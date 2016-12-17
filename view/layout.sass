@@ -1,0 +1,95 @@
+$color-primary: #FF5722
+$color-link: #E91E63
+
+body
+  background-color: white
+  font-size: 16px
+  color: #212121
+
+.searchbar
+  .logoContain
+    transition: all 100ms
+    .logo
+      transition: all 100ms
+  .logoContain.hide
+    margin-left: 0.5rem !important
+    .logo
+      width: 0 !important
+  .inputContain
+    position: relative
+    transition: all 100ms
+    input
+      border-top: none
+      border-right: none
+      border-left: none
+      outline: none
+      transition: all 100ms
+    input, .placeholder
+      color: $color-primary
+      display: inline-block
+      font-size: 1.3rem
+      line-height: 1.6
+
+.searchbar.big
+  .logoContain
+    display: block
+    text-align: center
+    margin-top: 20vh
+    .logo
+      display: inline-block
+      max-width: 70vw
+  .inputContain
+    display: block
+    text-align: center
+    margin-top: 2rem
+    input
+      width: 90vw
+      border-bottom: solid 2px $color-primary
+    input, .placeholder
+      text-align: center
+    .placeholder
+      position: absolute
+      top: 0
+      left: 0
+      right: 0
+      color: lighten($color-primary, 30%)
+      cursor: text
+      pointer-events: none
+      opacity: 1
+      transition: opacity 200ms
+    .placeholder.hide
+      opacity: 0
+.searchbar.small
+  margin-top: 2rem
+  .logoContain, .inputContain
+    display: inline-block
+  .logoContain
+    vertical-align: bottom
+    margin-left: 2rem
+    .logo
+      width: 150px
+  .inputContain
+    margin-left: 2.5rem
+    vertical-align: bottom
+    input
+      border-bottom: solid 1px $color-primary
+      text-align: left
+      width: 60vw
+  .inputContain.hw
+    margin-left: 0
+    input
+      width: 90vw
+
+.schsrch .desc
+  margin-top: 3rem
+  text-align: center
+  font-size: 1rem
+  .links
+    margin-bottom: 2rem
+    a
+      color: $color-link
+      margin-left: 1rem
+      margin-right: 1rem
+      cursor: pointer
+  .status
+    font-size: 0.75rem

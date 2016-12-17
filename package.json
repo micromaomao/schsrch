@@ -1,0 +1,40 @@
+{
+  "name": "schsrch",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "webpack-dev": "webpack",
+    "webpack": "webpack --optimize-minimize --optimize-occurrence-order",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/micromaomao/schsrch.git"
+  },
+  "author": "Mao Wtm <micromaomao@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/micromaomao/schsrch/issues"
+  },
+  "homepage": "https://github.com/micromaomao/schsrch#readme",
+  "dependencies": {
+    "express": "^4.14.0",
+    "mongoose": "^4.7.3",
+    "pug": "^2.0.0-beta6"
+  },
+  "devDependencies": {
+    "babel-core": "^6.21.0",
+    "babel-loader": "^6.2.10",
+    "babel-plugin-transform-react-jsx": "^6.8.0",
+    "babel-preset-es2015": "^6.18.0",
+    "css-loader": "^0.26.1",
+    "file-loader": "^0.9.0",
+    "node-sass": "^4.0.0",
+    "react": "^15.4.1",
+    "react-dom": "^15.4.1",
+    "sass-loader": "^4.1.0",
+    "style-loader": "^0.13.1",
+    "webpack": "^1.14.0"
+  }
+}
