@@ -1,6 +1,6 @@
 module.exports = {
   'short_name': 'SchSrch',
-  'name': 'SchSrch - CIE Past Paper Search',
+  'name': 'SchSrch',
   'icons': [
     {
       'src': '/resources/icon-192.png',

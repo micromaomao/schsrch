@@ -41,6 +41,7 @@ module.exports = {
         '/resources/icon-144.png'
       ],
       responseStrategy: 'cache-first',
+      version: '0',
       ServiceWorker: {
         scope: '/',
         publicPath: '../sw.js'
