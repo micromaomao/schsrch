@@ -12,6 +12,7 @@ let statusInfoState = createStore(function (state = {}, action) {
   }
 })
 
+let lastTimeout
 function fetchStatusInfo () {
   if ((statusInfoState.getState() || {}).loading) return
   statusInfoState.dispatch({type: 'unload'})
@@ -20,6 +21,8 @@ function fetchStatusInfo () {
   }, err => {
     statusInfoState.dispatch({type: 'error', err})
   })
+  lastTimeout && clearTimeout(lastTimeout)
+  lastTimeout = setTimeout(fetchStatusInfo, 5000)
 }
 
 fetchStatusInfo()
