@@ -20,11 +20,19 @@ body
     position: relative
     transition: all 100ms
     input
-      border-top: none
-      border-right: none
-      border-left: none
+      border: none
       outline: none
+    input, .stroke
       transition: all 100ms
+    .stroke
+      height: 2px
+      display: block
+      margin-left: auto
+      margin-right: auto
+      background-color: lighten($color-primary, 30%)
+      .fill
+        height: 2px
+        background-color: $color-primary
     input, .placeholder
       color: $color-primary
       display: inline-block
@@ -43,9 +51,8 @@ body
     display: block
     text-align: center
     margin-top: 2rem
-    input
+    input, .stroke
       width: 90vw
-      border-bottom: solid 2px $color-primary
     input, .placeholder
       text-align: center
     .placeholder
@@ -73,12 +80,12 @@ body
     margin-left: 2.5rem
     vertical-align: bottom
     input
-      border-bottom: solid 1px $color-primary
       text-align: left
+    input, .stroke
       width: 60vw
   .inputContain.hw
     margin-left: 0
-    input
+    input, .stroke
       width: 90vw
 
 .schsrch .desc

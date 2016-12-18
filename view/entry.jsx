@@ -16,12 +16,17 @@ class SchSrch extends React.Component {
     this.state = {
       query: ''
     }
+    this.handleQuery = this.handleQuery.bind(this)
+  }
+  handleQuery (query) {
+    this.setState({query})
+    console.log('Query: ' + query)
   }
   render () {
     let noSearch = this.state.query === ''
     return (
       <div className="schsrch">
-        <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={query => this.setState({query})} />
+        <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={this.handleQuery} loading={!noSearch} />
         {noSearch
           ? <Description />
           : null}
