@@ -32,11 +32,18 @@ class Description extends React.Component {
   }
   componentDidMount () {
     this.updateStat()
-    statusInfoState.subscribe(this.updateStat)
+    this.unsub = statusInfoState.subscribe(this.updateStat)
+  }
+  componentWillUnmount () {
+    this.unsub()
+    this.unsub = null
   }
   updateStat () {
     let st = statusInfoState.getState() || {}
-    this.setState({status: st.stat, error: st.err})
+    this.setState({loading: st.loading, error: st.err})
+    if (st.stat) {
+      this.setState({status: st.stat})
+    }
   }
   render () {
     let statusInfo = null
@@ -45,17 +52,17 @@ class Description extends React.Component {
         <a onClick={fetchStatusInfo}>Refresh</a>
       </div>
     )
-    if (this.state.status) {
+    if (this.state.status && !this.state.error) {
       let stat = this.state.status
       statusInfo = (
-        <div className='status'>
+        <div className={'status' + (this.state.loading ? ' loading' : '')}>
           <div>
             Currently holding {stat.docCount} paper ({stat.indexCount} pages)
           </div>
           <div>
             Load average: {stat.loadAvg.join('/')}
           </div>
-          {reloadBtn}
+          {this.state.loading ? null : reloadBtn}
         </div>
       )
     } else if (!this.state.error) {

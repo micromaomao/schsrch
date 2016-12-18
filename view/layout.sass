@@ -93,7 +93,8 @@ body
       margin-right: 1rem
       cursor: pointer
   .status
-    font-size: 0.75rem
+    font-size: 1rem
+    color: lighten($color-primary, 10%)
     .error
       color: red
     .reload a
@@ -101,3 +102,7 @@ body
       line-height: 2
       padding: 0.5rem 2rem
       cursor: pointer
+    .error, .reload
+      font-size: 0.75rem
+  .status.loading
+    opacity: 0.5
