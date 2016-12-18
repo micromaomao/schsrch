@@ -1,10 +1,14 @@
 'use strict'
+
+require('offline-plugin/runtime').install()
+
 const React = require('react')
 const ReactDOM = require('react-dom')
 
 require('./layout.sass')
 
 const SearchBar = require('./searchbar.jsx')
+const Description = require('./description.jsx')
 
 class SchSrch extends React.Component {
   constructor () {
@@ -29,36 +33,6 @@ class SchSrch extends React.Component {
   }
 }
 
-class Description extends React.Component {
-  constructor () {
-    super()
-    this.state = {}
-  }
-  render () {
-    return (
-      <div className='desc'>
-        <div className='links'>
-          <a>Usage</a>
-          &nbsp;
-          <a>Feedback</a>
-          &nbsp;
-          <a>Disclaimer</a>
-          &nbsp;
-          <a>API</a>
-        </div>
-        <div className='status'>
-          <div>
-            Currently holding ### paper (#### pages)
-          </div>
-          <div>
-            Load average: ##/##/##
-          </div>
-        </div>
-      </div>
-    )
-  }
-}
-
 let ui = ReactDOM.render(
   <SchSrch />,
   document.getElementsByClassName('react-root')[0]
@@ -67,5 +41,3 @@ let ui = ReactDOM.render(
 window.addEventListener('resize', evt => {
   ui.forceUpdate()
 })
-
-require('offline-plugin/runtime').install()

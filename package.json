@@ -21,7 +21,9 @@
   "dependencies": {
     "express": "^4.14.0",
     "mongoose": "^4.7.3",
-    "pug": "^2.0.0-beta6"
+    "pdfjs-dist": "^1.6.411",
+    "pug": "^2.0.0-beta6",
+    "redux": "^3.6.0"
   },
   "devDependencies": {
     "babel-core": "^6.21.0",
