@@ -26,6 +26,10 @@ module.exports = {
           presets: ['es2015'],
         }
       },
+      {
+        test: /\.png$/,
+        loader: 'file'
+      }
     ]
   },
   plugins: [

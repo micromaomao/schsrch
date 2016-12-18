@@ -1,5 +1,5 @@
 const React = require('react')
-const URL_LOGO = require('file!./logo.png')
+const URL_LOGO = require('./logo.png')
 
 class SearchBar extends React.Component {
   constructor () {

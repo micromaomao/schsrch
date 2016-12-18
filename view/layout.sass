@@ -1,5 +1,6 @@
 $color-primary: #FF5722
 $color-link: #E91E63
+$color-secondary-text: #727272
 
 body
   background-color: white
@@ -113,3 +114,21 @@ body
       font-size: 0.75rem
   .status.loading
     opacity: 0.5
+
+.searchresult.loading
+  opacity: 0.5
+.searchresult
+  .overflow
+    padding: 12rem 5rem
+    background-image: url(./overflow.png)
+    background-repeat: no-repeat
+    background-size: contain
+    background-position: top left
+  .set
+    padding: 0.5rem 1rem
+    margin-top: 0.5rem
+    .setname
+      font-size: 1.5rem
+      color: $color-secondary-text
+      .time, .paper, .variant
+        color: $color-primary
