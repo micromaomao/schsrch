@@ -31,6 +31,7 @@
     "css-loader": "^0.26.1",
     "file-loader": "^0.9.0",
     "node-sass": "^4.0.0",
+    "offline-plugin": "^4.5.3",
     "react": "^15.4.1",
     "react-dom": "^15.4.1",
     "sass-loader": "^4.1.0",

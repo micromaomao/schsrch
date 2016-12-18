@@ -103,3 +103,5 @@ let ui = ReactDOM.render(
 window.addEventListener('resize', evt => {
   ui.forceUpdate()
 })
+
+require('offline-plugin/runtime').install()

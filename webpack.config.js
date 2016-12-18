@@ -1,10 +1,11 @@
 const path = require('path')
+const OfflinePlugin = require('offline-plugin')
 
 module.exports = {
   entry: './view/entry.jsx',
   output: {
     path: './dist',
-    publicPath: 'resources/',
+    publicPath: '/resources/',
     filename: 'bundle.js'
   },
   module: {
@@ -26,5 +27,21 @@ module.exports = {
         }
       },
     ]
-  }
+  },
+  plugins: [
+    new OfflinePlugin({
+      caches: {
+        main: ['/', ':rest:']
+      },
+      externals: [
+        '/'
+      ],
+      responseStrategy: 'cache-first',
+      ServiceWorker: {
+        scope: '/',
+        publicPath: '../sw.js'
+      },
+      AppCache: null
+    })
+  ]
 }

@@ -11,6 +11,9 @@ module.exports = db => {
     res.send(pageIndex({}))
   })
   rMain.use('/resources', express.static(path.join(__dirname, 'dist')))
+  rMain.get('/sw.js', function (req, res) {
+    res.sendFile(path.join(__dirname, 'dist/sw.js'))
+  })
 
   return rMain
 }
