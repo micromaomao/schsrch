@@ -31,10 +31,14 @@ module.exports = {
   plugins: [
     new OfflinePlugin({
       caches: {
-        main: ['/', ':rest:']
+        main: ['/', ':rest:', '/manifest.json'],
+        additional: ['/resources/icon-192.png']
       },
       externals: [
-        '/'
+        '/',
+        '/manifest.json',
+        '/resources/icon-192.png',
+        '/resources/icon-144.png'
       ],
       responseStrategy: 'cache-first',
       ServiceWorker: {
