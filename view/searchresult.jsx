@@ -1,5 +1,5 @@
 const React = require('react')
-const paperUtils = require('./paperutils.js')
+const PaperUtils = require('./paperutils.js')
 const PaperSet = require('./paperset.jsx')
 
 class SearchResult extends React.Component {
@@ -71,9 +71,9 @@ class SearchResult extends React.Component {
       case 'pp':
         let bucket = []
         result.list.forEach(entity => {
-          let existing = bucket.find(x => paperUtils.setEqual(x, entity))
+          let existing = bucket.find(x => PaperUtils.setEqual(x, entity))
           if (existing) {
-            existing.types.push({type: entity.type, id: entity._id})
+            existing.types.push(entity)
           } else {
             bucket.push({
               subject: entity.subject,
@@ -81,18 +81,15 @@ class SearchResult extends React.Component {
               paper: entity.paper,
               variant: entity.variant,
               types: [
-                {
-                  type: entity.type,
-                  id: entity._id
-                }
+                entity
               ]
             })
           }
         })
         return (
           <div className='pplist'>
-            {bucket.map(set => (
-              <PaperSet paperSet={set} key={paperUtils.setToString(set)} />
+            {bucket.sort(PaperUtils.funcSortBucket).map(set => (
+              <PaperSet paperSet={set} key={PaperUtils.setToString(set)} />
             ))}
           </div>
         )
