@@ -48,7 +48,7 @@ class PaperSet extends React.Component {
               <span className='typename'>{PaperUtils.capitalizeFirst(PaperUtils.getTypeString(ftDoc.type))}</span>
               &nbsp;
               <span className='desc'>
-                <span className='pagenum'>found on page <span className='foundon'>{ftDoc.ftIndex.page}</span> / {ftDoc.numPages} pages total</span>
+                <span className='pagenum'>found on page <span className='foundon'>{ftDoc.ftIndex.page + 1}</span> / {ftDoc.numPages} pages total</span>
                 ,&nbsp;
                 <span className='filetype'>{ftDoc.fileType}</span>
               </span>
