@@ -1,5 +1,6 @@
 const React = require('react')
 const URL_LOGO = require('./logo.png')
+const CIESubjects = require('./CIESubjects.js')
 
 class SearchBar extends React.Component {
   constructor () {
@@ -35,6 +36,17 @@ class SearchBar extends React.Component {
       this.setState({loadingStart: nextProps.loading ? Date.now() : null})
     }
   }
+  chooseSubject (id) {
+    this.setQuery(id + ' ')
+    setTimeout(() => this.input.focus(), 1)
+  }
+  setQuery (query) {
+    this.handleQueryChange({
+      target: {
+        value: query
+      }
+    })
+  }
   render () {
     let hideLogo = !this.props.big && window.innerWidth <= 800
     let strokeFillStyle = {}
@@ -63,6 +75,26 @@ class SearchBar extends React.Component {
       strokeFillStyle.width = null
       strokeFillStyle.marginLeft = null
     }
+    let subjectHint = null
+    let subjectSearchRes = CIESubjects.search(this.state.query.replace(/^\s+/, ''))
+    if (subjectSearchRes && subjectSearchRes.length > 0) {
+      subjectHint = (
+        <div className='subjecthints'>
+          {subjectSearchRes.slice(0, 6).map(sj => (
+            <div className='subject' key={sj.id} onMouseDown={evt => this.chooseSubject(sj.id)} onTouchStart={evt => {
+              evt.preventDefault()
+              this.chooseSubject(sj.id)
+            }}>
+              <span className='id'>({sj.id})</span>
+              &nbsp;
+              <span className='level'>({sj.level})</span>
+              &nbsp;
+              <span className='name'>{sj.name}</span>
+            </div>
+          ))}
+        </div>
+      )
+    }
     return (
       <div className={this.props.big ? 'searchbar big' : 'searchbar small'}>
         <div className={'logoContain' + (hideLogo ? ' hide' : '')}>
@@ -76,6 +108,7 @@ class SearchBar extends React.Component {
           <div className='stroke'>
             <div className='fill' style={strokeFillStyle} />
           </div>
+          {subjectHint}
         </div>
       </div>
     )

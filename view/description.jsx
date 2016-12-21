@@ -22,7 +22,7 @@ function fetchStatusInfo () {
     statusInfoState.dispatch({type: 'error', err})
   })
   lastTimeout && clearTimeout(lastTimeout)
-  lastTimeout = setTimeout(fetchStatusInfo, 5000)
+  lastTimeout = setTimeout(fetchStatusInfo, 15000)
 }
 
 fetchStatusInfo()

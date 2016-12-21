@@ -39,6 +39,17 @@ body
       display: inline-block
       font-size: 1.3rem
       line-height: 1.6
+    .subjecthints
+      background-color: white
+      .subject
+        background-color: white
+        transition: background-color 200ms
+        padding: 0.3rem 1rem
+        .level, .id
+          font-size: 50%
+          color: $color-secondary-text
+      .subject:hover
+        background-color: darken(white, 10%)
 
 .searchbar.big
   .logoContain
@@ -52,7 +63,7 @@ body
     display: block
     text-align: center
     margin-top: 2rem
-    input, .stroke
+    input, .stroke, .subjecthints
       width: 90vw
     input, .placeholder
       text-align: center
@@ -68,6 +79,9 @@ body
       transition: opacity 200ms
     .placeholder.hide
       opacity: 0
+    .subjecthints
+      margin-left: auto
+      margin-right: auto
 .searchbar.small
   margin-top: 2rem
   .logoContain, .inputContain
@@ -82,11 +96,13 @@ body
     vertical-align: bottom
     input
       text-align: left
-    input, .stroke
+    input, .stroke, .subjecthints
       width: 60vw
+    .subjecthints
+      position: absolute
   .inputContain.hw
     margin-left: 0
-    input, .stroke
+    input, .stroke, .subjecthints
       width: 90vw
 
 .schsrch .desc
@@ -133,6 +149,7 @@ body
       .time, .paper, .variant
         color: $color-primary
         font-size: 1.3rem
+        display: inline-block
       .paper.meta
         color: $color-secondary-text !important
         font-size: 1rem !important

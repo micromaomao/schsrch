@@ -20,7 +20,7 @@
   "homepage": "https://github.com/micromaomao/schsrch#readme",
   "dependencies": {
     "express": "^4.14.0",
-    "mongoose": "^4.7.3",
+    "mongoose": "^4.7.4",
     "pdfjs-dist": "^1.6.411",
     "pug": "^2.0.0-beta6",
     "redux": "^3.6.0"

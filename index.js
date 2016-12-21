@@ -3,11 +3,12 @@ const pug = require('pug')
 const path = require('path')
 const appManifest = require('./view/appmanifest')
 const os = require('os')
+const PaperUtils = require('./view/paperutils')
 
 let pageIndex = pug.compileFile(path.join(__dirname, 'view/index.pug'))
 
-module.exports = db => {
-  const {PastPaperDoc, PastPaperIndex} = require('./lib/dbModel.js')(db)
+module.exports = (db, mongoose) => {
+  const {PastPaperDoc, PastPaperIndex} = require('./lib/dbModel.js')(db, mongoose)
   let rMain = express.Router()
 
   rMain.get('/', function (req, res) {
@@ -64,7 +65,7 @@ module.exports = db => {
       paper && (finder.paper = parseInt(paper))
       variant && (finder.variant = parseInt(variant))
       type && (finder.type = type)
-      PastPaperDoc.find(finder, {doc: false, __v: false}).limit(51).then(rst => {
+      PastPaperDoc.find(finder, {__v: false, doc: false}).limit(51).then(rst => {
         if (rst.length >= 50) {
           res.send({
             response: 'overflow'
@@ -80,6 +81,20 @@ module.exports = db => {
         res.send({response: 'error', err: err})
       })
     }
+  })
+
+  rMain.get('/fetchDoc/:id', function (req, res, next) {
+    PastPaperDoc.findOne({_id: req.params.id}).then(doc => {
+      if (!doc) {
+        next()
+        return
+      }
+      let fname = `${PaperUtils.setToString(doc)}_${doc.type}.${doc.fileType}`
+      res.set('Content-Disposition', `inline; filename=${JSON.stringify(fname)}`)
+      res.type(doc.fileType)
+      // TODO: In-browser viewing
+      res.send(doc.doc)
+    }).catch(err => next(err))
   })
   return rMain
 }

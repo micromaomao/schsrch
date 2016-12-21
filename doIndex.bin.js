@@ -13,7 +13,7 @@ db.on('error', err => {
   process.exit(1)
 })
 db.on('open', () => {
-  const {PastPaperIndex, PastPaperDoc} = require('./lib/dbModel.js')(db)
+  const {PastPaperIndex, PastPaperDoc} = require('./lib/dbModel.js')(db, mongoose)
 
   const indexPdf = path => new Promise((resolve, reject) => {
     const fname = path.split('/').slice(-1)[0]
