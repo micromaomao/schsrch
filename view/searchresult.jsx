@@ -26,7 +26,7 @@ class SearchResult extends React.Component {
     this.setState({query: query})
     this.props.onStateChange && this.props.onStateChange(true)
     this.setState({err: null, loading: true})
-    fetch('/search/' + encodeURIComponent(query)).then(res => res.json()).then(result => {
+    fetch('/search/' + encodeURIComponent(query) + '/').then(res => res.json()).then(result => {
       if (result.response === 'error') {
         this.error(query, result.err)
         return
@@ -91,6 +91,15 @@ class SearchResult extends React.Component {
             {bucket.sort(PaperUtils.funcSortBucket).map(set => (
               <PaperSet paperSet={set} key={PaperUtils.setToString(set)} />
             ))}
+          </div>
+        )
+      case 'text':
+        return (
+          <div className='fulltextlist'>
+            {result.list.map(set => {
+              let metas = {subject: set.doc.subject, time: set.doc.time, paper: set.doc.paper, variant: set.doc.variant}
+              return (<PaperSet paperSet={Object.assign({}, metas, {types: [Object.assign({}, set.doc, {ftIndex: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})} key={set.index._id} />)
+            })}
           </div>
         )
       default:

@@ -10,7 +10,13 @@ class PaperSet extends React.Component {
   render () {
     let set = this.props.paperSet
     let subject = Subjects.findExactById(set.subject)
-    set.types = set.types.sort((a, b) => PaperUtils.funcSortType(a.type, b.type))
+    let sortedTypes
+    let ftDoc = null
+    if (set.types[0] && set.types[0].ftIndex) {
+      ftDoc = set.types[0]
+    }
+    sortedTypes = set.types.slice(ftDoc !== null ? 1 : 0).sort((a, b) => PaperUtils.funcSortType(a.type, b.type))
+    // TODO: Highlight content
     return (
       <div className='set'>
         <div className='setname'>
@@ -36,8 +42,23 @@ class PaperSet extends React.Component {
               </span>)
             : null}
         </div>
-        <div className='files'>
-          {set.types.map(file => (
+        {ftDoc !== null
+          ? (
+            <div className='file ft' key={ftDoc._id} onClick={evt => this.openFile(ftDoc._id)}>
+              <span className='typename'>{PaperUtils.capitalizeFirst(PaperUtils.getTypeString(ftDoc.type))}</span>
+              &nbsp;
+              <span className='desc'>
+                <span className='pagenum'>found on page <span className='foundon'>{ftDoc.ftIndex.page}</span> / {ftDoc.numPages} pages total</span>
+                ,&nbsp;
+                <span className='filetype'>{ftDoc.fileType}</span>
+              </span>
+              <div className='indexcontent'>{ftDoc.ftIndex.content}</div>
+            </div>
+          )
+          : null}
+        <div className={ftDoc !== null ? 'related' : 'files'}>
+          {ftDoc ? 'Related: ' : null}
+          {sortedTypes.map(file => (
             <div className='file' key={file._id} onClick={evt => this.openFile(file._id)}>
               <span className='typename'>{PaperUtils.capitalizeFirst(PaperUtils.getTypeString(file.type))}</span>
               &nbsp;

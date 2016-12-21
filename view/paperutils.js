@@ -1,10 +1,11 @@
-const shortTypes = ['qp', 'ms', 'in', 'er', 'gt', 'ir', 'sp', 'sm', 'sr']
+const shortTypes = ['qp', 'ms', 'in', 'er', 'gt', 'ir', 'ci', 'sp', 'sm', 'sr']
 const longTypes = [
   'question paper',
   'marking scheme',
   'insert',
   'examiner report',
   'grade thresholds',
+  'confidential instructions',
   'confidential instructions',
   'specimen question paper',
   'specimen mark scheme',
@@ -23,6 +24,8 @@ module.exports = {
     return longTypes[sIndex]
   },
   funcSortType: (t1, t2) => {
+    t1 = t1.toLowerCase().trim()
+    t2 = t2.toLowerCase().trim()
     let i1 = shortTypes.indexOf(t1)
     let i2 = shortTypes.indexOf(t2)
     if (i1 < 0 && i2 >= 0) {
@@ -33,7 +36,7 @@ module.exports = {
     } else if (i1 < 0 && i2 < 0) {
       return 0
     } else {
-      return Math.sign(t1 - t2)
+      return Math.sign(i1 - i2)
     }
   },
   capitalizeFirst: str => {

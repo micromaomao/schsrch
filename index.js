@@ -31,7 +31,7 @@ module.exports = (db, mongoose) => {
   })
 
   rMain.get('/search/:query', function (req, res, next) {
-    let query = req.params.query.toString()
+    let query = req.params.query.toString().trim()
     let match
     if (query.match(/^\d{4}$/)) {
       fetchPP(query, null, null, null, null)
@@ -53,8 +53,21 @@ module.exports = (db, mongoose) => {
       fetchPP(match[1], match[2], match[4], null, match[3])
     } else {
       // TODO
-      res.send({
-        response: 'text, unimplemented'
+      PastPaperIndex.search(query).then(results => {
+        Promise.all(results.map(rst => new Promise((resolve, reject) => {
+          PastPaperDoc.find({subject: rst.doc.subject, time: rst.doc.time, paper: rst.doc.paper, variant: rst.doc.variant}, {_id: true, type: true, fileType: true, numPages: true}, (err, res) => {
+            if (err) {
+              resolve({doc: rst.doc, index: rst.index, related: []})
+            } else {
+              resolve({doc: rst.doc, index: rst.index, related: res.filter(x => x.type !== rst.doc.type)})
+            }
+          })
+        }))).then(rst => res.send({
+          response: 'text',
+          list: rst
+        })).catch(e => next(e))
+      }).catch(err => {
+        next(err)
       })
     }
 
