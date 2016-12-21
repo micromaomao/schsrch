@@ -12,8 +12,8 @@ const longTypes = [
   'specimen confidential instructions'
 ]
 
-const shortMonths = ['m', 's', 'w']
-const longMonths = ['March', 'May/June', 'Oct/Nov']
+const shortMonths = ['m', 's', 'w', 'y']
+const longMonths = ['Feb/March', 'May/June', 'Oct/Nov', 'For examination from']
 
 module.exports = {
   setToString: entity => `${entity.subject}_${entity.time}_${entity.paper}_${entity.variant}`,
