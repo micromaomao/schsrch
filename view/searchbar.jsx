@@ -1,6 +1,7 @@
 const React = require('react')
 const URL_LOGO = require('./logo.png')
 const CIESubjects = require('./CIESubjects.js')
+const SearchPrompt = require('./searchprompt.jsx')
 
 class SearchBar extends React.Component {
   constructor () {
@@ -109,6 +110,7 @@ class SearchBar extends React.Component {
           <div className='stroke'>
             <div className='fill' style={strokeFillStyle} />
           </div>
+          <SearchPrompt query={this.state.query} />
           {subjectHint}
         </div>
       </div>

@@ -63,10 +63,17 @@ class SearchResult extends React.Component {
     )
   }
   renderResult (result, query) {
+    if ((!result.list || result.list.length === 0) && result.response.match(/^(pp|text)$/)) {
+      result.response = 'empty'
+    }
     switch (result.response) {
       case 'overflow':
         return (
           <div className='overflow'>Too much entities found. Try search something more specific...</div>
+        )
+      case 'empty':
+        return (
+          <div className='empty'>Your search returned no results.</div>
         )
       case 'pp':
         let bucket = []

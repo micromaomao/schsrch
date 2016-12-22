@@ -87,7 +87,7 @@ body
   .logoContain, .inputContain
     display: inline-block
   .logoContain
-    vertical-align: bottom
+    vertical-align: top
     margin-left: 2rem
     .logo
       width: 150px
@@ -96,13 +96,16 @@ body
     vertical-align: bottom
     input
       text-align: left
-    input, .stroke, .subjecthints
+    input, .stroke, .subjecthints, .searchprompt
       width: 60vw
     .subjecthints
       position: absolute
+    .searchprompt
+      margin-left: auto
+      margin-right: auto
   .inputContain.hw
     margin-left: 0
-    input, .stroke, .subjecthints
+    input, .stroke, .subjecthints, .searchprompt
       width: 90vw
 
 .schsrch .desc
@@ -134,12 +137,13 @@ body
 .searchresult.loading
   opacity: 0.5
 .searchresult
-  .overflow
+  .overflow, .empty
     padding: 12rem 5rem
-    background-image: url(./overflow.png)
     background-repeat: no-repeat
     background-size: contain
     background-position: top left
+  .overflow
+    background-image: url(./overflow.png)
   .set
     padding: 0.5rem 1rem
     margin-top: 0.5rem
@@ -186,3 +190,10 @@ body
         color: $color-secondary-text
         .highlight
           color: $color-primary
+
+.searchprompt
+  color: $color-primary
+  font-size: 0.8rem
+  padding-top: 0.2rem
+  .error
+    color: red
