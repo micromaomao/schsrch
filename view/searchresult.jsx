@@ -57,12 +57,12 @@ class SearchResult extends React.Component {
           ? <div className='error'>{this.state.err.message}</div>
           : null}
         {this.state.result
-          ? this.renderResult(this.state.result)
+          ? this.renderResult(this.state.result, this.state.query)
           : null}
       </div>
     )
   }
-  renderResult (result) {
+  renderResult (result, query) {
     switch (result.response) {
       case 'overflow':
         return (
@@ -98,7 +98,11 @@ class SearchResult extends React.Component {
           <div className='fulltextlist'>
             {result.list.map(set => {
               let metas = {subject: set.doc.subject, time: set.doc.time, paper: set.doc.paper, variant: set.doc.variant}
-              return (<PaperSet paperSet={Object.assign({}, metas, {types: [Object.assign({}, set.doc, {ftIndex: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})} key={set.index._id} />)
+              return (<PaperSet
+                paperSet={Object.assign({}, metas, {types: [Object.assign({}, set.doc, {ftIndex: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})}
+                key={set.index._id}
+                indexQuery={query}
+                />)
             })}
           </div>
         )

@@ -1,6 +1,7 @@
 const React = require('react')
 const Subjects = require('./CIESubjects.js')
 const PaperUtils = require('./paperutils.js')
+const IndexContent = require('./indexcontent.jsx')
 
 class PaperSet extends React.Component {
   constructor () {
@@ -52,7 +53,7 @@ class PaperSet extends React.Component {
                 ,&nbsp;
                 <span className='filetype'>{ftDoc.fileType}</span>
               </span>
-              <div className='indexcontent'>{ftDoc.ftIndex.content}</div>
+              <IndexContent content={ftDoc.ftIndex.content} search={this.props.indexQuery || ''} />
             </div>
           )
           : null}
