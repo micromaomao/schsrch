@@ -10,7 +10,8 @@ class SearchBar extends React.Component {
       lastQueryChange: 0,
       loadingStart: null,
       lastTimeout: null,
-      lastQuerySubmited: ''
+      lastQuerySubmited: '',
+      focus: true
     }
     this.inputDelay = 1000
     this.handlePlaceholderClick = this.handlePlaceholderClick.bind(this)
@@ -76,7 +77,7 @@ class SearchBar extends React.Component {
       strokeFillStyle.marginLeft = null
     }
     let subjectHint = null
-    let subjectSearchRes = CIESubjects.search(this.state.query.replace(/^\s+/, ''))
+    let subjectSearchRes = this.state.focus ? CIESubjects.search(this.state.query.replace(/^\s+/, '')) : null
     if (subjectSearchRes && subjectSearchRes.length > 0) {
       subjectHint = (
         <div className='subjecthints'>
@@ -101,7 +102,7 @@ class SearchBar extends React.Component {
           <img className='logo' src={URL_LOGO} />
         </div>
         <div className={'inputContain' + (hideLogo ? ' hw' : '')}>
-          <input type='text' ref={f => this.input = f} value={this.state.query} onChange={this.handleQueryChange} />
+          <input type='text' ref={f => this.input = f} value={this.state.query} onChange={this.handleQueryChange} onFocus={evt => this.setState({focus: true})} onBlur={evt => this.setState({focus: false})} />
           {this.props.big
             ? <div className={'placeholder' + (this.state.query !== '' ? ' hide' : '')} onMouseDown={this.handlePlaceholderClick} onTouchStart={this.handlePlaceholderClick}>... Type here ...</div>
             : null}
