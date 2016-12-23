@@ -1,4 +1,5 @@
 const React = require('react')
+const Feedback = require('./feedback.jsx')
 const { createStore } = require('redux')
 
 let statusInfoState = createStore(function (state = {}, action) {
@@ -87,7 +88,7 @@ class Description extends React.Component {
         <div className='links'>
           <a>Usage</a>
           &nbsp;
-          <a>Feedback</a>
+          <a onClick={evt => Feedback.show()}>Feedback</a>
           &nbsp;
           <a>Disclaimer</a>
           &nbsp;

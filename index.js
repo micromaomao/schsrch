@@ -8,7 +8,7 @@ const PaperUtils = require('./view/paperutils')
 let pageIndex = pug.compileFile(path.join(__dirname, 'view/index.pug'))
 
 module.exports = (db, mongoose) => {
-  const {PastPaperDoc, PastPaperIndex} = require('./lib/dbModel.js')(db, mongoose)
+  const {PastPaperDoc, PastPaperIndex, PastPaperFeedback} = require('./lib/dbModel.js')(db, mongoose)
   let rMain = express.Router()
 
   rMain.get('/', function (req, res) {
@@ -108,5 +108,57 @@ module.exports = (db, mongoose) => {
       res.send(doc.doc)
     }).catch(err => next(err))
   })
+
+  rMain.post('/feedback/', function (req, res, next) {
+    let ctype = req.get('Content-Type')
+    let done = false
+    if (ctype !== 'application/json') {
+      res.status(415)
+      res.send('Content type incorrect.')
+      done = true
+      return
+    }
+    let body = ''
+    req.setEncoding('utf8')
+    req.on('data', chunk => {
+      if (done) return
+      body += chunk
+    })
+    req.on('end', () => {
+      if (done) return
+      done = true
+      body = body.trim()
+      if (body.length === 0) {
+        res.status(403)
+        res.send('Content is empty.')
+        return
+      }
+      let parsed = null
+      try {
+        parsed = JSON.parse(body)
+        if (typeof parsed !== 'object') {
+          throw new Error()
+        }
+      } catch (e) {
+        res.status(403)
+        res.send('Content is not valid JSON.')
+        return
+      }
+      let fb = new PastPaperFeedback({
+        time: Date.now(),
+        ip: req.ip,
+        email: parsed.email,
+        text: parsed.text
+      })
+      fb.save().then(() => {
+        res.status(200)
+        res.end()
+      }, err => {
+        res.status(403)
+        res.send(err.toString())
+      })
+    })
+  })
+
   return rMain
 }

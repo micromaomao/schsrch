@@ -13,6 +13,7 @@ require('./layout.sass')
 const SearchBar = require('./searchbar.jsx')
 const Description = require('./description.jsx')
 const SearchResult = require('./searchresult.jsx')
+const Feedback = require('./feedback.jsx')
 
 class SchSrch extends React.Component {
   constructor () {
@@ -37,6 +38,7 @@ class SchSrch extends React.Component {
         {noSearch
           ? <Description />
           : <SearchResult query={this.state.query} onStateChange={loading => this.setState({searching: loading})} smallerSetName={window.innerWidth <= 500} />}
+        {Feedback.reactInstance}
       </div>
     )
   }

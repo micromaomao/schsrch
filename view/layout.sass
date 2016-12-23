@@ -219,3 +219,69 @@ body
   padding-top: 0.2rem
   .error
     color: red
+
+.feedback
+  position: fixed
+  top: 0
+  bottom: 0
+  left: 0
+  right: 0
+  background-color: white
+  padding: 0
+  .top
+    background-color: $color-primary
+    color: white
+    font-size: 1.3rem
+    padding: 1rem 2rem
+    box-shadow: 0 0 4px #000
+    .close
+      vertical-align: middle
+      font-size: 0.9rem
+      opacity: 0.9
+      transition: background-color 200ms
+      padding: 0.5rem
+    .close:active
+      background-color: rgba(white, 0.2)
+  .content
+    padding: 1rem
+    h2
+      font-size: 1.3rem
+      margin: 0
+      line-height: 1.3
+      font-weight: normal
+      color: $color-primary
+    .email, textarea
+      width: 100%
+      outline: none
+      border-top: none
+      border-left: none
+      border-right: none
+      font-size: 0.9rem
+    textarea
+      height: 4rem
+      resize: vertical
+      max-height: 50vh
+      border-bottom: solid 2px $color-primary
+    textarea:disabled
+      opacity: 0.5
+      background: none
+    .email
+      border-bottom: solid 1px $color-primary
+    .submit
+      padding: 0.5rem 1rem
+      background-color: $color-primary
+      color: white
+      font-size: 1rem
+      margin: 0.5rem 0
+      box-shadow: 0 2px 2px rgba(#000, 0.4)
+      display: inline-block
+      transition: background-color 200ms
+    .submit:active
+      background-color: lighten($color-primary, 15%)
+    .submitting, .error
+      font-size: 0.8rem
+      margin: 0.5rem 0
+    .submitting
+      color: $color-primary
+    .error
+      color: red
