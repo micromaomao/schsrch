@@ -1,5 +1,7 @@
 'use strict'
 
+require('babel-polyfill')
+
 require('offline-plugin/runtime').install()
 
 const React = require('react')
