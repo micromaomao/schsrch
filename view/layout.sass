@@ -147,7 +147,12 @@ body
   .set
     padding: 0.5rem 1rem
     margin-top: 0.5rem
+    margin-bottom: 1rem
+    background-color: rgba($color-primary, 0.05)
     .setname
+      margin: -0.5rem -1rem 0 -1rem
+      padding: 0.5rem 1rem 
+      background-color: rgba($color-primary, 0.1)
       font-size: 1rem
       color: $color-secondary-text
       .time, .paper, .variant
@@ -190,6 +195,23 @@ body
         color: $color-secondary-text
         .highlight
           color: $color-primary
+
+.searchresult.smallsetname
+  .set
+    .setname
+      font-size: 0.9rem
+      .time, .paper, .variant
+        color: $color-primary
+        font-size: 0.9rem
+        display: inline-block
+    .typename
+      font-size: 1rem
+    .related
+      padding-top: 0.5rem
+      padding-left: 1rem
+      font-size: 0.9rem
+      .file
+        padding: 0.1rem 0.5rem
 
 .searchprompt
   color: $color-primary

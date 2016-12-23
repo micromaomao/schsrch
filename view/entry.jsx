@@ -36,7 +36,7 @@ class SchSrch extends React.Component {
         <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={this.handleQuery} loading={this.state.searching} />
         {noSearch
           ? <Description />
-          : <SearchResult query={this.state.query} onStateChange={loading => this.setState({searching: loading})} />}
+          : <SearchResult query={this.state.query} onStateChange={loading => this.setState({searching: loading})} smallerSetName={window.innerWidth <= 500} />}
       </div>
     )
   }
@@ -51,5 +51,5 @@ let ui = ReactDOM.render(
 )
 
 window.addEventListener('resize', evt => {
-  ui.forceUpdate()
+  setTimeout(() => ui.forceUpdate(), 1)
 })

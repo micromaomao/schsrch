@@ -52,7 +52,7 @@ class SearchResult extends React.Component {
   }
   render () {
     return (
-      <div className={'searchresult' + (this.state.loading ? ' loading' : '')}>
+      <div className={'searchresult' + (this.state.loading ? ' loading' : '') + (this.props.smallerSetName ? ' smallsetname' : '')}>
         {this.state.err
           ? <div className='error'>{this.state.err.message}</div>
           : null}

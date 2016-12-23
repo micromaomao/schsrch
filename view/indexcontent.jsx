@@ -7,7 +7,7 @@ class IndexContent extends React.Component {
     this.state = {}
   }
   render () {
-    let contents = this.mergeAlikeTokens(this.cutUseful(this.tokenize(this.props.content, this.props.search.split(wordSpliter)), 150))
+    let contents = this.mergeAlikeTokens(this.cutUseful(this.tokenize(this.props.content.trim().replace(/[\s\u0001-\u0020]+/g, ' '), this.props.search.split(wordSpliter)), 150))
     return (
       <div className='indexcontent'>
         {contents.map((token, index) => (
