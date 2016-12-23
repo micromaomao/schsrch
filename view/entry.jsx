@@ -1,6 +1,7 @@
 'use strict'
 
 require('babel-polyfill')
+require('fetch-polyfill')
 
 require('offline-plugin/runtime').install()
 
