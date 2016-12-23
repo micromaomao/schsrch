@@ -28,7 +28,7 @@ class FeedbackFrame extends React.Component {
     this.unsub = null
     this.updateStatus = this.updateStatus.bind(this)
     this.handleFeedbackTextChange = this.handleFeedbackTextChange.bind(this)
-    this.handleSubmitGeneral = this.handleSubmitGeneral.bind(this)
+    this.handleSubmit = this.handleSubmit.bind(this)
     this.handleEmailChange = this.handleEmailChange.bind(this)
   }
   componentDidMount () {
@@ -101,7 +101,7 @@ class FeedbackFrame extends React.Component {
         {
           this.state.submitting
             ? <div className='submitting'>Submitting</div>
-            : <div className='submit' onClick={this.handleSubmitGeneral}>Submit</div>
+            : <div className='submit' onClick={this.handleSubmit}>Submit</div>
         }
       </div>
     )
@@ -114,7 +114,7 @@ class FeedbackFrame extends React.Component {
     let val = evt.target.value
     this.setState({email: val})
   }
-  handleSubmitGeneral (evt) {
+  handleSubmit (evt) {
     let val = this.state.feedbackText
     this.setState({submitting: true, error: null})
     let ctHeaders = new Headers()
@@ -130,7 +130,7 @@ class FeedbackFrame extends React.Component {
           this.setState({submitting: false, error: 'Unknow error.'})
         })
       } else {
-        this.setState({submitting: false, success: true})
+        this.setState({submitting: false, success: true, feedbackText: '', email: ''})
       }
     }, err => {
       this.setState({submitting: false, error: err.message})
