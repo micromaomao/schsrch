@@ -121,15 +121,21 @@ class SearchBar extends React.Component {
       if (sjHintSelect !== null) {
         sjHintSelect = this.calculateSubjectHintSelect(sjHintSelect, subjectSearchRes.length)
       }
+      let getFocus = evt => {
+        this.input.focus()
+        evt.preventDefault()
+      }
       subjectHint = (
         <div className='subjecthints'>
           {subjectSearchRes.map((sj, index) => {
             let thisSelected = index === sjHintSelect
             return (
-              <div className={'subject' + (thisSelected ? ' select' : '')} key={sj.id} onMouseDown={evt => this.chooseSubject(sj.id)} onTouchStart={evt => {
-                evt.preventDefault()
-                this.chooseSubject(sj.id)
-              }}>
+              <div className={'subject' + (thisSelected ? ' select' : '')} key={sj.id}
+                onClick={evt => this.chooseSubject(sj.id)}
+                onTouchStart={getFocus} onTouchEnd={evt => {
+                  getFocus(evt)
+                  this.chooseSubject(sj.id)
+                }} onMouseDown={getFocus} onMouseUp={getFocus}>
                 <span className='id'>({sj.id})</span>
                 &nbsp;
                 <span className='level'>({sj.level})</span>
