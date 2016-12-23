@@ -52,7 +52,6 @@ module.exports = (db, mongoose) => {
     } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{2})[_ ]([a-z]+)[_ ](\d)$/))) {
       fetchPP(match[1], match[2], match[4], null, match[3])
     } else {
-      // TODO
       PastPaperIndex.search(query).then(results => {
         Promise.all(results.map(rst => new Promise((resolve, reject) => {
           PastPaperDoc.find({subject: rst.doc.subject, time: rst.doc.time, paper: rst.doc.paper, variant: rst.doc.variant}, {_id: true, type: true, fileType: true, numPages: true}, (err, res) => {

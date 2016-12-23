@@ -17,7 +17,6 @@ class PaperSet extends React.Component {
       ftDoc = set.types[0]
     }
     sortedTypes = set.types.slice(ftDoc !== null ? 1 : 0).sort((a, b) => PaperUtils.funcSortType(a.type, b.type))
-    // TODO: Highlight content
     return (
       <div className='set'>
         <div className='setname'>
