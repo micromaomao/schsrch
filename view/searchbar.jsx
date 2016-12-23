@@ -12,11 +12,13 @@ class SearchBar extends React.Component {
       loadingStart: null,
       lastTimeout: null,
       lastQuerySubmited: '',
-      focus: true
+      focus: true,
+      subjectHintSelect: null
     }
     this.inputDelay = 1000
     this.handlePlaceholderClick = this.handlePlaceholderClick.bind(this)
     this.handleQueryChange = this.handleQueryChange.bind(this)
+    this.handleKey = this.handleKey.bind(this)
   }
   handlePlaceholderClick (evt) {
     evt.preventDefault()
@@ -31,7 +33,31 @@ class SearchBar extends React.Component {
       if (val !== this.state.lastQuerySubmited)
         this.props.onQuery && this.props.onQuery(val.trim())
       this.setState({lastTimeout: null, lastQuerySubmited: val})
-    }, this.inputDelay)})
+    }, this.inputDelay), subjectHintSelect: null})
+  }
+  handleKey (evt) {
+    if (evt.key === 'ArrowDown' || evt.keyCode === 40) {
+      evt.preventDefault()
+      this.setState({subjectHintSelect: this.state.subjectHintSelect !== null ? this.state.subjectHintSelect + 1 : 0})
+    }
+    if (evt.key === 'ArrowUp' || evt.keyCode === 38) {
+      evt.preventDefault()
+      this.setState({subjectHintSelect: this.state.subjectHintSelect !== null ? this.state.subjectHintSelect - 1 : -1})
+    }
+    if (evt.key === 'Enter' || evt.keyCode === 13) {
+      evt.preventDefault()
+      this.selectThisSubject()
+    }
+    this.input.focus()
+  }
+  selectThisSubject () {
+    if (this.state.subjectHintSelect === null || !this.state.focus) {
+      return
+    }
+    let srs = this.searchSubject(this.state.query)
+    let sr = srs[this.calculateSubjectHintSelect(this.state.subjectHintSelect, srs.length)]
+    if (!sr) return
+    this.chooseSubject(sr.id)
   }
   componentWillReceiveProps (nextProps) {
     if (nextProps.loading !== this.props.loading) {
@@ -48,6 +74,16 @@ class SearchBar extends React.Component {
         value: query
       }
     })
+  }
+  searchSubject (query) {
+    return CIESubjects.search(query.replace(/^\s+/, ''))
+  }
+  calculateSubjectHintSelect(select, length) {
+    select = select % length
+    if (select < 0) {
+      select = length + select
+    }
+    return select
   }
   render () {
     let hideLogo = !this.props.big && window.innerWidth <= 800
@@ -78,22 +114,30 @@ class SearchBar extends React.Component {
       strokeFillStyle.marginLeft = null
     }
     let subjectHint = null
-    let subjectSearchRes = this.state.focus ? CIESubjects.search(this.state.query.replace(/^\s+/, '')) : null
+    let subjectSearchRes = this.state.focus ? this.searchSubject(this.state.query) : null
     if (subjectSearchRes && subjectSearchRes.length > 0) {
+      subjectSearchRes = subjectSearchRes.slice(0, 6)
+      let sjHintSelect = this.state.subjectHintSelect
+      if (sjHintSelect !== null) {
+        sjHintSelect = this.calculateSubjectHintSelect(sjHintSelect, subjectSearchRes.length)
+      }
       subjectHint = (
         <div className='subjecthints'>
-          {subjectSearchRes.slice(0, 6).map(sj => (
-            <div className='subject' key={sj.id} onMouseDown={evt => this.chooseSubject(sj.id)} onTouchStart={evt => {
-              evt.preventDefault()
-              this.chooseSubject(sj.id)
-            }}>
-              <span className='id'>({sj.id})</span>
-              &nbsp;
-              <span className='level'>({sj.level})</span>
-              &nbsp;
-              <span className='name'>{sj.name}</span>
-            </div>
-          ))}
+          {subjectSearchRes.map((sj, index) => {
+            let thisSelected = index === sjHintSelect
+            return (
+              <div className={'subject' + (thisSelected ? ' select' : '')} key={sj.id} onMouseDown={evt => this.chooseSubject(sj.id)} onTouchStart={evt => {
+                evt.preventDefault()
+                this.chooseSubject(sj.id)
+              }}>
+                <span className='id'>({sj.id})</span>
+                &nbsp;
+                <span className='level'>({sj.level})</span>
+                &nbsp;
+                <span className='name'>{sj.name}</span>
+              </div>
+          )
+          })}
         </div>
       )
     }
@@ -103,7 +147,14 @@ class SearchBar extends React.Component {
           <img className='logo' src={URL_LOGO} />
         </div>
         <div className={'inputContain' + (hideLogo ? ' hw' : '')}>
-          <input type='text' ref={f => this.input = f} value={this.state.query} onChange={this.handleQueryChange} onFocus={evt => this.setState({focus: true})} onBlur={evt => this.setState({focus: false})} />
+          <input
+            type='text'
+            ref={f => this.input = f}
+            value={this.state.query}
+            onChange={this.handleQueryChange}
+            onFocus={evt => this.setState({focus: true})}
+            onBlur={evt => this.setState({focus: false, subjectHintSelect: null})}
+            onKeyDown={this.handleKey} />
           {this.props.big
             ? <div className={'placeholder' + (this.state.query !== '' ? ' hide' : '')} onMouseDown={this.handlePlaceholderClick} onTouchStart={this.handlePlaceholderClick}>... Type here ...</div>
             : null}
