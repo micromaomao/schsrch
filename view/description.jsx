@@ -86,8 +86,6 @@ class Description extends React.Component {
     return (
       <div className='desc'>
         <div className='links'>
-          <a>Usage</a>
-          &nbsp;
           <a onClick={evt => Feedback.show()}>Feedback</a>
           &nbsp;
           <a>Disclaimer</a>
