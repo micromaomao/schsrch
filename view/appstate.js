@@ -49,13 +49,12 @@ let AppState = createStore(function (state = {}, action) {
   }
 })
 
-if (window.sessionStorage) {
-  let storedState = window.sessionStorage.getItem('state')
+function initFromHash () {
   try {
-    if (!storedState) {
-      throw new Error()
-    }
-    let state = JSON.parse(storedState)
+    let hashMatch = window.location.hash.match(/^#(.+)$/)
+    if (!hashMatch) throw new Error()
+    let stateData = hashMatch[1]
+    let state = JSON.parse(stateData)
     if (typeof state !== 'object') {
       throw new Error()
     }
@@ -63,12 +62,18 @@ if (window.sessionStorage) {
   } catch (e) {
     AppState.dispatch({type: 'init'})
   }
-  AppState.subscribe(() => {
-    let nState = AppState.getState()
-    window.sessionStorage.setItem('state', JSON.stringify(nState))
-  })
-} else {
-  AppState.dispatch({type: 'init'})
 }
+initFromHash()
+
+AppState.subscribe(() => {
+  let nState = AppState.getState()
+  let nsd = JSON.stringify(nState)
+  if (location.hash.substr(1) === nsd) return
+  window.location.replace('#' + nsd)
+})
+
+window.addEventListener("hashchange", evt => {
+  setTimeout(initFromHash, 1)
+})
 
 module.exports = AppState
