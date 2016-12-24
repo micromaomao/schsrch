@@ -55,7 +55,7 @@ class SchSrch extends React.Component {
       <div className='schsrch'>
         <div className='contentblackcover' style={blackCoverStyle} />
         <div className='content'>
-          <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={query => AppState.dispatch({type: 'query', query})} setQuery={this.state.query} loading={this.state.searching} />
+          <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={query => AppState.dispatch({type: 'query', query})} loading={this.state.searching} />
           {noSearch
             ? <Description />
             : <SearchResult query={this.state.query} onStateChange={loading => this.setState({searching: loading})} smallerSetName={window.innerWidth <= 500} />}
@@ -68,6 +68,7 @@ class SchSrch extends React.Component {
     this.handleUpdate()
     this.unsub = AppState.subscribe(this.handleUpdate)
     this.searchbar.input.focus()
+    this.searchbar.setQuery(AppState.getState().query)
   }
   componentWillUnmount () {
     this.unsub()
