@@ -148,7 +148,8 @@ module.exports = (db, mongoose) => {
         time: Date.now(),
         ip: req.ip,
         email: parsed.email,
-        text: parsed.text
+        text: parsed.text,
+        search: parsed.search
       })
       fb.save().then(() => {
         res.status(200)

@@ -195,6 +195,16 @@ body
         color: $color-secondary-text
         .highlight
           color: $color-primary
+  .fbBtn
+    color: $color-link
+    border-top: solid 2px $color-primary
+    padding: 0.5rem 1rem
+    display: inline-block
+    transition: background-color 200ms
+    cursor: pointer
+    -webkit-tap-highlight-color: transparent
+  .fbBtn:active
+    background-color: rgba($color-primary, 0.2)
 
 .searchresult.smallsetname
   .set
@@ -286,3 +296,6 @@ body
       color: $color-primary
     .error
       color: red
+    .searchReport
+      color: $color-primary
+      font-size: 1.2rem

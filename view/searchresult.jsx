@@ -1,6 +1,7 @@
 const React = require('react')
 const PaperUtils = require('./paperutils.js')
 const PaperSet = require('./paperset.jsx')
+const Feedback = require('./feedback.jsx')
 
 class SearchResult extends React.Component {
   constructor () {
@@ -59,6 +60,7 @@ class SearchResult extends React.Component {
         {this.state.result
           ? this.renderResult(this.state.result, this.state.query)
           : null}
+        <a className='fbBtn' onClick={evt => Feedback.show(this.state.query)}>Report issues/missing/errors with this search...</a>
       </div>
     )
   }

@@ -6,9 +6,9 @@ let feedbackState = createStore(function (state = {}, action) {
     case 'init':
       return {show: false}
     case 'show':
-      return Object.assign({}, state, {show: true})
+      return Object.assign({}, state, {show: true, search: action.search})
     case 'hide':
-      return Object.assign({}, state, {show: false})
+      return Object.assign({}, state, {show: false, search: null})
   }
 })
 feedbackState.dispatch({type: 'init'})
@@ -23,7 +23,8 @@ class FeedbackFrame extends React.Component {
       error: null,
       success: false,
       email: '',
-      feedbackText: ''
+      feedbackText: '',
+      search: null
     }
     this.unsub = null
     this.updateStatus = this.updateStatus.bind(this)
@@ -42,7 +43,7 @@ class FeedbackFrame extends React.Component {
   updateStatus () {
     let storeState = feedbackState.getState()
     if (storeState.show !== this.state.show) {
-      this.setState({show: storeState.show, topAnimationStart: Date.now()})
+      this.setState({show: storeState.show, topAnimationStart: Date.now(), search: storeState.search})
     }
   }
   render () {
@@ -83,10 +84,26 @@ class FeedbackFrame extends React.Component {
         </div>
       )
     }
+    let desc = null
+    if (!this.state.search) {
+      desc = (
+        <div>
+          <h2>General feedback</h2>
+          <p>If you want to report errors, use feedback button in the search result.</p>
+        </div>
+      )
+    } else {
+      desc = (
+        <div>
+          <h2>Search feedback</h2>
+          <p>If you want to report general things like design, use feedback button from the front screen.</p>
+          <p className='searchReport'>Reporting issues with search <code>{this.state.search}</code></p>
+        </div>
+      )
+    }
     return (
       <div className='general'>
-        <h2>General feedback</h2>
-        <p>If you want to report errors, use feedback button in the search result.</p>
+        {desc}
         <p>Provide your feedback in <b>either</b> English or Chinese. If possible, please include examples on how to improve.</p>
         <textarea onChange={this.handleFeedbackTextChange} value={this.state.feedbackText}
           placeholder='Your feedback here...' disabled={this.state.submitting} />
@@ -121,7 +138,8 @@ class FeedbackFrame extends React.Component {
     ctHeaders.append('Content-Type', 'application/json')
     fetch('/feedback/', {method: 'POST', body: JSON.stringify({
       email: this.state.email,
-      text: this.state.feedbackText
+      text: this.state.feedbackText,
+      search: this.state.search
     }), headers: ctHeaders}).then(res => {
       if (!res.ok) {
         res.text().then(errText => {
@@ -140,7 +158,7 @@ class FeedbackFrame extends React.Component {
 
 let Feedback = {
   reactInstance: (<FeedbackFrame />),
-  show: () => feedbackState.dispatch({type: 'show'})
+  show: search => feedbackState.dispatch({type: 'show', search: search || null})
 }
 
 module.exports = Feedback
