@@ -20,6 +20,9 @@ class SearchBar extends React.Component {
     this.handleQueryChange = this.handleQueryChange.bind(this)
     this.handleKey = this.handleKey.bind(this)
   }
+  componentDidMount () {
+    this.setQuery(this.props.setQuery || '')
+  }
   handlePlaceholderClick (evt) {
     evt.preventDefault()
     this.input.focus()
@@ -62,6 +65,9 @@ class SearchBar extends React.Component {
   componentWillReceiveProps (nextProps) {
     if (nextProps.loading !== this.props.loading) {
       this.setState({loadingStart: nextProps.loading ? Date.now() : null})
+    }
+    if (this.props.setQuery !== nextProps.setQuery) {
+      this.setQuery(nextProps.setQuery || '')
     }
   }
   chooseSubject (id) {

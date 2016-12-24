@@ -1,17 +1,17 @@
 const React = require('react')
-const { createStore } = require('redux')
+const AppState = require('./appstate.js')
 
-let feedbackState = createStore(function (state = {}, action) {
-  switch (action.type) {
-    case 'init':
-      return {show: false}
-    case 'show':
-      return Object.assign({}, state, {show: true, search: action.search})
-    case 'hide':
-      return Object.assign({}, state, {show: false, search: null})
-  }
-})
-feedbackState.dispatch({type: 'init'})
+// let feedbackState = createStore(function (state = {}, action) {
+//   switch (action.type) {
+//     case 'init':
+//       return {show: false}
+//     case 'show':
+//       return Object.assign({}, state, {show: true, search: action.search})
+//     case 'hide':
+//       return Object.assign({}, state, {show: false, search: null})
+//   }
+// })
+// feedbackState.dispatch({type: 'init'})
 
 class FeedbackFrame extends React.Component {
   constructor () {
@@ -34,20 +34,22 @@ class FeedbackFrame extends React.Component {
   }
   componentDidMount () {
     this.updateStatus()
-    this.unsub = feedbackState.subscribe(this.updateStatus)
+    this.unsub = AppState.subscribe(this.updateStatus)
   }
   componentWillUnmount () {
     this.unsub()
     this.unsub = null
   }
   updateStatus () {
-    let storeState = feedbackState.getState()
-    if (storeState.show !== this.state.show) {
-      this.setState({show: storeState.show, topAnimationStart: Date.now(), search: storeState.search})
+    let { feedback } = AppState.getState()
+    if (feedback.show !== this.state.show) {
+      this.setState({show: feedback.show, topAnimationStart: Date.now() + (feedback.show ? 100 : 0), search: feedback.search})
+      this.props.onChangeShow && this.props.onChangeShow(feedback.show)
     }
+    this.setState({search: feedback.search, feedbackText: feedback.feedbackText, email: feedback.email})
   }
   render () {
-    let topAnimationProgress = 1 - Math.pow(1 - ((Date.now() - this.state.topAnimationStart) / 500), 3)
+    let topAnimationProgress = 1 - Math.pow(1 - (Math.max(0, Date.now() - this.state.topAnimationStart) / 500), 3)
     let topPs = 0
     if (!this.state.show && topAnimationProgress >= 1) return null
     if (topAnimationProgress < 1) {
@@ -60,11 +62,13 @@ class FeedbackFrame extends React.Component {
     }
     let content = this.getContent()
     return (
-      <div className='feedback' style={topPs ? {top: (Math.round(topPs * 1000) / 10) + '%'} : {}}>
+      <div className='feedback' style={Object.assign({}, topPs ? {top: (Math.round(topPs * 1000) / 10) + '%'} : {}, {
+        willChange: 'top'
+      })}>
         <div className='top'>
           <span className='close' onClick={evt => {
             this.setState({success: false, error: null})
-            feedbackState.dispatch({type: 'hide'})
+            AppState.dispatch({type: 'hideFeedback'})
           }}>Hide</span>
           &nbsp;
           Feedback
@@ -125,11 +129,11 @@ class FeedbackFrame extends React.Component {
   }
   handleFeedbackTextChange (evt) {
     let val = evt.target.value
-    this.setState({feedbackText: val})
+    AppState.dispatch({type: 'writeFeedbackText', feedbackText: val})
   }
   handleEmailChange (evt) {
     let val = evt.target.value
-    this.setState({email: val})
+    AppState.dispatch({type: 'writeEmail', email: val})
   }
   handleSubmit (evt) {
     let val = this.state.feedbackText
@@ -148,7 +152,9 @@ class FeedbackFrame extends React.Component {
           this.setState({submitting: false, error: 'Unknow error.'})
         })
       } else {
-        this.setState({submitting: false, success: true, feedbackText: '', email: ''})
+        AppState.dispatch({type: 'writeFeedbackText', feedbackText: ''})
+        AppState.dispatch({type: 'writeEmail', email: ''})
+        this.setState({submitting: false, success: true})
       }
     }, err => {
       this.setState({submitting: false, error: err.message})
@@ -157,8 +163,8 @@ class FeedbackFrame extends React.Component {
 }
 
 let Feedback = {
-  reactInstance: (<FeedbackFrame />),
-  show: search => feedbackState.dispatch({type: 'show', search: search || null})
+  Frame: FeedbackFrame,
+  show: search => AppState.dispatch({type: 'showFeedback', search: search || null})
 }
 
 module.exports = Feedback

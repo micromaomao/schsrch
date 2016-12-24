@@ -7,6 +7,31 @@ body
   font-size: 16px
   color: #212121
   cursor: default
+  overflow: hide
+  margin: 0
+  *
+    box-sizing: border-box
+
+.schsrch
+  > .content,
+  > .contentblackcover,
+  > .feedback,
+    position: absolute
+    top: 0
+    left: 0
+    width: 100%
+    height: 100%
+  > .content
+    overflow: auto
+    z-index: 1
+
+.contentblackcover
+  z-index: 2
+  background-color: rgba(black, 0.5)
+  transition: opacity 600ms
+  will-change: opacity
+  opacity: 0
+  pointer-events: none
 
 .searchbar
   .logoContain
@@ -230,19 +255,21 @@ body
   .error
     color: red
 
+$feedback-top-height: 2rem + 1.3rem
 .feedback
-  position: fixed
-  top: 0
-  bottom: 0
-  left: 0
-  right: 0
-  overflow-y: auto
+  z-index: 3
   background-color: white
   padding: 0
   .top
     background-color: $color-primary
     color: white
     font-size: 1.3rem
+    line-height: 1.3rem
+    height: $feedback-top-height
+    position: absolute
+    left: 0
+    right: 0
+    top: 0
     padding: 1rem 2rem
     box-shadow: 0 0 4px #000
     .close
@@ -253,8 +280,14 @@ body
       padding: 0.5rem
     .close:active
       background-color: rgba(white, 0.2)
-  .content
-    padding: 1rem
+  > .content
+    position: absolute
+    left: 0
+    right: 0
+    top: $feedback-top-height
+    bottom: 0
+    padding: 2.3rem
+    overflow: auto
     h2
       font-size: 1.3rem
       margin: 0
