@@ -88,9 +88,9 @@ class Description extends React.Component {
         <div className='links'>
           <a onClick={evt => Feedback.show()}>Feedback</a>
           &nbsp;
-          <a>Disclaimer</a>
+          <a onClick={evt => window.open('https://schsrch.xyz/disclaim/')}>Disclaimer</a>
           &nbsp;
-          <a>API</a>
+          <a onClick={evt => window.open('https://github.com/micromaomao/schsrch/blob/master/index.js')}>API</a>
         </div>
         {statusInfo}
       </div>
