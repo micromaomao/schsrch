@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "node-gyp rebuild",
     "webpack-dev": "webpack",
     "webpack": "webpack --optimize-minimize --optimize-occurrence-order --define process.env.NODE_ENV='\"production\"' > /dev/null; if [ $? -eq 0 ]; then echo OK.; else echo Failed.; fi",
     "test": "echo \"Error: no test specified\" && exit 1"
