@@ -22,6 +22,7 @@
     "express": "^4.14.0",
     "fetch-polyfill": "^0.8.2",
     "mongoose": "^4.7.4",
+    "nan": "^2.5.0",
     "pdfjs-dist": "^1.6.411",
     "pug": "^2.0.0-beta6",
     "redux": "^3.6.0"
