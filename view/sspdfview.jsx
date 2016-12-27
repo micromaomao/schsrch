@@ -15,8 +15,7 @@ class SsPdfView extends React.Component {
       return null
     }
     this.viewWidth = window.innerWidth
-    // this.viewHeight = Math.min(this.viewWidth * (docJson.height / docJson.width), window.innerHeight)
-    this.viewHeight = window.innerHeight
+    this.viewHeight = Math.min(this.viewWidth * (docJson.height / docJson.width), window.innerHeight)
     let svgData = 'data:image/svg+xml,' + encodeURIComponent(docJson.svg)
     svgData = svgData.replace(/\(/g, '%28').replace(/\)/g, '%29')
     let svgStyle = {
