@@ -13,6 +13,7 @@ using v8::Exception;
 using v8::Isolate;
 using v8::Object;
 using v8::Array;
+using v8::Uint8Array;
 using Nan::Callback;
 using Nan::GetFunction;
 using Nan::Set;
@@ -22,40 +23,41 @@ using Nan::AsyncWorker;
 using Nan::HandleScope;
 using Nan::ThrowTypeError;
 using Nan::Persistent;
+using Nan::ObjectWrap;
 
-const char* MSG_EXCEPTION_TOSTRING =  "Exception in filename.toString()";
+const char* MSG_EXCEPTION_ZEROLEN =  "Zero length buffer provided.";
 
 class PdfssWorker : public AsyncWorker {
   public:
-    v8::String::Utf8Value* uFileName = NULL;
-    const char* fileName = NULL;
+    char* pdfData = NULL;
+    Persistent<Uint8Array>* pdfBuffer = NULL;
+    size_t pdfLen = 0;
     double pw, ph;
     char* txt;
     PopplerRectangle* rects;
     guint rectLen;
     char* error = NULL;
-    PdfssWorker(Callback* cb, Persistent<v8::String>* file)
+    int destPage;
+    PdfssWorker(Callback* cb, Persistent<Uint8Array>* pdfBuffer, int destPage)
       : AsyncWorker(cb) {
-        Local<v8::String> hFileName = New<v8::String>(*file);
-        this->uFileName = new v8::String::Utf8Value(hFileName);
-        if (this->uFileName->length() == 0) {
-          this->error = new char[strlen(MSG_EXCEPTION_TOSTRING)];
-          strcpy(this->error, MSG_EXCEPTION_TOSTRING);
-          delete this->uFileName;
-          this->uFileName = NULL;
-        } else {
-          this->fileName = **this->uFileName;
-        }
-        file->Reset();
-        delete file;
+      this->destPage = destPage;
+      this->pdfBuffer = pdfBuffer;
+      Local<Uint8Array> hPdf = New<Uint8Array>(*pdfBuffer);
+      this->pdfLen = (*hPdf)->ByteLength();
+      if (this->pdfLen == 0) {
+        this->error = new char[strlen(MSG_EXCEPTION_ZEROLEN)];
+        strcpy(this->error, MSG_EXCEPTION_ZEROLEN);
+      } else {
+        this->pdfData = (((char*)(*(*hPdf)->Buffer())->GetContents().Data())) + (*hPdf)->ByteOffset();
       }
+    }
 
     void Execute () {
       if (this->error != NULL) {
         return;
       }
       GError* gerror = NULL;
-      PopplerDocument* pd = poppler_document_new_from_file(this->fileName, NULL, &gerror);
+      PopplerDocument* pd = poppler_document_new_from_data(this->pdfData, this->pdfLen, NULL, &gerror);
       if (pd == NULL) {
         this->error = new char[strlen(gerror->message)];
         strcpy(this->error, gerror->message);
@@ -63,7 +65,7 @@ class PdfssWorker : public AsyncWorker {
         gerror = NULL;
         return;
       }
-      PopplerPage* pg = poppler_document_get_page(pd, 0);
+      PopplerPage* pg = poppler_document_get_page(pd, this->destPage);
       poppler_page_get_size(pg, &this->pw, &this->ph);
       this->txt = poppler_page_get_text(pg);
       poppler_page_get_text_layout(pg, &this->rects, &this->rectLen);
@@ -99,35 +101,44 @@ class PdfssWorker : public AsyncWorker {
         this->error = NULL;
       }
       this->callback->Call(2, argv);
-      if (this->uFileName != NULL) {
-        delete this->uFileName;
-        this->uFileName = NULL;
-        this->fileName = NULL;
+      if (this->pdfBuffer != NULL) {
+        this->pdfBuffer->Reset();
+        delete this->pdfBuffer;
+        this->pdfBuffer = NULL;
       }
     }
 };
 
-NAN_METHOD(hello) {
-  if (info.Length() != 2) {
-    ThrowTypeError("Two arguments.");
+NAN_METHOD(getPage) {
+  if (info.Length() != 3) {
+    ThrowTypeError("getPage(pdfBuffer, pageNum, callback)");
     return;
   }
-  if (!info[0]->IsString()) {
-    ThrowTypeError("arg[0] is not a string.");
+  if (!info[0]->IsUint8Array()) {
+    ThrowTypeError("arg[0] is not a buffer.");
     return;
   }
-  if (!info[1]->IsFunction()) {
-    ThrowTypeError("arg[1] is not a function.");
+  if (!info[1]->IsInt32()) {
+    ThrowTypeError("arg[1] is not a int32.");
     return;
   }
-  Callback *callback = new Callback(info[1].As<Function>());
-  AsyncQueueWorker(new PdfssWorker(callback, new Persistent<v8::String>(info[0].As<v8::String>())));
+  if (!info[2]->IsFunction()) {
+    ThrowTypeError("arg[2] is not a function.");
+    return;
+  }
+  int pn = (int)(*info[1].As<v8::Number>())->Value();
+  if (pn < 0) {
+    ThrowTypeError("arg[1] shouldn't be < 0.");
+    return;
+  }
+  Callback *callback = new Callback(info[2].As<Function>());
+  AsyncQueueWorker(new PdfssWorker(callback, new Persistent<Uint8Array>(info[0].As<Uint8Array>()), pn));
 }
 
 NAN_MODULE_INIT(Init) {
   Set(target
-    , New<v8::String>("hello").ToLocalChecked()
-    , New<v8::FunctionTemplate>(hello)->GetFunction());
+    , New<v8::String>("getPage").ToLocalChecked()
+    , New<v8::FunctionTemplate>(getPage)->GetFunction());
 }
 
 NODE_MODULE(sspdf, Init)
