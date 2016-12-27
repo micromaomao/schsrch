@@ -49,7 +49,7 @@ class PdfssWorker : public AsyncWorker {
       this->destPage = destPage;
       this->pdfLen = (*hPdf)->ByteLength();
       if (this->pdfLen == 0) {
-        this->error = new char[strlen(MSG_EXCEPTION_ZEROLEN)];
+        this->error = new char[strlen(MSG_EXCEPTION_ZEROLEN) + 1];
         strcpy(this->error, MSG_EXCEPTION_ZEROLEN);
       } else {
         char* pdfData = (((char*)(*(*hPdf)->Buffer())->GetContents().Data())) + (*hPdf)->ByteOffset();
@@ -65,7 +65,7 @@ class PdfssWorker : public AsyncWorker {
       GError* gerror = NULL;
       PopplerDocument* popperDoc = poppler_document_new_from_data(this->pdfData, this->pdfLen, NULL, &gerror);
       if (popperDoc == NULL) {
-        this->error = new char[strlen(gerror->message)];
+        this->error = new char[strlen(gerror->message) + 1];
         strcpy(this->error, gerror->message);
         g_error_free(gerror);
         gerror = NULL;
@@ -73,7 +73,7 @@ class PdfssWorker : public AsyncWorker {
       }
       int nPages = poppler_document_get_n_pages(popperDoc);
       if (this->destPage >= nPages) {
-        this->error = new char[strlen(MSG_EXCEPTION_PAGE_OUT_OF_RANGE)];
+        this->error = new char[strlen(MSG_EXCEPTION_PAGE_OUT_OF_RANGE) + 1];
         strcpy(this->error, MSG_EXCEPTION_PAGE_OUT_OF_RANGE);
         g_object_unref(popperDoc);
         return;
@@ -82,7 +82,7 @@ class PdfssWorker : public AsyncWorker {
       g_object_unref(popperDoc);
       popperDoc = NULL;
       if (page == NULL) {
-        this->error = new char[strlen(MSG_EXCEPTION_PAGE_FAIL)];
+        this->error = new char[strlen(MSG_EXCEPTION_PAGE_FAIL) + 1];
         strcpy(this->error, MSG_EXCEPTION_PAGE_FAIL);
         return;
       }
