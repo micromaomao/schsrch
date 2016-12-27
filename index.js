@@ -4,6 +4,7 @@ const path = require('path')
 const appManifest = require('./view/appmanifest')
 const os = require('os')
 const PaperUtils = require('./view/paperutils')
+const sspdf = require('./lib/sspdf')
 
 let pageIndex = pug.compileFile(path.join(__dirname, 'view/index.pug'))
 
@@ -106,6 +107,39 @@ module.exports = (db, mongoose) => {
       res.type(doc.fileType)
       // TODO: In-browser viewing
       res.send(doc.doc)
+    }).catch(err => next(err))
+  })
+  rMain.get('/sspdf/:docid/:page', function (req, res, next) {
+    let pn = parseInt(req.params.page)
+    if (!Number.isSafeInteger(pn) || pn < 0) {
+      next()
+      return
+    }
+    PastPaperDoc.findOne({_id: req.params.docid}).then(doc => {
+      if (!doc) {
+        next()
+        return
+      }
+      let buff = doc.doc
+      sspdf.getPage(buff, pn, function (err, result) {
+        if (err) {
+          next(err)
+        } else {
+          result.rects = result.rects.map(rect => {
+            function round (n) {
+              return Math.round(n * 100) / 100
+            }
+            rect.x1 = round(rect.x1)
+            rect.x2 = round(rect.x2)
+            rect.y1 = round(rect.y1)
+            rect.y2 = round(rect.y2)
+            return rect
+          })
+          result.svg = result.svg.toString('utf-8')
+          res.set('Cache-Control', 'max-age=31556926')
+          res.send(result)
+        }
+      })
     }).catch(err => next(err))
   })
 
