@@ -29,6 +29,8 @@ using Nan::ObjectWrap;
 using std::vector;
 
 const char* MSG_EXCEPTION_ZEROLEN =  "Zero length buffer provided.";
+const char* MSG_EXCEPTION_PAGE_FAIL =  "Unable to open that page.";
+const char* MSG_EXCEPTION_PAGE_OUT_OF_RANGE =  "Page index out of range.";
 
 class PdfssWorker : public AsyncWorker {
   public:
@@ -69,7 +71,21 @@ class PdfssWorker : public AsyncWorker {
         gerror = NULL;
         return;
       }
+      int nPages = poppler_document_get_n_pages(popperDoc);
+      if (this->destPage >= nPages) {
+        this->error = new char[strlen(MSG_EXCEPTION_PAGE_OUT_OF_RANGE)];
+        strcpy(this->error, MSG_EXCEPTION_PAGE_OUT_OF_RANGE);
+        g_object_unref(popperDoc);
+        return;
+      }
       PopplerPage* page = poppler_document_get_page(popperDoc, this->destPage);
+      g_object_unref(popperDoc);
+      popperDoc = NULL;
+      if (page == NULL) {
+        this->error = new char[strlen(MSG_EXCEPTION_PAGE_FAIL)];
+        strcpy(this->error, MSG_EXCEPTION_PAGE_FAIL);
+        return;
+      }
       poppler_page_get_size(page, &this->pw, &this->ph);
       this->txt = poppler_page_get_text(page);
       poppler_page_get_text_layout(page, &this->rects, &this->rectLen);
@@ -80,9 +96,7 @@ class PdfssWorker : public AsyncWorker {
       poppler_page_render(page, svg);
       cairo_surface_destroy(svgSurface);
       cairo_destroy(svg);
-
       g_object_unref(page);
-      g_object_unref(popperDoc);
     }
 
     void HandleOKCallback () {
