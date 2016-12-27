@@ -3,6 +3,7 @@
 #include <poppler.h>
 #include <cairo.h>
 #include <cairo-svg.h>
+#include <vector>
 
 namespace sspdf {
 
@@ -14,6 +15,7 @@ using v8::Isolate;
 using v8::Object;
 using v8::Array;
 using v8::Uint8Array;
+using v8::ArrayBuffer;
 using Nan::Callback;
 using Nan::GetFunction;
 using Nan::Set;
@@ -24,13 +26,13 @@ using Nan::HandleScope;
 using Nan::ThrowTypeError;
 using Nan::Persistent;
 using Nan::ObjectWrap;
+using std::vector;
 
 const char* MSG_EXCEPTION_ZEROLEN =  "Zero length buffer provided.";
 
 class PdfssWorker : public AsyncWorker {
   public:
     char* pdfData = NULL;
-    Persistent<Uint8Array>* pdfBuffer = NULL;
     size_t pdfLen = 0;
     double pw, ph;
     char* txt;
@@ -38,17 +40,18 @@ class PdfssWorker : public AsyncWorker {
     guint rectLen;
     char* error = NULL;
     int destPage;
-    PdfssWorker(Callback* cb, Persistent<Uint8Array>* pdfBuffer, int destPage)
+    vector<char> svgData;
+    PdfssWorker(Callback* cb, Local<Uint8Array> hPdf, int destPage)
       : AsyncWorker(cb) {
       this->destPage = destPage;
-      this->pdfBuffer = pdfBuffer;
-      Local<Uint8Array> hPdf = New<Uint8Array>(*pdfBuffer);
       this->pdfLen = (*hPdf)->ByteLength();
       if (this->pdfLen == 0) {
         this->error = new char[strlen(MSG_EXCEPTION_ZEROLEN)];
         strcpy(this->error, MSG_EXCEPTION_ZEROLEN);
       } else {
-        this->pdfData = (((char*)(*(*hPdf)->Buffer())->GetContents().Data())) + (*hPdf)->ByteOffset();
+        char* pdfData = (((char*)(*(*hPdf)->Buffer())->GetContents().Data())) + (*hPdf)->ByteOffset();
+        this->pdfData = new char[this->pdfLen];
+        memcpy(this->pdfData, pdfData, this->pdfLen);
       }
     }
 
@@ -69,6 +72,15 @@ class PdfssWorker : public AsyncWorker {
       poppler_page_get_size(pg, &this->pw, &this->ph);
       this->txt = poppler_page_get_text(pg);
       poppler_page_get_text_layout(pg, &this->rects, &this->rectLen);
+
+      cairo_surface_t* svgSurface = cairo_svg_surface_create_for_stream((cairo_write_func_t) PdfssWorker::writeFunc, this, this->pw, this->ph);
+      cairo_t* svg = cairo_create(svgSurface);
+      poppler_page_render(pg, svg);
+      cairo_surface_destroy(svgSurface);
+      cairo_destroy(svg);
+
+      // g_free(pg); ( led to crash )
+      // g_free(pd);
     }
 
     void HandleOKCallback () {
@@ -95,17 +107,39 @@ class PdfssWorker : public AsyncWorker {
         Set(obj, New<v8::String>("rects").ToLocalChecked(), rects);
         g_free(this->rects);
         argv[1] = obj;
+
+        Local<ArrayBuffer> svgABuffer = ArrayBuffer::New(Isolate::GetCurrent(), this->svgData.size());
+        char* svgBuffer = (char*)((*svgABuffer)->GetContents().Data());
+        memcpy(svgBuffer, &(*this->svgData.begin()), this->svgData.size());
+
+        if (this->svgData.size() > 0) {
+          auto ml = node::Buffer::Copy(Isolate::GetCurrent(), &(*this->svgData.begin()), this->svgData.size());
+          if (ml.IsEmpty()) {
+            argv[0] = v8::Exception::Error(New<v8::String>("Can't return svg data.").ToLocalChecked());
+          } else {
+            Set(obj, New<v8::String>("svg").ToLocalChecked(), ml.ToLocalChecked());
+          }
+        } else {
+          Set(obj, New<v8::String>("svg").ToLocalChecked(), Null());
+        }
       } else {
         argv[0] = v8::Exception::Error(New<v8::String>(this->error).ToLocalChecked());
         delete this->error;
         this->error = NULL;
       }
       this->callback->Call(2, argv);
-      if (this->pdfBuffer != NULL) {
-        this->pdfBuffer->Reset();
-        delete this->pdfBuffer;
-        this->pdfBuffer = NULL;
+      if (this->pdfData != NULL) {
+        delete this->pdfData;
+        this->pdfData = NULL;
       }
+    }
+    static cairo_status_t writeFunc (void* closure, const unsigned char* data, unsigned int length) {
+      PdfssWorker* worker = (PdfssWorker*) closure;
+      worker->svgData.reserve(worker->svgData.size() + length);
+      for (unsigned int i = 0; i < length; i ++) {
+        worker->svgData.push_back(data[i]);
+      }
+      return CAIRO_STATUS_SUCCESS;
     }
 };
 
@@ -131,8 +165,13 @@ NAN_METHOD(getPage) {
     ThrowTypeError("arg[1] shouldn't be < 0.");
     return;
   }
+  auto pdfBuffer = info[0].As<Uint8Array>();
+  if (pdfBuffer.IsEmpty()) {
+    ThrowTypeError("arg[0] can't resolve.");
+    return;
+  }
   Callback *callback = new Callback(info[2].As<Function>());
-  AsyncQueueWorker(new PdfssWorker(callback, new Persistent<Uint8Array>(info[0].As<Uint8Array>()), pn));
+  AsyncQueueWorker(new PdfssWorker(callback, pdfBuffer, pn));
 }
 
 NAN_MODULE_INIT(Init) {
