@@ -38,9 +38,10 @@ class PdfssWorker : public AsyncWorker {
     char* txt;
     PopplerRectangle* rects;
     guint rectLen;
-    char* error = NULL;
+    char* error = NULL; // Error stored here from {constructor, Execute} freed in HandleOKCallback.
     int destPage;
     vector<char> svgData;
+    // pdf data copied.
     PdfssWorker(Callback* cb, Local<Uint8Array> hPdf, int destPage)
       : AsyncWorker(cb) {
       this->destPage = destPage;
@@ -60,27 +61,28 @@ class PdfssWorker : public AsyncWorker {
         return;
       }
       GError* gerror = NULL;
-      PopplerDocument* pd = poppler_document_new_from_data(this->pdfData, this->pdfLen, NULL, &gerror);
-      if (pd == NULL) {
+      PopplerDocument* popperDoc = poppler_document_new_from_data(this->pdfData, this->pdfLen, NULL, &gerror);
+      if (popperDoc == NULL) {
         this->error = new char[strlen(gerror->message)];
         strcpy(this->error, gerror->message);
         g_error_free(gerror);
         gerror = NULL;
         return;
       }
-      PopplerPage* pg = poppler_document_get_page(pd, this->destPage);
-      poppler_page_get_size(pg, &this->pw, &this->ph);
-      this->txt = poppler_page_get_text(pg);
-      poppler_page_get_text_layout(pg, &this->rects, &this->rectLen);
+      PopplerPage* page = poppler_document_get_page(popperDoc, this->destPage);
+      poppler_page_get_size(page, &this->pw, &this->ph);
+      this->txt = poppler_page_get_text(page);
+      poppler_page_get_text_layout(page, &this->rects, &this->rectLen);
+      // this->rects require freeing by us, freed on HandleOKCallback.
 
       cairo_surface_t* svgSurface = cairo_svg_surface_create_for_stream((cairo_write_func_t) PdfssWorker::writeFunc, this, this->pw, this->ph);
       cairo_t* svg = cairo_create(svgSurface);
-      poppler_page_render(pg, svg);
+      poppler_page_render(page, svg);
       cairo_surface_destroy(svgSurface);
       cairo_destroy(svg);
 
-      g_object_unref(pg);
-      g_object_unref(pd);
+      g_object_unref(page);
+      g_object_unref(popperDoc);
     }
 
     void HandleOKCallback () {
@@ -92,9 +94,9 @@ class PdfssWorker : public AsyncWorker {
       };
       if (this->error == NULL) {
         obj = New<Object>();
-        Set(obj, New<v8::String>("pw").ToLocalChecked(), New<v8::Number>(this->pw));
-        Set(obj, New<v8::String>("ph").ToLocalChecked(), New<v8::Number>(this->ph));
-        Set(obj, New<v8::String>("txt").ToLocalChecked(), New<v8::String>(this->txt).ToLocalChecked());
+        Set(obj, New<v8::String>("width").ToLocalChecked(), New<v8::Number>(this->pw));
+        Set(obj, New<v8::String>("height").ToLocalChecked(), New<v8::Number>(this->ph));
+        Set(obj, New<v8::String>("text").ToLocalChecked(), New<v8::String>(this->txt).ToLocalChecked());
         rects = New<v8::Array>(this->rectLen);
         for (guint i = 0; i < this->rectLen; i ++) {
           Local<Object> xy = New<Object>();
@@ -106,11 +108,8 @@ class PdfssWorker : public AsyncWorker {
         }
         Set(obj, New<v8::String>("rects").ToLocalChecked(), rects);
         g_free(this->rects);
+        g_free(this->txt);
         argv[1] = obj;
-
-        Local<ArrayBuffer> svgABuffer = ArrayBuffer::New(Isolate::GetCurrent(), this->svgData.size());
-        char* svgBuffer = (char*)((*svgABuffer)->GetContents().Data());
-        memcpy(svgBuffer, &(*this->svgData.begin()), this->svgData.size());
 
         if (this->svgData.size() > 0) {
           auto ml = node::Buffer::Copy(Isolate::GetCurrent(), &(*this->svgData.begin()), this->svgData.size());
