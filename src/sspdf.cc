@@ -79,8 +79,8 @@ class PdfssWorker : public AsyncWorker {
       cairo_surface_destroy(svgSurface);
       cairo_destroy(svg);
 
-      // g_free(pg); ( led to crash )
-      // g_free(pd);
+      g_object_unref(pg);
+      g_object_unref(pd);
     }
 
     void HandleOKCallback () {
