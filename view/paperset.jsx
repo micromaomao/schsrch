@@ -2,11 +2,32 @@ const React = require('react')
 const Subjects = require('./CIESubjects.js')
 const PaperUtils = require('./paperutils.js')
 const IndexContent = require('./indexcontent.jsx')
+const AppState = require('./appstate.js')
+const FilePreview = require('./filepreview.jsx')
 
 class PaperSet extends React.Component {
   constructor () {
     super()
-    this.state = {}
+    this.state = {
+      previewing: null
+    }
+    this.handleAppStateUpdate = this.handleAppStateUpdate.bind(this)
+  }
+  handleAppStateUpdate () {
+    let previewingState = AppState.getState().previewing
+    if (previewingState && this.props.paperSet && this.props.paperSet.types.find(doc => doc._id === previewingState.id)) {
+      this.setState({previewing: previewingState})
+    } else {
+      this.setState({previewing: null})
+    }
+  }
+  componentDidMount () {
+    this.handleAppStateUpdate()
+    this.unsub = AppState.subscribe(this.handleAppStateUpdate)
+  }
+  componentWillUnmount () {
+    this.unsub()
+    this.unsub = null
   }
   render () {
     let set = this.props.paperSet
@@ -17,6 +38,7 @@ class PaperSet extends React.Component {
       ftDoc = set.types[0]
     }
     sortedTypes = set.types.slice(ftDoc !== null ? 1 : 0).sort((a, b) => PaperUtils.funcSortType(a.type, b.type))
+    let previewFtDoc = ftDoc !== null && this.state.previewing && this.state.previewing.id === ftDoc._id
     return (
       <div className='set'>
         <div className='setname'>
@@ -44,7 +66,7 @@ class PaperSet extends React.Component {
         </div>
         {ftDoc !== null
           ? (
-            <div className='file ft' key={ftDoc._id} onClick={evt => this.openFile(ftDoc._id)}>
+            <div className='file ft' key={ftDoc._id} onClick={evt => this.openFile(ftDoc._id, ftDoc.ftIndex.page)}>
               <span className='typename'>{PaperUtils.capitalizeFirst(PaperUtils.getTypeString(ftDoc.type))}</span>
               &nbsp;
               <span className='desc'>
@@ -56,10 +78,16 @@ class PaperSet extends React.Component {
             </div>
           )
           : null}
+        {previewFtDoc
+          ? (
+            <FilePreview doc={this.state.previewing.id} page={this.state.previewing.page} />
+          )
+          : null
+        }
         <div className={ftDoc !== null ? 'related' : 'files'}>
           {ftDoc ? 'Related: ' : null}
           {sortedTypes.map(file => (
-            <div className='file' key={file._id} onClick={evt => this.openFile(file._id)}>
+            <div className='file' key={file._id} onClick={evt => this.openFile(file._id, 0)}>
               <span className='typename'>{PaperUtils.capitalizeFirst(PaperUtils.getTypeString(file.type))}</span>
               &nbsp;
               <span className='desc'>
@@ -70,11 +98,16 @@ class PaperSet extends React.Component {
             </div>
           ))}
         </div>
+        {!previewFtDoc && this.state.previewing
+          ? (
+            <FilePreview doc={this.state.previewing.id} page={this.state.previewing.page} />
+          )
+          : null}
       </div>
     )
   }
-  openFile (_id) {
-    window.open('/fetchDoc/' + encodeURIComponent(_id) + '/')
+  openFile (id, page = 0) {
+    AppState.dispatch({type: 'previewFile', fileId: id, page: page})
   }
 }
 

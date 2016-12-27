@@ -10,13 +10,15 @@ let AppState = createStore(function (state = {}, action) {
           search: null,
           feedbackText: '',
           email: ''
-        }
+        },
+        previewing: null
       }
     case 'load':
       return action.state
     case 'query':
       return Object.assign({}, state, {
-        query: action.query
+        query: action.query,
+        previewing: state.query.trim() === action.query.trim() ? state.previewing : null
       })
     case 'showFeedback':
       return Object.assign({}, state, {
@@ -45,6 +47,17 @@ let AppState = createStore(function (state = {}, action) {
           email: action.email,
           show: true
         })
+      })
+    case 'previewFile':
+      return Object.assign({}, state, {
+        previewing: {
+          id: action.fileId,
+          page: action.page
+        }
+      })
+    case 'closePreview':
+      return Object.assign({}, state, {
+        previewing: null
       })
   }
 })

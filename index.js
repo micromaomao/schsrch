@@ -115,7 +115,7 @@ module.exports = (db, mongoose) => {
       next()
       return
     }
-    PastPaperDoc.findOne({_id: req.params.docid}).then(doc => {
+    PastPaperDoc.findOne({_id: req.params.docid}, {_v: false}).then(doc => {
       if (!doc) {
         next()
         return
@@ -137,6 +137,8 @@ module.exports = (db, mongoose) => {
           })
           result.svg = result.svg.toString('utf-8')
           res.set('Cache-Control', 'max-age=31556926')
+          doc.doc = null
+          result.doc = doc
           res.send(result)
         }
       })
