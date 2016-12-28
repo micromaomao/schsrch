@@ -20,6 +20,7 @@ module.exports = (db, mongoose) => {
   rMain.use('/resources', express.static(path.join(__dirname, 'dist')))
   rMain.use('/resources', express.static(path.join(__dirname, 'view/public')))
   rMain.get('/sw.js', function (req, res) {
+    res.set('cache-control', 'max-age=0')
     res.sendFile(path.join(__dirname, 'dist/sw.js'))
   })
   rMain.get('/manifest.json', function (req, res) {
