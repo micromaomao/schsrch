@@ -69,8 +69,9 @@ let AppState = createStore(function (state = {}, action) {
   }
 })
 
-function initFromHash () {
+function initFromHash (initIfFail = true) {
   try {
+    // FIXME: decodeURIComponent for firefox.
     let hashMatch = window.location.hash.match(/^#(.+)$/)
     if (!hashMatch) throw new Error()
     let stateData = hashMatch[1]
@@ -80,8 +81,11 @@ function initFromHash () {
     }
     AppState.dispatch({type: 'load', state: state})
   } catch (e) {
-    AppState.dispatch({type: 'init'})
+    if (initIfFail) AppState.dispatch({type: 'init'})
   }
+}
+function readFromHash () {
+  initFromHash(false)
 }
 initFromHash()
 
@@ -93,7 +97,7 @@ AppState.subscribe(() => {
 })
 
 window.addEventListener("hashchange", evt => {
-  setTimeout(initFromHash, 1)
+  setTimeout(readFromHash, 1)
 })
 
 module.exports = AppState

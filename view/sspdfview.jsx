@@ -41,6 +41,7 @@ class SsPdfView extends React.Component {
           onTouchMove={this.handleMove}
           onMouseUp={this.handleUp}
           onTouchEnd={this.handleUp}
+          onTouchCancel={this.handleUp}
           onWheel={this.handleScroll} />
       </div>
     )
@@ -53,8 +54,21 @@ class SsPdfView extends React.Component {
       }})
       return
     }
-    if (evt.touches.length !== 1 || this.state.dragOrig) {
+    if (evt.touches.length > 1 || this.state.dragOrig) {
       // TODO: Handle resize
+      let t0 = evt.touches[0]
+      let t1 = evt.touches[1]
+      this.setState({lastTapTime: 0, dragOrig: {
+        resize: true,
+        pointA: {
+          identifier: t0.identifier,
+          point: this.client2view([t0.clientX, t0.clientY])
+        },
+        pointB: {
+          identifier: t1.identifier,
+          point: this.client2view([t1.clientX, t1.clientY])
+        }
+      }})
       return
     }
     let touch = evt.changedTouches[0]
@@ -65,16 +79,42 @@ class SsPdfView extends React.Component {
   handleMove (evt, prevent = true) {
     if (prevent) evt.preventDefault()
     let dragOrig = this.state.dragOrig
+    if (!dragOrig) return
+    if (dragOrig.resize) {
+      if (evt.touches.length !== 2) {
+        this.setState({dragOrig: null})
+        return
+      }
+      let [t0, t1] = ['A', 'B'].map(p => Array.prototype.find.call(evt.touches, t => t.identifier === dragOrig['point' + p].identifier))
+      if (!t0 || !t1) {
+        this.setState({dragOrig: null})
+        return
+      }
+      let [op0, op1] = [dragOrig.pointA.point, dragOrig.pointB.point]
+      let [np0, np1] = [t0, t1].map(t => this.client2view([t.clientX, t.clientY]))
+      this.ctAnimationStopToState(this.calcPointsResize(op0, op1, np0, np1))
+      this.setState({lastTapTime: 0, dragOrig: {
+        resize: true,
+        pointA: {
+          identifier: t0.identifier,
+          point: this.client2view([t0.clientX, t0.clientY])
+        },
+        pointB: {
+          identifier: t1.identifier,
+          point: this.client2view([t1.clientX, t1.clientY])
+        }
+      }})
+      return
+    }
     if (!evt.touches && !evt.changedTouches) {
-      if (!dragOrig) return
       let [dx, dy] = [evt.clientX - dragOrig.x, evt.clientY - dragOrig.y]
       let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
       this.setState({dragOrig: Object.assign({}, dragOrig, {x: evt.clientX, y: evt.clientY, touch: null})})
       this.ctAnimationStopToState({ctPos: [odocX + dx, odocY + dy]})
       return
     }
-    if ((evt.touches.length !== 1 && !(evt.changedTouches.length === 1 && evt.touches.length === 0)) || !this.state.dragOrig) {
-      // TODO: Handle resize
+    if ((evt.touches.length !== 1 && !(evt.changedTouches.length === 1 && evt.touches.length === 0)) || !dragOrig) {
+      this.setState({dragOrig: null})
       return
     }
     let touch = evt.changedTouches[0]
@@ -103,15 +143,24 @@ class SsPdfView extends React.Component {
       return
     }
     if ((evt.changedTouches && evt.changedTouches.length !== 1) || (evt.touches && evt.touches.length !== 0) || !this.state.dragOrig) {
-      // TODO: Handle resize
+      let touchLeft = evt.changedTouches[0] || evt.touches[0]
+      let nStat = this.ctAnimationGetFinalState()
+      if (nStat.ctSize[0] > this.viewWidth * 5) {
+        nStat = this.calcResizeOnPoint(this.client2view([touchLeft.clientX, touchLeft.clientY]), this.viewWidth * 5 / nStat.ctSize[0])
+      } else if (nStat.ctSize[0] < this.viewWidth && nStat.ctSize[1] < this.viewHeight) {
+        nStat = this.calcCenter()
+      } else {
+        nStat.ctPos = this.calcBound(nStat)
+      }
+      this.ctAnimationStartFromState(nStat)
       return
     }
+    this.finishDrag()
     let touch = evt.changedTouches[0]
     if (isDoubleTap) {
       this.handleDoubleTap([touch.clientX, touch.clientY])
       return
     }
-    this.finishDrag()
   }
   finishDrag () {
     if (!this.state.dragOrig) return
@@ -174,6 +223,15 @@ class SsPdfView extends React.Component {
     ctX = ctX - (npX - point[0])
     ctY = ctY - (npY - point[1])
     return {ctPos: [ctX, ctY], ctSize: this.ctAnimationGetFinalState().ctSize.map(x => x * factor)}
+  }
+  calcPointsResize (op0, op1, np0, np1) {
+    // TODO: Better math
+    let [sr0, sr1] = [[np0, np1], [op0, op1]].map(([[x0, y0], [x1, y1]]) => Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2)))
+    if (sr0 === 0 || sr1 === 0) {
+      throw new Error('Messy points.')
+    }
+    let fact = sr0 / sr1
+    return this.calcResizeOnPoint([0, 1].map(p => (np0[p] + np1[p]) / 2), fact)
   }
   calcFactorDoc (state = this.ctAnimationGetFinalState()) {
     if (!this.props || !this.props.docJson) return 1
