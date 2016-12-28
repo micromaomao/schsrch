@@ -8,12 +8,13 @@ class SsPdfView extends React.Component {
       ctSize: [0, 0],
       dragOrig: null,
       lastTapTime: 0,
-      ctAnimation: null
     }
+    this.ctAnimation = null
     this.lastViewWidth = this.lastViewHeight = this.viewWidth = this.viewHeight = 0
     this.handleDown = this.handleDown.bind(this)
     this.handleMove = this.handleMove.bind(this)
     this.handleUp = this.handleUp.bind(this)
+    this.ctAnimationId = 0
   }
   render () {
     let docJson = this.props.docJson
@@ -66,7 +67,8 @@ class SsPdfView extends React.Component {
       if (!dragOrig) return
       let [dx, dy] = [evt.clientX - dragOrig.x, evt.clientY - dragOrig.y]
       let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
-      this.setState({ctPos: [odocX + dx, odocY + dy], dragOrig: Object.assign({}, dragOrig, {x: evt.clientX, y: evt.clientY, touch: null})})
+      this.setState({dragOrig: Object.assign({}, dragOrig, {x: evt.clientX, y: evt.clientY, touch: null})})
+      this.ctAnimationStartFromState({ctPos: [odocX + dx, odocY + dy]})
       return
     }
     if ((evt.touches.length !== 1 && !(evt.changedTouches.length === 1 && evt.touches.length === 0)) || !this.state.dragOrig) {
@@ -80,7 +82,8 @@ class SsPdfView extends React.Component {
     }
     let [dx, dy] = [touch.clientX - dragOrig.x, touch.clientY - dragOrig.y]
     let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
-    this.setState({ctPos: [odocX + dx, odocY + dy], dragOrig: Object.assign({}, dragOrig, {x: touch.clientX, y: touch.clientY})})
+    this.setState({dragOrig: Object.assign({}, dragOrig, {x: touch.clientX, y: touch.clientY})})
+    this.ctAnimationStartFromState({ctPos: [odocX + dx, odocY + dy]})
   }
   handleUp (evt) {
     evt.preventDefault()
@@ -167,7 +170,7 @@ class SsPdfView extends React.Component {
     if (this.lastViewWidth !== this.viewWidth || this.lastViewHeight !== this.viewHeight) {
       this.lastViewWidth = this.viewWidth
       this.lastViewHeight = this.viewHeight
-      this.ctAnimationStopToState(this.calcCenter())
+      this.ctAnimationStartFromState(this.calcCenter())
     }
   }
   calcCenter () {
@@ -187,8 +190,8 @@ class SsPdfView extends React.Component {
   }
   ctAnimationGetFinalState () {
     let finalState = this.state
-    if (this.state.ctAnimation) {
-      finalState = {ctPos: this.state.ctAnimation.nctPos, ctSize: this.state.ctAnimation.nctSize}
+    if (this.ctAnimation) {
+      finalState = {ctPos: this.ctAnimation.nctPos, ctSize: this.ctAnimation.nctSize}
     }
     return finalState
   }
@@ -201,17 +204,20 @@ class SsPdfView extends React.Component {
     this.ctAnimationStopTo(nStat.ctPos, nStat.ctSize)
   }
   ctAnimationStart (nctPos, nctSize) {
+    let aid = this.ctAnimationId++
     let animTime = 200
-    if (this.state.ctAnimation) {
-      cancelAnimationFrame(this.state.ctAnimation.frameId)
-      this.setState({ctAnimation: null})
+    if (this.ctAnimation) {
+      cancelAnimationFrame(this.ctAnimation.frameId)
+      this.ctAnimation = null
     }
     let [fromPos, fromSize] = ['ctPos', 'ctSize'].map(p => this.state[p])
     let fromTime = Date.now()
     let doAnim = () => {
-      let prog = (Date.now() - fromTime) / animTime
+      if (!this.ctAnimation || this.ctAnimation.aid !== aid) return
+      let prog = Math.max(Date.now() - fromTime, 20) / animTime
       if (prog >= 1) {
-        this.setState({ctAnimation: null, ctPos: nctPos, ctSize: nctSize})
+        this.ctAnimation = null
+        this.setState({ctPos: nctPos, ctSize: nctSize})
         return
       }
       let revProg = 1 - prog
@@ -221,16 +227,19 @@ class SsPdfView extends React.Component {
       })
 
       let frameId = requestAnimationFrame(doAnim)
-      this.setState({ctAnimation: {
-        frameId, nctPos, nctSize
-      }})
+      this.ctAnimation = {
+        frameId, nctPos, nctSize, aid
+      }
+    }
+    this.ctAnimation = {
+      frameId: 0, nctPos, nctSize, aid
     }
     doAnim()
   }
   ctAnimationStopTo (nctPos, nctSize) {
-    if (this.state.ctAnimation) {
-      cancelAnimationFrame(this.state.ctAnimation.frameId)
-      this.setState({ctAnimation: null})
+    if (this.ctAnimation) {
+      cancelAnimationFrame(this.ctAnimation.frameId)
+      this.ctAnimation = null
     }
     this.setState({ctPos: nctPos, ctSize: nctSize})
   }
