@@ -5,15 +5,17 @@ const appManifest = require('./view/appmanifest')
 const os = require('os')
 const PaperUtils = require('./view/paperutils')
 const sspdf = require('./lib/sspdf')
+const fs = require('fs')
 
 let pageIndex = pug.compileFile(path.join(__dirname, 'view/index.pug'))
+let indexSvg = fs.readFileSync(path.join(__dirname, 'view/index.svg'))
 
 module.exports = (db, mongoose) => {
   const {PastPaperDoc, PastPaperIndex, PastPaperFeedback} = require('./lib/dbModel.js')(db, mongoose)
   let rMain = express.Router()
 
   rMain.get('/', function (req, res) {
-    res.send(pageIndex({}))
+    res.send(pageIndex({svg: indexSvg}))
   })
   rMain.use('/resources', express.static(path.join(__dirname, 'dist')))
   rMain.use('/resources', express.static(path.join(__dirname, 'view/public')))

@@ -2,6 +2,14 @@ $color-primary: #FF5722
 $color-link: #E91E63
 $color-secondary-text: #727272
 
+.icon
+  display: inline-block
+  width: 1em
+  height: 1em
+  stroke-width: 0
+  stroke: currentColor
+  fill: currentColor
+
 body > .loading
   display: none
 
@@ -354,9 +362,20 @@ $feedback-top-height: 2rem + 1.3rem
     line-height: 2
     .page
       display: inline-block
-    .download, .close
+      .icon
+        vertical-align: middle
+        line-height: 0
+    .download, .close, .prev, .next
       margin-left: 1rem
       cursor: pointer
+      vertical-align: middle
+      line-height: 0
+    .prev
+      margin-right: 1rem
+  .whitebg
+    background-color: white
+  .pdfview.dirty
+    opacity: 0.3
 
 .sspdfview
   background-color: white

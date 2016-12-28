@@ -14,6 +14,7 @@ class SsPdfView extends React.Component {
     this.handleDown = this.handleDown.bind(this)
     this.handleMove = this.handleMove.bind(this)
     this.handleUp = this.handleUp.bind(this)
+    this.handleScroll = this.handleScroll.bind(this)
     this.ctAnimationId = 0
   }
   render () {
@@ -39,7 +40,8 @@ class SsPdfView extends React.Component {
           onMouseMove={this.handleMove}
           onTouchMove={this.handleMove}
           onMouseUp={this.handleUp}
-          onTouchEnd={this.handleUp} />
+          onTouchEnd={this.handleUp}
+          onWheel={this.handleScroll} />
       </div>
     )
   }
@@ -68,7 +70,7 @@ class SsPdfView extends React.Component {
       let [dx, dy] = [evt.clientX - dragOrig.x, evt.clientY - dragOrig.y]
       let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
       this.setState({dragOrig: Object.assign({}, dragOrig, {x: evt.clientX, y: evt.clientY, touch: null})})
-      this.ctAnimationStartFromState({ctPos: [odocX + dx, odocY + dy]})
+      this.ctAnimationStopToState({ctPos: [odocX + dx, odocY + dy]})
       return
     }
     if ((evt.touches.length !== 1 && !(evt.changedTouches.length === 1 && evt.touches.length === 0)) || !this.state.dragOrig) {
@@ -83,7 +85,7 @@ class SsPdfView extends React.Component {
     let [dx, dy] = [touch.clientX - dragOrig.x, touch.clientY - dragOrig.y]
     let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
     this.setState({dragOrig: Object.assign({}, dragOrig, {x: touch.clientX, y: touch.clientY})})
-    this.ctAnimationStartFromState({ctPos: [odocX + dx, odocY + dy]})
+    this.ctAnimationStopToState({ctPos: [odocX + dx, odocY + dy]})
   }
   handleUp (evt) {
     evt.preventDefault()
@@ -126,6 +128,20 @@ class SsPdfView extends React.Component {
       this.ctAnimationStartFromState({ctPos: this.calcBound(rsState), ctSize: rsState.ctSize})
     }
   }
+  handleScroll (evt) {
+    if (evt.ctrlKey) {
+      evt.preventDefault()
+      let point = this.client2view([evt.clientX, evt.clientY])
+      let nStat = this.calcResizeOnPoint(point, Math.pow(2, -evt.deltaY/100))
+      if (nStat.ctSize[0] > this.viewWidth * 5) return
+      if (nStat.ctSize[0] < this.viewWidth && nStat.ctSize[1] < this.viewHeight) {
+        nStat = this.calcCenter()
+      } else {
+        nStat.ctPos = this.calcBound(nStat)
+      }
+      this.ctAnimationStartFromState(nStat)
+    }
+  }
   client2view (point) {
     let rect = this.svgLayer.getBoundingClientRect()
     var supportPageOffset = window.pageXOffset !== undefined;
@@ -154,14 +170,14 @@ class SsPdfView extends React.Component {
   }
   calcResizeOnPoint (point, factor) {
     let [ctX, ctY] = this.ctAnimationGetFinalState().ctPos
-    let [npX, npY] = point.map(x => x * factor)
+    let [npX, npY] = [(-ctX + point[0]) * factor + ctX, (-ctY + point[1]) * factor + ctY]
     ctX = ctX - (npX - point[0])
     ctY = ctY - (npY - point[1])
     return {ctPos: [ctX, ctY], ctSize: this.ctAnimationGetFinalState().ctSize.map(x => x * factor)}
   }
-  calcFactorDoc () {
+  calcFactorDoc (state = this.ctAnimationGetFinalState()) {
     if (!this.props || !this.props.docJson) return 1
-    return this.ctAnimationGetFinalState().ctSize[0] / this.props.docJson.width
+    return state.ctSize[0] / this.props.docJson.width
   }
   componentDidMount () {
     this.componentDidUpdate({}, {})
@@ -170,8 +186,11 @@ class SsPdfView extends React.Component {
     if (this.lastViewWidth !== this.viewWidth || this.lastViewHeight !== this.viewHeight) {
       this.lastViewWidth = this.viewWidth
       this.lastViewHeight = this.viewHeight
-      this.ctAnimationStartFromState(this.calcCenter())
+      this.reCenter()
     }
+  }
+  reCenter () {
+    this.ctAnimationStartFromState(this.calcCenter())
   }
   calcCenter () {
     let [docWid, docHig] = ['width', 'height'].map(p => this.props.docJson[p])

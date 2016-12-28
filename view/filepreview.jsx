@@ -23,15 +23,20 @@ class FilePreview extends React.Component {
   }
   componentWillReceiveProps (nextProps) {
     if (!this.props || nextProps.doc !== this.props.doc || nextProps.page !== this.props.page) {
-      this.setState({docMeta: null})
+      if (!this.props || nextProps.doc !== this.props.doc) this.setState({docMeta: null})
       this.load(nextProps.doc, nextProps.page)
     }
   }
-  load (doc, page) {
-    this.setState({loading: true, docJson: null, error: null})
+  componentDidUpdate (prevProps, prevState) {
+    if (prevProps.doc !== this.props.doc || prevProps.page !== this.props.page) {
+      this.pdfView.reCenter()
+    }
+  }
+  load (doc = this.props.doc, page = this.props.page) {
+    this.setState({loading: true, error: null})
     fetch(`/sspdf/${doc}/${page}/`).then(res => new Promise((resolve, reject) => {
       if (!res.ok) {
-        reject(res.statusText)
+        reject(res.statusText || res.status)
       } else {
         resolve(res)
       }
@@ -40,7 +45,7 @@ class FilePreview extends React.Component {
       this.setState({loading: false, error: null, docJson: json, docMeta: json.doc})
     }, err => {
       if (this.props.doc !== doc || this.props.page !== page) return
-      this.setState({loading: false, error: err})
+      this.setState({loading: false, error: err, docJson: null})
     })
   }
   render () {
@@ -52,25 +57,41 @@ class FilePreview extends React.Component {
         {this.state.docMeta
           ? (
               <div className='top'>
+                {this.props.page > 0
+                  ? (
+                      <span className='prev' onClick={evt => this.changePage(this.props.page - 1)}>
+                        <svg className="icon ii-l"><use href="#ii-l" xlinkHref="#ii-l"></use></svg>
+                      </span>
+                    )
+                  : null}
                 <span className='doc'>
                   {PaperUtils.setToString(this.state.docMeta)}_{this.state.docMeta.type}
                 </span>
                 &nbsp;-&nbsp;
                 <span className='page'>
-                  page {this.props.page + 1} / {this.state.docMeta.numPages}
+                  <svg className="icon ii-pg"><use href="#ii-pg" xlinkHref="#ii-pg"></use></svg>
+                  &nbsp;
+                  {this.props.page + 1} / {this.state.docMeta.numPages}
                 </span>
                 &nbsp;
                 <a className='download' onClick={evt => this.download()}>
-                  download
+                  <svg className="icon ii-dl"><use href="#ii-dl" xlinkHref="#ii-dl" /></svg>
                 </a>
                 &nbsp;
                 <a className='close' onClick={evt => AppState.dispatch({type: 'closePreview'})}>
-                  close
+                  <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
                 </a>
+                {this.props.page + 1 < this.state.docMeta.numPages
+                  ? (
+                      <span className='next' onClick={evt => this.changePage(this.props.page + 1)}>
+                        <svg className="icon ii-r"><use href="#ii-r" xlinkHref="#ii-r"></use></svg>
+                      </span>
+                    )
+                  : null}
               </div>
             )
           : null}
-        {!this.state.loading && this.state.error && !this.state.docJson
+        {!this.state.loading && this.state.error
           ? (
               <div className='error'>
                 Can't load document:
@@ -79,9 +100,13 @@ class FilePreview extends React.Component {
               </div>
             )
           : null}
-        {!this.state.loading && !this.state.error && this.state.docJson
+        {!this.state.error && this.state.docJson
           ? (
-            <SsPdfView docJson={this.state.docJson} />
+            <div className='whitebg'>
+              <div className={this.state.loading ? 'pdfview dirty' : 'pdfview'}>
+                <SsPdfView ref={f => this.pdfView = f} docJson={this.state.docJson} />
+              </div>
+            </div>
           )
           : null}
       </div>
@@ -89,6 +114,9 @@ class FilePreview extends React.Component {
   }
   download () {
     window.open(`/fetchDoc/${this.state.docMeta._id}/`)
+  }
+  changePage (page) {
+    AppState.dispatch({type: 'previewChangePage', page})
   }
 }
 
