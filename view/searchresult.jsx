@@ -98,7 +98,7 @@ class SearchResult extends React.Component {
         return (
           <div className='pplist'>
             {bucket.sort(PaperUtils.funcSortBucket).map(set => (
-              <PaperSet paperSet={set} key={PaperUtils.setToString(set)} />
+              <PaperSet paperSet={set} psKey={PaperUtils.setToString(set)} key={PaperUtils.setToString(set)} />
             ))}
           </div>
         )
@@ -110,6 +110,7 @@ class SearchResult extends React.Component {
               return (<PaperSet
                 paperSet={Object.assign({}, metas, {types: [Object.assign({}, set.doc, {ftIndex: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})}
                 key={set.index._id}
+                psKey={set.index._id}
                 indexQuery={query}
                 />)
             })}

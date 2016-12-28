@@ -52,15 +52,15 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         previewing: {
           id: action.fileId,
-          page: action.page
+          page: action.page,
+          psKey: action.psKey
         }
       })
     case 'previewChangePage':
       return Object.assign({}, state, {
-        previewing: {
-          id: state.previewing.id,
+        previewing: Object.assign({}, state.previewing, {
           page: action.page
-        }
+        })
       })
     case 'closePreview':
       return Object.assign({}, state, {

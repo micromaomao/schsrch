@@ -14,6 +14,7 @@ class FilePreview extends React.Component {
       docJson: null,
       docMeta: null
     }
+    this.currentLoading = null
   }
   componentDidMount () {
     if (this.props && this.props.doc) {
@@ -33,6 +34,8 @@ class FilePreview extends React.Component {
     }
   }
   load (doc = this.props.doc, page = this.props.page) {
+    if (this.currentLoading && this.currentLoading.doc === doc && this.currentLoading.page === page) return
+    this.currentLoading = {doc, page}
     this.setState({loading: true, error: null})
     fetch(`/sspdf/${doc}/${page}/`).then(res => new Promise((resolve, reject) => {
       if (!res.ok) {
@@ -43,9 +46,11 @@ class FilePreview extends React.Component {
     })).then(res => res.json()).then(json => {
       if (this.props.doc !== doc || this.props.page !== page) return
       this.setState({loading: false, error: null, docJson: json, docMeta: json.doc})
+      this.currentLoading = null
     }, err => {
       if (this.props.doc !== doc || this.props.page !== page) return
       this.setState({loading: false, error: err, docJson: null})
+      this.currentLoading = null
     })
   }
   render () {

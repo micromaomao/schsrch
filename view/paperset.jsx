@@ -15,7 +15,7 @@ class PaperSet extends React.Component {
   }
   handleAppStateUpdate () {
     let previewingState = AppState.getState().previewing
-    if (previewingState && this.props.paperSet && this.props.paperSet.types.find(doc => doc._id === previewingState.id)) {
+    if (previewingState && this.props.psKey && this.props.psKey === previewingState.psKey) {
       this.setState({previewing: previewingState})
     } else {
       this.setState({previewing: null})
@@ -38,7 +38,7 @@ class PaperSet extends React.Component {
       ftDoc = set.types[0]
     }
     sortedTypes = set.types.slice(ftDoc !== null ? 1 : 0).sort((a, b) => PaperUtils.funcSortType(a.type, b.type))
-    let previewFtDoc = ftDoc !== null && this.state.previewing && this.state.previewing.id === ftDoc._id
+    let previewFtDoc = ftDoc !== null && this.state.previewing
     return (
       <div className='set'>
         <div className='setname'>
@@ -107,7 +107,7 @@ class PaperSet extends React.Component {
     )
   }
   openFile (id, page = 0) {
-    AppState.dispatch({type: 'previewFile', fileId: id, page: page})
+    AppState.dispatch({type: 'previewFile', fileId: id, page: page, psKey: this.props.psKey})
   }
 }
 
