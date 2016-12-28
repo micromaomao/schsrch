@@ -100,4 +100,4 @@ window.addEventListener("hashchange", evt => {
   setTimeout(readFromHash, 1)
 })
 
-module.exports = AppState
+window.AppState = module.exports = AppState

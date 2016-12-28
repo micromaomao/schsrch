@@ -1,6 +1,7 @@
 const React = require('react')
 const Feedback = require('./feedback.jsx')
 const { createStore } = require('redux')
+const AppState = require('./appstate.js')
 
 let statusInfoState = createStore(function (state = {}, action) {
   switch (action.type) {
@@ -16,14 +17,23 @@ let statusInfoState = createStore(function (state = {}, action) {
 let lastTimeout
 function fetchStatusInfo () {
   if ((statusInfoState.getState() || {}).loading) return
-  statusInfoState.dispatch({type: 'unload'})
-  fetch('/status/').then(res => res.json()).then(stat => {
-    statusInfoState.dispatch({type: 'load', data: stat})
-  }, err => {
-    statusInfoState.dispatch({type: 'error', err})
-  })
-  lastTimeout && clearTimeout(lastTimeout)
-  lastTimeout = setTimeout(fetchStatusInfo, 15000)
+  if (AppState.getState().query === '') {
+    statusInfoState.dispatch({type: 'unload'})
+    fetch('/status/').then(res => res.json()).then(stat => {
+      statusInfoState.dispatch({type: 'load', data: stat})
+    }, err => {
+      statusInfoState.dispatch({type: 'error', err})
+    })
+    lastTimeout && clearTimeout(lastTimeout)
+    lastTimeout = setTimeout(fetchStatusInfo, 5000)
+  } else {
+    let unsub = AppState.subscribe(() => {
+      if (AppState.getState().query === '') {
+        unsub()
+        fetchStatusInfo()
+      }
+    })
+  }
 }
 
 fetchStatusInfo()
