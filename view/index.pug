@@ -4,12 +4,14 @@ html
   head
     meta(name="viewport", content="width=device-width, initial-scale=1, user-scalable=no")
     meta(name="theme-color",content="#ff5722")
-    link(rel="manifest", href="/manifest.json")
-    link(rel="icon",size="192x192",type="image/png",href="/resources/icon-192.png")
-    link(rel="icon",size="144x144",type="image/png",href="/resources/icon-144.png")
+    link(rel="manifest", href=require('file!./manifest.json'))
+    link(rel="icon",size="192x192",type="image/png",href=require('!!file!image-maxsize?useImageMagick=true!./icon.png?max-width=192&max-height=192'))
+    link(rel="icon",size="144x144",type="image/png",href=require('!!file!image-maxsize?useImageMagick=true!./icon.png?max-width=144&max-height=144'))
+    link(rel="icon",size="32x32",type="image/png",href=require('file!image-maxsize?useImageMagick=true!./icon.png?max-width=32&max-height=32'))
     title Schsrch
   body
+    noscript
+      h1 Schsrch without Javascript
     .react-root
     p.loading(style='text-align: center') Loading...
-    | !{svg}
-    script(src="/resources/bundle.js")
+    !=require('raw!./index.svg')

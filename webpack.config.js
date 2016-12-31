@@ -1,16 +1,20 @@
 const path = require('path')
 const OfflinePlugin = require('offline-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const ManifestPlugin = require('./lib/manifest-webpack-process.js')
 
 module.exports = {
-  entry: './view/entry.jsx',
+  entry: {
+    'bundle': './view/entry.jsx'
+  },
   output: {
     path: './dist',
     publicPath: '/resources/',
-    filename: 'bundle.js'
+    filename: '[hash].js'
   },
   module: {
     loaders: [
-      { test: /\.sass$/, loaders: ['style', 'css', 'sass'] },
+      { test: /\.sass$/, loaders: ['css', 'sass'] },
       {
         test: /\.jsx$/,
         loader: 'babel',
@@ -29,28 +33,34 @@ module.exports = {
       {
         test: /\.png$/,
         loader: 'file'
+      },
+      {
+        test: /\.pug$/,
+        loader: 'pug'
       }
     ]
   },
   plugins: [
+    new ManifestPlugin(),
+    new HtmlWebpackPlugin({
+      template: './view/index.pug',
+      minify: {removeComments: true, useShortDoctype: true, sortClassName: true, sortAttributes: true}
+    }),
     new OfflinePlugin({
       caches: {
-        main: ['/', ':rest:', '/manifest.json'],
-        additional: ['/resources/icon-192.png']
+        main: [':rest:']
       },
-      externals: [
-        '/',
-        '/manifest.json',
-        '/resources/icon-192.png',
-        '/resources/icon-144.png'
-      ],
       responseStrategy: 'cache-first',
-      version: '0.3.0',
+      version: '0.4.0',
       ServiceWorker: {
         scope: '/',
         publicPath: '../sw.js'
       },
-      AppCache: null
+      AppCache: null,
+      rewrites: {
+        'index.html': '/'
+      }
     })
-  ]
+  ],
+  debug: true
 }

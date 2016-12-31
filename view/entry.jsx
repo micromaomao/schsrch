@@ -8,7 +8,7 @@ require('offline-plugin/runtime').install()
 const React = require('react')
 const ReactDOM = require('react-dom')
 
-require('./layout.sass')
+require('style!./layout.sass')
 
 const SearchBar = require('./searchbar.jsx')
 const Description = require('./description.jsx')

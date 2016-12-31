@@ -1,30 +1,24 @@
 const express = require('express')
-const pug = require('pug')
 const path = require('path')
-const appManifest = require('./view/appmanifest')
 const os = require('os')
 const PaperUtils = require('./view/paperutils')
 const sspdf = require('./lib/sspdf')
 const fs = require('fs')
-
-let pageIndex = pug.compileFile(path.join(__dirname, 'view/index.pug'))
-let indexSvg = fs.readFileSync(path.join(__dirname, 'view/index.svg'))
+const SVGO = require('svgo')
+const svgo = new SVGO()
 
 module.exports = (db, mongoose) => {
   const {PastPaperDoc, PastPaperIndex, PastPaperFeedback} = require('./lib/dbModel.js')(db, mongoose)
   let rMain = express.Router()
 
   rMain.get('/', function (req, res) {
-    res.send(pageIndex({svg: indexSvg}))
+    res.sendFile(path.join(__dirname, 'dist/index.html'))
   })
   rMain.use('/resources', express.static(path.join(__dirname, 'dist')))
-  rMain.use('/resources', express.static(path.join(__dirname, 'view/public')))
+  // rMain.use('/resources', express.static(path.join(__dirname, 'view/public')))
   rMain.get('/sw.js', function (req, res) {
     res.set('cache-control', 'max-age=0')
     res.sendFile(path.join(__dirname, 'dist/sw.js'))
-  })
-  rMain.get('/manifest.json', function (req, res) {
-    res.send(appManifest)
   })
 
   rMain.get('/status/', function (req, res, next) {
@@ -138,11 +132,15 @@ module.exports = (db, mongoose) => {
             rect.y2 = round(rect.y2)
             return rect
           })
-          result.svg = result.svg.toString('utf-8')
           res.set('Cache-Control', 'max-age=31556926')
+          result.svg = result.svg.toString('utf-8')
           doc.doc = null
           result.doc = doc
-          res.send(result)
+          console.log(svgo.optimize)
+          svgo.optimize(result.svg, rSvgo => {
+            result.svg = rSvgo.data
+            res.send(result)
+          })
         }
       })
     }).catch(err => next(err))
