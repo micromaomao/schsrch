@@ -22,11 +22,11 @@
   "dependencies": {
     "express": "^4.14.0",
     "fetch-polyfill": "^0.8.2",
-    "mongoose": "^4.7.4",
+    "mongoose": "^4.7.5",
     "nan": "^2.5.0",
-    "pdfjs-dist": "^1.6.411",
     "pug": "^2.0.0-beta6",
-    "redux": "^3.6.0"
+    "pdfjs-dist": "^1.6.418",
+    "redux": "^3.6.0",
   },
   "devDependencies": {
     "babel-core": "^6.21.0",
