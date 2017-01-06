@@ -49,7 +49,7 @@ module.exports = {
         main: [':rest:']
       },
       responseStrategy: 'cache-first',
-      version: '0.4.0',
+      version: '0.5.0',
       ServiceWorker: {
         scope: '/',
         publicPath: '../sw.js'
