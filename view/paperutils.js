@@ -14,6 +14,7 @@ const longTypes = [
 
 const shortMonths = ['m', 's', 'w', 'y']
 const longMonths = ['Feb/March', 'May/June', 'Oct/Nov', 'For examination from']
+const odashMonths = ['F/M', 'M/J', 'O/N', 'SP']
 
 module.exports = {
   setToString: entity => `${entity.subject}_${entity.time}_${entity.paper}_${entity.variant}`,
@@ -65,5 +66,10 @@ module.exports = {
     if (mi < 0) return myt
     if (y.length === 2) y = '20' + y
     return `${longMonths[mi]} ${y}`
+  },
+  odashMonthToMyMonth: odash => {
+    let mi = odashMonths.indexOf(odash)
+    if (mi < 0) return odash
+    return shortMonths[mi]
   }
 }

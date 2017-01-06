@@ -47,8 +47,15 @@ module.exports = (db, mongoose) => {
       fetchPP(match[1], match[2], match[4], match[5], null)
     } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{2})[_ ]([a-z]+)[_ ](\d)(\d)$/))) {
       fetchPP(match[1], match[2], match[4], match[5], match[3])
+    } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{2})[_ ](\d)(\d)[_ ]([a-z]+)$/))) {
+      fetchPP(match[1], match[2], match[3], match[4], match[5])
     } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{2})[_ ]([a-z]+)[_ ](\d)$/))) {
       fetchPP(match[1], match[2], match[4], null, match[3])
+    } else if ((match = query.toUpperCase().match(/^(\d{4})\/(\d{2})\/([A-Z]\/[A-Z]|SP)\/(\d{2})$/))) {
+      let month = PaperUtils.odashMonthToMyMonth(match[3])
+      let time = month + match[4]
+      let [paper, variant] = match[2].split('')
+      fetchPP(match[1], time, paper, variant, null)
     } else {
       PastPaperIndex.search(query).then(results => {
         Promise.all(results.map(rst => new Promise((resolve, reject) => {
@@ -71,10 +78,15 @@ module.exports = (db, mongoose) => {
     function fetchPP (subject, time, paper, variant, type) {
       let finder = {}
       subject && (finder.subject = subject)
-      time && (finder.time = time)
+      time && (finder.time = time.toLowerCase())
+      if (parseInt(paper) === 0 && Number.isSafeInteger(parseInt(variant)) && parseInt(variant) !== 0) {
+        paper = variant
+        variant = '0'
+      }
       paper && (finder.paper = parseInt(paper))
       variant && (finder.variant = parseInt(variant))
-      type && (finder.type = type)
+      type && (finder.type = type.toLowerCase())
+      console.log(finder)
       PastPaperDoc.find(finder, {__v: false, doc: false}).limit(51).then(rst => {
         if (rst.length >= 50) {
           res.send({
@@ -136,7 +148,6 @@ module.exports = (db, mongoose) => {
           result.svg = result.svg.toString('utf-8')
           doc.doc = null
           result.doc = doc
-          console.log(svgo.optimize)
           svgo.optimize(result.svg, rSvgo => {
             result.svg = rSvgo.data
             res.send(result)
