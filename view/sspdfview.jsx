@@ -8,6 +8,7 @@ class SsPdfView extends React.Component {
       ctSize: [0, 0],
       dragOrig: null,
       lastTapTime: 0,
+      blobUrl: null
     }
     this.ctAnimation = null
     this.lastViewWidth = this.lastViewHeight = this.viewWidth = this.viewHeight = 0
@@ -24,10 +25,9 @@ class SsPdfView extends React.Component {
     }
     this.viewWidth = window.innerWidth
     this.viewHeight = Math.min(this.viewWidth * (docJson.height / docJson.width), window.innerHeight - 40)
-    let svgData = 'data:image/svg+xml,' + encodeURIComponent(docJson.svg)
-    svgData = svgData.replace(/\(/g, '%28').replace(/\)/g, '%29')
+    let svgUrl = this.state.blobUrl
     let svgStyle = {
-      backgroundImage: `url(${svgData})`,
+      backgroundImage: svgUrl !== null ? `url(${svgUrl})` : ``,
       backgroundPosition: `${this.state.ctPos[0]}px ${this.state.ctPos[1]}px`,
       backgroundSize: `${this.state.ctSize[0]}px ${this.state.ctSize[1]}px`
     }
@@ -238,6 +238,9 @@ class SsPdfView extends React.Component {
     return state.ctSize[0] / this.props.docJson.width
   }
   componentDidMount () {
+    if (this.props.docJson) {
+      this.makeBlob(this.props.docJson.svg)
+    }
     this.componentDidUpdate({}, {})
   }
   componentDidUpdate (prevProps, prevState) {
@@ -245,6 +248,19 @@ class SsPdfView extends React.Component {
       this.lastViewWidth = this.viewWidth
       this.lastViewHeight = this.viewHeight
       this.reCenter()
+    }
+  }
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.docJson && (!this.props.docJson || this.props.docJson.svg !== nextProps.docJson.svg)) {
+      this.makeBlob(nextProps.docJson.svg)
+    }
+  }
+  makeBlob (svg) {
+    let oldUrl = this.state.blobUrl
+    let blob = new Blob([svg], {type: 'image/svg+xml'})
+    this.setState({blobUrl: URL.createObjectURL(blob)})
+    if (oldUrl) {
+      URL.revokeObjectURL(oldUrl)
     }
   }
   reCenter () {
