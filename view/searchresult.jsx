@@ -10,8 +10,11 @@ class SearchResult extends React.Component {
       err: null,
       result: null,
       loading: false,
-      query: ''
+      query: '',
+      renderListAnimation: 0
     }
+    this.mapResultListAnimation = this.mapResultListAnimation.bind(this)
+    this.nextFrameUpdate = null
   }
   componentDidMount () {
     if (typeof this.props.query === 'string') {
@@ -38,6 +41,7 @@ class SearchResult extends React.Component {
     })
   }
   result (query, result) {
+    this.setState({renderListAnimation: Date.now()})
     if (this.state.query !== query) {
       return
     }
@@ -63,6 +67,36 @@ class SearchResult extends React.Component {
         <a className='fbBtn' onClick={evt => Feedback.show(this.state.query)}>Report issues/missing/errors with this search...</a>
       </div>
     )
+  }
+  mapResultListAnimation (paperset, index) {
+    let ani = Date.now() - this.state.renderListAnimation
+    let stTime = index * 100
+    if (ani >= stTime) {
+      let opacity = Math.min((ani - stTime) / 200, 1)
+      if (opacity < 1) {
+        this.ensureNextFrameUpdate()
+      }
+      return (
+        <div style={{opacity}} key={paperset.key}>
+          {paperset}
+        </div>
+      )
+    } else {
+      this.ensureNextFrameUpdate()
+      return (
+        <div style={{height: '500px'}} key={paperset.key}>
+        </div>
+      )
+    }
+  }
+  ensureNextFrameUpdate () {
+    if (!this.nextFrameUpdate) {
+      this.nextFrameUpdate = requestAnimationFrame(() => {
+        console.log('u!')
+        this.nextFrameUpdate = null
+        this.forceUpdate()
+      })
+    }
   }
   renderResult (result, query) {
     if ((!result.list || result.list.length === 0) && result.response.match(/^(pp|text)$/)) {
@@ -99,7 +133,7 @@ class SearchResult extends React.Component {
           <div className='pplist'>
             {bucket.sort(PaperUtils.funcSortBucket).map(set => (
               <PaperSet paperSet={set} psKey={PaperUtils.setToString(set)} key={PaperUtils.setToString(set)} />
-            ))}
+            )).map(this.mapResultListAnimation)}
           </div>
         )
       case 'text':
@@ -113,7 +147,7 @@ class SearchResult extends React.Component {
                 psKey={set.index._id}
                 indexQuery={query}
                 />)
-            })}
+            }).map(this.mapResultListAnimation)}
           </div>
         )
       default:
