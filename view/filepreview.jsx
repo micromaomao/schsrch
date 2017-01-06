@@ -54,6 +54,12 @@ class FilePreview extends React.Component {
     })
   }
   render () {
+    let couldPrev = false
+    let couldNext = false
+    if (this.state.docMeta) {
+      couldPrev = this.props.page > 0
+      couldNext = this.props.page + 1 < this.state.docMeta.numPages
+    }
     return (
       <div className='filepreview'>
         {!this.state.docMeta && this.state.loading && !this.state.error
@@ -62,13 +68,9 @@ class FilePreview extends React.Component {
         {this.state.docMeta
           ? (
               <div className='top'>
-                {this.props.page > 0
-                  ? (
-                      <span className='prev' onClick={evt => this.changePage(this.props.page - 1)}>
-                        <svg className="icon ii-l"><use href="#ii-l" xlinkHref="#ii-l"></use></svg>
-                      </span>
-                    )
-                  : null}
+                <span className={'prev' + (couldPrev ? '' : ' disabled')} onClick={evt => couldPrev && this.changePage(this.props.page - 1)}>
+                  <svg className="icon ii-l"><use href="#ii-l" xlinkHref="#ii-l"></use></svg>
+                </span>
                 <span className='doc'>
                   {PaperUtils.setToString(this.state.docMeta)}_{this.state.docMeta.type}
                 </span>
@@ -86,13 +88,9 @@ class FilePreview extends React.Component {
                 <a className='close' onClick={evt => AppState.dispatch({type: 'closePreview'})}>
                   <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
                 </a>
-                {this.props.page + 1 < this.state.docMeta.numPages
-                  ? (
-                      <span className='next' onClick={evt => this.changePage(this.props.page + 1)}>
-                        <svg className="icon ii-r"><use href="#ii-r" xlinkHref="#ii-r"></use></svg>
-                      </span>
-                    )
-                  : null}
+                <span className={'next' + (couldNext ? '' : ' disabled')} onClick={evt => couldNext && this.changePage(this.props.page + 1)}>
+                  <svg className="icon ii-r"><use href="#ii-r" xlinkHref="#ii-r"></use></svg>
+                </span>
               </div>
             )
           : null}
