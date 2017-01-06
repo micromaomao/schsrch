@@ -64,7 +64,7 @@ module.exports = {
     if (Number.isNaN(y)) return myt
     let mi = shortMonths.indexOf(m)
     if (mi < 0) return myt
-    if (y.length === 2) y = '20' + y
+    if (y < 10) y = '0' + y
     return `${longMonths[mi]} ${y}`
   },
   odashMonthToMyMonth: odash => {
