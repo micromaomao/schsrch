@@ -181,7 +181,7 @@ class SsPdfView extends React.Component {
     if (evt.ctrlKey) {
       evt.preventDefault()
       let point = this.client2view([evt.clientX, evt.clientY])
-      let nStat = this.calcResizeOnPoint(point, Math.pow(2, -evt.deltaY/100))
+      let nStat = this.calcResizeOnPoint(point, Math.pow(2, -Math.sign(evt.deltaY) * 0.3))
       if (nStat.ctSize[0] > this.viewWidth * 5) return
       if (nStat.ctSize[0] < this.viewWidth && nStat.ctSize[1] < this.viewHeight) {
         nStat = this.calcCenter()
