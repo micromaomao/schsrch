@@ -92,7 +92,6 @@ class SearchResult extends React.Component {
   ensureNextFrameUpdate () {
     if (!this.nextFrameUpdate) {
       this.nextFrameUpdate = requestAnimationFrame(() => {
-        console.log('u!')
         this.nextFrameUpdate = null
         this.forceUpdate()
       })
