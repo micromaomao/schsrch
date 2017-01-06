@@ -1,7 +1,6 @@
 const path = require('path')
 const OfflinePlugin = require('offline-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const ManifestPlugin = require('./lib/manifest-webpack-process.js')
 
 module.exports = {
   entry: {
@@ -41,7 +40,6 @@ module.exports = {
     ]
   },
   plugins: [
-    new ManifestPlugin(),
     new HtmlWebpackPlugin({
       template: './view/index.pug',
       minify: {removeComments: true, useShortDoctype: true, sortClassName: true, sortAttributes: true}

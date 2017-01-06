@@ -11,6 +11,11 @@
       "src": false,
       "sizes": "144x144",
       "type": "image/png"
+    },
+    {
+      "src": false,
+      "sizes": "32x32",
+      "type": "image/png"
     }
   ],
   "start_url": "/",

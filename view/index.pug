@@ -4,10 +4,10 @@ html
   head
     meta(name="viewport", content="width=device-width, initial-scale=1, user-scalable=no")
     meta(name="theme-color",content="#ff5722")
-    link(rel="manifest", href=require('file!./manifest.json'))
-    link(rel="icon",size="192x192",type="image/png",href=require('!!file!image-maxsize?useImageMagick=true!./icon.png?max-width=192&max-height=192'))
-    link(rel="icon",size="144x144",type="image/png",href=require('!!file!image-maxsize?useImageMagick=true!./icon.png?max-width=144&max-height=144'))
-    link(rel="icon",size="32x32",type="image/png",href=require('file!image-maxsize?useImageMagick=true!./icon.png?max-width=32&max-height=32'))
+    -let mf = require('../lib/manifest-loader!./manifest.json')
+    link(rel="manifest", href=mf.manifest)
+    each icon in mf.icons
+      link(rel="icon",size=icon.sizes,type=icon.type,href=icon.src)
     title Schsrch
   body
     noscript
