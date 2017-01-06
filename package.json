@@ -21,12 +21,9 @@
   "homepage": "https://github.com/micromaomao/schsrch#readme",
   "dependencies": {
     "express": "^4.14.0",
-    "fetch-polyfill": "^0.8.2",
-    "html-webpack-plugin": "^2.25.0",
-    "mongoose": "^4.7.5",
+    "mongoose": "^4.7.6",
     "nan": "^2.5.0",
-    "pdfjs-dist": "^1.6.418",
-    "redux": "^3.6.0",
+    "pdfjs-dist": "^1.6.422",
     "svgo": "^0.7.1"
   },
   "devDependencies": {
@@ -37,8 +34,8 @@
     "babel-preset-es2015": "^6.18.0",
     "css-loader": "^0.26.1",
     "file-loader": "^0.9.0",
-    "html-webpack-plugin": "^2.24.1",
-    "image-maxsize-webpack-loader": "^0.2.0",
+    "fetch-polyfill": "^0.8.2",
+    "html-webpack-plugin": "^2.26.0",
     "lwip": "0.0.9",
     "node-sass": "^4.0.0",
     "offline-plugin": "^4.5.3",
@@ -47,6 +44,7 @@
     "raw-loader": "^0.5.1",
     "react": "^15.4.1",
     "react-dom": "^15.4.1",
+    "redux": "^3.6.0",
     "sass-loader": "^4.1.0",
     "style-loader": "^0.13.1",
     "webpack": "^1.14.0"
