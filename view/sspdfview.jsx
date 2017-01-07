@@ -64,7 +64,6 @@ class SsPdfView extends React.Component {
       return
     }
     if (evt.touches.length > 1 || this.state.dragOrig) {
-      // TODO: Handle resize
       let t0 = evt.touches[0]
       let t1 = evt.touches[1]
       this.setState({lastTapTime: 0, dragOrig: {
@@ -234,7 +233,6 @@ class SsPdfView extends React.Component {
     return {ctPos: [ctX, ctY], ctSize: this.ctAnimationGetFinalState().ctSize.map(x => x * factor)}
   }
   calcPointsResize (op0, op1, np0, np1) {
-    // TODO: Better math
     let [sr0, sr1] = [[np0, np1], [op0, op1]].map(([[x0, y0], [x1, y1]]) => Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2)))
     if (sr0 === 0 || sr1 === 0) {
       throw new Error('Messy points.')
