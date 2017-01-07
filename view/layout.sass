@@ -173,6 +173,7 @@ body
 
 .searchresult.loading
   opacity: 0.5
+  pointer-events: none
 .searchresult
   .overflow, .empty
     padding: 12rem 5rem
@@ -268,6 +269,8 @@ body
     color: red
 
 $feedback-top-height: 2rem + 1.3rem
+.feedback.hide
+  visibility: hidden
 .feedback
   z-index: 3
   background-color: white

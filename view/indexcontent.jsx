@@ -4,13 +4,31 @@ const wordSpliter = /[^a-zA-Z]/
 class IndexContent extends React.Component {
   constructor () {
     super()
-    this.state = {}
+    this.state = {
+      tokens: []
+    }
+  }
+  componentDidMount () {
+    this.updateToken()
+  }
+  shouldComponentUpdate (nextProps, nextState) {
+    return nextProps.content !== this.props.content || nextProps.search !== this.props.search || nextState.tokens !== this.state.tokens
+  }
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.content !== this.props.content || nextProps.search !== this.props.search) {
+      this.updateToken(nextProps)
+    }
+  }
+  updateToken (prop = this.props) {
+    if (!prop.content) {
+      this.setState({tokens: []})
+    }
+    this.setState({tokens: this.mergeAlikeTokens(this.cutUseful(this.tokenize(this.props.content.trim().replace(/[\s\u0001-\u0020]+/g, ' '), (this.props.search || '').split(wordSpliter)), 150))})
   }
   render () {
-    let contents = this.mergeAlikeTokens(this.cutUseful(this.tokenize(this.props.content.trim().replace(/[\s\u0001-\u0020]+/g, ' '), this.props.search.split(wordSpliter)), 150))
     return (
       <div className='indexcontent'>
-        {contents.map((token, index) => (
+        {this.state.tokens.map((token, index) => (
           <span className={token.highlight ? 'highlight' : ''} key={index}>{token.str}</span>
         ))}
       </div>

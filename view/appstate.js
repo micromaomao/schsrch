@@ -69,35 +69,32 @@ let AppState = createStore(function (state = {}, action) {
   }
 })
 
-function initFromHash (initIfFail = true) {
-  try {
-    // FIXME: decodeURIComponent for firefox.
-    let hashMatch = window.location.hash.match(/^#(.+)$/)
-    if (!hashMatch) throw new Error()
-    let stateData = hashMatch[1]
-    let state = JSON.parse(stateData)
-    if (typeof state !== 'object') {
-      throw new Error()
-    }
-    AppState.dispatch({type: 'load', state: state})
-  } catch (e) {
-    if (initIfFail) AppState.dispatch({type: 'init'})
-  }
+window.requestIdleCallback = window.requestIdleCallback || (func => setTimeout(func, 1000))
+window.cancelIdleCallback = window.cancelIdleCallback || (id => clearTimeout(id))
+
+let setHashTimeout = null
+let hashIdle = null
+
+if (history.state) {
+  AppState.dispatch({type: 'load', state: history.state})
+} else {
+  AppState.dispatch({type: 'init'})
 }
-function readFromHash () {
-  initFromHash(false)
-}
-initFromHash()
 
 AppState.subscribe(() => {
-  let nState = AppState.getState()
-  let nsd = JSON.stringify(nState)
-  if (location.hash.substr(1) === nsd) return
-  window.location.replace('#' + nsd)
+  if (hashIdle) {
+    cancelIdleCallback(hashIdle)
+    hashIdle = null
+  }
+  requestIdleCallback(() => {
+    let nState = AppState.getState()
+    history.replaceState(nState, 'SchSrch', '/')
+  })
 })
 
-window.addEventListener("hashchange", evt => {
-  setTimeout(readFromHash, 1)
+window.addEventListener('popstate', evt => {
+  let state = evt.state
+  AppState.dispatch({type: 'load', state})
 })
 
 window.AppState = module.exports = AppState

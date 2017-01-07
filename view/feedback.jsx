@@ -39,7 +39,7 @@ class FeedbackFrame extends React.Component {
   render () {
     let topAnimationProgress = 1 - Math.pow(1 - (Math.max(0, Date.now() - this.state.topAnimationStart) / 500), 3)
     let topPs = 0
-    if (!this.state.show && topAnimationProgress >= 1) return null
+    let show = this.state.show || topAnimationProgress < 1
     if (topAnimationProgress < 1) {
       if (!this.state.show) {
         topPs = topAnimationProgress
@@ -50,7 +50,7 @@ class FeedbackFrame extends React.Component {
     }
     let content = this.getContent()
     return (
-      <div className='feedback' style={Object.assign({}, topPs ? {transform: `translateY(${(Math.round(topPs * 1000) / 10)}%)`, willChange: 'transform'} : {})}>
+      <div className={'feedback' + (show ? '' : ' hide')} style={Object.assign({}, topPs ? {transform: `translateY(${(Math.round(topPs * 1000) / 10)}%)`, willChange: 'transform'} : {})}>
         <div className='top'>
           <span className='close' onClick={evt => {
             this.setState({success: false, error: null})
