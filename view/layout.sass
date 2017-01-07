@@ -388,7 +388,7 @@ $feedback-top-height: 2rem + 1.3rem
   overflow: hidden
   width: 100%
   position: relative
-  .svglayer, .selectlayer
+  .svglayer, .selectlayer, .dirtylayer, .pointereventcover
     position: absolute
     top: 0
     right: 0
@@ -400,5 +400,12 @@ $feedback-top-height: 2rem + 1.3rem
     background-repeat: no-repeat
     background-position: center
     will-change: background-size, background-position
-  .selectlayer
+  .dirtylayer
     z-index: 1
+    pointer-events: none
+  .selectlayer
+    z-index: 0
+  .pointereventcover
+    z-index: 3
+    background-color: white
+    opacity: 0

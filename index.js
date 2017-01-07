@@ -114,7 +114,6 @@ module.exports = (db, mongoose) => {
       let fname = `${PaperUtils.setToString(doc)}_${doc.type}.${doc.fileType}`
       res.set('Content-Disposition', `inline; filename=${JSON.stringify(fname)}`)
       res.type(doc.fileType)
-      // TODO: In-browser viewing
       res.send(doc.doc)
     }).catch(err => next(err))
   })
@@ -148,10 +147,11 @@ module.exports = (db, mongoose) => {
           result.svg = result.svg.toString('utf-8')
           doc.doc = null
           result.doc = doc
-          svgo.optimize(result.svg, rSvgo => {
-            result.svg = rSvgo.data
-            res.send(result)
-          })
+          // svgo.optimize(result.svg, rSvgo => {
+          //   result.svg = rSvgo.data
+          //   res.send(result)
+          // })
+          res.send(result)
         }
       })
     }).catch(err => next(err))

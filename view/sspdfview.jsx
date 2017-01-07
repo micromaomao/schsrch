@@ -8,7 +8,8 @@ class SsPdfView extends React.Component {
       ctSize: [0, 0],
       dragOrig: null,
       lastTapTime: 0,
-      blobUrl: null
+      blobUrl: null,
+      cacheCanvas: null
     }
     this.ctAnimation = null
     this.lastViewWidth = this.lastViewHeight = this.viewWidth = this.viewHeight = 0
@@ -17,6 +18,7 @@ class SsPdfView extends React.Component {
     this.handleUp = this.handleUp.bind(this)
     this.handleScroll = this.handleScroll.bind(this)
     this.ctAnimationId = 0
+    this.needPaintDirtyLayer = this.needClearDirtyLayer = false
   }
   render () {
     let docJson = this.props.docJson
@@ -26,15 +28,20 @@ class SsPdfView extends React.Component {
     this.viewWidth = window.innerWidth
     this.viewHeight = Math.min(this.viewWidth * (docJson.height / docJson.width), window.innerHeight - 40)
     let svgUrl = this.state.blobUrl
+    if (this.state.cacheCanvas && (this.state.dragOrig || this.ctAnimation)) {
+      this.needPaintDirtyLayer = true
+    } else {
+      this.needClearDirtyLayer = true
+    }
     let svgStyle = {
-      backgroundImage: svgUrl !== null ? `url(${svgUrl})` : ``,
+      backgroundImage: svgUrl !== null ? `url(${svgUrl})` : null,
+      display: (this.needPaintDirtyLayer ? 'none' : ''),
       backgroundPosition: `${this.state.ctPos[0]}px ${this.state.ctPos[1]}px`,
       backgroundSize: `${this.state.ctSize[0]}px ${this.state.ctSize[1]}px`
     }
-    // TODO: Resize by wheel and touch, drag to move
     return (
       <div className='sspdfview' style={{height: this.viewHeight + 'px'}}>
-        <div className='svglayer' ref={f => this.svgLayer = f} style={svgStyle}
+        <div className='pointereventcover'
           onMouseDown={this.handleDown}
           onTouchStart={this.handleDown}
           onMouseMove={this.handleMove}
@@ -43,6 +50,8 @@ class SsPdfView extends React.Component {
           onTouchEnd={this.handleUp}
           onTouchCancel={this.handleUp}
           onWheel={this.handleScroll} />
+        <div className='svglayer' ref={f => this.svgLayer = f} style={svgStyle} />
+        <canvas className='dirtylayer' ref={f => this.dirtyLayer = f} width={this.viewWidth} height={this.viewHeight} />
       </div>
     )
   }
@@ -239,7 +248,7 @@ class SsPdfView extends React.Component {
   }
   componentDidMount () {
     if (this.props.docJson) {
-      this.makeBlob(this.props.docJson.svg)
+      this.processDoc(this.props.docJson)
     }
     this.componentDidUpdate({}, {})
   }
@@ -249,19 +258,41 @@ class SsPdfView extends React.Component {
       this.lastViewHeight = this.viewHeight
       this.reCenter()
     }
+    let ctx = this.dirtyLayer.getContext('2d')
+    if (this.needPaintDirtyLayer) {
+      this.needPaintDirtyLayer = false
+      let [dx, dy] = this.state.ctPos
+      let [dw, dh] = this.state.ctSize
+      ctx.clearRect(0, 0, this.dirtyLayer.width, this.dirtyLayer.height)
+      ctx.drawImage(this.state.cacheCanvas, dx, dy, dw, dh)
+    } else if (this.needClearDirtyLayer) {
+      ctx.clearRect(0, 0, this.dirtyLayer.width, this.dirtyLayer.height)
+    }
   }
   componentWillReceiveProps (nextProps) {
     if (nextProps.docJson && (!this.props.docJson || this.props.docJson.svg !== nextProps.docJson.svg)) {
-      this.makeBlob(nextProps.docJson.svg)
+      this.processDoc(nextProps.docJson)
     }
   }
-  makeBlob (svg) {
+  processDoc ({svg, width, height}) {
+    const sf = 3
     let oldUrl = this.state.blobUrl
     let blob = new Blob([svg], {type: 'image/svg+xml'})
-    this.setState({blobUrl: URL.createObjectURL(blob)})
+    let blobUrl = URL.createObjectURL(blob)
+    this.setState({blobUrl: blobUrl})
     if (oldUrl) {
       URL.revokeObjectURL(oldUrl)
     }
+    let canvas = document.createElement('canvas')
+    canvas.width = width * sf
+    canvas.height = height * sf
+    let ctx = canvas.getContext('2d')
+    let img = document.createElement('img')
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, width * sf, height * sf)
+      this.setState({cacheCanvas: canvas})
+    }
+    img.src = blobUrl
   }
   reCenter () {
     this.ctAnimationStartFromState(this.calcCenter())
