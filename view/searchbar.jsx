@@ -100,24 +100,27 @@ class SearchBar extends React.Component {
     if (this.state.loadingStart !== null) {
       let ani = (loadingDur % loadAnimationCycle) / loadAnimationCycle
       if (ani <= 0.5) {
-        strokeFillStyle.width = (Math.round((ani / 0.5) * 100 * 10) / 10) + '%'
-        strokeFillStyle.marginLeft = null
+        // Stretch out from left
+        strokeFillStyle.transform = `translateX(-${Math.round((1 - ani / 0.5) * 1000) / 10}%)`
       } else {
-        strokeFillStyle.width = (Math.round((1 - (ani - 0.5) / 0.5) * 100 * 10) / 10) + '%'
-        strokeFillStyle.marginLeft = (Math.round(((ani - 0.5) / 0.5) * 100 * 10) / 10) + '%'
+        // Stretch in from right
+        strokeFillStyle.transform = `translateX(${Math.round((ani / 0.5 - 1) * 1000) / 10}%)`
       }
+      strokeFillStyle.willChange = 'transform'
       requestAnimationFrame(() => {this.forceUpdate()})
     } else if (this.state.lastTimeout !== null && lastChangedDur <= this.inputDelay) {
       let prog = Math.pow(lastChangedDur / this.inputDelay, 5)
-      strokeFillStyle.width = (Math.round(prog * 100 * 10) / 10) + '%'
-      if (this.props.big)
-        strokeFillStyle.marginLeft = (Math.round((1 - prog) / 2 * 100 * 10) / 10) + '%'
-      else
-        strokeFillStyle.marginLeft = null
+      if (this.props.big) {
+        // Stretch out from center
+        strokeFillStyle.transform = `scaleX(${Math.round(prog * 1000) / 1000})`
+      } else {
+        // Stretch out from left
+        strokeFillStyle.transform = `translateX(-${Math.round((1 - prog) * 1000) / 10}%)`
+      }
+      strokeFillStyle.willChange = 'transform'
       requestAnimationFrame(() => {this.forceUpdate()})
     } else {
-      strokeFillStyle.width = null
-      strokeFillStyle.marginLeft = null
+      strokeFillStyle.transform = `translateX(0)`
     }
     let subjectHint = null
     let subjectSearchRes = this.state.focus ? this.searchSubject(this.state.query) : null

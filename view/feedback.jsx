@@ -1,18 +1,6 @@
 const React = require('react')
 const AppState = require('./appstate.js')
 
-// let feedbackState = createStore(function (state = {}, action) {
-//   switch (action.type) {
-//     case 'init':
-//       return {show: false}
-//     case 'show':
-//       return Object.assign({}, state, {show: true, search: action.search})
-//     case 'hide':
-//       return Object.assign({}, state, {show: false, search: null})
-//   }
-// })
-// feedbackState.dispatch({type: 'init'})
-
 class FeedbackFrame extends React.Component {
   constructor () {
     super()
@@ -62,9 +50,7 @@ class FeedbackFrame extends React.Component {
     }
     let content = this.getContent()
     return (
-      <div className='feedback' style={Object.assign({}, topPs ? {top: (Math.round(topPs * 1000) / 10) + '%'} : {}, {
-        willChange: 'top'
-      })}>
+      <div className='feedback' style={Object.assign({}, topPs ? {transform: `translateY(${(Math.round(topPs * 1000) / 10)}%)`, willChange: 'transform'} : {})}>
         <div className='top'>
           <span className='close' onClick={evt => {
             this.setState({success: false, error: null})
