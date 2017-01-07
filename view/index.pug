@@ -7,11 +7,29 @@ html
     -let mf = require('../lib/manifest-loader!./manifest.json')
     link(rel="manifest", href=mf.manifest)
     each icon in mf.icons
-      link(rel="icon",size=icon.sizes,type=icon.type,href=icon.src)
+      link(rel='icon', size=icon.sizes, type=icon.type, href=icon.src)
     title Schsrch
   body
     noscript
-      h1 Schsrch without Javascript
+      style.
+        body { margin: 0; padding: 0 }
+        noscript .top a { color: white; font-weight: bold; }
+      div.top(style='text-align: center; padding: 2rem; background-color: #FF5722; color: white;')
+        p
+          a(href='http://www.enable-javascript.com/') Enabling javascript
+          | &nbsp;is required to use SchSrch to it's greatest potential, otherwise there is no point in not using other
+          | past paper websites but SchSrch.
+        p
+          | We won't use javascript to collect any user information or harm your computer. Please add SchSrch to NoScript whitelist.
+        p
+          | Here is a very simple version of SchSrch, made by using only HTML and CSS. Feedbacks are not dealt for this version of SchSrch.
+      div(style='text-align: center; margin-top: 2rem;')
+        img(src=require('./logo.png'))
+        div(style='margin: 1rem;')
+          form(action='/noscript-search/', method='get')
+            input(type='text', required, autocomplete='off', placeholder='Search paper', name='query', style='width: 40vw; font-size: 1rem;')
+            button(type='submit', style='font-size: 1rem; margin-left: 1rem;') Search
     .react-root
-    p.loading(style='text-align: center') Loading...
+    script.
+      document.write('<p class="loading" style="text-align: center">Loading...</p>')
     !=require('raw!./index.svg')

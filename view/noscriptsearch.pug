@@ -1,0 +1,41 @@
+doctype html
+
+html
+  head
+    meta(name="viewport", content="width=device-width, initial-scale=1, user-scalable=no")
+    meta(name="theme-color",content="#ff5722")
+    title Schsrch
+  body
+    noscript
+      style.
+        body { margin: 0; padding: 0 }
+        noscript .top a { color: white; font-weight: bold; }
+        noscript .result .paper { margin: 0.5rem 1rem; }
+        noscript .result .paper > a { color: #FF5722; }
+      div.top(style='text-align: center; padding: 0.4rem; background-color: #FF5722; color: white;')
+        p
+          a(href='http://www.enable-javascript.com/') Enabling javascript
+          | &nbsp;is required to use SchSrch to it's greatest potential, otherwise there is no point in not using other
+          | past paper websites but SchSrch.
+      div(style='margin-top: 1rem;')
+        div(style='margin: 1rem;')
+          form(action='/noscript-search/', method='get')
+            input(type='text', placeholder=query, autocomplete='off', name='query', value=query, style='width: 60vw; font-size: 1rem;')
+            button(type='submit', style='font-size: 1rem; margin-left: 1rem;') Search
+      div.result(style='margin: 1rem;')
+        -if (rst.response === 'error')
+          div(style='color: red;')= rst.error
+        -else if (!rst.list)
+          pre= JSON.stringify(rst, ' ', 2)
+        -else if (rst.list.length > 0)
+          each entity in rst.list.map(entity => (entity.index ? Object.assign(entity.doc, { index: entity.index }) : entity)).sort(PaperUtils.funcSortBucket)
+            div.paper
+              a(href='/fetchDoc/' + entity._id)
+                | #{entity.subject} (#{CIESubjects.findExactById(entity.subject).name}) #{PaperUtils.myTimeToHumanTime(entity.time)} (#{entity.time}) #{entity.paper || ''}#{entity.variant || ''} ( paper #{entity.paper} #{entity.variant ? ` variant ${entity.variant}` : ''} ) #{entity.type} (#{PaperUtils.getTypeString(entity.type)})
+              -if (entity.index)
+                | &nbsp;page #{entity.index.page + 1}
+                p= entity.index.content.substr(0, 200) + (entity.index.content.length > 200 ? '...' : '')
+        -else
+          | No results.
+    script.
+      window.location = '/'

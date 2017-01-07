@@ -24,7 +24,8 @@
     "mongoose": "^4.7.6",
     "nan": "^2.5.0",
     "pdfjs-dist": "^1.6.422",
-    "svgo": "^0.7.1"
+    "svgo": "^0.7.1",
+    "pug": "^2.0.0-beta6"
   },
   "devDependencies": {
     "babel-core": "^6.21.0",
@@ -39,7 +40,6 @@
     "lwip": "0.0.9",
     "node-sass": "^4.0.0",
     "offline-plugin": "^4.5.3",
-    "pug": "^2.0.0-beta6",
     "pug-loader": "^2.3.0",
     "raw-loader": "^0.5.1",
     "react": "^15.4.1",
