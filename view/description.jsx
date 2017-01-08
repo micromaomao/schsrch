@@ -73,7 +73,9 @@ class Description extends React.Component {
         <a onClick={fetchStatusInfo}>Refresh</a>
       </div>
     )
-    if (this.state.status && !this.state.error) {
+    if (this.state.server) {
+      statusInfo = null
+    } else if (this.state.status && !this.state.error) {
       let stat = this.state.status
       statusInfo = (
         <div className={'status' + (this.state.loading ? ' loading' : '')}>
@@ -102,13 +104,23 @@ class Description extends React.Component {
     }
     return (
       <div className='desc'>
-        <div className='links'>
-          <a onClick={evt => Feedback.show()}>Feedback</a>
-          &nbsp;
-          <a onClick={evt => window.open('https://schsrch.xyz/disclaim/')}>Disclaimer</a>
-          &nbsp;
-          <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
-        </div>
+        {!this.state.server
+          ? (
+            <div className='links'>
+              <a onClick={evt => Feedback.show()}>Feedback</a>
+              &nbsp;
+              <a onClick={evt => window.open('https://schsrch.xyz/disclaim/')}>Disclaimer</a>
+              &nbsp;
+              <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
+            </div>
+          )
+          : (
+            <div className='links'>
+              <a href='https://schsrch.xyz/disclaim/' target='_blank'>Disclaimer</a>
+              &nbsp;
+              <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
+            </div>
+          )}
         {statusInfo}
       </div>
     )

@@ -24,6 +24,16 @@ body
     box-sizing: border-box
 
 .schsrch
+  noscript
+    .top
+      text-align: center
+      padding: 2rem
+      background-color: #FF5722
+      color: white
+      margin-bottom: -4rem
+      a
+        color: white
+        font-weight: bold
   > .content,
   > .contentblackcover,
   > .feedback,
@@ -77,6 +87,11 @@ body
       display: inline-block
       font-size: 1.3rem
       line-height: 1.6
+    .querybox::placeholder,
+    .querybox::-webkit-input-placeholder,
+    .querybox::-moz-placeholder,
+    .querybox:-ms-input-placeholder
+      color: $color-primary
     .subjecthints
       background-color: white
       .subject

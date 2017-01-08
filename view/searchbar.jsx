@@ -158,27 +158,34 @@ class SearchBar extends React.Component {
         </div>
       )
     }
+    const placeholderText = '... Type here ...'
+    let queryBox = (<input
+            className='querybox'
+            type='text'
+            ref={f => this.input = f}
+            value={this.state.query}
+            placeholder={this.state.server ? placeholderText : ''}
+            onChange={this.handleQueryChange}
+            onFocus={evt => this.setState({focus: true})}
+            onBlur={evt => this.setState({focus: false, subjectHintSelect: null})}
+            onKeyDown={this.handleKey}
+            name='query'
+            autoComplete='off' />)
     return (
       <div className={this.props.big ? 'searchbar big' : 'searchbar small'}>
         <div className={'logoContain' + (hideLogo ? ' hide' : '')}>
           <img className='logo' src={URL_LOGO} alt='SchSrch' />
         </div>
         <div className={'inputContain' + (hideLogo ? ' hw' : '')}>
-          {this.state.server && this.state.query === ''
-            ? <div className='querybox'>Loading...</div>
-            : (
-              <input
-                className='querybox'
-                type='text'
-                ref={f => this.input = f}
-                value={this.state.query}
-                onChange={this.handleQueryChange}
-                onFocus={evt => this.setState({focus: true})}
-                onBlur={evt => this.setState({focus: false, subjectHintSelect: null})}
-                onKeyDown={this.handleKey} />
-            )}
+          {this.state.server
+            ? (
+              <form action='/formsearch' method='get'>
+                {queryBox}
+              </form>
+            )
+            : queryBox}
           {this.props.big && !this.state.server
-            ? <div className={'placeholder' + (this.state.query !== '' ? ' hide' : '')} onMouseDown={this.handlePlaceholderClick} onTouchStart={this.handlePlaceholderClick}>... Type here ...</div>
+            ? <div className={'placeholder' + (this.state.query !== '' ? ' hide' : '')} onMouseDown={this.handlePlaceholderClick} onTouchStart={this.handlePlaceholderClick}>{placeholderText}</div>
             : null}
           <div className='stroke'>
             <div className='fill' style={strokeFillStyle} />

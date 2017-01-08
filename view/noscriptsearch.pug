@@ -19,8 +19,8 @@ html
           | past paper websites but SchSrch.
       div(style='margin-top: 1rem;')
         div(style='margin: 1rem;')
-          form(action='/noscript-search/', method='get')
-            input(type='text', placeholder=query, autocomplete='off', name='query', value=query, style='width: 60vw; font-size: 1rem;')
+          form(action='/formsearch/', method='get')
+            input(type='text', placeholder=query, autofocus, autocomplete='off', name='query', value=query, style='width: 60vw; font-size: 1rem;')
             button(type='submit', style='font-size: 1rem; margin-left: 1rem;') Search
       div.result(style='margin: 1rem;')
         -if (rst.response === 'error')

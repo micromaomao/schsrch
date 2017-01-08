@@ -142,7 +142,7 @@ module.exports = (db, mongoose) => {
   })
   let _noscriptResultPage = pug.compileFile(path.join(__dirname, 'view/noscriptsearch.pug'))
   let noscriptResultPage = obj => _noscriptResultPage(Object.assign({}, {PaperUtils, CIESubjects}, obj))
-  rMain.get('/noscript-search', function (req, res, next) {
+  rMain.get('/formsearch/', function (req, res, next) {
     let query = req.query.query.toString().trim()
     if (query.length === 0) {
       res.redirect('/')

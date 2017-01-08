@@ -45,6 +45,27 @@ class SchSrch extends React.Component {
       <div className='schsrch'>
         <div className='contentblackcover' style={blackCoverStyle} />
         <div className='content'>
+          {
+            AppState.getState().serverrender
+            ? (
+                <noscript>
+                  <div className='top'>
+                    <p>
+                      <a href='http://www.enable-javascript.com/'>Enabling javascript</a>
+                      &nbsp;is required to use SchSrch to it's greatest potential, otherwise there is no point in not using other
+                      past paper websites but SchSrch.
+                    </p>
+                    <p>
+                      We won't use javascript to collect any user information or harm your computer. Please add SchSrch to NoScript whitelist.
+                    </p>
+                    <p>
+                      Here is a very simple version of SchSrch, made by using only HTML and CSS. Feedbacks are not dealt for this version of SchSrch.
+                    </p>
+                  </div>
+                </noscript>
+              )
+            : null
+          }
           <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={query => AppState.dispatch({type: 'query', query})} loading={this.state.searching} />
           {noSearch
             ? <Description />
