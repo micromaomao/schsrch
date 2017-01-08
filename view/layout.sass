@@ -25,15 +25,18 @@ body
 
 .schsrch
   noscript
-    .top
-      text-align: center
-      padding: 2rem
-      background-color: #FF5722
+    display: block
+    text-align: center
+    padding: 2rem
+    background-color: #FF5722
+    color: white
+    a
       color: white
-      margin-bottom: -4rem
-      a
-        color: white
-        font-weight: bold
+      font-weight: bold
+  noscript.big
+    margin-bottom: -4rem
+  noscript.small
+    padding: 0.5rem
   > .content,
   > .contentblackcover,
   > .feedback,
@@ -92,6 +95,10 @@ body
     .querybox::-moz-placeholder,
     .querybox:-ms-input-placeholder
       color: $color-primary
+    .querybox.border
+      border-bottom: 2px $color-primary solid
+    .formsubmit
+      margin: 0.5rem
     .subjecthints
       background-color: white
       .subject
@@ -221,6 +228,8 @@ body
         .level
           font-size: 60%
           vertical-align: middle
+    a
+      color: inherit
     .files
       padding-top: 1rem
       .file

@@ -19,8 +19,12 @@ class SsPdfView extends React.Component {
     this.handleScroll = this.handleScroll.bind(this)
     this.ctAnimationId = 0
     this.needPaintDirtyLayer = this.needClearDirtyLayer = false
+    if (AppState.getState().serverrender) {
+      this.state.server = true
+    }
   }
   render () {
+    if (this.state.server) return
     let docJson = this.props.docJson
     if (!docJson) {
       return null

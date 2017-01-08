@@ -16,7 +16,12 @@ class SearchBar extends React.Component {
       focus: true,
       subjectHintSelect: null
     }
-    if (AppState.getState().serverrender) this.state.server = true
+    if (AppState.getState().serverrender) {
+      this.state.server = true
+      let query = AppState.getState().serverrender.query
+      if (query)
+        this.state.query = query.query
+    }
     this.inputDelay = 1000
     this.handlePlaceholderClick = this.handlePlaceholderClick.bind(this)
     this.handleQueryChange = this.handleQueryChange.bind(this)
@@ -94,7 +99,7 @@ class SearchBar extends React.Component {
     return select
   }
   render () {
-    let hideLogo = !this.props.big && window.innerWidth <= 800
+    let hideLogo = !this.state.server && !this.props.big && window.innerWidth <= 800
     let strokeFillStyle = {}
     let lastChangedDur = Date.now() - this.state.lastQueryChange
     let loadingDur = Date.now() - this.state.loadingStart
@@ -126,7 +131,7 @@ class SearchBar extends React.Component {
     }
     let subjectHint = null
     let subjectSearchRes = this.state.focus ? this.searchSubject(this.state.query) : null
-    if (subjectSearchRes && subjectSearchRes.length > 0) {
+    if (!this.state.server && subjectSearchRes && subjectSearchRes.length > 0) {
       subjectSearchRes = subjectSearchRes.slice(0, 6)
       let sjHintSelect = this.state.subjectHintSelect
       if (sjHintSelect !== null) {
@@ -159,42 +164,46 @@ class SearchBar extends React.Component {
       )
     }
     const placeholderText = '... Type here ...'
-    let queryBox = (<input
-            className='querybox'
-            type='text'
-            ref={f => this.input = f}
-            value={this.state.query}
-            placeholder={this.state.server ? placeholderText : ''}
-            onChange={this.handleQueryChange}
-            onFocus={evt => this.setState({focus: true})}
-            onBlur={evt => this.setState({focus: false, subjectHintSelect: null})}
-            onKeyDown={this.handleKey}
-            name='query'
-            autoComplete='off' />)
-    return (
+    let renderT = (
       <div className={this.props.big ? 'searchbar big' : 'searchbar small'}>
         <div className={'logoContain' + (hideLogo ? ' hide' : '')}>
           <img className='logo' src={URL_LOGO} alt='SchSrch' />
         </div>
         <div className={'inputContain' + (hideLogo ? ' hw' : '')}>
-          {this.state.server
-            ? (
-              <form action='/formsearch' method='get'>
-                {queryBox}
-              </form>
-            )
-            : queryBox}
+          <input
+            className={'querybox' + (this.state.server ? ' border' : '')}
+            type='text'
+            ref={f => this.input = f}
+            value={this.state.query}
+            placeholder={this.state.server && !this.state.query ? placeholderText : null}
+            onChange={this.handleQueryChange}
+            onFocus={evt => this.setState({focus: true})}
+            onBlur={evt => this.setState({focus: false, subjectHintSelect: null})}
+            onKeyDown={this.handleKey}
+            name='query'
+            autoComplete='off' />
           {this.props.big && !this.state.server
             ? <div className={'placeholder' + (this.state.query !== '' ? ' hide' : '')} onMouseDown={this.handlePlaceholderClick} onTouchStart={this.handlePlaceholderClick}>{placeholderText}</div>
             : null}
-          <div className='stroke'>
-            <div className='fill' style={strokeFillStyle} />
-          </div>
+          {this.state.server ? <button className='formsubmit' type='submit'>Search</button> : null}
+          {this.state.server ? null : (
+            <div className='stroke'>
+              <div className='fill' style={strokeFillStyle} />
+            </div>
+          )}
           <SearchPrompt query={this.state.query} />
           {subjectHint}
         </div>
       </div>
     )
+    if (this.state.server) {
+      return (
+        <form action='/formsearch' method='get'>
+          {renderT}
+        </form>
+      )
+    }
+    return renderT
   }
 }
 

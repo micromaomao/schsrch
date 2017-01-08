@@ -6,7 +6,6 @@ const CIESubjects = require('./view/CIESubjects')
 const sspdf = require('./lib/sspdf')
 const fs = require('fs')
 const SVGO = require('svgo')
-const pug = require('pug')
 const cheerio = require('cheerio')
 require('./dist-server/serverrender')
 const serverRender = global.serverRender
@@ -58,9 +57,39 @@ module.exports = (db, mongoose) => {
   })
 
   function doSearch (query) {
+    function findRelated (doc) {
+      return PastPaperDoc.find({subject: doc.subject, time: doc.time, paper: doc.paper, variant: doc.variant}, {_id: true, type: true, fileType: true, numPages: true})
+        .then(rst => Promise.resolve(rst.filter(x => x.type !== doc.type)))
+    }
     return new Promise((resolve, reject) => {
       let match
-      if (query.match(/^\d{4}$/)) {
+      if ((match = query.match(/^!!index!([0-9a-f]+)$/))) {
+        let id = match[1]
+        PastPaperIndex.findOne({_id: id}).then(rstIndex => {
+          if (!rstIndex) {
+            resolve({
+              response: 'text',
+              list: []
+            })
+          } else {
+            PastPaperDoc.findOne({_id: rstIndex.doc}).then(rstDoc => {
+              if (!rstDoc) {
+                resolve({
+                  response: 'text',
+                  list: []
+                })
+              } else {
+                findRelated(rstDoc).then(rstRelated => {
+                  resolve({
+                    response: 'text',
+                    list: [{doc: rstDoc, index: rstIndex, related: rstRelated}]
+                  })
+                }, err => resolve(({ response: 'text', list: [{doc: rstDoc, index: rstIndex, related: []}] })))
+              }
+            }, err => reject({response: 'error', err: err.toString()}))
+          }
+        }, err => reject({response: 'error', err: err.toString()}))
+      } else if (query.match(/^\d{4}$/)) {
         fetchPP(query, null, null, null, null)
       } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{2})$/))) {
         fetchPP(match[1], match[2])
@@ -72,9 +101,9 @@ module.exports = (db, mongoose) => {
         fetchPP(match[1], match[2], null, null, match[3])
       } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{2})[_ ]*(paper[_ ]*)?(\d)$/))) {
         fetchPP(match[1], match[2], match[4], null, null)
-      } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{2})[_ ]*(paper[_ ]*)?(\d)(\d)$/))) {
+      } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{2})[_ ]*(paper[_ ]*)?(\d)[_ ](\d)$/))) {
         fetchPP(match[1], match[2], match[4], match[5], null)
-      } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{2})[_ ]([a-z]+)[_ ](\d)(\d)$/))) {
+      } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{2})[_ ]([a-z]+)[_ ](\d)[_ ](\d)$/))) {
         fetchPP(match[1], match[2], match[4], match[5], match[3])
       } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{2})[_ ](\d)(\d)[_ ]([a-z]+)$/))) {
         fetchPP(match[1], match[2], match[3], match[4], match[5])
@@ -88,12 +117,10 @@ module.exports = (db, mongoose) => {
       } else {
         PastPaperIndex.search(query).then(results => {
           Promise.all(results.map(rst => new Promise((resolve, reject) => {
-            PastPaperDoc.find({subject: rst.doc.subject, time: rst.doc.time, paper: rst.doc.paper, variant: rst.doc.variant}, {_id: true, type: true, fileType: true, numPages: true}, (err, res) => {
-              if (err) {
-                resolve({doc: rst.doc, index: rst.index, related: []})
-              } else {
-                resolve({doc: rst.doc, index: rst.index, related: res.filter(x => x.type !== rst.doc.type)})
-              }
+            findRelated(rst.doc).then(related => {
+              resolve({doc: rst.doc, index: rst.index, related: related})
+            }, err => {
+              resolve({doc: rst.doc, index: rst.index, related: []})
             })
           }))).then(rst => resolve({
             response: 'text',
@@ -140,17 +167,20 @@ module.exports = (db, mongoose) => {
       res.send(err)
     })
   })
-  let _noscriptResultPage = pug.compileFile(path.join(__dirname, 'view/noscriptsearch.pug'))
-  let noscriptResultPage = obj => _noscriptResultPage(Object.assign({}, {PaperUtils, CIESubjects}, obj))
   rMain.get('/formsearch/', function (req, res, next) {
     let query = req.query.query.toString().trim()
     if (query.length === 0) {
       res.redirect('/')
       return
     }
-    doSearch(query).then(rst => res.send(noscriptResultPage({rst, query})), err => {
+    doSearch(query).then(rst => {
+      res.type('html')
+      let $ = cheerio.load(indexHtml)
+      $('.react-root').html(serverRender({query: {query, result: JSON.parse(JSON.stringify(rst))}}))
+      res.send($.html())
+    }, err => {
       next(err.err)
-    })
+    }).catch(err => next(err))
   })
 
   rMain.get('/fetchDoc/:id', function (req, res, next) {

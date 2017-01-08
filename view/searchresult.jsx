@@ -2,6 +2,7 @@ const React = require('react')
 const PaperUtils = require('./paperutils.js')
 const PaperSet = require('./paperset.jsx')
 const Feedback = require('./feedback.jsx')
+const AppState = require('./appstate.js')
 
 class SearchResult extends React.Component {
   constructor () {
@@ -13,10 +14,19 @@ class SearchResult extends React.Component {
       query: '',
       renderListAnimation: 0
     }
+    if (AppState.getState().serverrender) {
+      this.state.server = true
+      let query = AppState.getState().serverrender.query
+      if (query) {
+        this.state.result = query.result
+        this.state.query = query.query
+      }
+    }
     this.mapResultListAnimation = this.mapResultListAnimation.bind(this)
     this.nextFrameUpdate = null
   }
   componentDidMount () {
+    if (AppState.getState().serverrender) return
     if (typeof this.props.query === 'string') {
       this.query(this.props.query)
     }
@@ -71,11 +81,16 @@ class SearchResult extends React.Component {
         {this.state.result
           ? this.renderResult(this.state.result, this.state.query)
           : null}
-        <a className='fbBtn' onClick={evt => Feedback.show(this.state.query)}>Report issues/missing/errors with this search...</a>
+        {this.state.server ? null : (
+          <a className='fbBtn' onClick={evt => Feedback.show(this.state.query)}>Report issues/missing/errors with this search...</a>
+        )}
       </div>
     )
   }
   mapResultListAnimation (paperset, index) {
+    if (this.state.server) {
+      return paperset
+    }
     let ani = Date.now() - this.state.renderListAnimation
     let stTime = index * 100
     if (ani >= stTime) {
@@ -138,7 +153,7 @@ class SearchResult extends React.Component {
         return (
           <div className='pplist'>
             {bucket.sort(PaperUtils.funcSortBucket).map(set => (
-              <PaperSet paperSet={set} psKey={PaperUtils.setToString(set)} key={PaperUtils.setToString(set)} />
+              <PaperSet paperSet={set} key={PaperUtils.setToString(set)} psKey={PaperUtils.setToString(set)} />
             )).map(this.mapResultListAnimation)}
           </div>
         )
@@ -149,8 +164,8 @@ class SearchResult extends React.Component {
               let metas = {subject: set.doc.subject, time: set.doc.time, paper: set.doc.paper, variant: set.doc.variant}
               return (<PaperSet
                 paperSet={Object.assign({}, metas, {types: [Object.assign({}, set.doc, {ftIndex: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})}
-                key={set.index._id}
-                psKey={set.index._id}
+                key={'!!index!' + set.index._id}
+                psKey={'!!index!' + set.index._id}
                 indexQuery={query}
                 />)
             }).map(this.mapResultListAnimation)}

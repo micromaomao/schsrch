@@ -12,6 +12,9 @@ class PaperSet extends React.Component {
       previewing: null
     }
     this.handleAppStateUpdate = this.handleAppStateUpdate.bind(this)
+    if (AppState.getState().serverrender) {
+      this.state.server = true
+    }
   }
   handleAppStateUpdate () {
     let previewingState = AppState.getState().previewing
@@ -67,18 +70,33 @@ class PaperSet extends React.Component {
         {ftDoc !== null
           ? (
             <div className='file ft' key={ftDoc._id} onClick={evt => this.openFile(ftDoc._id, ftDoc.ftIndex.page)}>
-              <span className='typename'>{PaperUtils.capitalizeFirst(PaperUtils.getTypeString(ftDoc.type))}</span>
-              &nbsp;
-              <span className='desc'>
-                <span className='pagenum'>found on page <span className='foundon'>{ftDoc.ftIndex.page + 1}</span> / {ftDoc.numPages} pages total</span>
-                ,&nbsp;
-                <span className='filetype'>{ftDoc.fileType}</span>
-              </span>
+              {(() => {
+                let pt = (
+                  <span>
+                    <span className='typename'>{PaperUtils.capitalizeFirst(PaperUtils.getTypeString(ftDoc.type))}</span>
+                    &nbsp;
+                    <span className='desc'>
+                      <span className='pagenum'>found on page <span className='foundon'>{ftDoc.ftIndex.page + 1}</span> / {ftDoc.numPages} pages total</span>
+                      ,&nbsp;
+                      <span className='filetype'>{ftDoc.fileType}</span>
+                    </span>
+                  </span>
+                )
+                if (!this.state.server) {
+                  return pt
+                } else {
+                  return (
+                    <a href={this.fileUrl(ftDoc._id)} target='_blank'>
+                      {pt}
+                    </a>
+                  )
+                }
+              })()}
               <IndexContent content={ftDoc.ftIndex.content} search={this.props.indexQuery || ''} />
             </div>
           )
           : null}
-        {previewFtDoc
+        {previewFtDoc && !this.state.server
           ? (
             <FilePreview doc={this.state.previewing.id} page={this.state.previewing.page} />
           )
@@ -86,17 +104,28 @@ class PaperSet extends React.Component {
         }
         <div className={ftDoc !== null ? 'related' : 'files'}>
           {ftDoc ? 'Related: ' : null}
-          {sortedTypes.map(file => (
-            <div className='file' key={file._id} onClick={evt => this.openFile(file._id, 0)}>
-              <span className='typename'>{PaperUtils.capitalizeFirst(PaperUtils.getTypeString(file.type))}</span>
-              &nbsp;
-              <span className='desc'>
-                <span className='pagenum'>{file.numPages} pages</span>
-                ,&nbsp;
-                <span className='filetype'>{file.fileType}</span>
+          {sortedTypes.map(file => {
+            let pt = (
+              <span>
+                <span className='typename'>{PaperUtils.capitalizeFirst(PaperUtils.getTypeString(file.type))}</span>
+                &nbsp;
+                <span className='desc'>
+                  <span className='pagenum'>{file.numPages} pages</span>
+                  ,&nbsp;
+                  <span className='filetype'>{file.fileType}</span>
+                </span>
               </span>
-            </div>
-          ))}
+            )
+            return (
+              <div className='file' key={file._id} onClick={evt => this.openFile(file._id, 0)}>
+                {!this.state.server ? pt : (
+                  <a href={this.fileUrl(file._id)} target='_blank'>
+                    {pt}
+                  </a>
+                )}
+              </div>
+            )
+          })}
         </div>
         {!previewFtDoc && this.state.previewing
           ? (
@@ -108,6 +137,9 @@ class PaperSet extends React.Component {
   }
   openFile (id, page = 0) {
     AppState.dispatch({type: 'previewFile', fileId: id, page: page, psKey: this.props.psKey})
+  }
+  fileUrl (id) {
+    return '/fetchDoc/' + encodeURIComponent(id)
   }
 }
 

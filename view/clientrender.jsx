@@ -20,7 +20,14 @@ if (history.state) {
   AppState.dispatch({type: 'load', state: history.state})
 } else {
   AppState.dispatch({type: 'init'})
+  let queryMatch
+  if ((queryMatch = window.location.toString().match(/\/formsearch\/\?query=([^&=]+)$/))) {
+    let q = decodeURIComponent(queryMatch[1].replace(/\+/g, ' '))
+    AppState.dispatch({type: 'query', query: q})
+  }
 }
+
+window.AppState = AppState
 
 AppState.subscribe(() => {
   if (hashIdle) {
@@ -29,7 +36,13 @@ AppState.subscribe(() => {
   }
   requestIdleCallback(() => {
     let nState = AppState.getState()
-    history.replaceState(nState, 'SchSrch', '/')
+    let url = '/'
+    if (nState.previewing) {
+      url = '/formsearch/?query=' + encodeURIComponent(nState.previewing.psKey)
+    } else if (nState.query.length > 0) {
+      url = '/formsearch/?query=' + encodeURIComponent(nState.query)
+    }
+    history.replaceState(nState, 'SchSrch', url)
   })
 })
 

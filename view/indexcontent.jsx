@@ -1,3 +1,4 @@
+const AppState = require('./appstate.js')
 const React = require('react')
 const wordSpliter = /[^a-zA-Z]/
 
@@ -6,6 +7,9 @@ class IndexContent extends React.Component {
     super()
     this.state = {
       tokens: []
+    }
+    if (AppState.getState().serverrender) {
+      this.state.server = true
     }
   }
   componentDidMount () {
@@ -23,12 +27,18 @@ class IndexContent extends React.Component {
     if (!prop.content) {
       this.setState({tokens: []})
     }
-    this.setState({tokens: this.mergeAlikeTokens(this.cutUseful(this.tokenize(this.props.content.trim().replace(/[\s\u0001-\u0020]+/g, ' '), (this.props.search || '').split(wordSpliter)), 150))})
+    this.setState({tokens: this.computeTokens(prop)})
+  }
+  computeTokens (prop = this.props) {
+    return this.mergeAlikeTokens(this.cutUseful(this.tokenize(this.props.content.trim().replace(/[\s\u0001-\u0020]+/g, ' '), (this.props.search || '').split(wordSpliter)), 150))
   }
   render () {
+    let tokens = this.state.tokens
+    if (this.state.server)
+      tokens = this.computeTokens()
     return (
       <div className='indexcontent'>
-        {this.state.tokens.map((token, index) => (
+        {tokens.map((token, index) => (
           <span className={token.highlight ? 'highlight' : ''} key={index}>{token.str}</span>
         ))}
       </div>

@@ -14,6 +14,13 @@ class SchSrch extends React.Component {
     }
     this.handleQuery = this.handleQuery.bind(this)
     this.handleUpdate = this.handleUpdate.bind(this)
+    if (AppState.getState().serverrender) {
+      this.state.server = true
+      let query = AppState.getState().serverrender.query
+      if (query) {
+        this.state.query = query.query
+      }
+    }
   }
   handleUpdate () {
     let state = AppState.getState()
@@ -41,6 +48,13 @@ class SchSrch extends React.Component {
     } else {
       blackCoverStyle = {opacity: 0, zIndex: '0'}
     }
+      let noScriptFirstP = (
+      <p>
+        <a href='http://www.enable-javascript.com/'>Enabling javascript</a>
+        &nbsp;is required to use SchSrch to it's greatest potential, otherwise there is no point in not using other
+        past paper websites but SchSrch.
+      </p>
+    )
     return (
       <div className='schsrch'>
         <div className='contentblackcover' style={blackCoverStyle} />
@@ -48,28 +62,30 @@ class SchSrch extends React.Component {
           {
             AppState.getState().serverrender
             ? (
-                <noscript>
-                  <div className='top'>
-                    <p>
-                      <a href='http://www.enable-javascript.com/'>Enabling javascript</a>
-                      &nbsp;is required to use SchSrch to it's greatest potential, otherwise there is no point in not using other
-                      past paper websites but SchSrch.
-                    </p>
-                    <p>
-                      We won't use javascript to collect any user information or harm your computer. Please add SchSrch to NoScript whitelist.
-                    </p>
-                    <p>
-                      Here is a very simple version of SchSrch, made by using only HTML and CSS. Feedbacks are not dealt for this version of SchSrch.
-                    </p>
-                  </div>
-                </noscript>
+                AppState.getState().serverrender.query
+                ? (
+                    <noscript className='small'>
+                      {noScriptFirstP}
+                    </noscript>
+                )
+                : (
+                    <noscript className='big'>
+                      {noScriptFirstP}
+                      <p>
+                        We won't use javascript to collect any user information or harm your computer. Please add SchSrch to NoScript whitelist.
+                      </p>
+                      <p>
+                        Here is a very simple version of SchSrch, made by using only HTML and CSS. Feedbacks are not dealt for this version of SchSrch.
+                      </p>
+                    </noscript>
+                )
               )
             : null
           }
           <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={query => AppState.dispatch({type: 'query', query})} loading={this.state.searching} />
           {noSearch
             ? <Description />
-            : <SearchResult query={this.state.query} onStateChange={loading => this.setState({searching: loading})} smallerSetName={window.innerWidth <= 500} />}
+            : <SearchResult query={this.state.query} onStateChange={loading => this.setState({searching: loading})} smallerSetName={this.state.server ? false : window.innerWidth <= 500} />}
         </div>
         <Feedback.Frame />
       </div>
