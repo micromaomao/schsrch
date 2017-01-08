@@ -1,7 +1,8 @@
 const React = require('react')
-const URL_LOGO = require('./logo.png')
 const CIESubjects = require('./CIESubjects.js')
 const SearchPrompt = require('./searchprompt.jsx')
+const AppState = require('./appstate.js')
+const URL_LOGO = require('./logo.png')
 
 class SearchBar extends React.Component {
   constructor () {
@@ -15,6 +16,7 @@ class SearchBar extends React.Component {
       focus: true,
       subjectHintSelect: null
     }
+    if (AppState.getState().serverrender) this.state.server = true
     this.inputDelay = 1000
     this.handlePlaceholderClick = this.handlePlaceholderClick.bind(this)
     this.handleQueryChange = this.handleQueryChange.bind(this)
@@ -159,18 +161,23 @@ class SearchBar extends React.Component {
     return (
       <div className={this.props.big ? 'searchbar big' : 'searchbar small'}>
         <div className={'logoContain' + (hideLogo ? ' hide' : '')}>
-          <img className='logo' src={URL_LOGO} />
+          <img className='logo' src={URL_LOGO} alt='SchSrch' />
         </div>
         <div className={'inputContain' + (hideLogo ? ' hw' : '')}>
-          <input
-            type='text'
-            ref={f => this.input = f}
-            value={this.state.query}
-            onChange={this.handleQueryChange}
-            onFocus={evt => this.setState({focus: true})}
-            onBlur={evt => this.setState({focus: false, subjectHintSelect: null})}
-            onKeyDown={this.handleKey} />
-          {this.props.big
+          {this.state.server && this.state.query === ''
+            ? <div className='querybox'>Loading...</div>
+            : (
+              <input
+                className='querybox'
+                type='text'
+                ref={f => this.input = f}
+                value={this.state.query}
+                onChange={this.handleQueryChange}
+                onFocus={evt => this.setState({focus: true})}
+                onBlur={evt => this.setState({focus: false, subjectHintSelect: null})}
+                onKeyDown={this.handleKey} />
+            )}
+          {this.props.big && !this.state.server
             ? <div className={'placeholder' + (this.state.query !== '' ? ' hide' : '')} onMouseDown={this.handlePlaceholderClick} onTouchStart={this.handlePlaceholderClick}>... Type here ...</div>
             : null}
           <div className='stroke'>

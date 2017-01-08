@@ -49,6 +49,7 @@ body
     transition: all 100ms
     .logo
       transition: all 100ms
+      color: $color-primary
   .logoContain.hide
     margin-left: 0.5rem !important
     .logo
@@ -56,10 +57,10 @@ body
   .inputContain
     position: relative
     transition: all 100ms
-    input
+    .querybox
       border: none
       outline: none
-    input, .stroke
+    .querybox, .stroke
       transition: all 100ms
     .stroke
       height: 2px
@@ -71,7 +72,7 @@ body
       .fill
         height: 2px
         background-color: $color-primary
-    input, .placeholder
+    .querybox, .placeholder
       color: $color-primary
       display: inline-block
       font-size: 1.3rem
@@ -100,9 +101,9 @@ body
     display: block
     text-align: center
     margin-top: 2rem
-    input, .stroke, .subjecthints
+    .querybox, .stroke, .subjecthints
       width: 90vw
-    input, .placeholder
+    .querybox, .placeholder
       text-align: center
     .placeholder
       position: absolute
@@ -131,9 +132,9 @@ body
   .inputContain
     margin-left: 2.5rem
     vertical-align: bottom
-    input
+    .querybox
       text-align: left
-    input, .stroke, .subjecthints, .searchprompt
+    .querybox, .stroke, .subjecthints, .searchprompt
       width: 60vw
     .subjecthints
       position: absolute
@@ -142,7 +143,7 @@ body
       margin-right: auto
   .inputContain.hw
     margin-left: 0
-    input, .stroke, .subjecthints, .searchprompt
+    .querybox, .stroke, .subjecthints, .searchprompt
       width: 90vw
 
 .schsrch .desc
@@ -156,6 +157,7 @@ body
       margin-left: 1rem
       margin-right: 1rem
       cursor: pointer
+      text-decoration: none
   .status
     font-size: 1rem
     color: lighten($color-primary, 10%)

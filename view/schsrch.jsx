@@ -1,20 +1,8 @@
-'use strict'
-
-require('babel-polyfill')
-require('fetch-polyfill')
-
-require('offline-plugin/runtime').install()
-
 const React = require('react')
-const ReactDOM = require('react-dom')
-
-require('style!./layout.sass')
-
 const SearchBar = require('./searchbar.jsx')
 const Description = require('./description.jsx')
 const SearchResult = require('./searchresult.jsx')
 const Feedback = require('./feedback.jsx')
-
 const AppState = require('./appstate.js')
 
 class SchSrch extends React.Component {
@@ -43,7 +31,9 @@ class SchSrch extends React.Component {
     let blackCoverStyle = {}
     let coverAnimationTime = Math.max(0, Date.now() - this.state.coverHideAnimation)
     let showCover = this.state.feedbackShowed
-    if (showCover) {
+    if (AppState.getState().serverrender) {
+      blackCoverStyle = {opacity: 0, zIndex: 0}
+    } else if (showCover) {
       blackCoverStyle = {opacity: 1, zIndex: ''}
     } else if (!showCover && coverAnimationTime < 600) {
       blackCoverStyle = {opacity: 0, zIndex: ''}
@@ -76,11 +66,4 @@ class SchSrch extends React.Component {
   }
 }
 
-let ui = ReactDOM.render(
-  <SchSrch />,
-  document.getElementsByClassName('react-root')[0]
-)
-
-window.addEventListener('resize', evt => {
-  setTimeout(() => ui.forceUpdate(), 1)
-})
+module.exports = SchSrch

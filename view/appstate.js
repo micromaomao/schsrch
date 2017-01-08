@@ -11,7 +11,20 @@ let AppState = createStore(function (state = {}, action) {
           feedbackText: '',
           email: ''
         },
-        previewing: null
+        previewing: null,
+        serverrender: null
+      }
+    case 'init-server':
+      return {
+        query: '',
+        feedback: {
+          show: false,
+          search: null,
+          feedbackText: '',
+          email: ''
+        },
+        previewing: null,
+        serverrender: action.serverrender || true
       }
     case 'load':
       return action.state
@@ -69,32 +82,4 @@ let AppState = createStore(function (state = {}, action) {
   }
 })
 
-window.requestIdleCallback = window.requestIdleCallback || (func => setTimeout(func, 1000))
-window.cancelIdleCallback = window.cancelIdleCallback || (id => clearTimeout(id))
-
-let setHashTimeout = null
-let hashIdle = null
-
-if (history.state) {
-  AppState.dispatch({type: 'load', state: history.state})
-} else {
-  AppState.dispatch({type: 'init'})
-}
-
-AppState.subscribe(() => {
-  if (hashIdle) {
-    cancelIdleCallback(hashIdle)
-    hashIdle = null
-  }
-  requestIdleCallback(() => {
-    let nState = AppState.getState()
-    history.replaceState(nState, 'SchSrch', '/')
-  })
-})
-
-window.addEventListener('popstate', evt => {
-  let state = evt.state
-  AppState.dispatch({type: 'load', state})
-})
-
-window.AppState = module.exports = AppState
+module.exports = AppState

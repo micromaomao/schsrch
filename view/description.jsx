@@ -36,17 +36,22 @@ function fetchStatusInfo () {
   }
 }
 
-fetchStatusInfo()
-
 class Description extends React.Component {
   constructor () {
     super()
     this.state = {}
+    if (AppState.getState().serverrender) {
+      this.state.server = true
+      this.state.status = AppState.getState().serverrender.status
+    }
     this.updateStat = this.updateStat.bind(this)
   }
   componentDidMount () {
     this.updateStat()
     this.unsub = statusInfoState.subscribe(this.updateStat)
+    if (!AppState.getState().serverrender) {
+      fetchStatusInfo()
+    }
   }
   componentWillUnmount () {
     this.unsub()
@@ -57,6 +62,8 @@ class Description extends React.Component {
     this.setState({loading: st.loading, error: st.err})
     if (st.stat) {
       this.setState({status: st.stat})
+    } else if (st.server) {
+      this.setState({server: true})
     }
   }
   render () {
@@ -100,7 +107,7 @@ class Description extends React.Component {
           &nbsp;
           <a onClick={evt => window.open('https://schsrch.xyz/disclaim/')}>Disclaimer</a>
           &nbsp;
-          <a onClick={evt => window.open('https://github.com/micromaomao/schsrch/blob/master/index.js')}>API</a>
+          <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
         </div>
         {statusInfo}
       </div>

@@ -7,15 +7,44 @@ const sspdf = require('./lib/sspdf')
 const fs = require('fs')
 const SVGO = require('svgo')
 const pug = require('pug')
+const cheerio = require('cheerio')
+require('./dist-server/serverrender')
+const serverRender = global.serverRender
+global.serverRender = null
 
 const svgo = new SVGO()
+
+let indexPath = path.join(__dirname, 'dist/index.html')
+let indexHtml = fs.readFileSync(indexPath)
+if (process.env.NODE_ENV !== 'production') {
+  fs.watch(indexPath, list => {
+    fs.readFile(indexPath, { encoding: 'utf8' }, (err, data) => {
+      if (err) {
+        console.log(err)
+        process.exit(1)
+      } else {
+        indexHtml = data
+      }
+    })
+  })
+}
 
 module.exports = (db, mongoose) => {
   const {PastPaperDoc, PastPaperIndex, PastPaperFeedback} = require('./lib/dbModel.js')(db, mongoose)
   let rMain = express.Router()
 
+  function statusInfo () {
+    return Promise.all([PastPaperDoc.count({}), PastPaperIndex.count({}), Promise.resolve(os.loadavg())])
+      .then(([docCount, indexCount, loadAvg]) => {
+        return Promise.resolve({docCount, indexCount, loadAvg: loadAvg.map(num => Math.round(num * 100) / 100)})
+      }, err => Promise.reject(err))
+  }
+
   rMain.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname, 'dist/index.html'))
+    res.type('html')
+    let $ = cheerio.load(indexHtml)
+    $('.react-root').html(serverRender({})) // We want this to be static so that service worker don't end up caching old data
+    res.send($.html())
   })
   rMain.use('/resources', express.static(path.join(__dirname, 'dist')))
   // rMain.use('/resources', express.static(path.join(__dirname, 'view/public')))
@@ -25,10 +54,7 @@ module.exports = (db, mongoose) => {
   })
 
   rMain.get('/status/', function (req, res, next) {
-    Promise.all([PastPaperDoc.count({}), PastPaperIndex.count({}), Promise.resolve(os.loadavg())])
-      .then(([docCount, indexCount, loadAvg]) => {
-        res.send({docCount, indexCount, loadAvg: loadAvg.map(num => Math.round(num * 100) / 100)})
-      }, err => next(err))
+    statusInfo().then(rst => res.send(rst), err => next(err))
   })
 
   function doSearch (query) {

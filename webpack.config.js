@@ -2,15 +2,7 @@ const path = require('path')
 const OfflinePlugin = require('offline-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
-module.exports = {
-  entry: {
-    'bundle': './view/entry.jsx'
-  },
-  output: {
-    path: './dist',
-    publicPath: '/resources/',
-    filename: '[hash].js'
-  },
+baseConfig = {
   module: {
     loaders: [
       { test: /\.sass$/, loaders: ['css', 'sass'] },
@@ -38,27 +30,54 @@ module.exports = {
         loader: 'pug'
       }
     ]
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: './view/index.pug',
-      minify: {removeComments: true, useShortDoctype: true, sortClassName: true, sortAttributes: true}
-    }),
-    new OfflinePlugin({
-      caches: {
-        main: [':rest:']
-      },
-      responseStrategy: 'cache-first',
-      version: '0.5.0',
-      ServiceWorker: {
-        scope: '/',
-        publicPath: '../sw.js'
-      },
-      AppCache: null,
-      rewrites: {
-        'index.html': '/'
-      }
-    })
-  ],
-  debug: true
+  }
 }
+
+module.exports = [
+  Object.assign({}, baseConfig, {
+    entry: {
+      'clientrender': './view/clientrender.jsx',
+    },
+    output: {
+      path: './dist',
+      publicPath: '/resources/',
+      filename: '[hash]-[name].js'
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        template: './view/index.pug',
+        minify: {removeComments: true, useShortDoctype: true, sortClassName: true, sortAttributes: true},
+        chunks: [ 'clientrender' ],
+        inject: false
+      }),
+      new OfflinePlugin({
+        caches: {
+          main: [':rest:']
+        },
+        responseStrategy: 'cache-first',
+        version: '0.5.0',
+        ServiceWorker: {
+          scope: '/',
+          publicPath: '/sw.js'
+        },
+        AppCache: null,
+        rewrites: {
+          'index.html': '/'
+        }
+      })
+    ]
+  }),
+  Object.assign({}, baseConfig, {
+    entry: {
+      'serverrender': './view/serverrender.jsx'
+    },
+    target: 'node',
+    output: {
+      path: './dist-server',
+      publicPath: '/resources/',
+      filename: '[name].js'
+    },
+    plugins: [
+    ]
+  })
+]

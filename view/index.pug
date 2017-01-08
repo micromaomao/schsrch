@@ -9,6 +9,7 @@ html
     each icon in mf.icons
       link(rel='icon', size=icon.sizes, type=icon.type, href=icon.src)
     title Schsrch
+    style!= require('./layout.sass').toString()
   body
     noscript
       style.
@@ -30,6 +31,6 @@ html
             input(type='text', required, autocomplete='off', placeholder='Search paper', name='query', style='width: 40vw; font-size: 1rem;')
             button(type='submit', style='font-size: 1rem; margin-left: 1rem;') Search
     .react-root
-    script.
-      document.write('<p class="loading" style="text-align: center">Loading...</p>')
-    !=require('raw!./index.svg')
+    each js in htmlWebpackPlugin.files.js
+      script(src=js, async)
+    != require('raw!./index.svg')
