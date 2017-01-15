@@ -12,7 +12,8 @@ let AppState = createStore(function (state = {}, action) {
           email: ''
         },
         previewing: null,
-        serverrender: null
+        serverrender: null,
+        view: 'home'
       }
     case 'init-server':
       return {
@@ -24,7 +25,8 @@ let AppState = createStore(function (state = {}, action) {
           email: ''
         },
         previewing: null,
-        serverrender: action.serverrender || true
+        serverrender: action.serverrender || true,
+        view: action.serverrender.view || 'home'
       }
     case 'load':
       return action.state
@@ -78,6 +80,17 @@ let AppState = createStore(function (state = {}, action) {
     case 'closePreview':
       return Object.assign({}, state, {
         previewing: null
+      })
+    case 'disclaim':
+      return Object.assign({}, state, {
+        view: 'disclaim'
+      })
+    case 'home':
+      return Object.assign({}, state, {
+        feedback: Object.assign({}, state.feedback, {
+          show: false
+        }),
+        view: 'home'
       })
   }
 })

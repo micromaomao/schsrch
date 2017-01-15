@@ -167,6 +167,12 @@ module.exports = (db, mongoose) => {
       res.send(err)
     })
   })
+  rMain.get('/disclaim/', function (req, res, next) {
+    res.type('html')
+    let $ = cheerio.load(indexHtml)
+    $('.react-root').html(serverRender({view: 'disclaim'}))
+    res.send($.html())
+  })
   rMain.get('/formsearch/', function (req, res, next) {
     let query = req.query.query.toString().trim()
     if (query.length === 0) {

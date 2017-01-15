@@ -24,6 +24,8 @@ if (history.state) {
   if ((queryMatch = window.location.toString().match(/\/formsearch\/\?query=([^&=]+)$/))) {
     let q = decodeURIComponent(queryMatch[1].replace(/\+/g, ' '))
     AppState.dispatch({type: 'query', query: q})
+  } else if ((queryMatch = window.location.toString().match(/\/disclaim\/$/))) {
+    AppState.dispatch({type: 'disclaim'})
   }
 }
 
@@ -37,7 +39,10 @@ AppState.subscribe(() => {
   requestIdleCallback(() => {
     let nState = AppState.getState()
     let url = '/'
-    if (nState.previewing) {
+    if (nState.view !== 'home') {
+      url = '/' + encodeURIComponent(nState.view) + '/'
+    }
+    else if (nState.previewing) {
       url = '/formsearch/?query=' + encodeURIComponent(nState.previewing.psKey)
     } else if (nState.query.length > 0) {
       url = '/formsearch/?query=' + encodeURIComponent(nState.query)

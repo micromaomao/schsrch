@@ -3,6 +3,7 @@ const SearchBar = require('./searchbar.jsx')
 const Description = require('./description.jsx')
 const SearchResult = require('./searchresult.jsx')
 const Feedback = require('./feedback.jsx')
+const Disclaimer = require('./disclaimer.jsx')
 const AppState = require('./appstate.js')
 
 class SchSrch extends React.Component {
@@ -10,7 +11,8 @@ class SchSrch extends React.Component {
     super()
     this.state = {
       query: '',
-      coverHideAnimation: 0
+      coverHideAnimation: 0,
+      view: 'home'
     }
     this.handleQuery = this.handleQuery.bind(this)
     this.handleUpdate = this.handleUpdate.bind(this)
@@ -20,12 +22,14 @@ class SchSrch extends React.Component {
       if (query) {
         this.state.query = query.query
       }
+      this.state.view = AppState.getState().view
     }
   }
   handleUpdate () {
     let state = AppState.getState()
     this.setState({feedbackShowed: state.feedback.show, coverHideAnimation: Date.now()})
     this.handleQuery(state.query)
+    this.setState({view: AppState.getState().view})
   }
   handleQuery (query) {
     this.setState({query})
@@ -34,11 +38,10 @@ class SchSrch extends React.Component {
     }
   }
   render () {
-    let noSearch = this.state.query === ''
     let blackCoverStyle = {}
     let coverAnimationTime = Math.max(0, Date.now() - this.state.coverHideAnimation)
     let showCover = this.state.feedbackShowed
-    if (AppState.getState().serverrender) {
+    if (this.state.server) {
       blackCoverStyle = {opacity: 0, zIndex: 0}
     } else if (showCover) {
       blackCoverStyle = {opacity: 1, zIndex: ''}
@@ -48,19 +51,30 @@ class SchSrch extends React.Component {
     } else {
       blackCoverStyle = {opacity: 0, zIndex: '0'}
     }
-      let noScriptFirstP = (
+    let noScriptFirstP = (
       <p>
         <a href='http://www.enable-javascript.com/'>Enabling javascript</a>
         &nbsp;is required to use SchSrch to it's greatest potential, otherwise there is no point in not using other
         past paper websites but SchSrch.
       </p>
     )
+    let view = (() => {
+      switch (this.state.view) {
+        case 'home':
+        default:
+          return this.renderHome()
+        case 'disclaim':
+          return this.renderDisclaim()
+      }
+    })()
     return (
       <div className='schsrch'>
-        <div className='contentblackcover' style={blackCoverStyle} />
+        {this.state.server ? null : (
+          <div className='contentblackcover' style={blackCoverStyle} />
+        )}
         <div className='content'>
           {
-            AppState.getState().serverrender
+            this.state.server
             ? (
                 AppState.getState().serverrender.query
                 ? (
@@ -82,14 +96,25 @@ class SchSrch extends React.Component {
               )
             : null
           }
-          <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={query => AppState.dispatch({type: 'query', query})} loading={this.state.searching} />
-          {noSearch
-            ? <Description />
-            : <SearchResult query={this.state.query} onStateChange={loading => this.setState({searching: loading})} smallerSetName={this.state.server ? false : window.innerWidth <= 500} />}
+          {view}
         </div>
-        <Feedback.Frame />
+        {this.state.server ? null : <Feedback.Frame />}
       </div>
     )
+  }
+  renderHome () {
+    let noSearch = this.state.query === ''
+    return (
+      <div>
+        <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={query => AppState.dispatch({type: 'query', query})} loading={this.state.searching} />
+        {noSearch
+          ? <Description />
+          : <SearchResult query={this.state.query} onStateChange={loading => this.setState({searching: loading})} smallerSetName={this.state.server ? false : window.innerWidth <= 500} />}
+      </div>
+    )
+  }
+  renderDisclaim () {
+    return (<Disclaimer />)
   }
   componentDidMount () {
     this.handleUpdate()

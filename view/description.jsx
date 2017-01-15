@@ -109,14 +109,14 @@ class Description extends React.Component {
             <div className='links'>
               <a onClick={evt => Feedback.show()}>Feedback</a>
               &nbsp;
-              <a onClick={evt => window.open('https://schsrch.xyz/disclaim/')}>Disclaimer</a>
+              <a onClick={evt => AppState.dispatch({type: 'disclaim'})}>Disclaimer</a>
               &nbsp;
               <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
             </div>
           )
           : (
             <div className='links'>
-              <a href='https://schsrch.xyz/disclaim/' target='_blank'>Disclaimer</a>
+              <a href='/disclaim/'>Disclaimer</a>
               &nbsp;
               <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
             </div>
