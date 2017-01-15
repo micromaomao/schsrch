@@ -292,6 +292,14 @@ module.exports = (db, mongoose) => {
       })
     })
   })
+  rMain.get('/robots.txt', function (req, res) {
+    if (req.hostname.match(/^beta\./)) {
+      res.sendFile(path.join(__dirname, 'view/betaRobots.txt'))
+    } else {
+      res.type('txt')
+      res.send('')
+    }
+  })
 
   return rMain
 }
