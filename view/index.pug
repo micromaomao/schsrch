@@ -8,8 +8,7 @@ html
     link(rel="manifest", href=mf.manifest)
     each icon in mf.icons
       link(rel='icon', size=icon.sizes, type=icon.type, href=icon.src)
-      link(rel="apple-touch-icon", sizes=icon.sizes, href=icon.src)
-    link(rel="apple-touch-icon", href=mf.icons[0].src)
+    link(rel="apple-touch-icon", href=require('./icon-apple.png'))
     meta(name="apple-mobile-web-app-title", content="SchSrch")
     meta(name="apple-mobile-web-app-capable", content="yes")
     title Schsrch
