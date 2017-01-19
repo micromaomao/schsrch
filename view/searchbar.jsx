@@ -34,7 +34,7 @@ class SearchBar extends React.Component {
     evt.preventDefault()
     this.input.focus()
   }
-  handleQueryChange (evt) {
+  handleQueryChange (evt, immediate = false) {
     let val = evt.target.value
     if (this.state.lastTimeout) {
       clearTimeout(this.state.lastTimeout)
@@ -43,7 +43,10 @@ class SearchBar extends React.Component {
       if (val !== this.state.lastQuerySubmited)
         this.props.onQuery && this.props.onQuery(val.trim())
       this.setState({lastTimeout: null, lastQuerySubmited: val})
-    }, this.inputDelay), subjectHintSelect: null})
+    }, immediate ? 1 : this.inputDelay), subjectHintSelect: null})
+  }
+  clear () {
+    this.setQuery('')
   }
   handleKey (evt) {
     if (evt.key === 'ArrowDown' || evt.keyCode === 40) {
@@ -86,7 +89,7 @@ class SearchBar extends React.Component {
       target: {
         value: query
       }
-    })
+    }, true)
   }
   searchSubject (query) {
     return CIESubjects.search(query.replace(/^\s+/, ''))
@@ -170,29 +173,42 @@ class SearchBar extends React.Component {
           <img className='logo' src={URL_LOGO} alt='SchSrch' />
         </div>
         <div className={'inputContain' + (hideLogo ? ' hw' : '')}>
-          <input
-            className={'querybox' + (this.state.server ? ' border' : '')}
-            type='text'
-            ref={f => this.input = f}
-            value={this.state.query}
-            placeholder={this.state.server && !this.state.query ? placeholderText : null}
-            onChange={this.handleQueryChange}
-            onFocus={evt => this.setState({focus: true})}
-            onBlur={evt => this.setState({focus: false, subjectHintSelect: null})}
-            onKeyDown={this.handleKey}
-            name='query'
-            autoComplete='off' />
-          {this.props.big && !this.state.server
-            ? <div className={'placeholder' + (this.state.query !== '' ? ' hide' : '')} onMouseDown={this.handlePlaceholderClick} onTouchStart={this.handlePlaceholderClick}>{placeholderText}</div>
-            : null}
-          {this.state.server ? <button className='formsubmit' type='submit'>Search</button> : null}
-          {this.state.server ? null : (
-            <div className='stroke'>
-              <div className='fill' style={strokeFillStyle} />
+          <div className='inputPositionWrap'>
+            <input
+              className={'querybox' + (this.state.server ? ' border' : '')}
+              type='text'
+              ref={f => this.input = f}
+              value={this.state.query}
+              placeholder={this.state.server && !this.state.query ? placeholderText : null}
+              onChange={this.handleQueryChange}
+              onFocus={evt => this.setState({focus: true})}
+              onBlur={evt => this.setState({focus: false, subjectHintSelect: null})}
+              onKeyDown={this.handleKey}
+              name='query'
+              autoComplete='off' />
+            {this.props.big && !this.state.server
+              ? <div className={'placeholder' + (this.state.query !== '' ? ' hide' : '')} onMouseDown={this.handlePlaceholderClick} onTouchStart={this.handlePlaceholderClick}>{placeholderText}</div>
+              : null}
+            {this.state.server ? null : (
+              <div className='stroke'>
+                <div className='fill' style={strokeFillStyle} />
+              </div>
+            )}
+            <div className='rightWrap'>
+              {this.state.server ? (
+                <button className='formsubmit' type='submit'>Search</button>
+              ) : null}
+              {this.state.query.length && !this.state.server
+                ? (
+                  <div className='clearInput' onClick={evt => this.clear()}>
+                    <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c"></use></svg>
+                  </div>
+                )
+                : null}
             </div>
-          )}
-          <SearchPrompt query={this.state.query} />
+          </div>
           {subjectHint}
+          <SearchPrompt query={this.state.query} />
         </div>
       </div>
     )

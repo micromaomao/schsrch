@@ -67,28 +67,69 @@ body
     .logo
       width: 0 !important
   .inputContain
+    $inputFontSize: 1.3rem
+    $inputLineHeight: 1.8
     position: relative
     transition: all 100ms
     .querybox
       border: none
       outline: none
-    .querybox, .stroke
+    .querybox, .stroke, .inputPositionWrap
       transition: all 100ms
-    .stroke
-      height: 2px
+    .inputPositionWrap
+      position: relative
       display: block
       margin-left: auto
       margin-right: auto
-      background-color: lighten($color-primary, 30%)
-      overflow: hidden
-      .fill
+      height: $inputFontSize * $inputLineHeight
+      .querybox, .placeholder
+        position: absolute
+        top: 0
+        left: 0
+        width: 100%
+        height: 100%
+      .stroke
+        position: absolute
+        z-index: 2
         height: 2px
-        background-color: $color-primary
+        bottom: 0
+        left: 0
+        right: 0
+        background-color: lighten($color-primary, 30%)
+        overflow: hidden
+        .fill
+          height: 2px
+          background-color: $color-primary
+      .rightWrap
+        position: absolute
+        right: 0
+        top: 0
+        bottom: 0
+        padding-top: 0.3rem
+        padding-left: 0.5rem
+        padding-right: 0.5rem
+        background-color: rgba(white, 0.7)
+        z-index: 1
+        .clearInput
+          display: inline-block
+          cursor: pointer
+          margin-top: -0.3rem
+          margin-left: -0.5rem
+          margin-right: -0.5rem
+          padding-top: 0.3rem
+          padding-left: 0.5rem
+          padding-right: 0.5rem
+          padding-bottom: 0.5rem
+          .icon
+            vertical-align: middle
+            line-height: 0
+            color: $color-primary
     .querybox, .placeholder
       color: $color-primary
       display: inline-block
-      font-size: 1.3rem
-      line-height: 1.6
+      font-size: $inputFontSize
+      line-height: $inputLineHeight
+    .querybox
       &::placeholder,
       &::-webkit-input-placeholder,
       &::-moz-placeholder,
@@ -96,8 +137,6 @@ body
         color: $color-primary
     .querybox.border
       border-bottom: 2px $color-primary solid
-    .formsubmit
-      margin: 0.5rem
     .subjecthints
       background-color: white
       .subject
@@ -122,15 +161,11 @@ body
     display: block
     text-align: center
     margin-top: 2rem
-    .querybox, .stroke, .subjecthints
+    .inputPositionWrap, .subjecthints
       width: 90vw
     .querybox, .placeholder
       text-align: center
     .placeholder
-      position: absolute
-      top: 0
-      left: 0
-      right: 0
       color: lighten($color-primary, 30%)
       cursor: text
       pointer-events: none
@@ -155,7 +190,7 @@ body
     vertical-align: bottom
     .querybox
       text-align: left
-    .querybox, .stroke, .subjecthints, .searchprompt
+    .inputPositionWrap, .subjecthints, .searchprompt
       width: 60vw
     .subjecthints
       position: absolute
@@ -164,7 +199,7 @@ body
       margin-right: auto
   .inputContain.hw
     margin-left: 0
-    .querybox, .stroke, .subjecthints, .searchprompt
+    .inputPositionWrap, .subjecthints, .searchprompt
       width: 90vw
 
 .schsrch .desc
@@ -288,8 +323,8 @@ body
 
 .searchprompt
   color: $color-primary
+  line-height: 1.5
   font-size: 0.8rem
-  padding-top: 0.2rem
   .error
     color: red
 
