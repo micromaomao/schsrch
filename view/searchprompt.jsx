@@ -11,7 +11,7 @@ class SearchPrompt extends React.Component {
     let query = this.props.query.toLowerCase().trim()
     let prompt = null
     if (query === '') {
-      prompt = ('Start by typing a subject, number or name...')
+      prompt = ('A syllabus, number or name, or any text to search...')
     } else if (query.match(/^\d{4}(\s|$)/)) {
       let querySubj = query.match(/^\d{4}/)[0]
       let subj = CIESubjects.findExactById(querySubj)
