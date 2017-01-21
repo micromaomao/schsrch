@@ -42,6 +42,8 @@ class SearchResult extends React.Component {
       || nextState.loading !== this.state.loading
       || nextState.query !== this.state.query
       || nextState.renderListAnimation !== this.state.renderListAnimation
+      || nextProps.smallerSetName !== this.props.smallerSetName
+      || nextProps.query !== this.props.query
   }
   query (query) {
     this.setState({query: query})
