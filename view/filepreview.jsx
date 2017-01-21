@@ -15,6 +15,7 @@ class FilePreview extends React.Component {
       docMeta: null
     }
     this.currentLoading = null
+    this.handlePageInputChange = this.handlePageInputChange.bind(this)
   }
   componentDidMount () {
     if (this.props && this.props.doc) {
@@ -53,6 +54,19 @@ class FilePreview extends React.Component {
       this.currentLoading = null
     })
   }
+  handlePageInputChange (evt) {
+    let pn = parseInt(evt.target.value)
+    if (Number.isSafeInteger(this.props.page) && this.state.docMeta && Number.isSafeInteger(pn)) {
+      let total = this.state.docMeta.numPages
+      let changingTo = pn - 1 // Page index starts from 0
+      if (changingTo >= total) {
+        changingTo = total - 1
+      } else if (changingTo < 0) {
+        changingTo = 0
+      }
+      this.changePage(changingTo)
+    }
+  }
   render () {
     let couldPrev = false
     let couldNext = false
@@ -78,7 +92,7 @@ class FilePreview extends React.Component {
                 <span className='page'>
                   <svg className="icon ii-pg"><use href="#ii-pg" xlinkHref="#ii-pg"></use></svg>
                   &nbsp;
-                  {this.props.page + 1} / {this.state.docMeta.numPages}
+                  <input className='input' type='number' onChange={this.handlePageInputChange} value={this.props.page + 1} /> / {this.state.docMeta.numPages}
                 </span>
                 &nbsp;
                 <a className='download' onClick={evt => this.download()}>
