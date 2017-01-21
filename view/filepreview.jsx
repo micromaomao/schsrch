@@ -12,7 +12,8 @@ class FilePreview extends React.Component {
       loading: false,
       error: null,
       docJson: null,
-      docMeta: null
+      docMeta: null,
+      pageInputValue: null
     }
     this.currentLoading = null
     this.handlePageInputChange = this.handlePageInputChange.bind(this)
@@ -32,6 +33,7 @@ class FilePreview extends React.Component {
   componentDidUpdate (prevProps, prevState) {
     if (prevProps.doc !== this.props.doc || prevProps.page !== this.props.page) {
       this.pdfView.reCenter()
+      this.setState({pageInputValue: null})
     }
   }
   load (doc = this.props.doc, page = this.props.page) {
@@ -65,6 +67,8 @@ class FilePreview extends React.Component {
         changingTo = 0
       }
       this.changePage(changingTo)
+    } else {
+      this.setState({pageInputValue: evt.target.value})
     }
   }
   render () {
@@ -92,7 +96,7 @@ class FilePreview extends React.Component {
                 <span className='page'>
                   <svg className="icon ii-pg"><use href="#ii-pg" xlinkHref="#ii-pg"></use></svg>
                   &nbsp;
-                  <input className='input' type='number' onChange={this.handlePageInputChange} value={this.props.page + 1} /> / {this.state.docMeta.numPages}
+                  <input className='input' type='number' onChange={this.handlePageInputChange} value={this.state.pageInputValue !== null ? this.state.pageInputValue : (this.props.page + 1)} /> / {this.state.docMeta.numPages}
                 </span>
                 &nbsp;
                 <a className='download' onClick={evt => this.download()}>
