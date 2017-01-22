@@ -17,6 +17,7 @@ const longMonths = ['Feb/March', 'May/June', 'Oct/Nov', 'For examination from']
 const odashMonths = ['F/M', 'M/J', 'O/N', 'SP']
 
 module.exports = {
+  shortMonths, longMonths,
   setToString: entity => `${entity.subject}_${entity.time}_${entity.paper}_${entity.variant}`,
   setEqual: (a, b) => a.subject === b.subject && a.time === b.time && a.paper === b.paper && a.variant === b.variant,
   getTypeString: shortType => {

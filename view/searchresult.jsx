@@ -3,6 +3,7 @@ const PaperUtils = require('./paperutils.js')
 const PaperSet = require('./paperset.jsx')
 const Feedback = require('./feedback.jsx')
 const AppState = require('./appstate.js')
+const OverflowView = require('./overflowview.jsx')
 
 class SearchResult extends React.Component {
   constructor () {
@@ -134,7 +135,7 @@ class SearchResult extends React.Component {
     switch (result.response) {
       case 'overflow':
         return (
-          <div className='overflow'>Too much entities found. Try search something more specific...</div>
+          <OverflowView query={query} />
         )
       case 'empty':
         return (

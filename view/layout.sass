@@ -248,13 +248,19 @@ body
   opacity: 0.5
   pointer-events: none
 .searchresult
-  .overflow, .empty
-    padding: 12rem 5rem
-    background-repeat: no-repeat
-    background-size: contain
-    background-position: top left
   .overflow
-    background-image: url(./overflow.png)
+    padding: 1rem 2rem
+    cursor: auto
+    .subject
+      color: $color-secondary-text
+      font-size: 80%
+    pre, p
+      margin: 0.5rem 0
+      padding: 0
+    .time, pre
+      color: $color-primary
+  .empty
+    padding: 3rem 5rem
   .error
     @extend .errorbox
   .set
