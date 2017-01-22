@@ -16,6 +16,20 @@ window.cancelIdleCallback = window.cancelIdleCallback || (id => clearTimeout(id)
 let setHashTimeout = null
 let hashIdle = null
 
+function readFromLocalStorage () {
+  try {
+    let stateData = window.localStorage.getItem('state')
+    let parse = JSON.parse(stateData)
+    if (typeof parse === 'object') {
+      return parse
+    } else {
+      return false
+    }
+  } catch (e) {
+    return false
+  }
+}
+
 if (history.state) {
   AppState.dispatch({type: 'load', state: history.state})
 } else {
@@ -26,6 +40,9 @@ if (history.state) {
     AppState.dispatch({type: 'query', query: q})
   } else if ((queryMatch = window.location.toString().match(/\/disclaim\/$/))) {
     AppState.dispatch({type: 'disclaim'})
+  } else {
+    let nsState = readFromLocalStorage()
+    nsState && AppState.dispatch({type: 'load', state: nsState})
   }
 }
 
@@ -48,6 +65,7 @@ AppState.subscribe(() => {
       url = '/formsearch/?query=' + encodeURIComponent(nState.query)
     }
     history.replaceState(nState, 'SchSrch', url)
+    window.localStorage.setItem('state', JSON.stringify(nState))
   })
 })
 
