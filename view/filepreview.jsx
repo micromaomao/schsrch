@@ -118,6 +118,7 @@ class FilePreview extends React.Component {
                 Can't load document:
                 <div>{this.state.error.message}</div>
                 <div className='retry' onClick={evt => this.load(this.props.doc, this.props.page)}>Try again</div>
+                <div className='download' onClick={evt => this.download()}>Download this document</div>
               </div>
             )
           : null}
@@ -134,7 +135,7 @@ class FilePreview extends React.Component {
     )
   }
   download () {
-    window.open(`/fetchDoc/${this.state.docMeta._id}/`)
+    window.open(`/fetchDoc/${this.state.docMeta ? this.state.docMeta._id : this.props.doc}/`)
   }
   changePage (page) {
     AppState.dispatch({type: 'previewChangePage', page})
