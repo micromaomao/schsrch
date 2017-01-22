@@ -56,7 +56,7 @@ class SearchResult extends React.Component {
       }
       this.result(query, result)
     }, err => {
-      this.error(query, err)
+      this.error(query, new Error('Unstable network connection or SchSrch has crashed.'))
     })
   }
   result (query, result) {
@@ -78,7 +78,13 @@ class SearchResult extends React.Component {
     return (
       <div className={'searchresult' + (this.state.loading ? ' loading' : '') + (this.props.smallerSetName ? ' smallsetname' : '')}>
         {this.state.err
-          ? <div className='error'>{this.state.err.message}</div>
+          ? <div className='error'>
+              <div>
+                Unable to search:&nbsp;
+                <span className='msg'>{this.state.err.message}</span>
+              </div>
+              <div className='retry' onClick={evt => this.query(this.state.query)}>Retry search</div>
+            </div>
           : null}
         {this.state.result
           ? this.renderResult(this.state.result, this.state.query)

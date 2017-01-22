@@ -229,6 +229,21 @@ body
   .status.loading
     opacity: 0.5
 
+.errorbox
+  padding: 1rem 2rem
+  color: $color-primary
+  .msg
+    color: red
+  .retry
+    cursor: pointer
+    color: white
+    display: inline-block
+    width: 10rem
+    text-align: center
+    padding: 0.5rem 0.5rem
+    margin: 1rem
+    background-color: $color-primary
+
 .searchresult.loading
   opacity: 0.5
   pointer-events: none
@@ -240,6 +255,8 @@ body
     background-position: top left
   .overflow
     background-image: url(./overflow.png)
+  .error
+    @extend .errorbox
   .set
     padding: 0.5rem 1rem
     margin-top: 0.5rem
@@ -415,11 +432,13 @@ $feedback-top-height: 2rem + 1.3rem
   .loading, .error
     padding: 1rem 2rem
   .error
-    color: red
+    @extend .errorbox
+    color: $color-primary
     background-color: white
-    .retry, .download
+    .download
       color: $color-primary
       cursor: pointer
+      padding-left: 1.2rem
   .top
     text-align: center
     font-size: 1rem

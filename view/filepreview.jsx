@@ -42,7 +42,7 @@ class FilePreview extends React.Component {
     this.setState({loading: true, error: null})
     fetch(`/sspdf/${doc}/${page}/`).then(res => new Promise((resolve, reject) => {
       if (!res.ok) {
-        reject(res.statusText || res.status)
+        reject(Object.assign(new Error(res.statusText || res.status), {notFetchError: true}))
       } else {
         resolve(res)
       }
@@ -52,7 +52,7 @@ class FilePreview extends React.Component {
       this.currentLoading = null
     }, err => {
       if (this.props.doc !== doc || this.props.page !== page) return
-      this.setState({loading: false, error: err, docJson: null})
+      this.setState({loading: false, error: (err.notFetchError ? err : new Error("Network unstable or SchSrch has crashed.")), docJson: null})
       this.currentLoading = null
     })
   }
@@ -115,8 +115,10 @@ class FilePreview extends React.Component {
         {!this.state.loading && this.state.error
           ? (
               <div className='error'>
-                Can't load document:
-                <div>{this.state.error.message}</div>
+                <div>
+                  Unable to preview the document:&nbsp;
+                  <span className='msg'>{this.state.error.message}</span>
+                </div>
                 <div className='retry' onClick={evt => this.load(this.props.doc, this.props.page)}>Try again</div>
                 <div className='download' onClick={evt => this.download()}>Download this document</div>
               </div>
