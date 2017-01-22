@@ -121,8 +121,8 @@ class PdfssWorker : public AsyncWorker {
           Set(rects, New<v8::Number>(i), xy);
         }
         Set(obj, New<v8::String>("rects").ToLocalChecked(), rects);
-        g_free(this->rects);
-        g_free(this->txt);
+        if (this->rectLen) g_free(this->rects);
+        if (this->txt) g_free(this->txt);
         argv[1] = obj;
 
         if (this->svgData.size() > 0) {
