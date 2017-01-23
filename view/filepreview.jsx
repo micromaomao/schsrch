@@ -20,15 +20,18 @@ class FilePreview extends React.Component {
   }
   componentDidMount () {
     if (this.props && this.props.doc) {
-      this.setState({docMeta: null})
-      this.load(this.props.doc, this.props.page)
+      this.loadFromProps(this.props)
     }
   }
   componentWillReceiveProps (nextProps) {
     if (!this.props || nextProps.doc !== this.props.doc || nextProps.page !== this.props.page) {
       if (!this.props || nextProps.doc !== this.props.doc) this.setState({docMeta: null})
-      this.load(nextProps.doc, nextProps.page)
+      this.loadFromProps(nextProps)
     }
+  }
+  loadFromProps (props) {
+    let {doc, page} = props
+    this.load(doc, page)
   }
   componentDidUpdate (prevProps, prevState) {
     if (prevProps.doc !== this.props.doc || prevProps.page !== this.props.page) {

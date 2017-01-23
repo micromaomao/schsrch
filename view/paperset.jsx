@@ -117,7 +117,7 @@ class PaperSet extends React.Component {
               </span>
             )
             return (
-              <div className='file' key={file._id} onClick={evt => this.openFile(file._id, 0)}>
+              <div className='file' key={file._id} onClick={evt => this.openFile(file._id, this.getLastPreviewPage(file._id))}>
                 {!this.state.server ? pt : (
                   <a href={this.fileUrl(file._id)} target='_blank'>
                     {pt}
@@ -140,6 +140,10 @@ class PaperSet extends React.Component {
   }
   fileUrl (id) {
     return '/fetchDoc/' + encodeURIComponent(id)
+  }
+  getLastPreviewPage (doc) {
+    let pres = AppState.getState().previewPages[doc]
+    return pres || 0
   }
 }
 
