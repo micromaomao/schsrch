@@ -7,6 +7,10 @@ let db = mongoose.createConnection(DB)
 
 const PDFJS = require('pdfjs-dist')
 const fs = require('fs')
+const path = require('path')
+const PaperUtils = require('./view/paperutils.js')
+
+let raceLock = {}
 
 db.on('error', err => {
   console.error(err)
@@ -164,7 +168,15 @@ db.on('open', () => {
             variant: parseInt(variant)
           }
           Object.assign(doc, mt)
-          let removeDoc = doc => PastPaperIndex.remove({doc: doc._id}).exec().then(() => doc.remove())
+          let setStr = PaperUtils.setToString(mt)
+          if (raceLock[setStr] && raceLock[setStr][mt.type]) {
+            resolve()
+            return
+          } else {
+            let lt = raceLock[setStr] || (raceLock[setStr] = {})
+            lt[mt.type] = true
+          }
+          let removeDoc = doc => {process.stderr.write('\n' + JSON.stringify(mt) + '\n'); return PastPaperIndex.remove({doc: doc._id}).exec().then(() => doc.remove())}
           Promise.all(idxes.map(idx => idx.save())).then(() => PastPaperDoc.find(mt, {_id: true}).exec())
             .then(docs => Promise.all(docs.map(doc => removeDoc(doc)))).then(() => doc.save()).then(resolve, reject)
         })).then(resolve, reject)
@@ -173,50 +185,66 @@ db.on('open', () => {
   })
 
   let queue = process.argv.slice(2)
-  let total = queue.length
-  let left = total
+  let total = () => queue.length + done
+  let left = () => queue.length
+  let done = 0
   let failure = 0
   let ended = false
+  let processing = 0
   let lastShowProgress = Date.now()
   function end () {
     ended = true
-    console.error(`Done. ${total - failure} documents indexed. ( ${failure} failed. )`)
+    process.stderr.write(`\nDone. ${total() - failure} documents indexed. ( ${failure} failed. )\n`)
     process.exit(0)
   }
   function thread (n) {
-    if (left <= 0) {
-      ended || end()
+    if (left() <= 0) {
+      if (processing === 0) {
+        ended || end()
+      } else {
+        setTimeout(() => thread(n), 100)
+      }
       return
     }
-    if (queue.length === 0) {
-      return
-    }
-    if (Date.now() - lastShowProgress >= 10000) {
-      console.error(`[${n}] ${total - left}/${total}, ${Math.round((1 - (left / total)) * 1000) / 10}% finish...`)
+    if (Date.now() - lastShowProgress >= 100) {
+      process.stderr.write(`[${n}] ${total() - left()}/${total()}, ${Math.round((1 - (left() / total())) * 1000) / 10}% finish...         \r`)
       lastShowProgress = Date.now()
     }
     let doneThis = () => {
-      left--
+      done++
+      processing --
       thread(n)
     }
     let task = queue.pop()
-    indexPdf(task).then(() => {
+    processing ++
+    new Promise((resolve, reject) => {
+      fs.stat(task, (err, stats) => {
+        if (err) {
+          reject(err)
+        } else if (stats.isDirectory()) {
+          fs.readdir(task, (err, files) => {
+            if (err) {
+              reject(err)
+            } else {
+              Array.prototype.push.apply(queue, files.map(f => path.join(task, f)))
+              resolve(false)
+            }
+          })
+        } else {
+          resolve(true)
+        }
+      })
+    }).then(doit => doit ? indexPdf(task) : Promise.resolve(false)).then(() => {
       doneThis()
     }, err => {
       failure++
-      console.log(task)
-      console.error('  -- Ignoring: ' + err.message)
+      process.stdout.write('\n' + task + '\n')
+      process.stderr.write('  -- Ignoring: ' + err.message + '\n')
       doneThis()
     })
   }
 
-  // for(let i = 0; i < 5; i ++) {
-  //   thread(i)
-  // }
-  thread(0)
-
-  // Promise.all(process.argv.slice(2).map(path => indexPdf(path))).then(() => process.exit(0)).catch(err => {
-  //   console.error(err)
-  //   process.exit(1)
-  // })
+  for(let i = 0; i < 3; i ++) {
+    thread(i)
+  }
 })

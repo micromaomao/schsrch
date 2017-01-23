@@ -101,9 +101,9 @@ module.exports = (db, mongoose) => {
         fetchPP(match[1], match[2], null, null, match[3])
       } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{1,2})[_ ]*(paper[_ ]*)?(\d)$/))) {
         fetchPP(match[1], match[2], match[4], null, null)
-      } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{1,2})[_ ]*(paper[_ ]*)?(\d)[_ ](\d)$/))) {
+      } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{1,2})[_ ]*(paper[_ ]*)?(\d)[_ ]*(\d)$/))) {
         fetchPP(match[1], match[2], match[4], match[5], null)
-      } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{1,2})[_ ]([a-z]+)[_ ](\d)[_ ](\d)$/))) {
+      } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{1,2})[_ ]([a-z]+)[_ ](\d)[_ ]*(\d)$/))) {
         fetchPP(match[1], match[2], match[4], match[5], match[3])
       } else if ((match = query.match(/^(\d{4})[_ ]([a-z]\d{1,2})[_ ](\d)(\d)[_ ]([a-z]+)$/))) {
         fetchPP(match[1], match[2], match[3], match[4], match[5])
