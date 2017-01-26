@@ -218,34 +218,68 @@ module.exports = (db, mongoose) => {
         next()
         return
       }
-      let buff = doc.doc
-      sspdf.getPage(buff, pn, function (err, result) {
-        if (err) {
-          next(err)
-        } else {
-          result.rects = result.rects.map(rect => {
-            function round (n) {
-              return Math.round(n * 100) / 100
-            }
-            rect.x1 = round(rect.x1)
-            rect.x2 = round(rect.x2)
-            rect.y1 = round(rect.y1)
-            rect.y2 = round(rect.y2)
-            return rect
-          })
-          res.set('Cache-Control', 'max-age=31556926')
-          result.svg = result.svg.toString('utf-8')
-          doc.doc = null
-          result.doc = doc
-          // svgo.optimize(result.svg, rSvgo => {
-          //   result.svg = rSvgo.data
-          //   res.send(result)
-          // })
-          res.send(result)
-        }
+      processSSPDF(doc, pn).then(sspdf => {
+        res.set('Cache-Control', 'max-age=' + (10 * 24 * 60 * 60).toString())
+        res.send(sspdf)
+      }, err => {
+        next(err)
       })
     }).catch(err => next(err))
   })
+
+  function processSSPDF (doc, pn) {
+    return new Promise((resolve, reject) => {
+      function postCache (stuff) {
+        let result = stuff
+        delete result.text
+        delete result.rects
+        result.doc = doc
+        result.doc.doc = null
+        return result
+      }
+
+      PastPaperIndex.find({doc: doc._id, page: pn}).then(ppIdxes => {
+        if (!ppIdxes || ppIdxes.length < 1) {
+          reject(new Error('PastPaperIndex not found.'))
+          return
+        }
+        let ppIdx = ppIdxes[0]
+        if (ppIdx.sspdfCache) {
+          resolve(postCache(ppIdx.sspdfCache))
+        } else {
+          console.log(`Building sspdf for ${doc._id}::${pn} (idx//${ppIdx._id})`)
+          let buff = doc.doc
+          sspdf.getPage(buff, pn, function (err, result) {
+            if (err) {
+              reject(err)
+            } else {
+              result.rects = result.rects.map(rect => {
+                function round (n) {
+                  return Math.round(n * 100) / 100
+                }
+                rect.x1 = round(rect.x1)
+                rect.x2 = round(rect.x2)
+                rect.y1 = round(rect.y1)
+                rect.y2 = round(rect.y2)
+                return rect
+              })
+              let svg = result.svg.toString('utf-8')
+              svgo.optimize(svg, rSvgo => {
+                result.svg = rSvgo.data
+                ppIdx.sspdfCache = result
+                ppIdx.save(err => {
+                  if (err) {
+                    console.error('Unable to save sspdfCache: ' + err)
+                  }
+                  resolve(postCache(result))
+                })
+              })
+            }
+          })
+        }
+      }).catch(reject)
+    })
+  }
 
   rMain.post('/feedback/', function (req, res, next) {
     let ctype = req.get('Content-Type')
