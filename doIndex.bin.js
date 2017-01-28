@@ -176,7 +176,7 @@ db.on('open', () => {
             let lt = raceLock[setStr] || (raceLock[setStr] = {})
             lt[mt.type] = true
           }
-          let removeDoc = doc => {process.stderr.write('\n' + JSON.stringify(mt) + '\n'); return PastPaperIndex.remove({doc: doc._id}).exec().then(() => doc.remove())}
+          let removeDoc = doc => PastPaperIndex.remove({doc: doc._id}).exec().then(() => doc.remove())
           Promise.all(idxes.map(idx => idx.save())).then(() => PastPaperDoc.find(mt, {_id: true}).exec())
             .then(docs => Promise.all(docs.map(doc => removeDoc(doc)))).then(() => doc.save()).then(resolve, reject)
         })).then(resolve, reject)
