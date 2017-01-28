@@ -39,6 +39,13 @@ module.exports = (db, mongoose) => {
       }, err => Promise.reject(err))
   }
 
+  rMain.use(function (req, res, next) {
+    if (req.hostname.match(/^www\./)) {
+      res.redirect('https://schsrch.xyz' + req.path)
+    } else {
+      next()
+    }
+  })
   rMain.get('/', function (req, res) {
     res.type('html')
     let $ = cheerio.load(indexHtml)
