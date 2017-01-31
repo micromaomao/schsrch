@@ -19,7 +19,7 @@ if (process.env.NODE_ENV !== 'production') {
   fs.watch(indexPath, list => {
     fs.readFile(indexPath, { encoding: 'utf8' }, (err, data) => {
       if (err) {
-        console.log(err)
+        console.error(err)
         process.exit(1)
       } else {
         indexHtml = data
