@@ -286,7 +286,7 @@ class SsPdfView extends React.Component {
       et.addEventListener('mouseup', this.handleUp, noPassiveEventsArgument)
       et.addEventListener('touchend', this.handleUp, noPassiveEventsArgument)
       et.addEventListener('touchcancel', this.handleUp, noPassiveEventsArgument)
-      et.addEventListener('mousewheel', this.handleUp, noPassiveEventsArgument)
+      et.addEventListener('mousewheel', this.handleScroll, noPassiveEventsArgument)
     }
   }
   componentWillReceiveProps (nextProps) {
