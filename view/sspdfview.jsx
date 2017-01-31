@@ -45,29 +45,22 @@ class SsPdfView extends React.Component {
     }
     return (
       <div className='sspdfview' style={{height: this.viewHeight + 'px'}}>
-        <div className='pointereventcover'
-          onMouseDown={this.handleDown}
-          onTouchStart={this.handleDown}
-          onMouseMove={this.handleMove}
-          onTouchMove={this.handleMove}
-          onMouseUp={this.handleUp}
-          onTouchEnd={this.handleUp}
-          onTouchCancel={this.handleUp}
-          onWheel={this.handleScroll} />
+        <div className='pointereventcover' ref={f => this.eventTarget = f} />
         <div className='svglayer' ref={f => this.svgLayer = f} style={svgStyle} />
         <canvas className='dirtylayer' ref={f => this.dirtyLayer = f} width={this.viewWidth} height={this.viewHeight} />
       </div>
     )
   }
   handleDown (evt) {
-    evt.preventDefault()
     if (!evt.touches) {
+      evt.preventDefault()
       this.setState({dragOrig: {
         touch: null, x: evt.clientX, y: evt.clientY
       }})
       return
     }
     if (evt.touches.length > 1 || this.state.dragOrig) {
+      evt.preventDefault()
       let t0 = evt.touches[0]
       let t1 = evt.touches[1]
       this.setState({lastTapTime: 0, dragOrig: {
@@ -83,15 +76,19 @@ class SsPdfView extends React.Component {
       }})
       return
     }
+    if (this.isInitialSize()) {
+      return
+    }
+    evt.preventDefault()
     let touch = evt.changedTouches[0]
     this.setState({dragOrig: {
       touch: touch.identifier, x: touch.clientX, y: touch.clientY
     }})
   }
   handleMove (evt, prevent = true) {
-    if (prevent) evt.preventDefault()
     let dragOrig = this.state.dragOrig
     if (!dragOrig) return
+    if (prevent) evt.preventDefault()
     if (dragOrig.resize) {
       if (evt.touches.length !== 2) {
         this.setState({dragOrig: null})
@@ -140,12 +137,13 @@ class SsPdfView extends React.Component {
     this.ctAnimationStopToState({ctPos: [odocX + dx, odocY + dy]})
   }
   handleUp (evt) {
-    evt.preventDefault()
     this.handleMove(evt, false)
-
     let doubleTapTime = 300
     let isDoubleTap = Date.now() - this.state.lastTapTime < doubleTapTime
     this.setState({lastTapTime: Date.now()})
+    if (this.dragOrig || isDoubleTap) {
+      evt.preventDefault()
+    }
     if (!evt.touches && !evt.changedTouches) {
       if (isDoubleTap) {
         this.handleDoubleTap([evt.clientX, evt.clientY])
@@ -229,6 +227,11 @@ class SsPdfView extends React.Component {
     }
     return [ctX, ctY]
   }
+  isInitialSize (viewState = this.ctAnimationGetFinalState()) {
+    let [viWid, viHig] = [this.viewWidth, this.viewHeight]
+    let [ctWid, ctHig] = viewState.ctSize
+    return viWid >= ctWid && viHig >= ctHig
+  }
   calcResizeOnPoint (point, factor) {
     let [ctX, ctY] = this.ctAnimationGetFinalState().ctPos
     let [npX, npY] = [(-ctX + point[0]) * factor + ctX, (-ctY + point[1]) * factor + ctY]
@@ -268,7 +271,22 @@ class SsPdfView extends React.Component {
       ctx.clearRect(0, 0, this.dirtyLayer.width, this.dirtyLayer.height)
       ctx.drawImage(this.state.cacheCanvas, dx, dy, dw, dh)
     } else if (this.needClearDirtyLayer) {
+      this.needClearDirtyLayer = false
       ctx.clearRect(0, 0, this.dirtyLayer.width, this.dirtyLayer.height)
+    }
+    const etAttr = 'data-event-bind'
+    let et = this.eventTarget
+    if (et.getAttribute(etAttr) !== 'true') {
+      et.setAttribute(etAttr, 'true')
+      let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
+      et.addEventListener('mousedown', this.handleDown, noPassiveEventsArgument)
+      et.addEventListener('touchstart', this.handleDown, noPassiveEventsArgument)
+      et.addEventListener('mousemove', this.handleMove, noPassiveEventsArgument)
+      et.addEventListener('touchmove', this.handleMove, noPassiveEventsArgument)
+      et.addEventListener('mouseup', this.handleUp, noPassiveEventsArgument)
+      et.addEventListener('touchend', this.handleUp, noPassiveEventsArgument)
+      et.addEventListener('touchcancel', this.handleUp, noPassiveEventsArgument)
+      et.addEventListener('mousewheel', this.handleUp, noPassiveEventsArgument)
     }
   }
   componentWillReceiveProps (nextProps) {
