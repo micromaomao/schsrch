@@ -30,7 +30,7 @@ class SsPdfView extends React.Component {
       return null
     }
     this.viewWidth = window.innerWidth
-    this.viewHeight = Math.min(this.viewWidth * (docJson.height / docJson.width), window.innerHeight - 40)
+    this.viewHeight = Math.min(this.viewWidth * (docJson.height / docJson.width), window.innerHeight - 25)
     let svgUrl = this.state.blobUrl
     if (this.state.cacheCanvas && (this.state.dragOrig || this.ctAnimation)) {
       this.needPaintDirtyLayer = true
@@ -138,19 +138,18 @@ class SsPdfView extends React.Component {
   }
   handleUp (evt) {
     this.handleMove(evt, false)
+    if (!evt.touches && !evt.changedTouches) {
+      if (this.dragOrig) {
+        evt.preventDefault()
+      }
+      this.finishDrag()
+      return
+    }
     let doubleTapTime = 300
     let isDoubleTap = Date.now() - this.state.lastTapTime < doubleTapTime
     this.setState({lastTapTime: Date.now()})
     if (this.dragOrig || isDoubleTap) {
       evt.preventDefault()
-    }
-    if (!evt.touches && !evt.changedTouches) {
-      if (isDoubleTap) {
-        this.handleDoubleTap([evt.clientX, evt.clientY])
-        return
-      }
-      this.finishDrag()
-      return
     }
     if ((evt.changedTouches && evt.changedTouches.length !== 1) || (evt.touches && evt.touches.length !== 0) || !this.state.dragOrig) {
       let touchLeft = evt.changedTouches[0] || evt.touches[0]
@@ -163,9 +162,9 @@ class SsPdfView extends React.Component {
         nStat.ctPos = this.calcBound(nStat)
       }
       this.ctAnimationStartFromState(nStat)
-      return
+    } else {
+      this.finishDrag()
     }
-    this.finishDrag()
     let touch = evt.changedTouches[0]
     if (isDoubleTap) {
       this.handleDoubleTap([touch.clientX, touch.clientY])
@@ -179,11 +178,10 @@ class SsPdfView extends React.Component {
   }
   handleDoubleTap (point) {
     this.setState({dragOrig: null})
-    let currentFactor = this.calcFactorDoc()
-    if (currentFactor >= 2) {
+    if (!this.isInitialSize()) {
       this.ctAnimationStartFromState(this.calcCenter())
     } else {
-      let rsState = this.calcResizeOnPoint(this.client2view(point), 2 / currentFactor)
+      let rsState = this.calcResizeOnPoint(this.client2view(point), 1.5 / this.calcFactorDoc())
       this.ctAnimationStartFromState({ctPos: this.calcBound(rsState), ctSize: rsState.ctSize})
     }
   }
@@ -347,6 +345,16 @@ class SsPdfView extends React.Component {
     nStat = Object.assign({}, this.ctAnimationGetFinalState(), nStat)
     this.ctAnimationStopTo(nStat.ctPos, nStat.ctSize)
   }
+  stateSimillar (ctA, ctB) {
+    let {ctPos: posA, ctSize: sizeA} = ctA
+    let {ctPos: posB, ctSize: sizeB} = ctB
+    const threshold = 1
+    for (let i = 0; i < 2; i ++) {
+      if (Math.abs(posA[i] - posB[i]) > threshold) return false
+      if (Math.abs(sizeA[i] - sizeB[i]) > threshold) return false
+    }
+    return true
+  }
   ctAnimationStart (nctPos, nctSize) {
     let aid = this.ctAnimationId++
     let animTime = 200
@@ -354,8 +362,13 @@ class SsPdfView extends React.Component {
       cancelAnimationFrame(this.ctAnimation.frameId)
       this.ctAnimation = null
     }
-    let [fromPos, fromSize] = ['ctPos', 'ctSize'].map(p => this.state[p])
+    let {ctPos: fromPos, ctSize: fromSize} = this.state
     let fromTime = Date.now()
+    let nct = {ctPos: nctPos, ctSize: nctSize}
+    if (this.stateSimillar(nct, this.state)) {
+      this.setState(nct)
+      return
+    }
     let doAnim = () => {
       if (!this.ctAnimation || this.ctAnimation.aid !== aid) return
       let prog = Math.max(Date.now() - fromTime, 20) / animTime
