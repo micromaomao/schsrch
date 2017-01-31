@@ -40,7 +40,7 @@ module.exports = (db, mongoose) => {
   }
 
   rMain.use(function (req, res, next) {
-    console.log(`Serving ${req.method.toUpperCase()} ${req.path} for ${req.ip}...`)
+    console.log(`Serving ${req.method.toUpperCase()} ${req.path} on ${req.hostname} for ${req.ip}...`)
     if (req.hostname.match(/^www\./)) {
       res.redirect('https://schsrch.xyz' + req.path)
     } else {
