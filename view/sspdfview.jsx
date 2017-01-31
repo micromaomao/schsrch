@@ -59,7 +59,7 @@ class SsPdfView extends React.Component {
       }})
       return
     }
-    if (evt.touches.length > 1 || this.state.dragOrig) {
+    if (evt.touches.length > 1) {
       evt.preventDefault()
       let t0 = evt.touches[0]
       let t1 = evt.touches[1]
@@ -137,9 +137,9 @@ class SsPdfView extends React.Component {
     this.ctAnimationStopToState({ctPos: [odocX + dx, odocY + dy]})
   }
   handleUp (evt) {
-    this.handleMove(evt, false)
     if (!evt.touches && !evt.changedTouches) {
-      if (this.dragOrig) {
+      this.handleMove(evt, false)
+      if (this.state.dragOrig) {
         evt.preventDefault()
       }
       this.finishDrag()
@@ -147,34 +147,43 @@ class SsPdfView extends React.Component {
     }
     let doubleTapTime = 300
     let isDoubleTap = Date.now() - this.state.lastTapTime < doubleTapTime
-    this.setState({lastTapTime: Date.now()})
-    if (this.dragOrig || isDoubleTap) {
+    if (this.state.dragOrig || isDoubleTap) {
       evt.preventDefault()
     }
-    if ((evt.changedTouches && evt.changedTouches.length !== 1) || (evt.touches && evt.touches.length !== 0) || !this.state.dragOrig) {
-      let touchLeft = evt.changedTouches[0] || evt.touches[0]
-      let nStat = this.ctAnimationGetFinalState()
-      if (nStat.ctSize[0] > this.viewWidth * 5) {
-        nStat = this.calcResizeOnPoint(this.client2view([touchLeft.clientX, touchLeft.clientY]), this.viewWidth * 5 / nStat.ctSize[0])
-      } else if (nStat.ctSize[0] < this.viewWidth && nStat.ctSize[1] < this.viewHeight) {
-        nStat = this.calcCenter()
-      } else {
-        nStat.ctPos = this.calcBound(nStat)
-      }
-      this.ctAnimationStartFromState(nStat)
+    if (this.state.dragOrig && !this.state.dragOrig.resize) {
+      this.handleMove(evt, false)
+    }
+    let notResize = !this.state.dragOrig || !this.state.dragOrig.resize
+    if (!notResize || isDoubleTap) {
+      this.setState({lastTapTime: 0})
     } else {
-      this.finishDrag()
+      this.setState({lastTapTime: Date.now()})
     }
     let touch = evt.changedTouches[0]
-    if (isDoubleTap) {
+    if (this.state.dragOrig) {
+      this.finishDrag()
+    }
+    if (notResize && isDoubleTap) {
       this.handleDoubleTap([touch.clientX, touch.clientY])
-      return
     }
   }
   finishDrag () {
     if (!this.state.dragOrig) return
-    this.setState({dragOrig: null})
     this.ctAnimationStartFromState({ctPos: this.calcBound()})
+
+    // Limit resize (no too big, no too small)
+    let nStat = this.ctAnimationGetFinalState()
+    let resizeCenter = this.state.dragOrig.resize ? this.state.dragOrig.pointA.point : ['x', 'y'].map(p => this.state.dragOrig[p])
+    if (nStat.ctSize[0] > this.viewWidth * 5) {
+      nStat = this.calcResizeOnPoint(this.client2view(resizeCenter), this.viewWidth * 5 / nStat.ctSize[0])
+    } else if (nStat.ctSize[0] < this.viewWidth && nStat.ctSize[1] < this.viewHeight) {
+      nStat = this.calcCenter()
+    } else {
+      nStat.ctPos = this.calcBound(nStat)
+    }
+    this.ctAnimationStartFromState(nStat)
+
+    this.setState({dragOrig: null})
   }
   handleDoubleTap (point) {
     this.setState({dragOrig: null})
