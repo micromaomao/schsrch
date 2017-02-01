@@ -57,14 +57,14 @@ body
   pointer-events: none
 
 .searchbar
-  .logoContain
+  .bannerContain
     transition: all 100ms
-    .logo
+    .banner
       transition: all 100ms
       color: $color-primary
-  .logoContain.hide
+  .bannerContain.hide
     margin-left: 0.5rem !important
-    .logo
+    .banner
       width: 0 !important
   .inputContain
     $inputFontSize: 1.3rem
@@ -150,17 +150,17 @@ body
         background-color: darken(white, 10%)
 
 .searchbar.big
-  .logoContain
+  .bannerContain
     display: block
     text-align: center
     margin-top: 20vh
-    .logo
+    .banner
       display: inline-block
       max-width: 70vw
   .inputContain
     display: block
     text-align: center
-    margin-top: 2rem
+    margin-top: 1rem
     .inputPositionWrap, .subjecthints
       width: 90vw
     .querybox, .placeholder
@@ -178,13 +178,14 @@ body
       margin-right: auto
 .searchbar.small
   margin-top: 2rem
-  .logoContain, .inputContain
+  .bannerContain, .inputContain
     display: inline-block
-  .logoContain
+  .bannerContain
     vertical-align: top
     margin-left: 2rem
-    .logo
-      width: 150px
+    .banner
+      max-width: 150px
+      max-height: 40px
   .inputContain
     margin-left: 2.5rem
     vertical-align: bottom

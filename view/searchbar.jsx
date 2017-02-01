@@ -2,7 +2,8 @@ const React = require('react')
 const CIESubjects = require('./CIESubjects.js')
 const SearchPrompt = require('./searchprompt.jsx')
 const AppState = require('./appstate.js')
-const URL_LOGO = require('./logo.png')
+const URL_BANNER = require('./banner.png')
+const URL_BANNER_SMALL = require('./banner-small.png')
 
 class SearchBar extends React.Component {
   constructor () {
@@ -102,7 +103,7 @@ class SearchBar extends React.Component {
     return select
   }
   render () {
-    let hideLogo = !this.state.server && !this.props.big && window.innerWidth <= 800
+    let hideBanner = !this.state.server && !this.props.big && window.innerWidth <= 800
     let strokeFillStyle = {}
     let lastChangedDur = Date.now() - this.state.lastQueryChange
     let loadingDur = Date.now() - this.state.loadingStart
@@ -169,10 +170,10 @@ class SearchBar extends React.Component {
     const placeholderText = '... Type here ...'
     let renderT = (
       <div className={this.props.big ? 'searchbar big' : 'searchbar small'}>
-        <div className={'logoContain' + (hideLogo ? ' hide' : '')}>
-          <img className='logo' src={URL_LOGO} alt='SchSrch' />
+        <div className={'bannerContain' + (hideBanner ? ' hide' : '')}>
+          <img className='banner' src={this.props.big ? URL_BANNER : URL_BANNER_SMALL} alt='SchSrch' />
         </div>
-        <div className={'inputContain' + (hideLogo ? ' hw' : '')}>
+        <div className={'inputContain' + (hideBanner ? ' hw' : '')}>
           <div className='inputPositionWrap'>
             <input
               className={'querybox' + (this.state.server ? ' border' : '')}
