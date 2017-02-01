@@ -4,6 +4,11 @@
   "icons": [
     {
       "src": false,
+      "sizes": "1024x1024",
+      "type": "image/png"
+    },
+    {
+      "src": false,
       "sizes": "192x192",
       "type": "image/png"
     },
