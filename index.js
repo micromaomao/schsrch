@@ -29,7 +29,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 module.exports = (db, mongoose) => {
-  const {PastPaperDoc, PastPaperIndex, PastPaperFeedback} = require('./lib/dbModel.js')(db, mongoose)
+  const {PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord} = require('./lib/dbModel.js')(db, mongoose)
   let rMain = express.Router()
 
   function statusInfo () {
@@ -47,11 +47,16 @@ module.exports = (db, mongoose) => {
       next()
     }
   })
+  function saveRecord (rec) {
+    return rec.save().then(() => {}, err => console.log('Error saving record: ' + err))
+  }
   rMain.get('/', function (req, res) {
     res.type('html')
     let $ = cheerio.load(indexHtml)
     $('.react-root').html(serverRender({})) // We want this to be static so that service worker don't end up caching old data
     res.send($.html())
+    let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/'})
+    saveRecord(rec)
   })
   rMain.use('/resources', express.static(path.join(__dirname, 'dist')))
   // rMain.use('/resources', express.static(path.join(__dirname, 'view/public')))
@@ -180,6 +185,8 @@ module.exports = (db, mongoose) => {
       res.status(500)
       res.send(err)
     })
+    let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/search/', search: query})
+    saveRecord(rec)
   })
   rMain.get('/disclaim/', function (req, res, next) {
     res.type('html')
@@ -205,6 +212,8 @@ module.exports = (db, mongoose) => {
 
   rMain.get('/fetchDoc/:id', function (req, res, next) {
     PastPaperDoc.findOne({_id: req.params.id}).then(doc => {
+      let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/fetchDoc/', targetId: req.params.id})
+      saveRecord(rec)
       if (!doc) {
         next()
         return
@@ -229,6 +238,8 @@ module.exports = (db, mongoose) => {
       processSSPDF(doc, pn).then(sspdf => {
         res.set('Cache-Control', 'max-age=' + (10 * 24 * 60 * 60).toString())
         res.send(sspdf)
+        let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/sspdf/', targetId: doc._id, targetPage: pn})
+        saveRecord(rec)
       }, err => {
         next(err)
       })
