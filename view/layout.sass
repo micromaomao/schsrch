@@ -442,10 +442,21 @@ $feedback-top-height: 2rem + 1.3rem
     @extend .errorbox
     color: $color-primary
     background-color: white
+  .error, .loading
     .download
       color: $color-primary
       cursor: pointer
+  .error
+    .download
       padding-left: 1.2rem
+  .loading
+    .download
+      padding: 0.5rem 1rem
+      margin-left: -2rem
+      margin-right: -2rem
+      margin-bottom: -1rem // Follow .filepreview .loading / padding
+      margin-top: 1rem
+      background-color: white
   .top
     text-align: center
     font-size: 1rem

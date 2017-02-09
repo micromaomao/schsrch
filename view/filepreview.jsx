@@ -84,7 +84,10 @@ class FilePreview extends React.Component {
     return (
       <div className='filepreview'>
         {!this.state.docMeta && this.state.loading && !this.state.error
-          ? <div className='loading'>Loading document...</div>
+          ? <div className='loading'>
+              Loading document...
+              <div className='download' onClick={evt => this.download()}>Download this document</div>
+            </div>
           : null}
         {this.state.docMeta
           ? (
