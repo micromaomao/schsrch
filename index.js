@@ -71,7 +71,7 @@ module.exports = (db, mongoose) => {
 
   function doSearch (query) {
     function findRelated (doc) {
-      return PastPaperDoc.find({subject: doc.subject, time: doc.time, paper: doc.paper, variant: doc.variant}, {_id: true, type: true, fileType: true, numPages: true})
+      return PastPaperDoc.find({subject: doc.subject, time: doc.time, paper: doc.paper, variant: doc.variant}, {_id: true, type: true, fileType: true, numPages: true}, {doc: false})
         .then(rst => Promise.resolve(rst.filter(x => x.type !== doc.type)))
     }
     return new Promise((resolve, reject) => {
@@ -85,7 +85,7 @@ module.exports = (db, mongoose) => {
               list: []
             })
           } else {
-            PastPaperDoc.findOne({_id: rstIndex.doc}).then(rstDoc => {
+            PastPaperDoc.findOne({_id: rstIndex.doc}, {doc: false}).then(rstDoc => {
               if (!rstDoc) {
                 resolve({
                   response: 'text',
@@ -161,7 +161,7 @@ module.exports = (db, mongoose) => {
         paper && (finder.paper = parseInt(paper))
         variant && (finder.variant = parseInt(variant))
         type && (finder.type = type.toLowerCase())
-        PastPaperDoc.find(finder, {__v: false, doc: false}).limit(51).then(rst => {
+        PastPaperDoc.find(finder, {doc: false}).limit(51).then(rst => {
           if (rst.length >= 50) {
             resolve({
               response: 'overflow'
@@ -230,7 +230,7 @@ module.exports = (db, mongoose) => {
       next()
       return
     }
-    PastPaperDoc.findOne({_id: req.params.docid}, {_v: false}).then(doc => {
+    PastPaperDoc.findOne({_id: req.params.docid}).then(doc => {
       if (!doc) {
         next()
         return
