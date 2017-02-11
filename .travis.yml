@@ -16,5 +16,6 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-6
+      - libpoppler-glib-dev
 script:
   - ./test/perpareDatabase.sh && npm run test
