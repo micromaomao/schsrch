@@ -18,4 +18,4 @@ addons:
       - g++-6
       - libpoppler-glib-dev
 script:
-  - ./test/perpareDatabase.sh && npm run test
+  - npm run webpack && ./test/perpareDatabase.sh && npm run test
