@@ -1,14 +1,15 @@
 #!/usr/bin/env node
-const DB = process.env.MONGODB
+const { MONGODB: DB, QUICK } = process.env
+let noCacheSSPDF = QUICK === '1'
 
 const mongoose = require('mongoose')
 mongoose.Promise = global.Promise
 let db = mongoose.createConnection(DB)
 
-const PDFJS = require('pdfjs-dist')
 const fs = require('fs')
 const path = require('path')
 const PaperUtils = require('./view/paperutils.js')
+const sspdf = require('./lib/sspdf.js')
 
 let raceLock = {}
 
@@ -27,28 +28,41 @@ db.on('open', () => {
         return
       }
 
-      let pagePromises = []
-
-      PDFJS.getDocument(new Uint8Array(data)).then(pdfDoc => new Promise((resolve, reject) => {
-        let doc = new PastPaperDoc({
-          doc: data,
-          numPages: pdfDoc.numPages,
-          fileType: 'pdf'
-        })
-        let loadPage = page => new Promise((resolve, reject) => {
-          let pIndex = page.pageIndex
-          page.getTextContent().then(ct => {
-            let textContent = ct.items.map(x => x.str).join('\n\n')
+      let doc = new PastPaperDoc({
+        doc: data,
+        // Will add numPages later.
+        fileType: 'pdf'
+      })
+      let loadPage = (pIndex, returnNumPages = false) => new Promise((resolve, reject) => {
+        new Promise((resolve, reject) => {
+          sspdf.getPage(data, pIndex, function (err, pageData) {
+            if (err) return reject(err)
+            resolve(pageData)
+          })
+        }).then(pageData => {
+          function ok (sspdfCache) {
             let idx = new PastPaperIndex({
               doc: doc._id,
               page: pIndex,
-              content: textContent
+              content: pageData.text,
+              sspdfCache
             })
-            resolve(idx)
-          }).catch(reject)
-        })
-        for (let pn = 1; pn <= pdfDoc.numPages; pn++) {
-          pagePromises.push(pdfDoc.getPage(pn).then(page => loadPage(page)))
+            resolve(returnNumPages ? [idx, pageData.pageNum] : idx)
+          }
+          if (noCacheSSPDF) {
+            ok(null)
+          } else {
+            sspdf.preCache(pageData, sspdfCache => {
+              ok(sspdfCache)
+            })
+          }
+        }).catch(reject)
+      })
+      loadPage(0, true).then(([idx0, numPages]) => {
+        doc.set('numPages', numPages)
+        let pagePromises = [Promise.resolve(idx0)]
+        for (let pn = 1; pn < numPages; pn++) {
+          pagePromises.push(loadPage(pn))
         }
         Promise.all(pagePromises).then(idxes => new Promise((resolve, reject) => {
           let subject
@@ -61,7 +75,7 @@ db.on('open', () => {
             let nameMat = fname.match(/^(\d+)_([a-z]\d\d)_([a-z]+)_(\d{1,2})\.pdf$/)
             let nameErMat = fname.match(/^(\d+)_([a-z]\d\d)_([a-z]+)\.pdf$/)
             if (!nameMat && !nameErMat) {
-              // Detect paper "identity" (metadata) by its first page.
+              // Detect paper "identity" (metadata) based on the first page.
               if (idxes.length === 0) {
                 throw new Error("No page => can't identify paper")
               }
@@ -178,9 +192,11 @@ db.on('open', () => {
           }
           let removeDoc = doc => PastPaperIndex.remove({doc: doc._id}).exec().then(() => doc.remove())
           Promise.all(idxes.map(idx => idx.save())).then(() => PastPaperDoc.find(mt, {_id: true}).exec())
-            .then(docs => Promise.all(docs.map(doc => removeDoc(doc)))).then(() => doc.save()).then(resolve, reject)
+            .then(docs => Promise.all(docs.map(doc => removeDoc(doc)))).then(() => doc.save(), reject).then(resolve, err => reject(new Error("Can't save document: " + err)))
         })).then(resolve, reject)
-      })).then(resolve, reject)
+      }, err => {
+        reject(err)
+      })
     })
   })
 
@@ -218,6 +234,7 @@ db.on('open', () => {
     let task = queue.pop()
     processing ++
     new Promise((resolve, reject) => {
+      console.log(task)
       fs.stat(task, (err, stats) => {
         if (err) {
           reject(err)
@@ -244,7 +261,8 @@ db.on('open', () => {
     })
   }
 
-  for(let i = 0; i < 3; i ++) {
-    thread(i)
-  }
+  // for(let i = 0; i < 3; i ++) {
+  //   thread(i)
+  // }
+  thread(0)
 })

@@ -5,13 +5,10 @@ const PaperUtils = require('./view/paperutils')
 const CIESubjects = require('./view/CIESubjects')
 const sspdf = require('./lib/sspdf')
 const fs = require('fs')
-const SVGO = require('svgo')
 const cheerio = require('cheerio')
 require('./dist-server/serverrender')
 const serverRender = global.serverRender
 global.serverRender = null
-
-const svgo = new SVGO()
 
 let indexPath = path.join(__dirname, 'dist/index.html')
 let indexHtml = fs.readFileSync(indexPath)
@@ -250,8 +247,8 @@ module.exports = (db, mongoose) => {
     return new Promise((resolve, reject) => {
       function postCache (stuff) {
         let result = stuff
-        delete result.text
-        delete result.rects
+        delete result.text // Not used for now.
+        delete result.rects // Not used for now.
         result.doc = doc
         result.doc.doc = null
         return result
@@ -272,20 +269,9 @@ module.exports = (db, mongoose) => {
             if (err) {
               reject(err)
             } else {
-              result.rects = result.rects.map(rect => {
-                function round (n) {
-                  return Math.round(n * 100) / 100
-                }
-                rect.x1 = round(rect.x1)
-                rect.x2 = round(rect.x2)
-                rect.y1 = round(rect.y1)
-                rect.y2 = round(rect.y2)
-                return rect
-              })
-              let svg = result.svg.toString('utf-8')
-              svgo.optimize(svg, rSvgo => {
-                result.svg = rSvgo.data
-                ppIdx.sspdfCache = result
+              sspdf.preCache(result, nResult => {
+                ppIdx.sspdfCache = nResult
+                result = null
                 ppIdx.save(err => {
                   if (err) {
                     console.error('Unable to save sspdfCache: ' + err)

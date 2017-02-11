@@ -28,9 +28,10 @@ using Nan::Persistent;
 using Nan::ObjectWrap;
 using std::vector;
 
-const char* MSG_EXCEPTION_ZEROLEN =  "Zero length buffer provided.";
-const char* MSG_EXCEPTION_PAGE_FAIL =  "Unable to open that page.";
-const char* MSG_EXCEPTION_PAGE_OUT_OF_RANGE =  "Page index out of range.";
+const char* MSG_EXCEPTION_ZEROLEN = "Zero length buffer provided.";
+const char* MSG_EXCEPTION_PAGE_FAIL = "Unable to open that page.";
+const char* MSG_EXCEPTION_PAGE_OUT_OF_RANGE = "Page index out of range.";
+const char* MSG_EXCEPTION_CARIO_ERROR = "Error creating cario surface.";
 
 class PdfssWorker : public AsyncWorker {
   public:
@@ -42,6 +43,7 @@ class PdfssWorker : public AsyncWorker {
     guint rectLen;
     char* error = NULL; // Error stored here from {constructor, Execute} freed in HandleOKCallback.
     int destPage;
+    int pageNum = 0;
     vector<char> svgData;
     // pdf data copied.
     PdfssWorker(Callback* cb, Local<Uint8Array> hPdf, int destPage)
@@ -72,6 +74,7 @@ class PdfssWorker : public AsyncWorker {
         return;
       }
       int nPages = poppler_document_get_n_pages(popperDoc);
+      this->pageNum = nPages;
       if (this->destPage >= nPages) {
         this->error = new char[strlen(MSG_EXCEPTION_PAGE_OUT_OF_RANGE) + 1];
         strcpy(this->error, MSG_EXCEPTION_PAGE_OUT_OF_RANGE);
@@ -92,7 +95,21 @@ class PdfssWorker : public AsyncWorker {
       // this->rects require freeing by us, freed on HandleOKCallback.
 
       cairo_surface_t* svgSurface = cairo_svg_surface_create_for_stream((cairo_write_func_t) PdfssWorker::writeFunc, this, this->pw, this->ph);
+      if (cairo_surface_status(svgSurface) != CAIRO_STATUS_SUCCESS) {
+        this->error = new char[strlen(MSG_EXCEPTION_CARIO_ERROR) + 1];
+        strcpy(this->error, MSG_EXCEPTION_CARIO_ERROR);
+        cairo_surface_destroy(svgSurface);
+        return;
+      }
       cairo_t* svg = cairo_create(svgSurface);
+      if (cairo_status(svg) != CAIRO_STATUS_SUCCESS) {
+        this->error = new char[strlen(MSG_EXCEPTION_CARIO_ERROR) + 1];
+        strcpy(this->error, MSG_EXCEPTION_CARIO_ERROR);
+        cairo_surface_destroy(svgSurface);
+        cairo_destroy(svg);
+        return;
+      }
+      // FIXME: Random SIGABRT, SIGBUS and SERFAULT
       poppler_page_render(page, svg);
       cairo_surface_destroy(svgSurface);
       cairo_destroy(svg);
@@ -111,6 +128,7 @@ class PdfssWorker : public AsyncWorker {
         Set(obj, New<v8::String>("width").ToLocalChecked(), New<v8::Number>(this->pw));
         Set(obj, New<v8::String>("height").ToLocalChecked(), New<v8::Number>(this->ph));
         Set(obj, New<v8::String>("text").ToLocalChecked(), New<v8::String>(this->txt).ToLocalChecked());
+        Set(obj, New<v8::String>("pageNum").ToLocalChecked(), New<v8::Number>(this->pageNum));
         rects = New<v8::Array>(this->rectLen);
         for (guint i = 0; i < this->rectLen; i ++) {
           Local<Object> xy = New<Object>();

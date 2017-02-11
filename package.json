@@ -24,7 +24,6 @@
     "express": "^4.14.1",
     "mongoose": "^4.8.1",
     "nan": "^2.5.1",
-    "pdfjs-dist": "^1.7.282",
     "svgo": "^0.7.2"
   },
   "devDependencies": {
