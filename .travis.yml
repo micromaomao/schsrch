@@ -3,7 +3,7 @@ sudo: no
 node_js:
   - "7"
 env:
-  - CXX=g++ MONGODB=127.0.0.1
+  - CXX=g++-6 MONGODB=127.0.0.1
 install:
   - npm install -g npm@latest
   - npm cache clean
@@ -14,5 +14,7 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+    packages:
+      - g++-6
 script:
   - ./test/perpareDatabase.sh && npm run test
