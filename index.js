@@ -275,7 +275,7 @@ module.exports = (db, mongoose) => {
                   if (err) {
                     console.error('Unable to save sspdfCache: ' + err)
                   }
-                  resolve(postCache(result))
+                  resolve(postCache(nResult))
                 })
               })
             }
