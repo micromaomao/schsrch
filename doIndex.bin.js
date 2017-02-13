@@ -223,7 +223,7 @@ db.on('open', () => {
       return
     }
     if (Date.now() - lastShowProgress >= 100) {
-      process.stderr.write(`[${n}] ${total() - left()}/${total()}, ${Math.round((1 - (left() / total())) * 1000) / 10}% finish...         \r`)
+      process.stderr.write(`[${n}] ${total() - left()}/${total()}, ${Math.round((1 - (left() / total())) * 1000) / 10}% finish... ${queue[queue.length - 1]}        \r`)
       lastShowProgress = Date.now()
     }
     let doneThis = () => {
@@ -234,7 +234,6 @@ db.on('open', () => {
     let task = queue.pop()
     processing ++
     new Promise((resolve, reject) => {
-      console.log(task)
       fs.stat(task, (err, stats) => {
         if (err) {
           reject(err)
