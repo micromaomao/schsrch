@@ -14,8 +14,11 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - mongodb-3.0-precise
     packages:
       - g++-6
       - libpoppler-glib-dev
+      - mongodb-org-server
+      - libglib2.0-dev
 script:
   - npm run webpack && ./test/perpareDatabase.sh && npm run test
