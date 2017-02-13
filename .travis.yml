@@ -18,7 +18,7 @@ addons:
     packages:
       - g++-6
       - libpoppler-glib-dev
-      - mongodb-org-server
+      - mongodb-org
       - libglib2.0-dev
 script:
   - npm run webpack && ./test/perpareDatabase.sh && npm run test
