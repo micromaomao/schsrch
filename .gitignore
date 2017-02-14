@@ -2,3 +2,4 @@ dist
 dist-server
 node_modules
 build
+coverage
