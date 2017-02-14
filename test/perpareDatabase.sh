@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 cd "$(dirname "$0")"
 
-mongo mongodb://$MONGODB/test --eval "db.dropDatabase()"
+mongo --host $MONGODB --eval "db.getSiblingDB('test').dropDatabase()"
 QUICK=1 ../doIndex.bin.js pastpapers
