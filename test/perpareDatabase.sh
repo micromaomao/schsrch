@@ -2,4 +2,4 @@
 cd "$(dirname "$0")"
 
 mongo mongodb://$MONGODB/test --eval "db.dropDatabase()"
-../doIndex.bin.js pastpapers
+QUICK=1 ../doIndex.bin.js pastpapers
