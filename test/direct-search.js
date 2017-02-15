@@ -48,6 +48,16 @@ module.exports = schsrch =>
       pplTest(s + 's17 1', ['s17_1_1_ms', 's17_1_1_qp', 's17_1_2_ms', 's17_1_2_qp'])
       pplTest(s + 's171', ['s17_1_1_ms', 's17_1_1_qp', 's17_1_2_ms', 's17_1_2_qp'])
 
+      pplTest(s + '1', ['s08_1_0_qp', 's16_1_0_ms', 's16_1_0_qp', 's17_1_1_ms', 's17_1_1_qp', 's17_1_2_qp', 's17_1_2_ms', 'w16_1_1_qp', 'w16_1_1_ms'])
+      pplTest(s + 'p1', ['s08_1_0_qp', 's16_1_0_ms', 's16_1_0_qp', 's17_1_1_ms', 's17_1_1_qp', 's17_1_2_qp', 's17_1_2_ms', 'w16_1_1_qp', 'w16_1_1_ms'])
+      pplTest(s + 'paper 1', ['s08_1_0_qp', 's16_1_0_ms', 's16_1_0_qp', 's17_1_1_ms', 's17_1_1_qp', 's17_1_2_qp', 's17_1_2_ms', 'w16_1_1_qp', 'w16_1_1_ms'])
+      pplTest(s + '11', ['s17_1_1_ms', 's17_1_1_qp'])
+      pplTest(s + 'p11', ['s17_1_1_ms', 's17_1_1_qp'])
+      pplTest(s + 'paper 11', ['s17_1_1_ms', 's17_1_1_qp'])
+      pplTest(s + '0', [])
+      pplTest(s + 'p0', [])
+      pplTest(s + 'paper 0', [])
+
       pplTest(s + 'y17 paper 11', [])
       pplTest(s + 's16 paper 13', [])
       pplTest(s + 's16 paper 3', [])
