@@ -3,6 +3,7 @@ const should = require('should')
 const _schsrch = require('../index')
 const express = require('express')
 let schsrch = null
+let dbModel = null
 const mongoose = require('mongoose')
 mongoose.Promise = global.Promise
 
@@ -29,7 +30,8 @@ db.on('error', function (err) {
 db.on('open', function () {
   schsrch = express()
   schsrch.use(_schsrch(db, mongoose))
-  const {PastPaperRequestRecord, PastPaperDoc} = require('../lib/dbModel.js')(db, mongoose)
+  dbModel = require('../lib/dbModel.js')(db, mongoose)
+  const {PastPaperRequestRecord, PastPaperDoc} = dbModel
   PastPaperRequestRecord.count().then(ct => {
     if (ct !== 0) {
       console.error('Unclean database. Run test/perpareDatabase.sh before testing.')
@@ -53,5 +55,6 @@ db.on('open', function () {
 function doTests () {
   require('./server-basic.js')(schsrch)
   require('./direct-search.js')(schsrch)
+  require('./text-search.js')(schsrch)
   run()
 }

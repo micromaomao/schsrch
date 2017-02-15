@@ -100,24 +100,28 @@ module.exports = (db, mongoose) => {
         }, err => reject({response: 'error', err: err.toString()}))
       } else if (query.match(/^\d{4}$/)) {
         fetchPP(query, null, null, null, null)
+      } else if ((match = query.match(/^(\d{4})([_ ]|[_ ]*pa?p?e?r?)[_ ]*(\d)$/))) { // 06101 seems like a typo, so don't misunderstand.
+        fetchPP(match[1], null, match[3], null, null)
+      } else if ((match = query.match(/^(\d{4})([_ ]|[_ ]*pa?p?e?r?)[_ ]*(\d)[_ ]*(\d)$/))) { // 061011 as well
+        fetchPP(match[1], null, match[3], match[4], null)
       } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})$/))) {
         fetchPP(match[1], match[2])
-      } else if ((match = query.match(/^(\d{4})[_ ](\d)$/))) {
-        fetchPP(match[1], null, match[2], null, null)
-      } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]+)$/))) {
+      } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]{2})$/))) {
         fetchPP(match[1], null, null, null, match[2])
-      } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})[_ ]*([a-z]+)$/))) {
+      } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})[_ ]*([a-z]{2})$/))) {
         fetchPP(match[1], match[2], null, null, match[3])
       } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})[_ ]*(p?a?p?e?r?[_ ]*)?(\d)$/))) {
         fetchPP(match[1], match[2], match[4], null, null)
       } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})[_ ]*(p?a?p?e?r?[_ ]*)?(\d)[_ ]*(\d)$/))) {
         fetchPP(match[1], match[2], match[4], match[5], null)
-      } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})[_ ]*([a-z]+)[_ ]*(\d)[_ ]*(\d)$/))) {
-        fetchPP(match[1], match[2], match[4], match[5], match[3])
-      } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})[_ ](\d)(\d)[_ ]*([a-z]+)$/))) {
-        fetchPP(match[1], match[2], match[3], match[4], match[5])
-      } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})[_ ]*([a-z]+)[_ ]*(\d)$/))) {
+      } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})[_ ]*([a-z]{2})[_ ]*p?a?p?e?r?[_ ]*(\d)$/))) {
         fetchPP(match[1], match[2], match[4], null, match[3])
+      } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})[_ ]*([a-z]{2})[_ ]*p?a?p?e?r?[_ ]*(\d)[_ ]*(\d)$/))) {
+        fetchPP(match[1], match[2], match[4], match[5], match[3])
+      } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})([_ ]*p?a?p?e?r?[_ ]*)(\d)[_ ]*([a-z]{2})$/))) {
+        fetchPP(match[1], match[2], match[4], null, match[5])
+      } else if ((match = query.match(/^(\d{4})[_ ]*([a-z]\d{1,2})([_ ]*p?a?p?e?r?[_ ]*)(\d)[_ ]*(\d)[_ ]*([a-z]{2})$/))) {
+        fetchPP(match[1], match[2], match[4], match[5], match[6])
       } else if ((match = query.toUpperCase().match(/^(\d{4})\/(\d{2})\/([A-Z]\/[A-Z]|SP)\/(\d{2})$/))) {
         let month = PaperUtils.odashMonthToMyMonth(match[3])
         let time = month + match[4]
