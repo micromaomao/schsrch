@@ -231,7 +231,7 @@ module.exports = (db, mongoose) => {
       return
     }
     PastPaperDoc.findOne({_id: req.params.docid}).then(doc => {
-      if (!doc) {
+      if (!doc || doc.numPages <= pn) {
         next()
         return
       }

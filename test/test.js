@@ -56,5 +56,6 @@ function doTests () {
   require('./server-basic.js')(schsrch)
   require('./direct-search.js')(schsrch)
   require('./text-search.js')(schsrch)
+  require('./getdoc.js')(schsrch, dbModel)
   run()
 }
