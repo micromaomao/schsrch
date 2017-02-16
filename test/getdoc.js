@@ -4,7 +4,7 @@ const crypto = require('crypto')
 
 module.exports = (schsrch, dbModel) =>
   describe('Getting the document', function () {
-    const {PastPaperDoc} = dbModel
+    const {PastPaperDoc, PastPaperIndex} = dbModel
     it('fetchDoc', function (done) {
       PastPaperDoc.find({subject: '0610', time: 's17', paper: 1, variant: 1, type: 'qp'}).then(docs => {
         if (!docs || docs.length !== 1) {
@@ -116,5 +116,22 @@ module.exports = (schsrch, dbModel) =>
         .set('Host', 'schsrch.xyz')
         .expect(404)
         .end(done)
+    })
+    it('should cached sspdf preview', function (done) {
+      PastPaperIndex.findOne({doc: sspdfTestDoc._id, page: 0}).then(idx => {
+        if (!idx) {
+          done(new Error('Index not exist.'))
+          return
+        }
+        try {
+          idx.sspdfCache.should.be.an.Object()
+          idx.sspdfCache.svg.should.be.a.String().and.match(/^<svg/)
+          idx.sspdfCache.rects.should.be.an.Array()
+          idx.sspdfCache.rects.forEach(x => x.should.be.an.Object())
+          done()
+        } catch (e) {
+          done(e)
+        }
+      })
     })
   })
