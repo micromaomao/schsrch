@@ -55,7 +55,8 @@ db.on('open', function () {
 function doTests () {
   require('./server-basic.js')(schsrch)
   require('./direct-search.js')(schsrch)
-  require('./text-search.js')(schsrch)
+  require('./text-search.js')(schsrch, dbModel)
   require('./getdoc.js')(schsrch, dbModel)
+  require('./feedback.js')(schsrch, dbModel)
   run()
 }

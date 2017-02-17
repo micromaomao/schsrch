@@ -134,4 +134,9 @@ module.exports = (schsrch, dbModel) =>
         }
       })
     })
+    it('should 404 if PastPaperIndex missing', function (done) {
+      PastPaperIndex.remove({doc: sspdfTestDoc._id}).then(() => {
+        testPage404(0, done)
+      }, err => done(err))
+    })
   })

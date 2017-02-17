@@ -259,7 +259,7 @@ module.exports = (db, mongoose) => {
 
       PastPaperIndex.find({doc: doc._id, page: pn}).then(ppIdxes => {
         if (!ppIdxes || ppIdxes.length < 1) {
-          reject(new Error('PastPaperIndex not found.'))
+          reject(null)
           return
         }
         let ppIdx = ppIdxes[0]
@@ -319,6 +319,9 @@ module.exports = (db, mongoose) => {
         parsed = JSON.parse(body)
         if (typeof parsed !== 'object') {
           throw new Error()
+        }
+        if (parsed.email === null) {
+          parsed.email = ''
         }
       } catch (e) {
         res.status(403)

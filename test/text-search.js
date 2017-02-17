@@ -2,8 +2,9 @@ const supertest = require('supertest')
 const should = require('should')
 const PaperUtils = require('../view/paperutils.js')
 
-module.exports = (schsrch) =>
+module.exports = (schsrch, dbModel) =>
   describe('Full text search', function () {
+    const {PastPaperDoc} = dbModel
     function ftExpectBasic (x) {
       return x.expect(res => res.body.list.forEach(x => x.should.be.an.Object()))
       .expect(res => res.body.list.forEach(x => x.doc.should.be.an.Object()))
@@ -17,6 +18,7 @@ module.exports = (schsrch) =>
       .expect(res => res.body.list.forEach(x => should.not.exist(x.index.sspdfCache)))
     }
     let indexToSearch = null
+    let tDocId = null
     function coldWife(done, itx) {
       ftExpectBasic(
         supertest(schsrch)
@@ -40,6 +42,7 @@ module.exports = (schsrch) =>
         .expect(res => should.not.exist(res.body.list[0].related[0].doc))
         .expect(res => should.not.exist(res.body.list[0].related[0].sspdfCache))
         .expect(res => indexToSearch = res.body.list[0].index._id)
+        .expect(res => tDocId = res.body.list[0].doc._id)
         .end(done)
     }
     it('Case: cold wife', function (done) {
@@ -79,17 +82,40 @@ module.exports = (schsrch) =>
       indexToSearch.should.be.a.String()
       coldWife(done, '!!index!' + indexToSearch)
     })
+    function ftExpectEmpty (req) {
+      return ftExpectBasic(req)
+        .expect(res => res.body.should.be.an.Object())
+        .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
+        .expect(res => res.body.list.should.be.an.Array())
+        .expect(res => res.body.list.length.should.equal(0, `Response should have no results returned.`))
+    }
     it('Case: !!index!000000000000000000000000' , function (done) {
-      ftExpectBasic(
+      ftExpectEmpty(
         supertest(schsrch)
           .get('/search/' + encodeURIComponent('!!index!000000000000000000000000'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
-          .expect(res => res.body.should.be.an.Object())
-          .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
-          .expect(res => res.body.list.should.be.an.Array())
-          .expect(res => res.body.list.length.should.equal(0, `Response should have no results returned.`)))
-        .end(done)
+      ).end(done)
+    })
+    it("Shouldn't return the result if the corrospounding doc disappeared", function (done) {
+      PastPaperDoc.remove({_id: tDocId}).then(() => {
+        ftExpectEmpty(
+          supertest(schsrch)
+            .get('/search/' + encodeURIComponent('cold wife'))
+            .set('Host', 'schsrch.xyz')
+            .expect('Content-Type', /json/)
+            .expect(200)
+        ).end(done)
+      }, err => done(err))
+    })
+    it("Shouldn't return !!index result if the corrospounding doc disappeared" , function (done) {
+      ftExpectEmpty(
+        supertest(schsrch)
+          .get('/search/' + encodeURIComponent('!!index!' + indexToSearch))
+          .set('Host', 'schsrch.xyz')
+          .expect('Content-Type', /json/)
+          .expect(200)
+      ).end(done)
     })
   })
