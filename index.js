@@ -263,6 +263,7 @@ module.exports = (db, mongoose) => {
           return
         }
         let ppIdx = ppIdxes[0]
+        // FIXME: Race condition result in duplicate works
         if (ppIdx.sspdfCache) {
           resolve(postCache(ppIdx.sspdfCache))
         } else {
