@@ -161,7 +161,7 @@ class SearchResult extends React.Component {
         })
         return (
           <div className='pplist'>
-            {bucket.sort(PaperUtils.funcSortBucket).map(set => (
+            {bucket.sort(PaperUtils.funcSortSet).map(set => (
               <PaperSet paperSet={set} key={PaperUtils.setToString(set)} psKey={PaperUtils.setToString(set)} />
             )).map(this.mapResultListAnimation)}
           </div>

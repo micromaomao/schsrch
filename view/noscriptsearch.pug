@@ -28,7 +28,7 @@ html
         -else if (!rst.list)
           pre= JSON.stringify(rst, ' ', 2)
         -else if (rst.list.length > 0)
-          each entity in rst.list.map(entity => (entity.index ? Object.assign(entity.doc, { index: entity.index }) : entity)).sort(PaperUtils.funcSortBucket)
+          each entity in rst.list.map(entity => (entity.index ? Object.assign(entity.doc, { index: entity.index }) : entity)).sort(PaperUtils.funcSortSet)
             div.paper
               a(href='/fetchDoc/' + entity._id)
                 | #{entity.subject} (#{CIESubjects.findExactById(entity.subject).name}) #{PaperUtils.myTimeToHumanTime(entity.time)} (#{entity.time}) #{entity.paper || ''}#{entity.variant || ''} ( paper #{entity.paper} #{entity.variant ? ` variant ${entity.variant}` : ''} ) #{entity.type} (#{PaperUtils.getTypeString(entity.type)})

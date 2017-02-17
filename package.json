@@ -9,7 +9,7 @@
     "webpack-dev": "webpack --progress --colors --watch",
     "webpack": "webpack --progress --optimize-minimize --optimize-occurrence-order --define process.env.NODE_ENV='\"production\"' > /dev/null; if [ $? -eq 0 ]; then echo OK.; else echo Failed.; fi",
     "test": "mocha --delay",
-    "coverage": "test/perpareDatabase.sh && node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- --delay"
+    "coverage": "test/perpareDatabase.sh && node_modules/.bin/istanbul cover -x \"**/dist-server/**\" node_modules/.bin/_mocha -- --delay"
   },
   "repository": {
     "type": "git",
