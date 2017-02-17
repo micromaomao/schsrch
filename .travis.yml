@@ -11,6 +11,7 @@ install:
   - npm cache clean
   - npm install --dev
   - npm install coveralls
+  - npm install istanbul
 services:
   - mongodb
 addons:
