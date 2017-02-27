@@ -352,6 +352,9 @@ module.exports = (db, mongoose) => {
       res.send('')
     }
   })
+  rMain.get('/redbook', function (req, res) {
+    res.redirect('https://static.maowtm.org/redbook.pdf')
+  })
 
   return rMain
 }
