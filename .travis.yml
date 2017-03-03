@@ -24,6 +24,8 @@ addons:
       - g++-6
       - libpoppler-glib-dev
       - mongodb-org
+      - zlib1g-dev
+      - libpng-dev
 script:
   - npm run webpack && ./test/perpareDatabase.sh && npm run coverage
   - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
