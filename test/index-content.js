@@ -42,4 +42,16 @@ module.exports = () =>
       IndexContent.lcsLength(IndexContent.tokenize('The big fox jumps over the lazy dog.'), IndexContent.tokenize('the the')).should.equal(3)
       IndexContent.lcsLength(IndexContent.tokenize('The big fox jumps over the lazy dog.'), IndexContent.tokenize('thethe')).should.equal(0)
     })
+    const realLifeData = require('./data/index-content.js')
+    for (let idx = 0; idx < realLifeData.length; idx ++) {
+      (function (better, worse, query) {
+        it('Real life test case ' + idx, function () {
+          let queryTokens = IndexContent.tokenize(query)
+          let betterScore = IndexContent.lcsLength(IndexContent.tokenize(better), queryTokens)
+          let worseScore = IndexContent.lcsLength(IndexContent.tokenize(worse), queryTokens)
+          console.log(`    Better: ${betterScore}, worse: ${worseScore}, difference factor: ${betterScore / worseScore}`)
+          betterScore.should.be.above(worseScore)
+        })
+      })(realLifeData[idx].better, realLifeData[idx].worse, realLifeData[idx].query)
+    }
   })
