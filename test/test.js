@@ -64,5 +64,6 @@ function doTests () {
   require('./feedback.js')(schsrch, dbModel)
   require('./ciesubjects.js')()
   require('./paperutils.js')()
+  require('./index-content.js')()
   run()
 }
