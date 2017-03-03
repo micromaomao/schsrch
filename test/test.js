@@ -29,6 +29,10 @@ db.on('error', function (err) {
 })
 db.on('open', function () {
   schsrch = express()
+  schsrch.use(function (req, res, next) {
+    console.log(`    ${req.method.toUpperCase()} ${req.path}`)
+    next()
+  })
   schsrch.use(_schsrch(db, mongoose))
   schsrch.use(function (err, req, res, next) {
     console.error(err)
