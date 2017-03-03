@@ -30,6 +30,10 @@ db.on('error', function (err) {
 db.on('open', function () {
   schsrch = express()
   schsrch.use(_schsrch(db, mongoose))
+  schsrch.use(function (err, req, res, next) {
+    console.error(err)
+    next()
+  })
   dbModel = require('../lib/dbModel.js')(db, mongoose)
   const {PastPaperRequestRecord, PastPaperDoc} = dbModel
   PastPaperRequestRecord.count().then(ct => {
