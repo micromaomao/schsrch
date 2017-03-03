@@ -160,13 +160,15 @@ module.exports = schsrch =>
       dsTest(s + 's8 10 qp', ['s08_1_0_qp'])
     })
 
-    dsTest('0610/11/M/J/17', ['s17_1_1_ms', 's17_1_1_qp'])
-    dsTest('0610/01/M/J/16', ['s16_1_0_ms', 's16_1_0_qp'])
-    dsTest('0610/10/M/J/16', ['s16_1_0_ms', 's16_1_0_qp'])
-    dsTest('0610/11/M/J/16', [])
-    dsTest('0610/11/O/N/16', ['w16_1_1_qp', 'w16_1_1_ms'])
-    dsTest('0610/10/O/N/16', [])
-    dsTest('0610/01/O/N/16', [])
+    ;[true, false].forEach(withExtraSlash => {
+      dsTest(`0610/11/M${withExtraSlash ? '/' : ''}J/17`, ['s17_1_1_ms', 's17_1_1_qp'])
+      dsTest(`0610/01/M${withExtraSlash ? '/' : ''}J/16`, ['s16_1_0_ms', 's16_1_0_qp'])
+      dsTest(`0610/10/M${withExtraSlash ? '/' : ''}J/16`, ['s16_1_0_ms', 's16_1_0_qp'])
+      dsTest(`0610/11/M${withExtraSlash ? '/' : ''}J/16`, [])
+      dsTest(`0610/11/O${withExtraSlash ? '/' : ''}N/16`, ['w16_1_1_qp', 'w16_1_1_ms'])
+      dsTest(`0610/10/O${withExtraSlash ? '/' : ''}N/16`, [])
+      dsTest(`0610/01/O${withExtraSlash ? '/' : ''}N/16`, [])
+    })
 
     it('Overflow result', function (done) {
       supertest(schsrch)

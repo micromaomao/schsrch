@@ -79,6 +79,7 @@ module.exports = () =>
       testForYr('5', '2005')
     })
     it('odashMonthToMyMonth', function () {
+      PaperUtils.odashMonths.map(x => x.replace(/\//g, '')).map(PaperUtils.odashMonthToMyMonth).should.deepEqual(PaperUtils.shortMonths)
       PaperUtils.odashMonths.map(PaperUtils.odashMonthToMyMonth).should.deepEqual(PaperUtils.shortMonths)
       PaperUtils.odashMonthToMyMonth('X/Y').should.equal('X/Y')
     })

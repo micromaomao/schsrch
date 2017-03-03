@@ -80,6 +80,9 @@ module.exports = {
   },
   odashMonthToMyMonth: odash => {
     let mi = odashMonths.indexOf(odash)
+    if (mi < 0 && odash.match(/^[A-Z]{2}$/)) {
+      mi = odashMonths.indexOf(`${odash[0]}/${odash[1]}`)
+    }
     if (mi < 0) return odash
     return shortMonths[mi]
   }
