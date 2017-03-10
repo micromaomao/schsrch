@@ -109,7 +109,6 @@ class PdfssWorker : public AsyncWorker {
         cairo_destroy(svg);
         return;
       }
-      // FIXME: Random SIGABRT, SIGBUS and SERFAULT
       poppler_page_render(page, svg);
       cairo_surface_destroy(svgSurface);
       cairo_destroy(svg);

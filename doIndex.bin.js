@@ -10,6 +10,7 @@ const fs = require('fs')
 const path = require('path')
 const PaperUtils = require('./view/paperutils.js')
 const sspdf = require('./lib/sspdf.js')
+const sspdfLock = require('./lib/singlelock.js')()
 
 let raceLock = {}
 
@@ -35,9 +36,12 @@ db.on('open', () => {
       })
       let loadPage = (pIndex, returnNumPages = false) => new Promise((resolve, reject) => {
         new Promise((resolve, reject) => {
-          sspdf.getPage(data, pIndex, function (err, pageData) {
-            if (err) return reject(err)
-            resolve(pageData)
+          sspdfLock(function (done) {
+            sspdf.getPage(data, pIndex, function (err, pageData) {
+              done()
+              if (err) return reject(err)
+              resolve(pageData)
+            })
           })
         }).then(pageData => {
           function ok (sspdfCache) {
