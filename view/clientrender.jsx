@@ -36,8 +36,14 @@ if (history.state) {
   AppState.dispatch({type: 'init'})
   let queryMatch
   if ((queryMatch = window.location.toString().match(/\/formsearch\/\?query=([^&=]+)$/))) {
-    let q = decodeURIComponent(queryMatch[1].replace(/\+/g, ' '))
-    AppState.dispatch({type: 'query', query: q})
+    try {
+      let o = JSON.parse(document.getElementsByClassName('react-root')[0].dataset.querying)
+      if (typeof o !== 'object') throw new Error()
+      AppState.dispatch({type: 'replaceQuerying', querying: o})
+    } catch (e) {
+      let q = decodeURIComponent(queryMatch[1].replace(/\+/g, ' '))
+      AppState.dispatch({type: 'query', query: q})
+    }
   } else if ((queryMatch = window.location.toString().match(/\/disclaim\/$/))) {
     AppState.dispatch({type: 'disclaim'})
   } else {
@@ -58,11 +64,10 @@ AppState.subscribe(() => {
     let url = '/'
     if (nState.view !== 'home') {
       url = '/' + encodeURIComponent(nState.view) + '/'
-    }
-    else if (nState.previewing) {
+    } else if (nState.previewing) {
       url = '/formsearch/?query=' + encodeURIComponent(nState.previewing.psKey)
-    } else if (nState.query.length > 0) {
-      url = '/formsearch/?query=' + encodeURIComponent(nState.query)
+    } else if (nState.querying && nState.querying.query.length > 0) {
+      url = '/formsearch/?query=' + encodeURIComponent(nState.querying.query)
     }
     history.replaceState(nState, 'SchSrch', url)
     window.localStorage.setItem('state', JSON.stringify(nState))

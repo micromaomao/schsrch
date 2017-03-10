@@ -10,32 +10,19 @@ class SchSrch extends React.Component {
   constructor () {
     super()
     this.state = {
-      query: '',
       coverHideAnimation: 0,
       view: 'home'
     }
-    this.handleQuery = this.handleQuery.bind(this)
     this.handleUpdate = this.handleUpdate.bind(this)
     if (AppState.getState().serverrender) {
       this.state.server = true
-      let query = AppState.getState().serverrender.query
-      if (query) {
-        this.state.query = query.query
-      }
       this.state.view = AppState.getState().view
     }
   }
   handleUpdate () {
     let state = AppState.getState()
     this.setState({feedbackShowed: state.feedback.show, coverHideAnimation: Date.now()})
-    this.handleQuery(state.query)
     this.setState({view: AppState.getState().view})
-  }
-  handleQuery (query) {
-    this.setState({query})
-    if (query === '') {
-      this.setState({searching: false})
-    }
   }
   render () {
     let blackCoverStyle = {}
@@ -103,15 +90,33 @@ class SchSrch extends React.Component {
     )
   }
   renderHome () {
-    let noSearch = this.state.query === ''
+    let noSearch = AppState.getState().querying ? false : true
     return (
       <div>
-        <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={query => AppState.dispatch({type: 'query', query})} loading={this.state.searching} />
+        <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={this.handleQuery}
+          loading={noSearch ? false : (AppState.getState().querying.loading || false)} />
         {noSearch
           ? <Description />
-          : <SearchResult query={this.state.query} onStateChange={loading => this.setState({searching: loading})} smallerSetName={this.state.server ? false : window.innerWidth <= 500} />}
+          : <SearchResult querying={AppState.getState().querying} onRetry={() => this.handleQuery(AppState.getState().querying.query)} smallerSetName={this.state.server ? false : window.innerWidth <= 500} />}
       </div>
     )
+  }
+  handleQuery (query) {
+    let oldQuery = AppState.getState().querying ? AppState.getState().querying.query : ''
+    AppState.dispatch({type: 'query', query})
+    if (AppState.getState().querying && (AppState.getState().querying.query !== oldQuery || !AppState.getState().querying.result)) {
+      AppState.dispatch({type: 'queryStartRequest'})
+      fetch('/search/' + encodeURIComponent(query) + '/').then(res => res.json()).then(result => {
+        if (result.response === 'error') {
+          AppState.dispatch({type: 'queryError', query, error: result.err})
+          return
+        }
+        AppState.dispatch({type: 'queryResult', query, result})
+      }, err => {
+        let error = new Error('Unknow error (maybe no Internet?)')
+        AppState.dispatch({type: 'queryError', query, error})
+      })
+    }
   }
   renderDisclaim () {
     return (<Disclaimer />)
@@ -120,7 +125,8 @@ class SchSrch extends React.Component {
     this.handleUpdate()
     this.unsub = AppState.subscribe(this.handleUpdate)
     if (AppState.getState().previewing === null) this.searchbar.input.focus()
-    this.searchbar.setQuery(AppState.getState().query)
+    this.searchbar.setQuery(AppState.getState().querying ? AppState.getState().querying.query : '')
+    AppState.getState().querying && this.handleQuery(AppState.getState().querying.query)
   }
   componentWillUnmount () {
     this.unsub()

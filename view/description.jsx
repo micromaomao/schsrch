@@ -17,7 +17,7 @@ let statusInfoState = createStore(function (state = {}, action) {
 let lastTimeout
 function fetchStatusInfo () {
   if ((statusInfoState.getState() || {}).loading) return
-  if (AppState.getState().query === '') {
+  if (!AppState.getState().querying) {
     statusInfoState.dispatch({type: 'unload'})
     fetch('/status/').then(res => res.json()).then(stat => {
       statusInfoState.dispatch({type: 'load', data: stat})
@@ -28,7 +28,7 @@ function fetchStatusInfo () {
     lastTimeout = setTimeout(fetchStatusInfo, 5000)
   } else {
     let unsub = AppState.subscribe(() => {
-      if (AppState.getState().query === '') {
+      if (!AppState.getState().querying) {
         unsub()
         fetchStatusInfo()
       }

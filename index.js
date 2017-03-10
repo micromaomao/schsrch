@@ -100,7 +100,8 @@ module.exports = (db, mongoose) => {
     doSearch(query).then(rst => {
       res.type('html')
       let $ = cheerio.load(indexHtml)
-      $('.react-root').html(serverRender({query: {query, result: JSON.parse(JSON.stringify(rst))}}))
+      let querying = {query, error: null, result: JSON.parse(JSON.stringify(rst))}
+      $('.react-root').html(serverRender({querying})).attr('data-querying', JSON.stringify(querying))
       res.send($.html())
     }, err => {
       next(err.err || err)

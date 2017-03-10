@@ -1,7 +1,8 @@
+const InterfaceVersion = 4
 const { createStore } = require('redux')
 
 const init = {
-  query: '',
+  querying: null,
   feedback: {
     show: false,
     search: null,
@@ -11,7 +12,8 @@ const init = {
   previewing: null,
   serverrender: null,
   view: 'home',
-  previewPages: {}
+  previewPages: {},
+  version: InterfaceVersion
 }
 
 function setPreviewPages (previewPages, doc, page) {
@@ -25,24 +27,60 @@ let AppState = createStore(function (state = {}, action) {
     case 'init':
       return Object.assign({}, init)
     case 'init-server':
-      return {
-        query: '',
-        feedback: {
-          show: false,
-          search: null,
-          feedbackText: '',
-          email: ''
-        },
-        previewing: null,
+      return Object.assign({}, init, {
         serverrender: action.serverrender || true,
-        view: action.serverrender.view || 'home'
-      }
+        view: action.serverrender.view || 'home',
+        querying: action.serverrender.querying || null
+      })
     case 'load':
+      if (action.state.version !== InterfaceVersion) {
+        console.log(`Not loading from state data of older version - ${action.state.version || '0'} !== ${InterfaceVersion}`)
+        return Object.assign({}, init)
+      }
       return Object.assign({}, init, action.state)
     case 'query':
+      if (action.query.trim().length === 0) {
+        return Object.assign({}, state, {
+          querying: null
+        })
+      }
+      if (state.querying && state.querying.query === action.query.trim()) return state // Search query not changed.
       return Object.assign({}, state, {
-        query: action.query,
-        previewing: state.query.trim() === action.query.trim() ? state.previewing : null
+        querying: {
+          query: action.query.trim(),
+          loading: false
+        },
+        previewing: null
+      })
+    case 'replaceQuerying':
+      return Object.assign({}, state, {
+        querying: action.querying
+      })
+    case 'queryStartRequest':
+      return Object.assign({}, state, {
+        querying: Object.assign({}, state.querying || {}, {
+          loading: true,
+          error: null,
+          result: null
+        })
+      })
+    case 'queryError':
+      if (!(state.querying && state.querying.query === action.query.trim())) return state
+      return Object.assign({}, state, {
+        querying: Object.assign({}, state.querying || {}, {
+          loading: false,
+          error: action.error,
+          result: null
+        })
+      })
+    case 'queryResult':
+      if (!(state.querying && state.querying.query === action.query.trim())) return state
+      return Object.assign({}, state, {
+        querying: Object.assign({}, state.querying || {}, {
+          loading: false,
+          error: null,
+          result: action.result
+        })
       })
     case 'showFeedback':
       return Object.assign({}, state, {
