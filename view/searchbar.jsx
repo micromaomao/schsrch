@@ -19,9 +19,9 @@ class SearchBar extends React.Component {
     }
     if (AppState.getState().serverrender) {
       this.state.server = true
-      let query = AppState.getState().serverrender.query
-      if (query)
-        this.state.query = query.query
+      let querying = AppState.getState().querying
+      if (querying)
+        this.state.query = querying.query
     }
     this.inputDelay = 1000
     this.handlePlaceholderClick = this.handlePlaceholderClick.bind(this)
