@@ -177,7 +177,7 @@ class SearchBar extends React.Component {
           <div className='inputPositionWrap'>
             <input
               className={'querybox' + (this.state.server ? ' border' : '')}
-              type='text'
+              type='search'
               ref={f => this.input = f}
               value={this.state.query}
               placeholder={this.state.server && !this.state.query ? placeholderText : null}
@@ -195,18 +195,11 @@ class SearchBar extends React.Component {
                 <div className='fill' style={strokeFillStyle} />
               </div>
             )}
-            <div className='rightWrap'>
-              {this.state.server ? (
+            {this.state.server ? (
+              <div className='rightWrap'>
                 <button className='formsubmit' type='submit'>Search</button>
-              ) : null}
-              {this.state.query.length && !this.state.server
-                ? (
-                  <div className='clearInput' onClick={evt => this.clear()}>
-                    <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c"></use></svg>
-                  </div>
-                )
-                : null}
-            </div>
+              </div>
+            ) : null}
           </div>
           {subjectHint}
           <SearchPrompt query={this.state.query} />
