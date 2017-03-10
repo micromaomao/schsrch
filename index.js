@@ -60,6 +60,15 @@ module.exports = (db, mongoose) => {
     res.set('cache-control', 'max-age=0')
     res.sendFile(path.join(__dirname, 'dist/sw.js'))
   })
+  rMain.get('/opensearch.xml', function (req, res) {
+    res.set('cache-control', 'max-age=0')
+    res.set()
+    res.sendFile(path.join(__dirname, 'view/opensearch.xml'), {
+      headers: {
+        'content-type': 'application/opensearchdescription+xml'
+      }
+    })
+  })
 
   rMain.get('/status/', function (req, res, next) {
     statusInfo().then(rst => res.send(rst), err => next(err))
