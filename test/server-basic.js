@@ -83,7 +83,7 @@ module.exports = schsrch =>
         .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect('Content-Type', /html/)
-        .expect(res => res.text.indexOf(`<input type="text" class="querybox border" value=${JSON.stringify(tQuery)} name="query" autocomplete="off"`).should.be.aboveOrEqual(0))
+        .expect(res => res.text.indexOf(`<input type="search" class="querybox border" value=${JSON.stringify(tQuery)} name="query" autocomplete="off"`).should.be.aboveOrEqual(0))
         .end(done)
     })
     it('/formsearch/(empty)', function (done) {
