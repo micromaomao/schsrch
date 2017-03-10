@@ -92,7 +92,7 @@ module.exports = (db, mongoose) => {
     res.send($.html())
   })
   rMain.get('/formsearch/', function (req, res, next) {
-    let query = req.query.query.toString().trim()
+    let query = (req.query.query || '').toString().trim()
     if (query.length === 0) {
       res.redirect('/')
       return
