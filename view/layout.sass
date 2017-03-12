@@ -78,16 +78,27 @@ body
       transition: all 100ms
     .inputPositionWrap
       position: relative
-      display: block
+      display: -webkit-flex
+      -webkit-flex-direction: row
+      -webkit-flex-wrap: nowrap
+      -webkit-align-items: flex-end
+      display: flex
+      flex-direction: row
+      flex-wrap: nowrap
+      align-items: flex-end
       margin-left: auto
       margin-right: auto
       height: $inputFontSize * $inputLineHeight
-      .querybox, .placeholder
+      .placeholder
         position: absolute
         top: 0
         left: 0
         width: 100%
+      .querybox .placeholder
         height: 100%
+      .querybox
+        -webkit-flex: 1
+        flex: 1
       .stroke
         position: absolute
         z-index: 2
@@ -101,15 +112,13 @@ body
           height: 2px
           background-color: $color-primary
       .rightWrap
-        position: absolute
-        right: 0
-        top: 0
-        bottom: 0
         padding-top: 0.3rem
         padding-left: 0.5rem
         padding-right: 0.5rem
         background-color: rgba(white, 0.7)
         z-index: 1
+        -webkit-flex: content
+        flex: content
         .clearInput
           display: inline-block
           cursor: pointer
