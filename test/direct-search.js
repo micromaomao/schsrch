@@ -35,8 +35,12 @@ module.exports = schsrch =>
 
       dsTest(s + 's16', ['s16_1_0_ms', 's16_1_0_qp', 's16_2_0_ms', 's16_2_0_qp'])
       dsTest(s + 's17', ['s17_1_1_ms', 's17_1_1_qp', 's17_1_2_ms', 's17_1_2_qp'])
+      dsTest(s + 'S16', ['s16_1_0_ms', 's16_1_0_qp', 's16_2_0_ms', 's16_2_0_qp'])
+      dsTest(s + 'S17', ['s17_1_1_ms', 's17_1_1_qp', 's17_1_2_ms', 's17_1_2_qp'])
       dsTest(s + 's18', [])
+      dsTest(s + 'S18', [])
       dsTest(s + 'w16', ['w16_1_1_qp', 'w16_1_1_ms'])
+      dsTest(s + 'W16', ['w16_1_1_qp', 'w16_1_1_ms'])
       dsTest(s + 'w17', [])
       dsTest(s + 'y17', [])
 
@@ -75,6 +79,7 @@ module.exports = schsrch =>
       dsTest(s + 's16 paper 3', [])
       dsTest(s + 'w16 paper 3', [])
       dsTest(s + 's16 paper 1', ['s16_1_0_ms', 's16_1_0_qp'])
+      dsTest(s + 'S16 paper 1', ['s16_1_0_ms', 's16_1_0_qp'])
       dsTest(s + 'y17 paper11', [])
       dsTest(s + 's16 paper13', [])
       dsTest(s + 's16 paper3', [])
