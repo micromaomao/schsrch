@@ -24,8 +24,9 @@
   "dependencies": {
     "cheerio": "^0.22.0",
     "express": "^4.15.2",
-    "mongoose": "^4.9.0",
+    "mongoose": "^4.9.2",
     "nan": "^2.5.1",
+    "node-sass": "^4.5.2",
     "svgo": "^0.7.2"
   },
   "devDependencies": {
