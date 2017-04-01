@@ -122,7 +122,7 @@ class FilePreview extends React.Component {
                   <svg className="icon ii-l"><use href="#ii-l" xlinkHref="#ii-l"></use></svg>
                 </span>
                 <span className='doc'>
-                  {PaperUtils.setToString(this.state.docMeta)}_{this.state.docMeta.type}
+                  {this.state.docMeta.type.toUpperCase()}
                 </span>
                 &nbsp;-&nbsp;
                 <span className='page'>

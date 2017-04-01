@@ -478,13 +478,17 @@ $feedback-top-height: 2rem + 1.3rem
       .input
         display: inline
         text-align: center
-        width: 3rem
+        width: 2rem
         background-color: transparent
         border-top: 0
         border-left: 0
         border-right: 0
         border-bottom: solid 1px white
         outline: none
+        &::-webkit-inner-spin-button
+          appearance: none
+          -moz-appearance: none
+          -webkit-appearance: none
         color: inherit
         font: inherit
         line-height: 1
