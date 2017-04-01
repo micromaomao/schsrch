@@ -208,7 +208,8 @@ module.exports = (db, mongoose) => {
                 resolve(pageData)
               })
             }).then(pageData => Promise.resolve(Object.assign(idx, {
-              rects: pageData.rects
+              rects: pageData.rects,
+              content: pageData.text
             })))
           )).then(idxes => Promise.resolve(Object.assign(doc, {dir: Recognizer.dir(idxes)})))
             .then(doc => doc.save().then(() => Promise.resolve(doc.dir)))
