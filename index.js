@@ -9,6 +9,7 @@ const cheerio = require('cheerio')
 require('./dist-server/serverrender')
 const serverRender = global.serverRender
 global.serverRender = null
+const Recognizer = require('./lib/recognizer.js')
 
 let indexPath = path.join(__dirname, 'dist/index.html')
 let indexHtml = fs.readFileSync(indexPath)
@@ -187,6 +188,38 @@ module.exports = (db, mongoose) => {
       }).catch(reject)
     })
   }
+
+  rMain.get('/docdir/:docid', function (req, res, next) {
+    let docid = req.params.docid.toString()
+    PastPaperDoc.findOne({_id: docid}).then(doc => {
+      if (!doc) {
+        next()
+        return
+      }
+      if (doc.dir && doc.dir.length > 0) {
+        res.send(doc.dir)
+      } else {
+        PastPaperIndex.find({doc: docid}).sort({page: 1}).exec().then(idxes =>
+          Promise.all(idxes.map(idx =>
+            // TODO: Lock sspdf to prevent race condition
+            new Promise((resolve, reject) => {
+              sspdf.getPage(doc.doc, idx.page, function (err, pageData) {
+                if (err) return reject(err)
+                resolve(pageData)
+              })
+            }).then(pageData => Promise.resolve(Object.assign(idx, {
+              rects: pageData.rects
+            })))
+          )).then(idxes => Promise.resolve(Object.assign(doc, {dir: Recognizer.dir(idxes)})))
+            .then(doc => doc.save().then(() => Promise.resolve(doc.dir)))
+        ).then(dir => {
+          res.send(dir)
+          let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/docdir/', targetId: docid})
+          saveRecord(rec)
+        }, err => next(err))
+      }
+    }, err => next(err))
+  })
 
   rMain.post('/feedback/', function (req, res, next) {
     let ctype = req.get('Content-Type')

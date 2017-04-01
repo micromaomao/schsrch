@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-const { MONGODB: DB, QUICK } = process.env
+const { MONGODB: DB, QUICK, DEBUG } = process.env
 let noCacheSSPDF = QUICK === '1'
+let debug = DEBUG === '1'
 
 const mongoose = require('mongoose')
 mongoose.Promise = global.Promise
@@ -11,6 +12,7 @@ const path = require('path')
 const PaperUtils = require('./view/paperutils.js')
 const sspdf = require('./lib/sspdf.js')
 const sspdfLock = require('./lib/singlelock.js')()
+const Recognizer = require('./lib/recognizer.js')
 
 let raceLock = {}
 
@@ -23,6 +25,9 @@ db.on('open', () => {
 
   const indexPdf = path => new Promise((resolve, reject) => {
     const fname = path.split('/').slice(-1)[0]
+    if (debug) {
+      process.stderr.write(`Reading ${path}\n`)
+    }
     fs.readFile(path, (err, data) => {
       if (err) {
         reject(err)
@@ -37,7 +42,13 @@ db.on('open', () => {
       let loadPage = (pIndex, returnNumPages = false) => new Promise((resolve, reject) => {
         new Promise((resolve, reject) => {
           sspdfLock(function (done) {
+            if (debug) {
+              process.stderr.write(`Aquired sspdf lock for ${path} page ${pIndex}\n`)
+            }
             sspdf.getPage(data, pIndex, function (err, pageData) {
+              if (debug) {
+                process.stderr.write(`Releasing sspdf lock for ${path} page ${pIndex}\n`)
+              }
               done()
               if (err) return reject(err)
               resolve(pageData)
@@ -51,24 +62,40 @@ db.on('open', () => {
               content: pageData.text,
               sspdfCache
             })
+            idx.rects = pageData.rects // TODO: Should I remove it later to not blow up database?
+            if (debug) {
+              process.stderr.write(`Creating index for ${path} page ${pIndex}\n`)
+            }
             resolve(returnNumPages ? [idx, pageData.pageNum] : idx)
           }
           if (noCacheSSPDF) {
             ok(null)
           } else {
+            if (debug) {
+              process.stderr.write(`Precaching ${path} page ${pIndex}\n`)
+            }
             sspdf.preCache(pageData, sspdfCache => {
               ok(sspdfCache)
             })
           }
         }).catch(reject)
       })
+      if (debug) {
+        process.stderr.write(`Loading cover page in ${path}\n`)
+      }
       loadPage(0, true).then(([idx0, numPages]) => {
+        if (debug) {
+          process.stderr.write(`Load cover page in ${path}, numPages = ${numPages}\n`)
+        }
         doc.set('numPages', numPages)
         let pagePromises = [Promise.resolve(idx0)]
         for (let pn = 1; pn < numPages; pn++) {
           pagePromises.push(loadPage(pn))
         }
         Promise.all(pagePromises).then(idxes => new Promise((resolve, reject) => {
+          if (debug) {
+            process.stderr.write(`All page done creating index in ${path}\n`)
+          }
           let subject
           let time
           let type
@@ -185,18 +212,43 @@ db.on('open', () => {
             paper: parseInt(paper),
             variant: parseInt(variant)
           }
+          if (debug) {
+            process.stderr.write(`Metadata detected: ${JSON.stringify(mt)} in ${path}\n`)
+          }
           Object.assign(doc, mt)
           let setStr = PaperUtils.setToString(mt)
           if (raceLock[setStr] && raceLock[setStr][mt.type]) {
+            if (debug) {
+              process.stderr.write(`Couldn't obtain duplicate raceLock for ${path}, discarding data...\n`)
+            }
             resolve()
             return
           } else {
             let lt = raceLock[setStr] || (raceLock[setStr] = {})
             lt[mt.type] = true
           }
+          if (debug) {
+            process.stderr.write(`Perpare to process ${path}\n`)
+          }
           let removeDoc = doc => PastPaperIndex.remove({doc: doc._id}).exec().then(() => doc.remove())
-          Promise.all(idxes.map(idx => idx.save())).then(() => PastPaperDoc.find(mt, {_id: true}).exec())
-            .then(docs => Promise.all(docs.map(doc => removeDoc(doc)))).then(() => doc.save(), reject).then(resolve, err => reject(new Error("Can't save document: " + err)))
+          let assignDir = () => new Promise((resolve, reject) => {
+            if (debug) {
+              process.stderr.write(`Pre assignDir ${path}\n`)
+            }
+            if (!noCacheSSPDF) doc.set('dir', Recognizer.dir(idxes))
+            doc.set('rects', null)
+            if (debug) {
+              process.stderr.write(`assignDir ${path}\n`)
+            }
+            resolve()
+          })
+          assignDir().then(() => Promise.all(idxes.map(idx => idx.save())).then(() => PastPaperDoc.find(mt, {_id: true}).exec())
+            .then(docs => Promise.all(docs.map(doc => removeDoc(doc)))).then(() => doc.save(), reject).then(a => {
+              if (debug) {
+                process.stderr.write(`Saved ${path}\n`)
+              }
+              return Promise.resolve(a)
+            }).then(resolve, err => reject(new Error("Can't save document: " + err))))
         })).then(resolve, reject)
       }, err => {
         reject(err)
@@ -211,7 +263,7 @@ db.on('open', () => {
   let failure = 0
   let ended = false
   let processing = 0
-  let lastShowProgress = Date.now()
+  let lastShowProgress = 0
   function end () {
     ended = true
     process.stderr.write(`\nDone. ${total() - failure} documents indexed. ( ${failure} failed. )\n`)
@@ -255,6 +307,9 @@ db.on('open', () => {
         }
       })
     }).then(doit => doit ? indexPdf(task) : Promise.resolve(false)).then(() => {
+      if (debug) {
+        process.stderr.write(`Done ${task}\n`)
+      }
       doneThis()
     }, err => {
       failure++

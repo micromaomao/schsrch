@@ -2,6 +2,7 @@ const React = require('react')
 const PaperUtils = require('./paperutils.js')
 const SsPdfView = require('./sspdfview.jsx')
 const AppState = require('./appstate.js')
+const DocDirList = require('./docdirlist.jsx')
 
 // TODO: Highlight
 
@@ -13,7 +14,10 @@ class FilePreview extends React.Component {
       error: null,
       docJson: null,
       docMeta: null,
-      pageInputValue: null
+      pageInputValue: null,
+      dirJson: null,
+      dirError: null,
+      showingDir: false
     }
     this.currentLoading = null
     this.handlePageInputChange = this.handlePageInputChange.bind(this)
@@ -36,7 +40,7 @@ class FilePreview extends React.Component {
   componentDidUpdate (prevProps, prevState) {
     if (prevProps.doc !== this.props.doc || prevProps.page !== this.props.page) {
       this.pdfView.reCenter()
-      this.setState({pageInputValue: null})
+      this.setState({pageInputValue: null, showingDir: false})
     }
   }
   load (doc = this.props.doc, page = this.props.page) {
@@ -57,6 +61,28 @@ class FilePreview extends React.Component {
       if (this.props.doc !== doc || this.props.page !== page) return
       this.setState({loading: false, error: (err.notFetchError ? err : new Error("Network unstable or SchSrch has crashed.")), docJson: null})
       this.currentLoading = null
+    })
+
+    if (this.state.dirJson === null || this.props.doc !== doc) {
+      this.setState({dirJson: null})
+      this.refetchDir(doc)
+    }
+  }
+  refetchDir (doc) {
+    if (this.state.dirJson !== null && this.props.doc === doc) return
+    fetch(`/docdir/${doc}/`).then(res => new Promise((resolve, reject) => {
+      if (!res.ok) {
+        reject(Object.assign(new Error(res.statusText || res.status), {notFetchError: true}))
+      } else {
+        resolve(res)
+      }
+    })).then(res => res.json()).then(json => {
+      if (this.props.doc !== doc) return
+      this.setState({dirJson: json, dirError: null})
+    }, err => {
+      if (this.props.doc !== doc) return
+      this.setState({dirJson: null, dirError: (err.notFetchError ? err : new Error("Network unstable or SchSrch has crashed."))})
+      setTimeout(() => refetchDir(), 500)
     })
   }
   handlePageInputChange (evt) {
@@ -105,6 +131,9 @@ class FilePreview extends React.Component {
                   <input className='input' type='number' onChange={this.handlePageInputChange} value={this.state.pageInputValue !== null ? this.state.pageInputValue : (this.props.page + 1)} /> / {this.state.docMeta.numPages}
                 </span>
                 &nbsp;
+                <a className='dir' onClick={evt => this.toggleDir()}>
+                  <svg className="icon ii-dir"><use href="#ii-dir" xlinkHref="#ii-dir" /></svg>
+                </a>
                 <a className='download' onClick={evt => this.download()}>
                   <svg className="icon ii-dl"><use href="#ii-dl" xlinkHref="#ii-dl" /></svg>
                 </a>
@@ -134,7 +163,10 @@ class FilePreview extends React.Component {
           ? (
             <div className='whitebg'>
               <div className={this.state.loading ? 'pdfview dirty' : 'pdfview'}>
-                <SsPdfView ref={f => this.pdfView = f} docJson={this.state.docJson} />
+                {this.state.showingDir ? <DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={question => this.selectQuestion(question)} /> : null}
+                <div className={!this.state.dirJson || !this.state.showingDir ? 'show' : 'hide'}>
+                  <SsPdfView ref={f => this.pdfView = f} docJson={this.state.docJson} />
+                </div>
               </div>
             </div>
           )
@@ -142,11 +174,18 @@ class FilePreview extends React.Component {
       </div>
     )
   }
+  toggleDir () {
+    this.setState({showingDir: !this.state.showingDir})
+  }
   download () {
     window.open(`/fetchDoc/${this.state.docMeta ? this.state.docMeta._id : this.props.doc}/`)
   }
   changePage (page) {
     AppState.dispatch({type: 'previewChangePage', page})
+  }
+  selectQuestion (question) {
+    this.setState({showingDir: false})
+    this.changePage(question.page)
   }
 }
 
