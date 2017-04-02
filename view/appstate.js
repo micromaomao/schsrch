@@ -114,7 +114,8 @@ let AppState = createStore(function (state = {}, action) {
         previewing: {
           id: action.fileId,
           page: action.page,
-          psKey: action.psKey
+          psKey: action.psKey || state.previewing.psKey,
+          highlightingQ: action.highlightingQ
         },
         previewPages: setPreviewPages(state.previewPages, action.fileId, action.page)
       })

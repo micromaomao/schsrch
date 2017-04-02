@@ -173,19 +173,29 @@ class FilePreview extends React.Component {
     )
   }
   renderMsref () {
-    return [
-      {
-        className: 'test',
-        lt: [100, 100],
-        rb: [400, 150],
-        boundX: true,
-        stuff: (
-          <div style={{width: '100%', height: '100%', backgroundColor: 'rgba(255, 0, 0, 0.3)'}} onClick={evt => {
-            console.log('ha!')
-          }}>Hello world!</div>
-        )
+    let doc = this.props.doc
+    if (!this.state.loading && this.state.docJson && this.state.dirJson && this.state.msRef && this.state.dirJson.length === this.state.msRef.dir.length) {
+      let inPageDirs = this.state.dirJson.map((a, i) => Object.assign({}, a, {i})).filter(dir => dir.page === this.props.page && dir.qNRect)
+      if (inPageDirs.length > 0) {
+        return inPageDirs.map(dir => ({
+          boundX: true,
+          lt: [0, dir.qNRect.y1 - 4],
+          rb: [this.state.docJson.width, dir.qNRect.y2 + 4],
+          className: 'questionln' + (AppState.getState().previewing.highlightingQ === dir.i ? ' highlight' : ''),
+          stuff: null,
+          onClick: evt => {
+            if (!this.state.msRef || this.props.doc !== doc) {
+              return
+            }
+            let dirMs = this.state.msRef.dir[dir.i]
+            if (dirMs.qN === dir.qN) {
+              AppState.dispatch({type: 'previewFile', fileId: this.state.msRef.docid, page: dirMs.page, highlightingQ: dir.i})
+            }
+          }
+        }))
       }
-    ]
+    }
+    return []
   }
   toggleDir () {
     this.setState({showingDir: !this.state.showingDir})

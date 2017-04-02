@@ -52,13 +52,13 @@ class SsPdfView extends React.Component {
             let xBound = x => item.boundX ? Math.max(Math.min(x, this.viewWidth), 0) : x
             let yBound = y => item.boundY ? Math.max(Math.min(y, this.viewHeight), 0) : y
             return (
-              <div className={item.className} key={i} style={{
+              <div className={item.className || ''} key={i} style={{
                 position: 'absolute',
                 left: xBound(ltPoint[0]) + 'px',
                 top: yBound(ltPoint[1]) + 'px',
                 right: (this.viewWidth - xBound(rbPoint[0])) + 'px',
                 bottom: (this.viewHeight - yBound(rbPoint[1])) + 'px'
-              }}>{item.stuff}</div>
+              }} onClick={item.onClick} onTouchEnd={item.onClick}>{item.stuff}</div>
             )
           })}
         </div>
