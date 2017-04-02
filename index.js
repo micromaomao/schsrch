@@ -212,7 +212,7 @@ module.exports = (db, mongoose) => {
       }
       PastPaperDoc.findOne({subject: doc.subject, time: doc.time, paper: doc.paper, variant: doc.variant, type: doc.type === 'ms' ? 'qp' : 'ms'}).then(msdoc => {
         if (!msdoc) {
-          res.send({dir: [], docid: null})
+          res.send({dir: {}, docid: null})
         } else {
           msdoc.ensureDir().then(dir => {
             res.send({dir, docid: msdoc._id.toString()})

@@ -18,8 +18,8 @@ class DocDirList extends React.Component {
           ? (
             <div>
               <ul>
-                {this.props.dirJson.map(question =>
-                  <li key={question._id} onClick={evt => this.props.onSelect && this.props.onSelect(question)}>
+                {this.props.dirJson.dirs.map((question, ii) =>
+                  <li key={ii} onClick={evt => this.props.onSelect && this.props.onSelect(question, ii)}>
                     <span className='qn'><span>#</span>{question.qN}</span>
                     <span className='qt'>{question.qT}</span>
                     &nbsp;
@@ -27,7 +27,7 @@ class DocDirList extends React.Component {
                   </li>
                 )}
               </ul>
-              {this.props.dirJson.length === 0
+              {this.props.dirJson.dirs.length === 0
                 ? (
                   <div className='msg'>No question directory available.</div>
                 ) : null}

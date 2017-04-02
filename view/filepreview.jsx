@@ -161,7 +161,7 @@ class FilePreview extends React.Component {
           ? (
             <div className='whitebg'>
               <div className={this.state.loading ? 'pdfview dirty' : 'pdfview'}>
-                {this.state.showingDir ? <DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={question => this.selectQuestion(question)} /> : null}
+                {this.state.showingDir ? <DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={(question, i) => this.selectQuestion(question, i)} /> : null}
                 <div className={!this.state.dirJson || !this.state.showingDir ? 'show' : 'hide'}>
                   <SsPdfView ref={f => this.pdfView = f} docJson={this.state.docJson} msref={this.renderMsref()} />
                 </div>
@@ -174,20 +174,21 @@ class FilePreview extends React.Component {
   }
   renderMsref () {
     let doc = this.props.doc
-    if (!this.state.loading && this.state.docJson && this.state.dirJson && this.state.msRef && this.state.dirJson.length === this.state.msRef.dir.length) {
-      let inPageDirs = this.state.dirJson.map((a, i) => Object.assign({}, a, {i})).filter(dir => dir.page === this.props.page && dir.qNRect)
+    if (!this.state.loading && this.state.docJson && this.state.dirJson && this.state.dirJson.dirs && this.state.msRef && this.state.msRef.dir && this.state.dirJson.dirs.length === this.state.msRef.dir.dirs.length) {
+      let inPageDirs = this.state.dirJson.dirs.map((a, i) => Object.assign({}, a, {i})).filter(dir => dir.page === this.props.page && dir.qNRect)
+      let isMcqMs = this.state.dirJson.mcqMs
       if (inPageDirs.length > 0) {
         return inPageDirs.map(dir => ({
           boundX: true,
-          lt: [0, dir.qNRect.y1 - 4],
-          rb: [this.state.docJson.width, dir.qNRect.y2 + 4],
+          lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
+          rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [this.state.docJson.width, dir.qNRect.y2 + 4],
           className: 'questionln' + (AppState.getState().previewing.highlightingQ === dir.i ? ' highlight' : ''),
           stuff: null,
           onClick: evt => {
             if (!this.state.msRef || this.props.doc !== doc) {
               return
             }
-            let dirMs = this.state.msRef.dir[dir.i]
+            let dirMs = this.state.msRef.dir.dirs[dir.i]
             if (dirMs.qN === dir.qN) {
               AppState.dispatch({type: 'previewFile', fileId: this.state.msRef.docid, page: dirMs.page, highlightingQ: dir.i})
             }
@@ -203,12 +204,12 @@ class FilePreview extends React.Component {
   download () {
     window.open(`/fetchDoc/${this.state.docMeta ? this.state.docMeta._id : this.props.doc}/`)
   }
-  changePage (page) {
-    AppState.dispatch({type: 'previewChangePage', page})
+  changePage (page, highlightingQ) {
+    AppState.dispatch({type: 'previewChangePage', page, highlightingQ})
   }
-  selectQuestion (question) {
+  selectQuestion (question, i) {
     this.setState({showingDir: false})
-    this.changePage(question.page)
+    this.changePage(question.page, i)
   }
 }
 

@@ -114,7 +114,7 @@ let AppState = createStore(function (state = {}, action) {
         previewing: {
           id: action.fileId,
           page: action.page,
-          psKey: action.psKey || state.previewing.psKey,
+          psKey: action.psKey || (state.previewing ? state.previewing.psKey : null),
           highlightingQ: action.highlightingQ
         },
         previewPages: setPreviewPages(state.previewPages, action.fileId, action.page)
@@ -122,7 +122,8 @@ let AppState = createStore(function (state = {}, action) {
     case 'previewChangePage':
       return Object.assign({}, state, {
         previewing: Object.assign({}, state.previewing, {
-          page: action.page
+          page: action.page,
+          highlightingQ: Number.isSafeInteger(action.highlightingQ) ? action.highlightingQ : state.previewing.highlightingQ
         }),
         previewPages: setPreviewPages(state.previewPages, state.previewing.id, action.page)
       })
