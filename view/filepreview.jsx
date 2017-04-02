@@ -163,7 +163,7 @@ class FilePreview extends React.Component {
               <div className={this.state.loading ? 'pdfview dirty' : 'pdfview'}>
                 {this.state.showingDir ? <DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={question => this.selectQuestion(question)} /> : null}
                 <div className={!this.state.dirJson || !this.state.showingDir ? 'show' : 'hide'}>
-                  <SsPdfView ref={f => this.pdfView = f} docJson={this.state.docJson} />
+                  <SsPdfView ref={f => this.pdfView = f} docJson={this.state.docJson} msref={this.renderMsref()} />
                 </div>
               </div>
             </div>
@@ -171,6 +171,21 @@ class FilePreview extends React.Component {
           : null}
       </div>
     )
+  }
+  renderMsref () {
+    return [
+      {
+        className: 'test',
+        lt: [100, 100],
+        rb: [400, 150],
+        boundX: true,
+        stuff: (
+          <div style={{width: '100%', height: '100%', backgroundColor: 'rgba(255, 0, 0, 0.3)'}} onClick={evt => {
+            console.log('ha!')
+          }}>Hello world!</div>
+        )
+      }
+    ]
   }
   toggleDir () {
     this.setState({showingDir: !this.state.showingDir})

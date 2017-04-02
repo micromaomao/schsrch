@@ -45,7 +45,23 @@ class SsPdfView extends React.Component {
     }
     return (
       <div className='sspdfview' style={{height: this.viewHeight + 'px'}}>
-        <div className='pointereventcover' ref={f => this.eventTarget = f} />
+        <div className='pointereventcover' ref={f => this.eventTarget = f}>
+          {(this.props.msref || []).map((item, i) => {
+            let ltPoint = this.doc2view(item.lt)
+            let rbPoint = this.doc2view(item.rb)
+            let xBound = x => item.boundX ? Math.max(Math.min(x, this.viewWidth), 0) : x
+            let yBound = y => item.boundY ? Math.max(Math.min(y, this.viewHeight), 0) : y
+            return (
+              <div className={item.className} key={i} style={{
+                position: 'absolute',
+                left: xBound(ltPoint[0]) + 'px',
+                top: yBound(ltPoint[1]) + 'px',
+                right: (this.viewWidth - xBound(rbPoint[0])) + 'px',
+                bottom: (this.viewHeight - yBound(rbPoint[1])) + 'px'
+              }}>{item.stuff}</div>
+            )
+          })}
+        </div>
         <div className='svglayer' ref={f => this.svgLayer = f} style={svgStyle} />
         <canvas className='dirtylayer' ref={f => this.dirtyLayer = f} width={this.viewWidth} height={this.viewHeight} />
       </div>
@@ -408,6 +424,18 @@ class SsPdfView extends React.Component {
       this.ctAnimation = null
     }
     this.setState({ctPos: nctPos, ctSize: nctSize})
+  }
+  doc2view ([x, y]) {
+    if (x === -Infinity) return [0, this.doc2view([0, y])[1]]
+    if (x === Infinity) return [this.viewWidth, this.doc2view([0, y])[1]]
+    let [docWid, docHig] = ['width', 'height'].map(p => this.props.docJson[p])
+    return [(x / docWid) * this.state.ctSize[0] + this.state.ctPos[0],
+            (y / docHig) * this.state.ctSize[1] + this.state.ctPos[1]]
+  }
+  view2doc ([x, y]) {
+    let [docWid, docHig] = ['width', 'height'].map(p => this.props.docJson[p])
+    return [((x - this.state.ctPos[0]) / this.state.ctSize[0]) * docWid,
+            ((y - this.state.ctPos[1]) / this.state.ctSize[1]) * docHig]
   }
 }
 
