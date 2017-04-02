@@ -27,6 +27,7 @@
     "mongoose": "^4.9.2",
     "nan": "^2.5.1",
     "node-sass": "^4.5.2",
+    "rbush": "^2.0.1",
     "svgo": "^0.7.2"
   },
   "devDependencies": {
