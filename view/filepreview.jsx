@@ -3,6 +3,7 @@ const PaperUtils = require('./paperutils.js')
 const SsPdfView = require('./sspdfview.jsx')
 const AppState = require('./appstate.js')
 const DocDirList = require('./docdirlist.jsx')
+const FetchErrorPromise = require('./fetcherrorpromise.js')
 
 // TODO: Highlight
 
@@ -47,19 +48,13 @@ class FilePreview extends React.Component {
     if (this.currentLoading && this.currentLoading.doc === doc && this.currentLoading.page === page) return
     this.currentLoading = {doc, page}
     this.setState({loading: true, error: null})
-    fetch(`/sspdf/${doc}/${page}/`).then(res => new Promise((resolve, reject) => {
-      if (!res.ok) {
-        reject(Object.assign(new Error(res.statusText || res.status), {notFetchError: true}))
-      } else {
-        resolve(res)
-      }
-    })).then(res => res.json()).then(json => {
+    fetch(`/sspdf/${doc}/${page}/`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
       if (this.props.doc !== doc || this.props.page !== page) return
       this.setState({loading: false, error: null, docJson: json, docMeta: json.doc})
       this.currentLoading = null
     }, err => {
       if (this.props.doc !== doc || this.props.page !== page) return
-      this.setState({loading: false, error: (err.notFetchError ? err : new Error("Network unstable or SchSrch has crashed.")), docJson: null})
+      this.setState({loading: false, error: err, docJson: null})
       this.currentLoading = null
     })
 
@@ -68,21 +63,15 @@ class FilePreview extends React.Component {
       this.refetchDir(doc)
     }
   }
-  refetchDir (doc) {
+  refetchDir (doc = this.props.doc) {
     if (this.state.dirJson !== null && this.props.doc === doc) return
-    fetch(`/docdir/${doc}/`).then(res => new Promise((resolve, reject) => {
-      if (!res.ok) {
-        reject(Object.assign(new Error(res.statusText || res.status), {notFetchError: true}))
-      } else {
-        resolve(res)
-      }
-    })).then(res => res.json()).then(json => {
+    fetch(`/docdir/${doc}/`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
       if (this.props.doc !== doc) return
       this.setState({dirJson: json, dirError: null})
     }, err => {
       if (this.props.doc !== doc) return
-      this.setState({dirJson: null, dirError: (err.notFetchError ? err : new Error("Network unstable or SchSrch has crashed."))})
-      setTimeout(() => refetchDir(), 500)
+      this.setState({dirJson: null, dirError: err})
+      setTimeout(() => this.refetchDir(doc), 500)
     })
   }
   handlePageInputChange (evt) {

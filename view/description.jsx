@@ -2,6 +2,7 @@ const React = require('react')
 const Feedback = require('./feedback.jsx')
 const { createStore } = require('redux')
 const AppState = require('./appstate.js')
+const FetchErrorPromise = require('./fetcherrorpromise.js')
 
 let statusInfoState = createStore(function (state = {}, action) {
   switch (action.type) {
@@ -19,7 +20,7 @@ function fetchStatusInfo () {
   if ((statusInfoState.getState() || {}).loading) return
   if (!AppState.getState().querying) {
     statusInfoState.dispatch({type: 'unload'})
-    fetch('/status/').then(res => res.json()).then(stat => {
+    fetch('/status/').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(stat => {
       statusInfoState.dispatch({type: 'load', data: stat})
     }, err => {
       statusInfoState.dispatch({type: 'error', err})

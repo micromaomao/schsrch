@@ -5,6 +5,7 @@ const SearchResult = require('./searchresult.jsx')
 const Feedback = require('./feedback.jsx')
 const Disclaimer = require('./disclaimer.jsx')
 const AppState = require('./appstate.js')
+const FetchErrorPromise = require('./fetcherrorpromise.js')
 
 class SchSrch extends React.Component {
   constructor () {
@@ -106,15 +107,14 @@ class SchSrch extends React.Component {
     AppState.dispatch({type: 'query', query})
     if (AppState.getState().querying && (AppState.getState().querying.query !== oldQuery || !AppState.getState().querying.result)) {
       AppState.dispatch({type: 'queryStartRequest'})
-      fetch('/search/' + encodeURIComponent(query) + '/').then(res => res.json()).then(result => {
+      fetch('/search/' + encodeURIComponent(query) + '/').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
         if (result.response === 'error') {
           AppState.dispatch({type: 'queryError', query, error: result.err})
           return
         }
         AppState.dispatch({type: 'queryResult', query, result})
       }, err => {
-        let error = new Error('Unknow error (maybe no Internet?)')
-        AppState.dispatch({type: 'queryError', query, error})
+        AppState.dispatch({type: 'queryError', query, error: err})
       })
     }
   }
