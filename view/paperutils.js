@@ -1,7 +1,7 @@
 const shortTypes = ['qp', 'ms', 'in', 'er', 'gt', 'ir', 'ci', 'sp', 'sm', 'sr']
 const longTypes = [
   'question paper',
-  'marking scheme',
+  'mark scheme',
   'insert',
   'examiner report',
   'grade thresholds',
