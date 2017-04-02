@@ -200,9 +200,31 @@ module.exports = (db, mongoose) => {
         res.send(dir)
         let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/docdir/', targetId: docid})
         saveRecord(rec)
-      }, err => {
-        next(err)
-      })
+      }, err => next(err))
+    }, err => next(err))
+  })
+  rMain.get('/msdir/:docid', function (req, res, next) {
+    let docid = req.params.docid.toString()
+    PastPaperDoc.findOne({_id: docid}).then(doc => {
+      if (!doc) {
+        next()
+        return
+      }
+      if (doc.type === 'ms') {
+        res.redirect('/docdir/' + doc._id)
+      } else {
+        PastPaperDoc.findOne({subject: doc.subject, time: doc.time, paper: doc.paper, variant: doc.variant, type: 'ms'}).then(msdoc => {
+          if (!msdoc) {
+            res.send([])
+          } else {
+            msdoc.ensureDir().then(dir => {
+              res.send(dir)
+              let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/msdir/', targetId: docid})
+              saveRecord(rec)
+            }, err => next(err))
+          }
+        }, err => next(err))
+      }
     }, err => next(err))
   })
 

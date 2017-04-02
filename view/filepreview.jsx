@@ -18,7 +18,8 @@ class FilePreview extends React.Component {
       pageInputValue: null,
       dirJson: null,
       dirError: null,
-      showingDir: false
+      showingDir: false,
+      msRef: null
     }
     this.currentLoading = null
     this.handlePageInputChange = this.handlePageInputChange.bind(this)
@@ -59,15 +60,23 @@ class FilePreview extends React.Component {
     })
 
     if (this.state.dirJson === null || this.props.doc !== doc) {
-      this.setState({dirJson: null})
+      this.setState({dirJson: null, msRef: null})
       this.refetchDir(doc)
     }
   }
   refetchDir (doc = this.props.doc) {
-    if (this.state.dirJson !== null && this.props.doc === doc) return
+    if (this.state.dirJson !== null && this.state.msRef !== null && this.props.doc === doc) return
     fetch(`/docdir/${doc}/`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
       if (this.props.doc !== doc) return
-      this.setState({dirJson: json, dirError: null})
+      this.setState({dirJson: json, dirError: null, msRef: null})
+      fetch(`/msdir/${doc}/`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
+        if (this.props.doc !== doc) return
+        this.setState({msRef: json})
+      }, err => {
+        if (this.props.doc !== doc) return
+        this.setState({msRef: null})
+        setTimeout(() => this.refetchDir(doc), 500)
+      })
     }, err => {
       if (this.props.doc !== doc) return
       this.setState({dirJson: null, dirError: err})
