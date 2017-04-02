@@ -210,21 +210,17 @@ module.exports = (db, mongoose) => {
         next()
         return
       }
-      if (doc.type === 'ms') {
-        res.redirect('/docdir/' + doc._id)
-      } else {
-        PastPaperDoc.findOne({subject: doc.subject, time: doc.time, paper: doc.paper, variant: doc.variant, type: 'ms'}).then(msdoc => {
-          if (!msdoc) {
-            res.send([])
-          } else {
-            msdoc.ensureDir().then(dir => {
-              res.send(dir)
-              let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/msdir/', targetId: docid})
-              saveRecord(rec)
-            }, err => next(err))
-          }
-        }, err => next(err))
-      }
+      PastPaperDoc.findOne({subject: doc.subject, time: doc.time, paper: doc.paper, variant: doc.variant, type: doc.type === 'ms' ? 'qp' : 'ms'}).then(msdoc => {
+        if (!msdoc) {
+          res.send([])
+        } else {
+          msdoc.ensureDir().then(dir => {
+            res.send(dir)
+            let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/msdir/', targetId: docid})
+            saveRecord(rec)
+          }, err => next(err))
+        }
+      }, err => next(err))
     }, err => next(err))
   })
 
