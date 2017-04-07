@@ -29,5 +29,5 @@ addons:
       - mongodb-org
       - elasticsearch
 script:
-  - npm run webpack && ./test/perpareDatabase.sh && npm run coverage
+  - ./test/perpareDatabase.sh && npm run coverage
   - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
