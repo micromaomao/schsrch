@@ -1,6 +1,7 @@
 language: node_js
 sudo: no
 dist: trusty
+group: edge
 node_js:
   - "7"
 env:
@@ -21,12 +22,12 @@ addons:
       - ubuntu-toolchain-r-test
       - r-packages-trusty
       - mongodb-3.0-precise
+      - elasticsearch-5.x
     packages:
       - g++-6
       - libpoppler-glib-dev
       - mongodb-org
-before_script:
-  - sleep 10
+      - elasticsearch
 script:
   - npm run webpack && ./test/perpareDatabase.sh && npm run coverage
   - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
