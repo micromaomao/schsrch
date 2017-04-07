@@ -1,15 +1,14 @@
-const express = require('express')
+const express = require.main.require('express')
 const path = require('path')
 const os = require('os')
 const PaperUtils = require('./view/paperutils')
-const CIESubjects = require('./view/CIESubjects')
 const sspdf = require('./lib/sspdf')
 const fs = require('fs')
 const cheerio = require('cheerio')
 require('./dist-server/serverrender')
 const serverRender = global.serverRender
 global.serverRender = null
-const Recognizer = require('./lib/recognizer.js')
+const mongoose = require.main.require('mongoose')
 
 let indexPath = path.join(__dirname, 'dist/index.html')
 let indexHtml = fs.readFileSync(indexPath)
@@ -26,8 +25,8 @@ if (process.env.NODE_ENV !== 'production') {
   })
 }
 
-module.exports = (db, mongoose) => {
-  const {PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord} = require('./lib/dbModel.js')(db, mongoose)
+module.exports = ({mongodb: db}) => {
+  const {PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord} = require('./lib/dbModel.js')(db)
   let rMain = express.Router()
 
   function statusInfo () {
