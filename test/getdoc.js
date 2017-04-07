@@ -74,6 +74,7 @@ module.exports = (schsrch, dbModel) =>
           .expect(res => ['width', 'height'].forEach(p => res.body[p].should.be.a.Number().and.above(0)))
           .expect(res => res.body.pageNum.should.equal(tDoc.numPages))
           .expect(res => should.not.exist(res.body.doc.doc))
+          .expect(res => should.not.exist(res.body.doc.fileBlob))
           .expect(res => res.body.svg.should.be.a.String().and.match(/^<svg/))
           .end(done)
         })
@@ -117,8 +118,8 @@ module.exports = (schsrch, dbModel) =>
         .expect(404)
         .end(done)
     })
-    it('should cached sspdf preview', function (done) {
-      PastPaperIndex.findOne({doc: sspdfTestDoc._id, page: 0}).then(idx => {
+    it('sspdf preview should be cached', function (done) {
+      PastPaperIndex.findOne({docId: sspdfTestDoc._id, page: 0}).then(idx => {
         if (!idx) {
           done(new Error('Index not exist.'))
           return
@@ -135,7 +136,7 @@ module.exports = (schsrch, dbModel) =>
       })
     })
     it('should 404 if PastPaperIndex missing', function (done) {
-      PastPaperIndex.remove({doc: sspdfTestDoc._id}).then(() => {
+      PastPaperIndex.remove({docId: sspdfTestDoc._id}).then(() => {
         testPage404(0, done)
       }, err => done(err))
     })

@@ -11,9 +11,10 @@ module.exports = (schsrch, dbModel) =>
       .expect(res => res.body.list.forEach(x => x.doc._id.should.be.a.String()))
       .expect(res => res.body.list.forEach(x => x.doc.fileType.should.equal('pdf')))
       .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.doc)))
+      .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.fileBlob)))
       .expect(res => res.body.list.forEach(x => x.index.should.be.an.Object()))
       .expect(res => res.body.list.forEach(x => x.index._id.should.be.an.String()))
-      .expect(res => res.body.list.forEach(x => x.index.doc.should.be.an.String()))
+      .expect(res => res.body.list.forEach(x => x.index.docId.should.be.an.String()))
       .expect(res => res.body.list.forEach(x => x.index.page.should.be.an.Number().and.aboveOrEqual(0)))
       .expect(res => res.body.list.forEach(x => should.not.exist(x.index.sspdfCache)))
     }

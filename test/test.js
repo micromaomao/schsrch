@@ -5,6 +5,7 @@ const express = require('express')
 let schsrch = null
 let dbModel = null
 const mongoose = require('mongoose')
+const elasticsearch = require('elasticsearch')
 mongoose.Promise = global.Promise
 
 process.on('unhandledRejection', (reason, promise) => {
@@ -13,16 +14,20 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1)
 })
 
-const DB = process.env.MONGODB
+const { MONGODB: DB, ES } = process.env
 
 try {
   DB.should.be.a.String().and.should.not.be.empty()
+  ES.should.be.a.String().and.should.not.be.empty()
 } catch (e) {
   console.log('You need to provide env MONGODB. E.g. MONGODB=127.0.0.1')
   process.exit(1)
 }
 
 let db = mongoose.createConnection(DB)
+let es = new elasticsearch.Client({
+  host: ES
+})
 db.on('error', function (err) {
   console.error(err)
   process.exit(1)
@@ -33,30 +38,32 @@ db.on('open', function () {
     console.log(`    ${req.method.toUpperCase()} ${req.path}`)
     next()
   })
-  schsrch.use(_schsrch(db, mongoose))
+  schsrch.use(_schsrch({mongodb: db, elasticsearch: es}))
   schsrch.use(function (err, req, res, next) {
     console.error(err)
     next()
   })
-  dbModel = require('../lib/dbModel.js')(db, mongoose)
-  const {PastPaperRequestRecord, PastPaperDoc} = dbModel
-  PastPaperRequestRecord.count().then(ct => {
-    if (ct !== 0) {
-      console.error('Unclean database. Run test/perpareDatabase.sh before testing.')
-      process.exit(1)
-      return
-    }
-    PastPaperDoc.count().then(ct => {
-      if (ct === 0) {
-        console.error('No testing paper present. Run test/perpareDatabase.sh before testing.')
+  require('../lib/dbModel.js')(db, es).then(_dbModel => {
+    dbModel = _dbModel
+    const {PastPaperRequestRecord, PastPaperDoc} = dbModel
+    PastPaperRequestRecord.count().then(ct => {
+      if (ct !== 0) {
+        console.error('Unclean database. Run test/perpareDatabase.sh before testing.')
         process.exit(1)
         return
       }
-      doTests()
+      PastPaperDoc.count().then(ct => {
+        if (ct === 0) {
+          console.error('No testing paper present. Run test/perpareDatabase.sh before testing.')
+          process.exit(1)
+          return
+        }
+        doTests()
+      })
+    }, err => {
+      console.error(err)
+      process.exit(1)
     })
-  }, err => {
-    console.error(err)
-    process.exit(1)
   })
 })
 

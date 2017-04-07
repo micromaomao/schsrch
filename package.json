@@ -34,6 +34,9 @@
     "mongoose": "^4.9.3"
   },
   "devDependencies": {
+    "elasticsearch": "^13.0.0-rc2",
+    "mongoose": "^4.9.3",
+    "express": "^4.15.2",
     "babel-core": "^6.24.0",
     "babel-loader": "^6.4.1",
     "babel-plugin-transform-react-jsx": "^6.23.0",

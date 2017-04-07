@@ -20,6 +20,7 @@ module.exports = schsrch =>
           .expect(res => res.body.list.forEach(x => x._id.should.be.a.String()))
           .expect(res => res.body.list.forEach(x => x.fileType.should.equal('pdf')))
           .expect(res => res.body.list.forEach(x => should.not.exist(x.doc)))
+          .expect(res => res.body.list.forEach(x => should.not.exist(x.fileBlob)))
           .expect(res => res.body.list = res.body.list.map(x => `${PaperUtils.setToString(x)}_${x.type}`))
           .expect(res => res.body.list = res.body.list.sort())
           .expect(res => res.body.list.forEach((x, idx) => x.should.equal(expect[idx])))
