@@ -85,5 +85,6 @@ module.exports = {
     }
     if (mi < 0) return odash
     return shortMonths[mi]
-  }
+  },
+  extractSet: doc => ({subject: doc.subject, time: doc.time, paper: doc.paper, variant: doc.variant})
 }

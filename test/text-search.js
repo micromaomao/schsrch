@@ -23,7 +23,7 @@ module.exports = (schsrch, dbModel) =>
     function coldWife(done, itx) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/' + encodeURIComponent(itx ? itx : 'cold wife'))
+          .get('/search/?query=' + encodeURIComponent(itx ? itx : 'cold wife'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -52,7 +52,7 @@ module.exports = (schsrch, dbModel) =>
     it('Case: turn shout', function (done) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/' + encodeURIComponent('turn shout'))
+          .get('/search/?query=' + encodeURIComponent('turn shout'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -73,7 +73,7 @@ module.exports = (schsrch, dbModel) =>
     it('Case: 0612 turn shout', function (done) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/' + encodeURIComponent('0612 turn shout'))
+          .get('/search/?query=' + encodeURIComponent('0612 turn shout'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -90,7 +90,7 @@ module.exports = (schsrch, dbModel) =>
     it('Case: 0611 turn shout', function (done) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/' + encodeURIComponent('0611 turn shout'))
+          .get('/search/?query=' + encodeURIComponent('0611 turn shout'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -107,7 +107,7 @@ module.exports = (schsrch, dbModel) =>
     it('Case: 0613 turn shout', function (done) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/' + encodeURIComponent('0613 turn shout'))
+          .get('/search/?query=' + encodeURIComponent('0613 turn shout'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -120,7 +120,7 @@ module.exports = (schsrch, dbModel) =>
     it('Case: (space)', function (done) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/' + encodeURIComponent(' '))
+          .get('/search/?query=' + encodeURIComponent(' '))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -144,7 +144,7 @@ module.exports = (schsrch, dbModel) =>
     it('Case: !!index!000000000000000000000000' , function (done) {
       ftExpectEmpty(
         supertest(schsrch)
-          .get('/search/' + encodeURIComponent('!!index!000000000000000000000000'))
+          .get('/search/?query=' + encodeURIComponent('!!index!000000000000000000000000'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -154,7 +154,7 @@ module.exports = (schsrch, dbModel) =>
       PastPaperDoc.remove({_id: tDocId}).then(() => {
         ftExpectEmpty(
           supertest(schsrch)
-            .get('/search/' + encodeURIComponent('cold wife'))
+            .get('/search/?query=' + encodeURIComponent('cold wife'))
             .set('Host', 'schsrch.xyz')
             .expect('Content-Type', /json/)
             .expect(200)
@@ -164,7 +164,7 @@ module.exports = (schsrch, dbModel) =>
     it("Shouldn't return !!index result if the corrospounding doc disappeared" , function (done) {
       ftExpectEmpty(
         supertest(schsrch)
-          .get('/search/' + encodeURIComponent('!!index!' + indexToSearch))
+          .get('/search/?query=' + encodeURIComponent('!!index!' + indexToSearch))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)

@@ -5,7 +5,7 @@ const crypto = require('crypto')
 module.exports = (schsrch, dbModel) =>
   describe('Getting the document', function () {
     const {PastPaperDoc, PastPaperIndex} = dbModel
-    it('fetchDoc', function (done) {
+    it('/doc/?as=blob', function (done) {
       PastPaperDoc.find({subject: '0610', time: 's17', paper: 1, variant: 1, type: 'qp'}).then(docs => {
         if (!docs || docs.length !== 1) {
           done(new Error(`There should be one and only one 0610_s17_1_1_qp in the testing database (there are currently ${docs.length}).`))
@@ -14,7 +14,7 @@ module.exports = (schsrch, dbModel) =>
         let tDoc = docs[0]
         let hash = crypto.createHash('sha256')
         supertest(schsrch)
-          .get('/fetchDoc/' + encodeURIComponent(tDoc._id) + '/')
+          .get('/doc/' + encodeURIComponent(tDoc._id) + '/?as=blob')
           .set('Host', 'schsrch.xyz')
           .expect(200)
           .expect('Content-Type', /pdf/)
@@ -46,9 +46,16 @@ module.exports = (schsrch, dbModel) =>
           })
         })
     })
-    it('fetchDoc with 000000000000000000000000', function (done) {
+    it('/doc/ with 000000000000000000000000', function (done) {
       supertest(schsrch)
-        .get('/fetchDoc/000000000000000000000000/')
+        .get('/doc/000000000000000000000000/?as=blob')
+        .set('Host', 'schsrch.xyz')
+        .expect(404)
+        .end(done)
+    })
+    it('/doc/ with 000000000000000000000000', function (done) {
+      supertest(schsrch)
+        .get('/doc/000000000000000000000000/?as=dir')
         .set('Host', 'schsrch.xyz')
         .expect(404)
         .end(done)
@@ -63,7 +70,7 @@ module.exports = (schsrch, dbModel) =>
         let tDoc = docs[0]
         sspdfTestDoc = tDoc
         supertest(schsrch)
-          .get('/sspdf/' + encodeURIComponent(tDoc._id) + '/0')
+          .get('/doc/' + encodeURIComponent(tDoc._id) + '/?page=0&as=sspdf')
           .set('Host', 'schsrch.xyz')
           .expect(200)
           .expect('Content-Type', /json/)
@@ -95,9 +102,10 @@ module.exports = (schsrch, dbModel) =>
       }))).then(() => done(), err => done(err))
     })
     function testPage404 (page, done) {
+      page = parseInt(page)
       let tDoc = sspdfTestDoc
       supertest(schsrch)
-        .get('/sspdf/' + encodeURIComponent(tDoc._id) + '/' + page)
+        .get('/doc/' + encodeURIComponent(tDoc._id) + '/?as=sspdf&page=' + page)
         .set('Host', 'schsrch.xyz')
         .expect(404)
         .end(done)
@@ -113,7 +121,7 @@ module.exports = (schsrch, dbModel) =>
     })
     it('404 for 000000000000000000000000', function (done) {
       supertest(schsrch)
-        .get('/sspdf/000000000000000000000000/0')
+        .get('/doc/000000000000000000000000/?as=sspdf&page=0')
         .set('Host', 'schsrch.xyz')
         .expect(404)
         .end(done)

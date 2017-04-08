@@ -8,7 +8,7 @@ module.exports = schsrch =>
       it(query, function (done) {
         expect = expect.sort().map(x => `0610_${x}`)
         supertest(schsrch)
-          .get('/search/' + encodeURIComponent(query))
+          .get('/search/?query=' + encodeURIComponent(query))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -178,7 +178,7 @@ module.exports = schsrch =>
 
     it('Overflow result', function (done) {
       supertest(schsrch)
-        .get('/search/0611')
+        .get('/search/?query=0611')
         .set('Host', 'schsrch.xyz')
         .expect('Content-Type', /json/)
         .expect(200)

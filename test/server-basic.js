@@ -76,27 +76,27 @@ module.exports = schsrch =>
         .expect(res => res.text.length.should.be.above(0))
         .end(done)
     })
-    it('/formsearch', function (done) {
+    it('/search/?as=page', function (done) {
       const tQuery = `whateverqueryhere${Math.random()}`
       supertest(schsrch)
-        .get('/formsearch/?query=' + encodeURIComponent(tQuery))
+        .get('/search/?as=page&query=' + encodeURIComponent(tQuery))
         .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect('Content-Type', /html/)
         .expect(res => res.text.indexOf(`<input type="text" class="querybox border" value=${JSON.stringify(tQuery)} name="query" autocomplete="off"`).should.be.aboveOrEqual(0))
         .end(done)
     })
-    it('/formsearch/(empty)', function (done) {
+    it('/search/?as=page&query=(empty)', function (done) {
       supertest(schsrch)
-        .get('/formsearch/?query=')
+        .get('/search/?as=page&query=')
         .set('Host', 'schsrch.xyz')
         .expect(302)
         .expect('Location', '/')
         .end(done)
     })
-    it('/formsearch/(space)', function (done) {
+    it('/search/?as=page&query=(space)', function (done) {
       supertest(schsrch)
-        .get('/formsearch/?query=%20')
+        .get('/search/?as=page&query=%20')
         .set('Host', 'schsrch.xyz')
         .expect(302)
         .expect('Location', '/')

@@ -76,9 +76,27 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
 
     let doSearch = require('./lib/doSearch.js')({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord})
 
-    rMain.get('/search/:query', function (req, res, next) {
-      let query = req.params.query.toString().trim()
-      doSearch(query).then(rst => res.send(rst), err => {
+    rMain.get('/search/', function (req, res, next) {
+      let query = (req.query.query || '').toString().trim()
+      let format = req.query.as || 'json'
+      if (query === '' && format === 'page') {
+        res.redirect('/')
+        return
+      }
+      doSearch(query).then(rst => {
+        if (format === 'json') {
+          res.send(rst)
+        } else if (format === 'page') {
+          res.type('html')
+          let $ = cheerio.load(indexHtml)
+          let querying = {query, error: null, result: JSON.parse(JSON.stringify(rst))}
+          $('.react-root').html(serverRender({querying})).attr('data-querying', JSON.stringify(querying))
+          res.send($.html())
+        } else {
+          res.status(404)
+          res.send('Format unknow.')
+        }
+      }, err => {
         res.status(500)
         next(err)
       })
@@ -97,50 +115,55 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
         res.redirect('/')
         return
       }
-      doSearch(query).then(rst => {
-        res.type('html')
-        let $ = cheerio.load(indexHtml)
-        let querying = {query, error: null, result: JSON.parse(JSON.stringify(rst))}
-        $('.react-root').html(serverRender({querying})).attr('data-querying', JSON.stringify(querying))
-        res.send($.html())
-      }, err => {
-        next(err.err || err)
-      }).catch(err => next(err))
+      res.redirect('/search/?as=page&query=' + encodeURIComponent(query))
     })
 
-    rMain.get('/fetchDoc/:id', function (req, res, next) {
-      PastPaperDoc.findOne({_id: req.params.id}).then(doc => {
-        let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/fetchDoc/', targetId: req.params.id})
+    rMain.get('/doc/:id', function (req, res, next) {
+      let docId = req.params.id
+      let format = req.query.as || 'blob'
+      let page = parseInt(req.query.page || 'NaN')
+      if (!Number.isSafeInteger(page)) page = null
+      PastPaperDoc.findOne({_id: docId}).then(doc => {
+        let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/doc/', targetId: req.params.id, targetPage: page, targetFormat: format})
         saveRecord(rec)
-        if (!doc) {
+        if (!doc || (page !== null && (page < 0 || page >= doc.numPages))) {
           next()
           return
         }
-        let fname = `${PaperUtils.setToString(doc)}_${doc.type}.${doc.fileType}`
-        res.set('Content-Disposition', `inline; filename=${JSON.stringify(fname)}`)
-        res.type(doc.fileType)
-        res.send(doc.fileBlob)
-      }).catch(err => next(err))
-    })
-    rMain.get('/sspdf/:docid/:page', function (req, res, next) {
-      let pn = parseInt(req.params.page)
-      if (!Number.isSafeInteger(pn) || pn < 0) {
-        next()
-        return
-      }
-      PastPaperDoc.findOne({_id: req.params.docid}).then(doc => {
-        if (!doc || doc.numPages <= pn) {
-          next()
-          return
+        if (format === 'blob') {
+          if (page !== null) {
+            next()
+            return
+          }
+          let fname = `${PaperUtils.setToString(doc)}_${doc.type}.${doc.fileType}`
+          res.set('Content-Disposition', `inline; filename=${JSON.stringify(fname)}`)
+          res.type(doc.fileType)
+          res.send(doc.fileBlob)
+        } else if (format === 'sspdf') {
+          if (page === null) {
+            next()
+            return
+          }
+          processSSPDF(doc, page).then(sspdf => {
+            return PastPaperDoc.findOne(Object.assign(PaperUtils.extractSet(doc), {type: (doc.type === 'ms' ? 'qp' : 'ms')}), {_id: true, type: true}).then(related => {
+              return Promise.resolve(Object.assign(sspdf, {related}))
+            })
+          }).then(sspdf => {
+            res.set('Cache-Control', 'max-age=' + (10 * 24 * 60 * 60 - 1).toString())
+            res.send(sspdf)
+          }, err => next(err))
+        } else if (format === 'dir') {
+          doc.ensureDir().then(dir => {
+            if (page === null) {
+              res.send(dir)
+            } else {
+              res.send(Object.assign(dir, {dirs: dir.dirs.filter(d => d.page === page)}))
+            }
+          }, err => next(err))
+        } else {
+          res.status(404)
+          res.send('Format unknow.')
         }
-        processSSPDF(doc, pn).then(sspdf => {
-          res.set('Cache-Control', 'max-age=' + (10 * 24 * 60 * 60).toString())
-          res.send(sspdf)
-          let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/sspdf/', targetId: doc._id, targetPage: pn})
-          saveRecord(rec)
-        }, err => {
-          next(err)
-        })
       }).catch(err => next(err))
     })
 
@@ -148,8 +171,6 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       return new Promise((resolve, reject) => {
         function postCache (stuff) {
           let result = stuff
-          delete result.text // Not used for now.
-          delete result.rects // Not used for now.
           result.doc = doc
           result.doc.fileBlob = null
           return result
@@ -187,41 +208,6 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
         }).catch(reject)
       })
     }
-
-    rMain.get('/docdir/:docid', function (req, res, next) {
-      let docid = req.params.docid.toString()
-      PastPaperDoc.findOne({_id: docid}).then(doc => {
-        if (!doc) {
-          next()
-          return
-        }
-        doc.ensureDir().then(dir => {
-          res.send(dir)
-          let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/docdir/', targetId: docid})
-          saveRecord(rec)
-        }, err => next(err))
-      }, err => next(err))
-    })
-    rMain.get('/msdir/:docid', function (req, res, next) {
-      let docid = req.params.docid.toString()
-      PastPaperDoc.findOne({_id: docid}).then(doc => {
-        if (!doc) {
-          next()
-          return
-        }
-        PastPaperDoc.findOne({subject: doc.subject, time: doc.time, paper: doc.paper, variant: doc.variant, type: doc.type === 'ms' ? 'qp' : 'ms'}).then(msdoc => {
-          if (!msdoc) {
-            res.send({dir: {}, docid: null})
-          } else {
-            msdoc.ensureDir().then(dir => {
-              res.send({dir, docid: msdoc._id.toString()})
-              let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/msdir/', targetId: docid})
-              saveRecord(rec)
-            }, err => next(err))
-          }
-        }, err => next(err))
-      }, err => next(err))
-    })
 
     rMain.post('/feedback/', function (req, res, next) {
       let ctype = req.get('Content-Type')
