@@ -8,9 +8,18 @@ module.exports = (schsrch, dbModel) =>
   describe('Getting the dir of the document', function () {
     const {PastPaperDoc} = dbModel
     let thePaper
+    let theMarkScheme
     before(function (done) {
       PastPaperDoc.findOne({subject: '0470', type: 'qp'}).then(doc => {
+        doc.should.be.an.Object()
         thePaper = doc
+        done()
+      }, err => done(err))
+    })
+    before(function (done) {
+      PastPaperDoc.findOne({subject: '0470', type: 'ms'}).then(doc => {
+        doc.should.be.an.Object()
+        theMarkScheme = doc
         done()
       }, err => done(err))
     })
@@ -59,6 +68,14 @@ module.exports = (schsrch, dbModel) =>
           .get('/doc/' + thePaper._id + '/?as=dir&page=2')
           .set('Host', 'schsrch.xyz'))
         .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs.filter(x => x.p === 2)))
+        .end(done)
+    })
+    it('/doc/?as=dir for ms', function (done) {
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + theMarkScheme._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz'))
+        .expect(res => res.body.dirs.length.should.equal(expectedDirs.length))
         .end(done)
     })
   })

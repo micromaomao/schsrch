@@ -4,4 +4,4 @@ cd "$(dirname "$0")"
 mongo --host $MONGODB --eval "db.getSiblingDB('test').dropDatabase()"
 curl -X DELETE 'http://'$ES'/pastpaper'
 echo
-QUICK=1 ../doIndex.bin.js pastpapers
+QUICK=1 DEBUG=1 ../doIndex.bin.js pastpapers

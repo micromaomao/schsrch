@@ -6,31 +6,34 @@ module.exports = (schsrch, dbModel) =>
   describe('Full text search', function () {
     const {PastPaperDoc} = dbModel
     function ftExpectBasic (x) {
-      return x.expect(res => res.body.list.forEach(x => x.should.be.an.Object()))
-      .expect(res => res.body.list.forEach(x => x.doc.should.be.an.Object()))
-      .expect(res => res.body.list.forEach(x => x.doc._id.should.be.a.String()))
-      .expect(res => res.body.list.forEach(x => x.doc.fileType.should.equal('pdf')))
-      .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.doc)))
-      .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.fileBlob)))
-      .expect(res => res.body.list.forEach(x => x.index.should.be.an.Object()))
-      .expect(res => res.body.list.forEach(x => x.index._id.should.be.an.String()))
-      .expect(res => res.body.list.forEach(x => x.index.docId.should.be.an.String()))
-      .expect(res => res.body.list.forEach(x => x.index.page.should.be.an.Number().and.aboveOrEqual(0)))
-      .expect(res => res.body.list.forEach(x => should.not.exist(x.index.sspdfCache)))
+      return x
+        .expect(res => res.body.list.should.be.an.Array())
+        .expect(res => res.body.list.forEach(x => x.should.be.an.Object()))
+        .expect(res => res.body.list.forEach(x => x.doc.should.be.an.Object()))
+        .expect(res => res.body.list.forEach(x => x.doc._id.should.be.a.String()))
+        .expect(res => res.body.list.forEach(x => x.doc.fileType.should.equal('pdf')))
+        .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.doc)))
+        .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.fileBlob)))
+        .expect(res => res.body.list.forEach(x => x.index.should.be.an.Object()))
+        .expect(res => res.body.list.forEach(x => x.index._id.should.be.an.String()))
+        .expect(res => res.body.list.forEach(x => x.index.docId.should.be.an.String()))
+        .expect(res => res.body.list.forEach(x => x.index.page.should.be.an.Number().and.aboveOrEqual(0)))
+        .expect(res => res.body.list.forEach(x => should.not.exist(x.index.sspdfCache)))
+        .expect(res => res.body.list = res.body.list.filter(x => x.doc.subject !== '0470'))
     }
     let indexToSearch = null
     let tDocId = null
     function keywordsTest(done, itx) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/?query=' + encodeURIComponent(itx ? itx : 'decrease delivery demand desk discipline discomfort duck ear either'))
+          .get('/search/?query=' + encodeURIComponent(itx ? itx : 'decrease delivery demand desk'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
           .expect(res => res.body.should.be.an.Object())
           .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
-          .expect(res => res.body.list.should.be.an.Array())
-          .expect(res => res.body.list.length.should.equal(1, `Response should have one result returned.`)))
+          .expect(res => res.body.list.should.be.an.Array()))
+        .expect(res => res.body.list.length.should.equal(1, `Response should have one result returned.`))
         .expect(res => res.body.list = res.body.list.map(x => Object.assign(x, {str: `${PaperUtils.setToString(x.doc)}_${x.doc.type}`})))
         .expect(res => res.body.list[0].str.should.equal('0610_s16_1_0_qp'))
         .expect(res => res.body.list[0].related.should.be.an.Array())
@@ -197,7 +200,7 @@ module.exports = (schsrch, dbModel) =>
       PastPaperDoc.remove({_id: tDocId}).then(() => {
         ftExpectEmpty(
           supertest(schsrch)
-            .get('/search/?query=' + encodeURIComponent('decrease delivery demand desk discipline discomfort duck ear either'))
+            .get('/search/?query=' + encodeURIComponent('decrease delivery demand desk'))
             .set('Host', 'schsrch.xyz')
             .expect('Content-Type', /json/)
             .expect(200)

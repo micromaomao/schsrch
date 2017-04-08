@@ -62,12 +62,13 @@ module.exports = (schsrch, dbModel) =>
     })
     let sspdfTestDoc = null
     function sspdfTestBody (done) {
-      PastPaperDoc.find({subject: '0610', time: 's16', paper: 2, variant: 0, type: 'qp'}).then(docs => {
-        if (!docs || docs.length !== 1) {
+      PastPaperDoc.find({subject: '0610', time: 's16', paper: 2, variant: 0}).then(docs => {
+        if (!docs || docs.filter(x => x.type === 'qp').length !== 1) {
           done(new Error(`There should be one and only one 0610_s16_2_0_qp in the testing database (there are currently ${docs.length}).`))
           return
         }
-        let tDoc = docs[0]
+        let tDoc = docs.filter(x => x.type === 'qp')[0]
+        let tDocMs = docs.filter(x => x.type === 'ms')[0]
         sspdfTestDoc = tDoc
         supertest(schsrch)
           .get('/doc/' + encodeURIComponent(tDoc._id) + '/?page=0&as=sspdf')
@@ -83,6 +84,9 @@ module.exports = (schsrch, dbModel) =>
           .expect(res => should.not.exist(res.body.doc.doc))
           .expect(res => should.not.exist(res.body.doc.fileBlob))
           .expect(res => res.body.svg.should.be.a.String().and.match(/^<svg/))
+          .expect(res => res.body.related.should.be.an.Object())
+          .expect(res => res.body.related.type.should.equal('ms'))
+          .expect(res => res.body.related._id.should.equal(tDocMs._id.toString()))
           .end(done)
         })
     }
