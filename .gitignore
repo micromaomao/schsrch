@@ -3,4 +3,4 @@ dist-server
 node_modules
 build
 coverage
-bootstrapPapers.dbdump.tgz
+bootstrapPapers.dbdump.*

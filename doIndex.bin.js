@@ -248,7 +248,7 @@ db.on('open', () => {
               let content = idx.content
               delete idx.rects
               return idx.save().then(() => {
-                return idx.indexToElastic(content, doc)
+                return idx.indexToElastic(doc)
               })
             })).then(() => PastPaperDoc.find(mt, {_id: true}).exec())
               .then(docs => Promise.all(docs.map(doc => removeDoc(doc)))).then(() => doc.save(), reject).then(a => {
