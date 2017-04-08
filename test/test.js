@@ -72,6 +72,7 @@ function doTests () {
   require('./direct-search.js')(schsrch)
   require('./text-search.js')(schsrch, dbModel)
   require('./getdoc.js')(schsrch, dbModel)
+  require('./docdir.js')(schsrch, dbModel)
   require('./feedback.js')(schsrch, dbModel)
   require('./ciesubjects.js')()
   require('./paperutils.js')()
