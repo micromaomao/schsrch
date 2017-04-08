@@ -9,6 +9,7 @@ module.exports = (schsrch, dbModel) =>
     const {PastPaperDoc} = dbModel
     let thePaper
     let theMarkScheme
+    let theMCQMarkScheme
     before(function (done) {
       PastPaperDoc.findOne({subject: '0470', type: 'qp'}).then(doc => {
         doc.should.be.an.Object()
@@ -17,32 +18,41 @@ module.exports = (schsrch, dbModel) =>
       }, err => done(err))
     })
     before(function (done) {
-      PastPaperDoc.findOne({subject: '0470', type: 'ms'}).then(doc => {
+      PastPaperDoc.findOne({subject: '0470', type: 'ms', paper: 3}).then(doc => {
         doc.should.be.an.Object()
         theMarkScheme = doc
         done()
       }, err => done(err))
     })
-    function expectBasicDir (st) {
+    before(function (done) {
+      PastPaperDoc.findOne({subject: '0470', type: 'ms', paper: 1}).then(doc => {
+        doc.should.be.an.Object()
+        theMCQMarkScheme = doc
+        done()
+      })
+    })
+    function expectBasicDir (st, mcq = false) {
       return st
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => {
           let dirs = res.body.dirs
           dirs.should.be.an.Array()
-          let lastY = 0
-          let lastPage = 0
-          for (let i = 0; i < dirs.length; i ++) {
-            dirs[i].qNRect.should.be.an.Object()
-            if (lastPage === dirs[i].page) {
-              dirs[i].qNRect.y1.should.be.above(lastY)
-              dirs[i].qNRect.y2.should.be.above(lastY)
-            } else {
-              lastPage = dirs[i].page
+          if (!mcq) {
+            let lastY = 0
+            let lastPage = 0
+            for (let i = 0; i < dirs.length; i ++) {
+              dirs[i].qNRect.should.be.an.Object()
+              if (lastPage === dirs[i].page) {
+                dirs[i].qNRect.y1.should.be.above(lastY)
+                dirs[i].qNRect.y2.should.be.above(lastY)
+              } else {
+                lastPage = dirs[i].page
+              }
+              dirs[i].qNRect.x1.should.be.below(70)
+              dirs[i].qNRect.x2.should.be.below(70)
+              lastY = dirs[i].qNRect.y2
             }
-            dirs[i].qNRect.x1.should.be.below(70)
-            dirs[i].qNRect.x2.should.be.below(70)
-            lastY = dirs[i].qNRect.y2
           }
         })
     }
@@ -76,6 +86,26 @@ module.exports = (schsrch, dbModel) =>
           .get('/doc/' + theMarkScheme._id + '/?as=dir')
           .set('Host', 'schsrch.xyz'))
         .expect(res => res.body.dirs.length.should.equal(expectedDirs.length))
+        .end(done)
+    })
+    it('should cache dir result', function (done) {
+      PastPaperDoc.findOne({_id: thePaper}, {fileBlob: false}).then(doc => {
+        if (!doc) return Promise.reject(new Error('No doc found in database.'))
+        try {
+          doc.dir.should.be.an.Object()
+          doc.dir.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs)
+        } catch (e) {
+          return Promise.reject(e)
+        }
+      }).then(() => done(), err => done(err))
+    })
+    it('should work for MCQ Mark Scheme', function (done) {
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + theMCQMarkScheme._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz'), true)
+        .expect(res => res.body.mcqMs.should.be.true())
+        .expect(res => res.body.dirs.map(x => x.qT).join('').should.equal('DCBCB BCACD BDADD BDCDC BCCDA ABCDB BBACB CDBBC'.replace(/ /g, '')))
         .end(done)
     })
   })
