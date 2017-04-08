@@ -215,7 +215,8 @@ class SearchBar extends React.Component {
     )
     if (this.state.server) {
       return (
-        <form action='/formsearch' method='get'>
+        <form action='/search' method='get'>
+          <input type='hidden' name='as' value='page' />
           {renderT}
         </form>
       )

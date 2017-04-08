@@ -126,6 +126,14 @@ module.exports = (schsrch, dbModel) =>
         .expect(404)
         .end(done)
     })
+    it('404 for unknow format', function (done) {
+      supertest(schsrch)
+        .get(`/doc/${sspdfTestDoc._id}/?as=lol`)
+        .set('Host', 'schsrch.xyz')
+        .expect(404)
+        .expect(res => res.text.should.match(/format unknow/i))
+        .end(done)
+    })
     it('sspdf preview should be cached', function (done) {
       PastPaperIndex.findOne({docId: sspdfTestDoc._id, page: 0}).then(idx => {
         if (!idx) {

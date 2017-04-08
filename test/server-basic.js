@@ -1,5 +1,7 @@
 const supertest = require('supertest')
 const should = require('should')
+const fs = require('fs')
+const path = require('path')
 
 module.exports = schsrch =>
   describe('Basic pages', function () {
@@ -59,13 +61,28 @@ module.exports = schsrch =>
         .end(done)
     })
     it('/sw.js', function (done) {
-      supertest(schsrch)
-        .get('/sw.js')
-        .set('Host', 'schsrch.xyz')
-        .expect(200)
-        .expect('Content-Type', /javascript/)
-        .expect(res => res.text.length.should.be.above(0))
-        .end(done)
+      fs.readFile(path.join(__dirname, '../dist/sw.js'), {encoding: 'utf-8'}, (err, data) => {
+        if (err) return done(err)
+        supertest(schsrch)
+          .get('/sw.js')
+          .set('Host', 'schsrch.xyz')
+          .expect(200)
+          .expect('Content-Type', /javascript/)
+          .expect(res => res.text.should.equal(data))
+          .end(done)
+      })
+    })
+    it('/opensearch.xml', function (done) {
+      fs.readFile(path.join(__dirname, '../view/opensearch.xml'), {encoding: 'utf-8'}, (err, data) => {
+        if (err) return done(err)
+        supertest(schsrch)
+          .get('/opensearch.xml')
+          .set('Host', 'schsrch.xyz')
+          .expect(200)
+          .expect('Content-Type', /opensearchdescription\+xml/)
+          .expect(res => res.text.should.equal(data))
+          .end(done)
+      })
     })
     it('/disclaim/', function (done) {
       supertest(schsrch)

@@ -109,14 +109,6 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       $('.react-root').html(serverRender({view: 'disclaim'}))
       res.send($.html())
     })
-    rMain.get('/formsearch/', function (req, res, next) {
-      let query = (req.query.query || '').toString().trim()
-      if (query.length === 0) {
-        res.redirect('/')
-        return
-      }
-      res.redirect('/search/?as=page&query=' + encodeURIComponent(query))
-    })
 
     rMain.get('/doc/:id', function (req, res, next) {
       let docId = req.params.id
