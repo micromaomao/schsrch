@@ -20,7 +20,7 @@ db.on('open', () => {
   es.indices.delete({
     index: 'pastpaper'
   }).then(() => Promise.resolve(), err => {
-    if (err.body && err.body.error && err.body.error.type === 'index_already_exists_exception') return Promise.resolve()
+    if (err.body && err.body.error && err.body.error.type === 'index_not_found_exception') return Promise.resolve()
     else return Promise.reject(err)
   }).then(() => {
     process.stderr.write('Index deleted.\n')
