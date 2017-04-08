@@ -20,10 +20,10 @@ module.exports = (schsrch, dbModel) =>
     }
     let indexToSearch = null
     let tDocId = null
-    function coldWife(done, itx) {
+    function keywordsTest(done, itx) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/?query=' + encodeURIComponent(itx ? itx : 'cold wife'))
+          .get('/search/?query=' + encodeURIComponent(itx ? itx : 'decrease delivery demand desk discipline discomfort duck ear either'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -46,13 +46,13 @@ module.exports = (schsrch, dbModel) =>
         .expect(res => tDocId = res.body.list[0].doc._id)
         .end(done)
     }
-    it('Case: cold wife', function (done) {
-      coldWife(done)
+    it('Case: decrease delivery bla bla bla...', function (done) {
+      keywordsTest(done)
     })
-    it('Case: turn shout', function (done) {
+    it('Case: Lorem ipsum dolor sit amet', function (done) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/?query=' + encodeURIComponent('turn shout'))
+          .get('/search/?query=' + encodeURIComponent('Lorem ipsum dolor sit amet'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -70,10 +70,10 @@ module.exports = (schsrch, dbModel) =>
         .expect(res => res.body.list[1].related.should.have.length(0))
         .end(done)
     })
-    it('Case: 0612 turn shout', function (done) {
+    it('Case: 0612 Lorem ipsum dolor sit amet', function (done) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/?query=' + encodeURIComponent('0612 turn shout'))
+          .get('/search/?query=' + encodeURIComponent('0612 Lorem ipsum dolor sit amet'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -87,10 +87,10 @@ module.exports = (schsrch, dbModel) =>
         .expect(res => res.body.list[0].related.should.have.length(0))
         .end(done)
     })
-    it('Case: 0611 turn shout', function (done) {
+    it('Case: 0611 Lorem ipsum dolor sit amet', function (done) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/?query=' + encodeURIComponent('0611 turn shout'))
+          .get('/search/?query=' + encodeURIComponent('0611 Lorem ipsum dolor sit amet'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -115,7 +115,7 @@ module.exports = (schsrch, dbModel) =>
       return function (done) {
         ftExpectBasic(
           supertest(schsrch)
-            .get('/search/?query=' + encodeURIComponent(`0611 ${paper} turn shout`))
+            .get('/search/?query=' + encodeURIComponent(`0611 ${paper} Lorem ipsum dolor sit amet`))
             .set('Host', 'schsrch.xyz')
             .expect('Content-Type', /json/)
             .expect(200)
@@ -130,34 +130,34 @@ module.exports = (schsrch, dbModel) =>
           .end(done)
       }
     }
-    it('Case: 0611 paper 9 turn shout', test0611P9('paper 9'))
-    it('Case: 0611 paper9 turn shout', test0611P9('paper9'))
-    it('Case: 0611 p9 turn shout', test0611P9('p9'))
-    it('Case: 0611 paper 3 turn shout', function (done) {
+    it('Case: 0611 paper 9 Lorem ipsum dolor sit amet', test0611P9('paper 9'))
+    it('Case: 0611 paper9 Lorem ipsum dolor sit amet', test0611P9('paper9'))
+    it('Case: 0611 p9 Lorem ipsum dolor sit amet', test0611P9('p9'))
+    it('Case: 0611 paper 3 Lorem ipsum dolor sit amet', function (done) {
       ftExpectEmpty(
         supertest(schsrch)
-          .get('/search/?query=0611 paper 3 turn shout')
+          .get('/search/?query=0611 paper 3 Lorem ipsum dolor sit amet')
           .set('Host', 'schsrch.xyz'))
         .end(done)
     })
-    it('Case: 0611 paper3 turn shout', function (done) {
+    it('Case: 0611 paper3 Lorem ipsum dolor sit amet', function (done) {
       ftExpectEmpty(
         supertest(schsrch)
-          .get('/search/?query=0611 paper3 turn shout')
+          .get('/search/?query=0611 paper3 Lorem ipsum dolor sit amet')
           .set('Host', 'schsrch.xyz'))
         .end(done)
     })
-    it('Case: 0611 p3 turn shout', function (done) {
+    it('Case: 0611 p3 Lorem ipsum dolor sit amet', function (done) {
       ftExpectEmpty(
         supertest(schsrch)
-          .get('/search/?query=0611 p3 turn shout')
+          .get('/search/?query=0611 p3 Lorem ipsum dolor sit amet')
           .set('Host', 'schsrch.xyz'))
         .end(done)
     })
-    it('Case: 0613 turn shout', function (done) {
+    it('Case: 0613 Lorem ipsum dolor sit amet', function (done) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/?query=' + encodeURIComponent('0613 turn shout'))
+          .get('/search/?query=' + encodeURIComponent('0613 Lorem ipsum dolor sit amet'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -182,7 +182,7 @@ module.exports = (schsrch, dbModel) =>
     })
     it('Case: !!index!...', function (done) {
       indexToSearch.should.be.a.String()
-      coldWife(done, '!!index!' + indexToSearch)
+      keywordsTest(done, '!!index!' + indexToSearch)
     })
     it('Case: !!index!000000000000000000000000' , function (done) {
       ftExpectEmpty(
@@ -197,7 +197,7 @@ module.exports = (schsrch, dbModel) =>
       PastPaperDoc.remove({_id: tDocId}).then(() => {
         ftExpectEmpty(
           supertest(schsrch)
-            .get('/search/?query=' + encodeURIComponent('cold wife'))
+            .get('/search/?query=' + encodeURIComponent('decrease delivery demand desk discipline discomfort duck ear either'))
             .set('Host', 'schsrch.xyz')
             .expect('Content-Type', /json/)
             .expect(200)
