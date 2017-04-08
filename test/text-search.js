@@ -104,6 +104,56 @@ module.exports = (schsrch, dbModel) =>
         .expect(res => res.body.list[0].related.should.have.length(0))
         .end(done)
     })
+    function ftExpectEmpty (req) {
+      return ftExpectBasic(req)
+        .expect(res => res.body.should.be.an.Object())
+        .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
+        .expect(res => res.body.list.should.be.an.Array())
+        .expect(res => res.body.list.length.should.equal(0, `Response should have no results returned.`))
+    }
+    function test0611P9 (paper) {
+      return function (done) {
+        ftExpectBasic(
+          supertest(schsrch)
+            .get('/search/?query=' + encodeURIComponent(`0611 ${paper} turn shout`))
+            .set('Host', 'schsrch.xyz')
+            .expect('Content-Type', /json/)
+            .expect(200)
+            .expect(res => res.body.should.be.an.Object())
+            .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
+            .expect(res => res.body.list.should.be.an.Array())
+            .expect(res => res.body.list.length.should.equal(1, `Response should have one result returned.`)))
+          .expect(res => res.body.list = res.body.list.map(x => Object.assign(x, {str: `${PaperUtils.setToString(x.doc)}_${x.doc.type}`})))
+          .expect(res => res.body.list[0].str.should.equal('0611_s16_9_0_ms'))
+          .expect(res => res.body.list[0].related.should.be.an.Array())
+          .expect(res => res.body.list[0].related.should.have.length(0))
+          .end(done)
+      }
+    }
+    it('Case: 0611 paper 9 turn shout', test0611P9('paper 9'))
+    it('Case: 0611 paper9 turn shout', test0611P9('paper9'))
+    it('Case: 0611 p9 turn shout', test0611P9('p9'))
+    it('Case: 0611 paper 3 turn shout', function (done) {
+      ftExpectEmpty(
+        supertest(schsrch)
+          .get('/search/?query=0611 paper 3 turn shout')
+          .set('Host', 'schsrch.xyz'))
+        .end(done)
+    })
+    it('Case: 0611 paper3 turn shout', function (done) {
+      ftExpectEmpty(
+        supertest(schsrch)
+          .get('/search/?query=0611 paper3 turn shout')
+          .set('Host', 'schsrch.xyz'))
+        .end(done)
+    })
+    it('Case: 0611 p3 turn shout', function (done) {
+      ftExpectEmpty(
+        supertest(schsrch)
+          .get('/search/?query=0611 p3 turn shout')
+          .set('Host', 'schsrch.xyz'))
+        .end(done)
+    })
     it('Case: 0613 turn shout', function (done) {
       ftExpectBasic(
         supertest(schsrch)
@@ -134,13 +184,6 @@ module.exports = (schsrch, dbModel) =>
       indexToSearch.should.be.a.String()
       coldWife(done, '!!index!' + indexToSearch)
     })
-    function ftExpectEmpty (req) {
-      return ftExpectBasic(req)
-        .expect(res => res.body.should.be.an.Object())
-        .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
-        .expect(res => res.body.list.should.be.an.Array())
-        .expect(res => res.body.list.length.should.equal(0, `Response should have no results returned.`))
-    }
     it('Case: !!index!000000000000000000000000' , function (done) {
       ftExpectEmpty(
         supertest(schsrch)

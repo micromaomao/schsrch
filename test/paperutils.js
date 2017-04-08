@@ -83,4 +83,11 @@ module.exports = () =>
       PaperUtils.odashMonths.map(PaperUtils.odashMonthToMyMonth).should.deepEqual(PaperUtils.shortMonths)
       PaperUtils.odashMonthToMyMonth('X/Y').should.equal('X/Y')
     })
+    it('extractSet', function () {
+      let set = {subject: 1, time: 2, paper: 3, variant: 4}
+      PaperUtils.extractSet(set).should.deepEqual(set)
+      PaperUtils.extractSet(Object.assign({}, set, {type: 'ms'})).should.deepEqual(set)
+      PaperUtils.extractSet(Object.assign({}, set, {variant: 5})).should.not.deepEqual(set)
+      PaperUtils.extractSet(Object.assign({}, set, {variant: 5, type: 'ms'})).should.not.deepEqual(set)
+    })
   })

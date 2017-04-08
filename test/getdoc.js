@@ -134,6 +134,13 @@ module.exports = (schsrch, dbModel) =>
         .expect(res => res.text.should.match(/format unknow/i))
         .end(done)
     })
+    it('404 for blob with page', function (done) {
+      supertest(schsrch)
+        .get(`/doc/${sspdfTestDoc._id}/?as=blob&page=0`)
+        .set('Host', 'schsrch.xyz')
+        .expect(404)
+        .end(done)
+    })
     it('sspdf preview should be cached', function (done) {
       PastPaperIndex.findOne({docId: sspdfTestDoc._id, page: 0}).then(idx => {
         if (!idx) {
