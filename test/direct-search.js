@@ -8,7 +8,7 @@ module.exports = schsrch =>
       it(query, function (done) {
         expect = expect.sort().map(x => `0610_${x}`)
         supertest(schsrch)
-          .get('/search/?query=' + encodeURIComponent(query))
+          .get('/search/?query=' + encodeURIComponent(query) + '&as=json')
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -178,13 +178,21 @@ module.exports = schsrch =>
 
     it('Overflow result', function (done) {
       supertest(schsrch)
-        .get('/search/?query=0611')
+        .get('/search/?query=0611&as=json')
         .set('Host', 'schsrch.xyz')
         .expect('Content-Type', /json/)
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => res.body.response.should.equal('overflow', 'Response should be "overflow" type'))
         .expect(res => should.not.exist(res.body.list))
+        .end(done)
+    })
+    it('Unknow format', function (done) {
+      supertest(schsrch)
+        .get('/search/?query=0610 s17 ms 1&as=lol')
+        .set('Host', 'schsrch.xyz')
+        .expect(404)
+        .expect(res => res.text.should.match(/format unknow/i))
         .end(done)
     })
   })
