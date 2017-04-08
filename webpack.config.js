@@ -5,10 +5,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 baseConfig = {
   module: {
     loaders: [
-      { test: /\.sass$/, loaders: ['css', 'sass'] },
+      { test: /\.sass$/, loaders: ['css-loader', 'sass-loader'] },
       {
         test: /\.jsx$/,
-        loader: 'babel',
+        loader: 'babel-loader',
         query: {
           presets: ['es2015'],
           plugins: ['transform-react-jsx']
@@ -16,18 +16,18 @@ baseConfig = {
       },
       {
         test: /\.js$/,
-        loader: 'babel',
+        loader: 'babel-loader',
         query: {
           presets: ['es2015'],
         }
       },
       {
         test: /\.png$/,
-        loader: 'file'
+        loader: 'file-loader'
       },
       {
         test: /\.pug$/,
-        loader: 'pug'
+        loader: 'pug-loader'
       }
     ]
   }
@@ -39,7 +39,7 @@ module.exports = [
       'clientrender': './view/clientrender.jsx',
     },
     output: {
-      path: './dist',
+      path: path.join(__dirname, './dist'),
       publicPath: '/resources/',
       filename: '[hash]-[name].js'
     },
@@ -73,7 +73,7 @@ module.exports = [
     },
     target: 'node',
     output: {
-      path: './dist-server',
+      path: path.join(__dirname, './dist-server'),
       publicPath: '/resources/',
       filename: '[name].js'
     },
