@@ -100,7 +100,7 @@ class PaperSet extends React.Component {
           : null}
         {showPreview && !this.state.server
           ? (
-            <FilePreview doc={this.state.previewing.id} page={this.state.previewing.page} />
+            <FilePreview doc={this.state.previewing.id} page={this.state.previewing.page} highlightingQ={this.state.previewing.highlightingQ} />
           )
           : null
         }
@@ -131,7 +131,7 @@ class PaperSet extends React.Component {
         </div>
         {!showPreview && this.state.previewing
           ? (
-            <FilePreview doc={this.state.previewing.id} page={this.state.previewing.page} />
+            <FilePreview doc={this.state.previewing.id} page={this.state.previewing.page} highlightingQ={this.state.previewing.highlightingQ} />
           )
           : null}
       </div>

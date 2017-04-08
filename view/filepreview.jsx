@@ -180,29 +180,31 @@ class FilePreview extends React.Component {
     let doc = this.props.doc
     if (!this.state.loading && this.state.docJson && this.state.dirJson && this.state.relatedDirJson // Fully loaded
       && this.state.dirJson.dirs && this.state.relatedDirJson.dirs // Data valid
-      && this.state.dirJson.dirs.length <= this.state.relatedDirJson.dirs.length // Won't have OutOfRange errors.
     ) {
       let inPageDirs = this.state.dirJson.dirs
         .map((a, i) => Object.assign({}, a, {i})) // Used for tracking which dir is the user clicking, for example.
         .filter(dir => dir.page === this.props.page && dir.qNRect) // We only need those that can be displayed (i.e. has qNRect).
       let isMcqMs = this.state.dirJson.mcqMs // MCQ mark scheme displays differently.
       if (inPageDirs.length > 0) {
-        return inPageDirs.map(dir => ({
-          boundX: true,
-          lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
-          rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [this.state.docJson.width, dir.qNRect.y2 + 4],
-          className: 'questionln' + (AppState.getState().previewing.highlightingQ === dir.i ? ' highlight' : ''),
-          stuff: null,
-          onClick: evt => {
-            if (!this.state.relatedDirJson || this.props.doc !== doc) {
-              return
-            }
-            let dirMs = this.state.relatedDirJson.dirs[dir.i]
-            if (dirMs.qN === dir.qN) {
-              AppState.dispatch({type: 'previewFile', fileId: this.state.relatedDocId, page: dirMs.page, highlightingQ: dir.i})
+        return inPageDirs.map(dir => {
+          if (dir.i >= this.state.relatedDirJson.dirs.length) return null
+          return {
+            boundX: true,
+            lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
+            rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [this.state.docJson.width, dir.qNRect.y2 + 4],
+            className: 'questionln' + (this.props.highlightingQ === dir.i ? ' highlight' : ''),
+            stuff: null,
+            onClick: evt => {
+              if (!this.state.relatedDirJson || this.props.doc !== doc) {
+                return
+              }
+              let dirMs = this.state.relatedDirJson.dirs[dir.i]
+              if (dirMs.qN === dir.qN) {
+                AppState.dispatch({type: 'previewFile', fileId: this.state.relatedDocId, page: dirMs.page, highlightingQ: dir.i})
+              }
             }
           }
-        }))
+        }).filter(x => x !== null)
       }
     }
     return []
