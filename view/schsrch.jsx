@@ -15,6 +15,8 @@ class SchSrch extends React.Component {
       view: 'home'
     }
     this.handleUpdate = this.handleUpdate.bind(this)
+    // UI Components should support server rendering to allow javascript-disabled users to use this App.
+    // The DOM produced by server and client javascript could (and should) differ.
     if (AppState.getState().serverrender) {
       this.state.server = true
       this.state.view = AppState.getState().view
@@ -107,7 +109,7 @@ class SchSrch extends React.Component {
     AppState.dispatch({type: 'query', query})
     if (AppState.getState().querying && (AppState.getState().querying.query !== oldQuery || !AppState.getState().querying.result)) {
       AppState.dispatch({type: 'queryStartRequest'})
-      fetch('/search/' + encodeURIComponent(query) + '/').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
+      fetch('/search/?query=' + encodeURIComponent(query) + '&as=json').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
         if (result.response === 'error') {
           AppState.dispatch({type: 'queryError', query, error: result.err})
           return

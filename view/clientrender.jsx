@@ -2,19 +2,20 @@
 
 require('babel-polyfill')
 require('fetch-polyfill')
-
 require('offline-plugin/runtime').install()
 
+// AppState is like a global variable, where UI components can listen to change of state and response.
+// States include things like current query, current previewing documents, etc.
+// This also make sure that the App won't "reset" once user switch to other Apps and switch back.
 const AppState = require('./appstate.js')
+
 const React = require('react')
 const ReactDOM = require('react-dom')
 const SchSrch = require('./schsrch.jsx')
 
+// Polyfill
 window.requestIdleCallback = window.requestIdleCallback || (func => setTimeout(func, 1000))
 window.cancelIdleCallback = window.cancelIdleCallback || (id => clearTimeout(id))
-
-let setHashTimeout = null
-let hashIdle = null
 
 function readFromLocalStorage () {
   try {
@@ -51,13 +52,10 @@ if (history.state) {
   }
 }
 
+// Make it F12 useable
 window.AppState = AppState
 
 AppState.subscribe(() => {
-  if (hashIdle) {
-    cancelIdleCallback(hashIdle)
-    hashIdle = null
-  }
   requestIdleCallback(() => {
     let nState = AppState.getState()
     let url = '/'

@@ -46,7 +46,7 @@ class SsPdfView extends React.Component {
     return (
       <div className='sspdfview' style={{height: this.viewHeight + 'px'}}>
         <div className='pointereventcover' ref={f => this.eventTarget = f}>
-          {(this.props.msref || []).map((item, i) => {
+          {(this.props.overlay || []).map((item, i) => {
             let ltPoint = this.doc2view(item.lt)
             let rbPoint = this.doc2view(item.rb)
             let xBound = x => item.boundX ? Math.max(Math.min(x, this.viewWidth), 0) : x

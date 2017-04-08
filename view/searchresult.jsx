@@ -80,11 +80,13 @@ class SearchResult extends React.Component {
           <div className='fulltextlist'>
             {result.list.map(set => {
               let metas = {subject: set.doc.subject, time: set.doc.time, paper: set.doc.paper, variant: set.doc.variant}
+              // paperSet: { subject: ..., paper: ..., ..., types: [ {_id: <docId>, type: ..., index: { ... }}, {_id: <docId>, type: ...}... ] }
+              // query: the words user searched. Used for highlighting content.
               return (<PaperSet
-                paperSet={Object.assign({}, metas, {types: [Object.assign({}, set.doc, {ftIndex: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})}
+                paperSet={Object.assign({}, metas, {types: [Object.assign({}, set.doc, {index: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})}
                 key={'!!index!' + set.index._id}
                 psKey={'!!index!' + set.index._id}
-                indexQuery={query}
+                query={query}
                 />)
             })}
           </div>

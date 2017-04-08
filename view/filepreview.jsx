@@ -19,7 +19,8 @@ class FilePreview extends React.Component {
       dirJson: null,
       dirError: null,
       showingDir: false,
-      msRef: null
+      relatedDirJson: null,
+      relatedDocId: null
     }
     this.currentLoading = null
     this.handlePageInputChange = this.handlePageInputChange.bind(this)
@@ -31,7 +32,7 @@ class FilePreview extends React.Component {
   }
   componentWillReceiveProps (nextProps) {
     if (!this.props || nextProps.doc !== this.props.doc || nextProps.page !== this.props.page) {
-      if (!this.props || nextProps.doc !== this.props.doc) this.setState({docMeta: null})
+      if (!this.props || nextProps.doc !== this.props.doc) this.setState({docMeta: null, dirJson: null, relatedDirJson: null, relatedDocId: null})
       this.loadFromProps(nextProps)
     }
   }
@@ -46,41 +47,44 @@ class FilePreview extends React.Component {
     }
   }
   load (doc = this.props.doc, page = this.props.page) {
-    if (this.currentLoading && this.currentLoading.doc === doc && this.currentLoading.page === page) return
+    if (this.currentLoading && this.currentLoading.doc === doc && this.currentLoading.page === page) return // Avoid duplicate requests.
     this.currentLoading = {doc, page}
     this.setState({loading: true, error: null})
-    fetch(`/sspdf/${doc}/${page}/`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
+    fetch(`/doc/${doc}/?page=${page}&as=sspdf`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
       if (this.props.doc !== doc || this.props.page !== page) return
       this.setState({loading: false, error: null, docJson: json, docMeta: json.doc})
       this.currentLoading = null
+      if (this.state.dirJson === null || this.props.doc !== doc) {
+        this.setState({dirJson: null, relatedDirJson: null, relatedDocId: null})
+        this.loadDirs(doc, json.related ? json.related._id : null)
+      }
     }, err => {
       if (this.props.doc !== doc || this.props.page !== page) return
       this.setState({loading: false, error: err, docJson: null})
       this.currentLoading = null
     })
-
-    if (this.state.dirJson === null || this.props.doc !== doc) {
-      this.setState({dirJson: null, msRef: null})
-      this.refetchDir(doc)
-    }
   }
-  refetchDir (doc = this.props.doc) {
-    if (this.state.dirJson !== null && this.state.msRef !== null && this.props.doc === doc) return
-    fetch(`/docdir/${doc}/`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
-      if (this.props.doc !== doc) return
-      this.setState({dirJson: json, dirError: null, msRef: null})
-      fetch(`/msdir/${doc}/`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
-        if (this.props.doc !== doc) return
-        this.setState({msRef: json})
-      }, err => {
-        if (this.props.doc !== doc) return
-        this.setState({msRef: null})
-        setTimeout(() => this.refetchDir(doc), 500)
-      })
+  loadDirs (doc = this.props.doc, relatedDocId) {
+    if (this.state.dirJson !== null && this.state.relatedDirJson !== null && this.props.doc === doc) return
+    // Load dir of this document
+    fetch(`/doc/${doc}/?as=dir`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
+      if (this.props.doc !== doc) return // Check if the user has changed to another document, just in case.
+      this.setState({dirJson: json, dirError: null, relatedDirJson: null, relatedDocId: null})
+      // Load dir of corresponding ms or qp.
+      if (relatedDocId) {
+        fetch(`/doc/${relatedDocId}/?as=dir`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
+          if (this.props.doc !== doc) return
+          this.setState({relatedDirJson: json, relatedDocId})
+        }, err => {
+          if (this.props.doc !== doc) return
+          this.setState({relatedDirJson: null})
+          setTimeout(() => this.loadDirs(doc, relatedDocId), 500)
+        })
+      }
     }, err => {
       if (this.props.doc !== doc) return
       this.setState({dirJson: null, dirError: err})
-      setTimeout(() => this.refetchDir(doc), 500)
+      setTimeout(() => this.loadDirs(doc, relatedDocId), 500)
     })
   }
   handlePageInputChange (evt) {
@@ -163,7 +167,7 @@ class FilePreview extends React.Component {
               <div className={this.state.loading ? 'pdfview dirty' : 'pdfview'}>
                 {this.state.showingDir ? <DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={(question, i) => this.selectQuestion(question, i)} /> : null}
                 <div className={!this.state.dirJson || !this.state.showingDir ? 'show' : 'hide'}>
-                  <SsPdfView ref={f => this.pdfView = f} docJson={this.state.docJson} msref={this.renderMsref()} />
+                  <SsPdfView ref={f => this.pdfView = f} docJson={this.state.docJson} overlay={this.renderOverlay()} />
                 </div>
               </div>
             </div>
@@ -172,11 +176,16 @@ class FilePreview extends React.Component {
       </div>
     )
   }
-  renderMsref () {
+  renderOverlay () {
     let doc = this.props.doc
-    if (!this.state.loading && this.state.docJson && this.state.dirJson && this.state.dirJson.dirs && this.state.msRef && this.state.msRef.dir && this.state.dirJson.dirs.length === this.state.msRef.dir.dirs.length) {
-      let inPageDirs = this.state.dirJson.dirs.map((a, i) => Object.assign({}, a, {i})).filter(dir => dir.page === this.props.page && dir.qNRect)
-      let isMcqMs = this.state.dirJson.mcqMs
+    if (!this.state.loading && this.state.docJson && this.state.dirJson && this.state.relatedDirJson // Fully loaded
+      && this.state.dirJson.dirs && this.state.relatedDirJson.dirs // Data valid
+      && this.state.dirJson.dirs.length <= this.state.relatedDirJson.dirs.length // Won't have OutOfRange errors.
+    ) {
+      let inPageDirs = this.state.dirJson.dirs
+        .map((a, i) => Object.assign({}, a, {i})) // Used for tracking which dir is the user clicking, for example.
+        .filter(dir => dir.page === this.props.page && dir.qNRect) // We only need those that can be displayed (i.e. has qNRect).
+      let isMcqMs = this.state.dirJson.mcqMs // MCQ mark scheme displays differently.
       if (inPageDirs.length > 0) {
         return inPageDirs.map(dir => ({
           boundX: true,
@@ -185,12 +194,12 @@ class FilePreview extends React.Component {
           className: 'questionln' + (AppState.getState().previewing.highlightingQ === dir.i ? ' highlight' : ''),
           stuff: null,
           onClick: evt => {
-            if (!this.state.msRef || this.props.doc !== doc) {
+            if (!this.state.relatedDirJson || this.props.doc !== doc) {
               return
             }
-            let dirMs = this.state.msRef.dir.dirs[dir.i]
+            let dirMs = this.state.relatedDirJson.dirs[dir.i]
             if (dirMs.qN === dir.qN) {
-              AppState.dispatch({type: 'previewFile', fileId: this.state.msRef.docid, page: dirMs.page, highlightingQ: dir.i})
+              AppState.dispatch({type: 'previewFile', fileId: this.state.relatedDocId, page: dirMs.page, highlightingQ: dir.i})
             }
           }
         }))
@@ -202,7 +211,7 @@ class FilePreview extends React.Component {
     this.setState({showingDir: !this.state.showingDir})
   }
   download () {
-    window.open(`/fetchDoc/${this.state.docMeta ? this.state.docMeta._id : this.props.doc}/`)
+    window.open(`/doc/${this.state.docMeta ? this.state.docMeta._id : this.props.doc}/`)
   }
   changePage (page, highlightingQ) {
     AppState.dispatch({type: 'previewChangePage', page, highlightingQ})

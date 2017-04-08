@@ -36,12 +36,14 @@ class PaperSet extends React.Component {
     let set = this.props.paperSet
     let subject = Subjects.findExactById(set.subject)
     let sortedTypes
-    let ftDoc = null
-    if (set.types[0] && set.types[0].ftIndex) {
-      ftDoc = set.types[0]
+    let firstDoc = null
+    // firstDoc is the doc to be displayed its content. Remaining docs will appear under "Related:"
+    if (set.types[0] && set.types[0].index) {
+      firstDoc = set.types[0]
     }
-    sortedTypes = set.types.slice(ftDoc !== null ? 1 : 0).sort((a, b) => PaperUtils.funcSortType(a.type, b.type))
-    let previewFtDoc = ftDoc !== null && this.state.previewing
+    // sortedTypes is all the document in this set *except* the one that gets displayed its content in full text search.
+    sortedTypes = set.types.slice(firstDoc !== null ? 1 : 0).sort((a, b) => PaperUtils.funcSortType(a.type, b.type))
+    let showPreview = firstDoc !== null && this.state.previewing
     return (
       <div className='set'>
         <div className='setname'>
@@ -67,18 +69,18 @@ class PaperSet extends React.Component {
               </span>)
             : null}
         </div>
-        {ftDoc !== null
+        {firstDoc !== null
           ? (
-            <div className='file ft' key={ftDoc._id} onClick={evt => this.openFile(ftDoc._id, ftDoc.ftIndex.page)}>
+            <div className='file first' key={firstDoc._id} onClick={evt => this.openFile(firstDoc._id, firstDoc.index.page)}>
               {(() => {
                 let pt = (
                   <span>
-                    <span className='typename'>{PaperUtils.capitalizeFirst(PaperUtils.getTypeString(ftDoc.type))}</span>
+                    <span className='typename'>{PaperUtils.capitalizeFirst(PaperUtils.getTypeString(firstDoc.type))}</span>
                     &nbsp;
                     <span className='desc'>
-                      <span className='pagenum'>found on page <span className='foundon'>{ftDoc.ftIndex.page + 1}</span> / {ftDoc.numPages} pages total</span>
+                      <span className='pagenum'>found on page <span className='foundon'>{firstDoc.index.page + 1}</span> / {firstDoc.numPages} pages total</span>
                       ,&nbsp;
-                      <span className='filetype'>{ftDoc.fileType}</span>
+                      <span className='filetype'>{firstDoc.fileType}</span>
                     </span>
                   </span>
                 )
@@ -86,24 +88,24 @@ class PaperSet extends React.Component {
                   return pt
                 } else {
                   return (
-                    <a href={this.fileUrl(ftDoc._id)} target='_blank'>
+                    <a href={this.fileUrl(firstDoc._id)} target='_blank'>
                       {pt}
                     </a>
                   )
                 }
               })()}
-              <IndexContent content={ftDoc.ftIndex.content} search={this.props.indexQuery || ''} />
+              <IndexContent content={firstDoc.index.content} search={this.props.query || ''} />
             </div>
           )
           : null}
-        {previewFtDoc && !this.state.server
+        {showPreview && !this.state.server
           ? (
             <FilePreview doc={this.state.previewing.id} page={this.state.previewing.page} />
           )
           : null
         }
-        <div className={ftDoc !== null ? 'related' : 'files'}>
-          {ftDoc ? 'Related: ' : null}
+        <div className={firstDoc !== null ? 'related' : 'files'}>
+          {firstDoc ? 'Related: ' : null}
           {sortedTypes.map(file => {
             let pt = (
               <span>
@@ -127,7 +129,7 @@ class PaperSet extends React.Component {
             )
           })}
         </div>
-        {!previewFtDoc && this.state.previewing
+        {!showPreview && this.state.previewing
           ? (
             <FilePreview doc={this.state.previewing.id} page={this.state.previewing.page} />
           )
@@ -139,7 +141,7 @@ class PaperSet extends React.Component {
     AppState.dispatch({type: 'previewFile', fileId: id, page: page, psKey: this.props.psKey})
   }
   fileUrl (id) {
-    return '/fetchDoc/' + encodeURIComponent(id)
+    return '/doc/' + encodeURIComponent(id)
   }
   getLastPreviewPage (doc) {
     let pres = AppState.getState().previewPages[doc]
