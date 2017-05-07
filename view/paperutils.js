@@ -1,16 +1,33 @@
-const shortTypes = ['qp', 'ms', 'in', 'er', 'gt', 'ir', 'ci', 'sp', 'sm', 'sr']
+const shortTypes = ['qp', 'ms', 'in', 'sin', 'er', 'gt', 'ci', 'sp', 'sm', 'sci', 'rb', 'srb', 'srbi', 'un', 'dc', 'tc', 'tn', 'stc', 'stn', 'ts', 'sts', 'sb', 'ab', 'gn', 'su']
 const longTypes = [
   'question paper',
   'mark scheme',
   'insert',
+  'specimen insert',
   'examiner report',
   'grade thresholds',
   'confidential instructions',
-  'confidential instructions',
   'specimen question paper',
   'specimen mark scheme',
-  'specimen confidential instructions'
+  'specimen confidential instructions',
+  'resource booklet',
+  'specimen resource booklet',
+  'specimen resource booklet insert',
+  'update notice',
+  'defined content booklet',
+  'topic cards',
+  "teacher's note",
+  'specimen topic card',
+  "specimen teacher's note",
+  'tapescript',
+  'specimen tapescript',
+  'standards booklet',
+  'answer booklet',
+  "teachers’ guide to prescribed works",
+  'map'
 ]
+
+if (shortTypes.length !== longTypes.length) throw new Error('Check the two array.')
 
 const shortMonths = ['m', 's', 'w', 'y']
 const longMonths = ['Feb/March', 'May/June', 'Oct/Nov', 'For examination from']
