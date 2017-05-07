@@ -84,7 +84,7 @@ class Description extends React.Component {
             Currently holding {stat.docCount} paper ({stat.indexCount} pages)
           </div>
           <div>
-            Load average: {stat.loadAvg.join('/')}
+            Mystery number: {stat.requestCount}
           </div>
           {this.state.loading ? null : reloadBtn}
         </div>

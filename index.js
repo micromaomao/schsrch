@@ -30,9 +30,9 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
 
   require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord}) => {
     function statusInfo () {
-      return Promise.all([PastPaperDoc.count({}), PastPaperIndex.count({}), Promise.resolve(os.loadavg())])
-        .then(([docCount, indexCount, loadAvg]) => {
-          return Promise.resolve({docCount, indexCount, loadAvg: loadAvg.map(num => Math.round(num * 100) / 100)})
+      return Promise.all([PastPaperDoc.count({}), PastPaperIndex.count({}), PastPaperRequestRecord.count({})])
+        .then(([docCount, indexCount, requestCount]) => {
+          return Promise.resolve({docCount, indexCount, requestCount})
         }, err => Promise.reject(err))
     }
 

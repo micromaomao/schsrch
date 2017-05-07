@@ -55,9 +55,7 @@ module.exports = schsrch =>
         .expect(res => res.body.should.be.an.Object())
         .expect(res => res.body.docCount.should.be.a.Number())
         .expect(res => res.body.indexCount.should.be.a.Number())
-        .expect(res => res.body.loadAvg.should.be.an.Array())
-        .expect(res => res.body.loadAvg.should.have.length(3))
-        .expect(res => res.body.loadAvg[0].should.be.a.Number())
+        .expect(res => res.body.requestCount.should.be.a.Number())
         .end(done)
     })
     it('/sw.js', function (done) {
