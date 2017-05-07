@@ -44,7 +44,7 @@ module.exports = () =>
     })
     it('should return correct deprecation states', function () {
       CIESubjects.deprecationStates('0000').should.deepEqual([])
-      CIESubjects.deprecationStates('9239').should.deepEqual([{type: 'successor', of: '8987', formerFinal: 's15'}])
-      CIESubjects.deprecationStates('8987').should.deepEqual([{type: 'former', of: '9239', final: 's15'}])
+      CIESubjects.deprecationStates('9239').should.deepEqual([{type: 'successor', of: '8987', formerFinal: 'w15'}])
+      CIESubjects.deprecationStates('8987').should.deepEqual([{type: 'former', of: '9239', final: 'w15'}])
     })
   })
