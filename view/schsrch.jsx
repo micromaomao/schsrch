@@ -95,16 +95,17 @@ class SchSrch extends React.Component {
   renderHome () {
     let noSearch = AppState.getState().querying ? false : true
     return (
-      <div>
+      <div className='view-home'>
         <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={this.handleQuery}
           loading={noSearch ? false : (AppState.getState().querying.loading || false)} />
         {noSearch
           ? <Description />
-          : <SearchResult querying={AppState.getState().querying} onRetry={() => this.handleQuery(AppState.getState().querying.query)} smallerSetName={this.state.server ? false : window.innerWidth <= 500} />}
+          : <SearchResult querying={AppState.getState().querying} onRetry={() => this.handleQuery(AppState.getState().querying.query)} onChangeQuery={nQuery => this.handleQuery(nQuery)} smallerSetName={this.state.server ? false : window.innerWidth <= 500} />}
       </div>
     )
   }
   handleQuery (query) {
+    this.searchbar && this.searchbar.setQuery(query)
     let oldQuery = AppState.getState().querying ? AppState.getState().querying.query : ''
     AppState.dispatch({type: 'query', query})
     if (AppState.getState().querying && (AppState.getState().querying.query !== oldQuery || !AppState.getState().querying.result)) {

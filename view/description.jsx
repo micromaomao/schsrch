@@ -104,7 +104,7 @@ class Description extends React.Component {
       )
     }
     return (
-      <div className='desc'>
+      <div className='home-desc'>
         {!this.state.server
           ? (
             <div className='links'>

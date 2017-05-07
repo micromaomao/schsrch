@@ -4,6 +4,7 @@ const PaperSet = require('./paperset.jsx')
 const Feedback = require('./feedback.jsx')
 const AppState = require('./appstate.js')
 const OverflowView = require('./overflowview.jsx')
+const CIESubjects = require('./CIESubjects.js')
 
 class SearchResult extends React.Component {
   shouldComponentUpdate (nextProps, nextState) {
@@ -17,6 +18,9 @@ class SearchResult extends React.Component {
   }
   render () {
     let querying = this.props.querying || {query: ''}
+    let relatedSubject = querying.query.match(/^(\d{4})(\s|$)/)
+    if (relatedSubject) relatedSubject = relatedSubject[1]
+    let deprecationStates = relatedSubject ? CIESubjects.deprecationStates(relatedSubject) : []
     return (
       <div className={'searchresult' + (querying.loading ? ' loading' : '') + (this.props.smallerSetName ? ' smallsetname' : '')}>
         {querying.error
@@ -28,6 +32,34 @@ class SearchResult extends React.Component {
               <div className='retry' onClick={evt => this.props.onRetry && this.props.onRetry()}>Retry search</div>
             </div>
           : null}
+        {deprecationStates.map((dst, i) => (
+          <div className='warning' key={i}>
+            {(() => {
+              let newQuery = `${dst.of}${querying.query.substr(4)}`
+              let href = AppState.getState().serverrender ? `/search/?as=page&query=${encodeURIComponent(newQuery)}` : null
+              let handleClick = evt => this.props.onChangeQuery && this.props.onChangeQuery(newQuery)
+              if (dst.type === 'former') {
+                return (
+                    <div className='msg'>
+                      Syllabus {relatedSubject} had been replaced by syllabus <a href={href} onClick={handleClick}>{dst.of} ({CIESubjects.findExactById(dst.of).name})</a>.
+                      Its final examination series was {PaperUtils.myTimeToHumanTime(dst.final)}. For newer past papers, you should
+                      specify the new syllabus code {dst.of}.
+                    </div>
+                  )
+              }
+              if (dst.type === 'successor') {
+                return (
+                    <div className='msg'>
+                      Syllabus {relatedSubject} is a replacement of syllabus <a href={href} onClick={handleClick}>{dst.of} ({CIESubjects.findExactById(dst.of).name})</a>,
+                      which was no longer used after its final examination series {PaperUtils.myTimeToHumanTime(dst.formerFinal)}.
+                      For older past papers, you should specify the old syllabus {dst.of} to avoid confusion.
+                    </div>
+                  )
+              }
+              return null
+            })()}
+          </div>
+        ))}
         {querying.result
           ? this.renderResult(querying.result, querying.query)
           : null}
