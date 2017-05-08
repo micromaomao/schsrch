@@ -12,7 +12,19 @@ html
     link(rel="search", type="application/opensearchdescription+xml", title="schsrch", href="/opensearch.xml")
     meta(name="apple-mobile-web-app-title", content="SchSrch")
     meta(name="apple-mobile-web-app-capable", content="yes")
-    title Schsrch
+    -const description = "Trying to be the most simple and intuitive CIE search engine, made by pupils."
+    meta(name="description", content=description)
+    meta(property="og:url", content="https://schsrch.xyz")
+    meta(property="og:title", content="SchSrch")
+    meta(property="og:description", content=description)
+    meta(property="og:image", content=mf.icons[0].src)
+    meta(property="og:image:type", content=mf.icons[0].type)
+    -let ogSz = mf.icons[0].sizes.split('x')
+    meta(property="og:image:width", content=ogSz[0])
+    meta(property="og:image:height", content=ogSz[1])
+    meta(property="og:type", content="website")
+    meta(property="og:locale", content="en_GB")
+    title SchSrch
     style!= require('./layout.sass').toString()
   body
     .react-root

@@ -49,7 +49,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     rMain.get('/', function (req, res) {
       res.type('html')
       let $ = cheerio.load(indexHtml)
-      $('.react-root').html(serverRender({})) // We want this to be static so that service worker don't end up caching old data
+      $('.react-root').html(serverRender({})) // We want this to be static so that service worker don't end up caching old data, and that's why no status.
       res.send($.html())
       let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/'})
       saveRecord(rec)
