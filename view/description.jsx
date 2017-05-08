@@ -71,7 +71,7 @@ class Description extends React.Component {
     let statusInfo = null
     let reloadBtn = (
       <div className="reload">
-        <a onClick={fetchStatusInfo}>Refresh</a>
+        <span onClick={fetchStatusInfo}>Refresh</span>
       </div>
     )
     if (this.state.server) {
@@ -80,8 +80,15 @@ class Description extends React.Component {
       let stat = this.state.status
       statusInfo = (
         <div className={'status' + (this.state.loading ? ' loading' : '')}>
+          <div className='large'>
+            Trying to be the most simple and intuitive CIE search engine, made by pupils.
+          </div>
+          <div className='hr' />
           <div>
-            Currently holding {stat.docCount} paper ({stat.indexCount} pages)
+            Teachers - <a href="http://teachers.cie.org.uk/">I need your help</a>! Contact IG2 Lynn if you know me personally and are OK with me using your CIE credential.
+          </div>
+          <div>
+            Currently storing {stat.docCount} paper. (that's a whopping {stat.indexCount} pages!)
           </div>
           <div>
             Mystery number: {stat.requestCount}

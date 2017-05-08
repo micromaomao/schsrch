@@ -225,17 +225,35 @@ body
       cursor: pointer
       text-decoration: none
   .status
-    font-size: 1rem
+    font-size: 0.8rem
     color: lighten($color-primary, 10%)
+    .large
+      font-size: 1rem
+      color: lighten($color-primary, 5%)
+    .hr
+      border-bottom: solid 1px $color-primary
+      margin-left: 15%
+      margin-right: 15%
+      height: 0
     .error
       color: red
-    .reload a
+    .reload span
       color: $color-link
       line-height: 2
       padding: 0.5rem 2rem
       cursor: pointer
+      font-size: 0.7rem
     .error, .reload
       font-size: 0.75rem
+    div
+      margin-bottom: 0.6rem
+    a
+      color: $color-link
+      border-bottom: solid 1px $color-link
+      transition: color 200ms
+      text-decoration: none
+      &:hover
+        color: darken($color-link, 20%)
   .status.loading
     opacity: 0.5
 
