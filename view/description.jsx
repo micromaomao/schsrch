@@ -85,9 +85,6 @@ class Description extends React.Component {
           </div>
           <div className='hr' />
           <div>
-            Teachers - <a href="http://teachers.cie.org.uk/">I need your help</a>! Contact IG2 Lynn if you know me personally and are OK with me using your CIE credential.
-          </div>
-          <div>
             Currently storing {stat.docCount} paper. (that's a whopping {stat.indexCount} pages!)
           </div>
           <div>
