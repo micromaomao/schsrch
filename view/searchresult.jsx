@@ -63,9 +63,6 @@ class SearchResult extends React.Component {
         {querying.result
           ? this.renderResult(querying.result, querying.query)
           : null}
-        {AppState.getState().serverrender ? null : (
-          <a className='fbBtn' onClick={evt => Feedback.show(querying.query)}>Report issues/missing/errors with this search...</a>
-        )}
       </div>
     )
   }

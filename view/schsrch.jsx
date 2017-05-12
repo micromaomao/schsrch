@@ -52,7 +52,7 @@ class SchSrch extends React.Component {
       switch (this.state.view) {
         case 'home':
         default:
-          return this.renderHome()
+          return AppState.getState().querying ? this.renderSearch() : this.renderHome()
         case 'disclaim':
           return this.renderDisclaim()
       }
@@ -93,17 +93,34 @@ class SchSrch extends React.Component {
     )
   }
   renderHome () {
-    let noSearch = AppState.getState().querying ? false : true
     return (
-      <div className='view-home'>
-        <SearchBar ref={f => this.searchbar = f} big={noSearch} onQuery={this.handleQuery}
-          loading={noSearch ? false : (AppState.getState().querying.loading || false)} />
-        {noSearch
-          ? <Description />
-          : <SearchResult querying={AppState.getState().querying} onRetry={() => this.handleQuery(AppState.getState().querying.query)} onChangeQuery={nQuery => this.handleQuery(nQuery)} smallerSetName={this.state.server ? false : window.innerWidth <= 500} />}
+      <div className='view view-home'>
+        <SearchBar ref={f => this.searchbar = f} big={true} onQuery={this.handleQuery} loading={false} />
+        <Description />
       </div>
     )
   }
+  renderSearch () {
+    let query = AppState.getState().querying || {}
+    query = query.query
+    return (
+      <div className='view view-search'>
+        <SearchBar ref={f => this.searchbar = f} big={false} onQuery={this.handleQuery}
+          loading={AppState.getState().querying.loading || false} />
+        <div className='searchcontain'>
+          <SearchResult
+            querying={AppState.getState().querying}
+            onRetry={() => this.handleQuery(AppState.getState().querying.query)}
+            onChangeQuery={nQuery => this.handleQuery(nQuery)}
+            smallerSetName={this.state.server ? false : window.innerWidth <= 500} />
+        </div>
+        {AppState.getState().serverrender ? null : (
+            <a className='fbBtn' onClick={evt => Feedback.show((AppState.getState().querying || {}).query)}>Report issues/missing/errors with this search...</a>
+          )}
+      </div>
+    )
+  }
+
   handleQuery (query) {
     this.searchbar && this.searchbar.setQuery(query)
     let oldQuery = AppState.getState().querying ? AppState.getState().querying.query : ''

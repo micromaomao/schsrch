@@ -50,6 +50,14 @@ body
     overflow-x: hidden
     overflow-y: auto
     z-index: 1
+    display: flex
+    flex-wrap: nowrap
+    flex-direction: column
+    noscript
+      flex-grow: 0
+      flex-shrink: 1
+    .view
+      flex-grow: 1
 
 .contentblackcover
   z-index: 2
@@ -189,22 +197,25 @@ body
       margin-left: auto
       margin-right: auto
 .searchbar.small
-  margin-top: 2rem
-  .bannerContain, .inputContain
-    display: inline-block
+  flex-shrink: 0
+  margin: 0
+  padding-top: 0.5rem
+  display: flex
+  flex-direction: row
+  flex-wrap: nowrap
+  align-items: center
   .bannerContain
-    vertical-align: top
-    margin-left: 2rem
+    margin-left: 1rem
     .banner
-      max-width: 150px
-      max-height: 40px
+      display: block
+      height: 35px
   .inputContain
-    margin-left: 2.5rem
-    vertical-align: bottom
+    flex-grow: 1
+    margin-left: 1.5rem
     .querybox
       text-align: left
     .inputPositionWrap, .subjecthints, .searchprompt
-      width: 60vw
+      width: 100%
     .subjecthints
       position: absolute
     .searchprompt
@@ -281,6 +292,26 @@ body
     margin: 1rem
     background-color: $color-primary
 
+.schsrch .view-search
+  display: flex
+  flex-direction: column
+  flex-wrap: nowrap
+  height: 100%
+  .searchcontain
+    flex-grow: 1
+    overflow-y: auto
+  .fbBtn
+    display: block
+    color: $color-link
+    border-top: solid 2px $color-primary
+    padding: 0.5rem 1rem
+    display: inline-block
+    transition: background-color 200ms
+    cursor: pointer
+    -webkit-tap-highlight-color: transparent
+  .fbBtn:active
+    background-color: rgba($color-primary, 0.2)
+
 .searchresult.loading
   opacity: 0.5
   pointer-events: none
@@ -353,16 +384,6 @@ body
         color: $color-secondary-text
         .highlight
           color: $color-primary
-  .fbBtn
-    color: $color-link
-    border-top: solid 2px $color-primary
-    padding: 0.5rem 1rem
-    display: inline-block
-    transition: background-color 200ms
-    cursor: pointer
-    -webkit-tap-highlight-color: transparent
-  .fbBtn:active
-    background-color: rgba($color-primary, 0.2)
 
   .warning
     border-top: 2px solid $color-link
