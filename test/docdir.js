@@ -57,6 +57,7 @@ module.exports = (schsrch, dbModel) =>
         })
     }
     it('/doc/?as=dir', function (done) {
+      this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
           .get('/doc/' + thePaper._id + '/?as=dir')
@@ -81,6 +82,7 @@ module.exports = (schsrch, dbModel) =>
         .end(done)
     })
     it('/doc/?as=dir for ms', function (done) {
+      this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
           .get('/doc/' + theMarkScheme._id + '/?as=dir')
