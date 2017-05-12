@@ -25,7 +25,7 @@
   ],
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "background_color": "#ffffff",
   "lang": "en-US",
   "prefer_related_applications": false,

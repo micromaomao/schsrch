@@ -30,9 +30,9 @@
     "svgo": "^0.7.2"
   },
   "peerDependencies": {
-    "elasticsearch": "^13.0.0",
+    "elasticsearch": "^13.0.1",
     "express": "^4.15.2",
-    "mongoose": "^4.9.7"
+    "mongoose": "^4.9.8"
   },
   "devDependencies": {
     "babel-core": "^6.24.1",
@@ -56,7 +56,7 @@
     "react": "^15.5.4",
     "react-dom": "^15.5.4",
     "redux": "^3.6.0",
-    "sass-loader": "^6.0.3",
+    "sass-loader": "^6.0.5",
     "sharp": "^0.17.3",
     "should": "^11.2.1",
     "supertest": "^3.0.0",
