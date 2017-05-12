@@ -18,13 +18,14 @@ body
   font-size: 16px
   color: #212121
   cursor: default
-  overflow: hide
+  min-width: 200px
   margin: 0
   font-family: sans-serif
   *
     box-sizing: border-box
 
 .schsrch
+  min-width: 200px
   noscript
     display: block
     text-align: center
@@ -44,8 +45,10 @@ body
     left: 0
     width: 100%
     height: 100%
+    min-width: 200px
   > .content
-    overflow: auto
+    overflow-x: hidden
+    overflow-y: auto
     z-index: 1
 
 .contentblackcover
@@ -224,9 +227,13 @@ body
       margin-right: 1rem
       cursor: pointer
       text-decoration: none
+      display: inline-block
+      line-height: 1.5
   .status
     font-size: 0.8rem
     color: lighten($color-primary, 10%)
+    padding-left: 0.5rem
+    padding-right: 0.5rem
     .large
       font-size: 1rem
       color: lighten($color-primary, 5%)
@@ -247,6 +254,8 @@ body
       font-size: 0.75rem
     div
       margin-bottom: 0.6rem
+    span
+      display: inline-block
     a
       color: $color-link
       border-bottom: solid 1px $color-link

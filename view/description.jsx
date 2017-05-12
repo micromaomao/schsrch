@@ -86,7 +86,7 @@ class Description extends React.Component {
           </div>
           <div className='hr' />
           <div>
-            Currently supporting {CIESubjects.length} subjects: storing {stat.docCount} paper ({stat.indexCount} pages).
+            Currently supporting <span>{CIESubjects.length} subjects:</span> <span>storing {stat.docCount} paper</span> <span>({stat.indexCount} pages).</span>
           </div>
           <div>
             Mystery number: {stat.requestCount}
