@@ -1,6 +1,7 @@
 const React = require('react')
 const CIESubjects = require('./CIESubjects.js')
 const PaperUtils = require('./paperutils.js')
+const Feedback = require('./feedback.jsx')
 
 class SearchPrompt extends React.Component {
   constructor () {
@@ -17,7 +18,7 @@ class SearchPrompt extends React.Component {
       let subj = CIESubjects.findExactById(querySubj)
       let tiMatch = null
       if (!subj) {
-        prompt = (<div className='error'>Syllabus number {querySubj} dosen't exist.</div>)
+        prompt = (<div className='error'>Syllabus {querySubj} isn't supported. <a onClick={evt => Feedback.show(querySubj + ' << unsupported syllabus')}>Request to add</a></div>)
       } else if (query.match(/^\d{4}$/)) {
         prompt = (`${subj.level} ${subj.name}: When? (s16, w15, etc.)`)
       } else if (tiMatch = query.match(/^\d{4}\s([a-z]\d\d)$/)) {

@@ -86,7 +86,6 @@ class FeedbackFrame extends React.Component {
       desc = (
         <div>
           <h2>Search feedback</h2>
-          <p>If you want to report general things like design, use feedback button from the front screen.</p>
           <p className='searchReport'>Reporting issues with search <code>{this.state.search}</code></p>
         </div>
       )
@@ -94,7 +93,15 @@ class FeedbackFrame extends React.Component {
     return (
       <div className='general'>
         {desc}
-        <p>Provide your feedback in <b>either</b> English or Chinese. If possible, please include examples on how to improve.</p>
+        <p>Provide your feedback in <b>either</b> English or Chinese.</p>
+        <ul>
+          <li>If you are requesting a feture or a change, please give example of how to improve / implementation.</li>
+          <li>
+            If you are requesting for supporting a new syllabus, please provide link to the cie.org.uk page of that
+            syllabus, and if possible, link for finding its past papers
+            (especially s/w {(new Date().getFullYear() - 1).toString().substr(-2, 2)}).
+          </li>
+        </ul>
         <textarea onChange={this.handleFeedbackTextChange} value={this.state.feedbackText}
           placeholder='Your feedback here...' disabled={this.state.submitting} />
         <p>Email address... (Optional)</p>
