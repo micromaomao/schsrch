@@ -3,6 +3,7 @@ const Feedback = require('./feedback.jsx')
 const { createStore } = require('redux')
 const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
+const CIESubjects = require('./CIESubjects.js')
 
 let statusInfoState = createStore(function (state = {}, action) {
   switch (action.type) {
@@ -85,7 +86,7 @@ class Description extends React.Component {
           </div>
           <div className='hr' />
           <div>
-            Currently storing {stat.docCount} paper. (that's a whopping {stat.indexCount} pages!)
+            Currently supporting {CIESubjects.length} subjects: storing {stat.docCount} paper ({stat.indexCount} pages).
           </div>
           <div>
             Mystery number: {stat.requestCount}

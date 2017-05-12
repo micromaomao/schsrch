@@ -43,5 +43,6 @@ module.exports = {
       depStates.push({type: 'successor', of: former.id, formerFinal: former.deprecation.final})
     }
     return depStates
-  }
+  },
+  length: subjects.length
 }
