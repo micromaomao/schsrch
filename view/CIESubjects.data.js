@@ -1,3 +1,10 @@
+/*
+  List of all CIE subjects that SchSrch officially maintain.
+
+  If you want SchSrch to include additional subjects, report with either GitHub issues or on-site feedback.
+  SchSrch will do its best to keep all contents up-to-date.
+*/
+
 module.exports = [
   {
     id: '0400',
