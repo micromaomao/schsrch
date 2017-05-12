@@ -1,6 +1,5 @@
 const React = require('react')
 const CIESubjects = require('./CIESubjects.js')
-const SearchPrompt = require('./searchprompt.jsx')
 const AppState = require('./appstate.js')
 const URL_BANNER = require('./banner.png')
 const URL_BANNER_SMALL = require('./banner-small.png')
@@ -173,7 +172,7 @@ class SearchBar extends React.Component {
         <div className={'bannerContain' + (hideBanner ? ' hide' : '')}>
           <img className='banner' src={this.props.big ? URL_BANNER : URL_BANNER_SMALL} alt='SchSrch' />
         </div>
-        <div className={'inputContain' + (hideBanner ? ' hw' : '')}>
+        <div className={'inputContain' + (hideBanner ? ' hidebanner' : '')}>
           <div className='inputPositionWrap'>
             <input
               className={'querybox' + (this.state.server ? ' border' : '')}
@@ -209,7 +208,6 @@ class SearchBar extends React.Component {
             </div>
           </div>
           {subjectHint}
-          <SearchPrompt query={this.state.query} />
         </div>
       </div>
     )

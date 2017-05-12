@@ -5,6 +5,7 @@ const Feedback = require('./feedback.jsx')
 const AppState = require('./appstate.js')
 const OverflowView = require('./overflowview.jsx')
 const CIESubjects = require('./CIESubjects.js')
+const SearchPrompt = require('./searchprompt.jsx')
 
 class SearchResult extends React.Component {
   shouldComponentUpdate (nextProps, nextState) {
@@ -23,6 +24,7 @@ class SearchResult extends React.Component {
     let deprecationStates = relatedSubject ? CIESubjects.deprecationStates(relatedSubject) : []
     return (
       <div className={'searchresult' + (querying.loading ? ' loading' : '') + (this.props.smallerSetName ? ' smallsetname' : '')}>
+        <SearchPrompt query={querying.query} />
         {querying.error
           ? <div className='error'>
               <div>

@@ -214,16 +214,13 @@ body
     margin-left: 1.5rem
     .querybox
       text-align: left
-    .inputPositionWrap, .subjecthints, .searchprompt
+    .inputPositionWrap, .subjecthints
       width: 100%
     .subjecthints
       position: absolute
-    .searchprompt
-      margin-left: auto
-      margin-right: auto
-  .inputContain.hw
+  .inputContain.hidebanner
     margin-left: 0
-    .inputPositionWrap, .subjecthints, .searchprompt
+    .inputPositionWrap, .subjecthints
       width: 90vw
 
 .schsrch .home-desc
@@ -384,6 +381,10 @@ body
         color: $color-secondary-text
         .highlight
           color: $color-primary
+
+  .searchprompt
+    padding-left: 0.5rem
+    padding-right: 0.5rem
 
   .warning
     border-top: 2px solid $color-link
