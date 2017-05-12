@@ -1,6 +1,8 @@
 const path = require('path')
+const webpack = require('webpack')
 const OfflinePlugin = require('offline-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const dev = process.env.NODE_ENV !== 'production'
 
 baseConfig = {
   module: {
@@ -30,7 +32,8 @@ baseConfig = {
         loader: 'pug-loader'
       }
     ]
-  }
+  },
+  devtool: 'source-map'
 }
 
 module.exports = [
@@ -64,8 +67,14 @@ module.exports = [
         rewrites: {
           'index.html': '/'
         }
+      }),
+      dev ? null : new webpack.optimize.UglifyJsPlugin({
+        minimize: dev,
+        compress: dev,
+        sourceMap: true,
+        comments: false
       })
-    ]
+    ].filter(x => x !== null)
   }),
   Object.assign({}, baseConfig, {
     entry: {
