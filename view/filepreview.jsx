@@ -185,7 +185,7 @@ class FilePreview extends React.Component {
         {!this.state.error && this.state.docJson
           ? (
             <div className={this.state.loading ? 'pdfview dirty' : 'pdfview'} ref={f => this.sspdfContainer = f}>
-              {this.state.showingDir ? <DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={(question, i) => this.selectQuestion(question, i)} /> : null}
+              {this.state.showingDir ? <div className='dircontain'><DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={(question, i) => this.selectQuestion(question, i)} /></div> : null}
               <div className={!this.state.dirJson || !this.state.showingDir ? 'show' : 'hide'}>
                 <SsPdfView ref={f => this.sspdfView = f} docJson={this.state.docJson} overlay={this.renderOverlay()} width={this.state.measuredViewWidth} height={this.state.measuredViewHeight} />
               </div>
