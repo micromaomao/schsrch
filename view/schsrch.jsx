@@ -117,6 +117,7 @@ class SchSrch extends React.Component {
         <div className='searchcontain' onScroll={this.handleSearchContainScroll}>
           <SearchResult
             querying={AppState.getState().querying}
+            previewing={AppState.getState().previewing}
             onRetry={() => this.handleQuery(AppState.getState().querying.query)}
             onChangeQuery={nQuery => this.handleQuery(nQuery)}
             smallerSetName={this.state.server ? false : window.innerWidth <= 500} />

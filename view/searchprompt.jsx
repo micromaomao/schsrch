@@ -5,10 +5,6 @@ const Feedback = require('./feedback.jsx')
 const AppState = require('./appstate.js')
 
 class SearchPrompt extends React.Component {
-  constructor () {
-    super()
-    this.state = {}
-  }
   render () {
     let query = this.props.query.toLowerCase().trim()
     let prompt = null

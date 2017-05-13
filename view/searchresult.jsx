@@ -6,18 +6,9 @@ const AppState = require('./appstate.js')
 const OverflowView = require('./overflowview.jsx')
 const CIESubjects = require('./CIESubjects.js')
 const SearchPrompt = require('./searchprompt.jsx')
+const FilePreview = require('./filepreview.jsx')
 
 class SearchResult extends React.Component {
-  shouldComponentUpdate (nextProps, nextState) {
-    if (AppState.getState().previewing) return true
-    let nQ = nextProps.querying
-    let tQ = this.props.querying || {}
-    return nQ.error !== tQ.error
-      || nQ.result !== tQ.result
-      || nQ.loading !== tQ.loading
-      || nQ.query !== tQ.query
-      || nextProps.smallerSetName !== this.props.smallerSetName
-  }
   render () {
     let querying = this.props.querying || {query: ''}
     let relatedSubject = querying.query.match(/^(\d{4})(\s|$)/)
@@ -102,25 +93,57 @@ class SearchResult extends React.Component {
         })
         return (
           <div className='pplist'>
-            {bucket.sort(PaperUtils.funcSortSet).map(set => (
-              <PaperSet paperSet={set} key={PaperUtils.setToString(set)} psKey={PaperUtils.setToString(set)} />
-            ))}
+            {(() => {
+              let elements = []
+              bucket.sort(PaperUtils.funcSortSet).forEach(set => {
+                let psKey = PaperUtils.setToString(set)
+                elements.push(<PaperSet paperSet={set} key={psKey}
+                    onOpenFile={(id, page) => {
+                        AppState.dispatch({type: 'previewFile', fileId: id, page, psKey})
+                      }}
+                  />)
+                let previewing = null
+                if ((previewing = this.props.previewing) !== null) {
+                  if (previewing.psKey === psKey) {
+                    elements.push(
+                      <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
+                    )
+                  }
+                }
+              })
+              return elements
+            })()}
           </div>
         )
       case 'text':
         return (
           <div className='fulltextlist'>
-            {result.list.map(set => {
-              let metas = {subject: set.doc.subject, time: set.doc.time, paper: set.doc.paper, variant: set.doc.variant}
-              // paperSet: { subject: ..., paper: ..., ..., types: [ {_id: <docId>, type: ..., index: { ... }}, {_id: <docId>, type: ...}... ] }
-              // query: the words user searched. Used for highlighting content.
-              return (<PaperSet
-                paperSet={Object.assign({}, metas, {types: [Object.assign({}, set.doc, {index: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})}
-                key={'!!index!' + set.index._id}
-                psKey={'!!index!' + set.index._id}
-                query={query}
-                />)
-            })}
+            {(() => {
+                let elements = []
+                result.list.forEach(set => {
+                  let metas = {subject: set.doc.subject, time: set.doc.time, paper: set.doc.paper, variant: set.doc.variant}
+                  // paperSet: { subject: ..., paper: ..., ..., types: [ {_id: <docId>, type: ..., index: { ... }}, {_id: <docId>, type: ...}... ] }
+                  // query: the words user searched. Used for highlighting content.
+                  let psKey = '!!index!' + set.index._id
+                  elements.push(<PaperSet
+                    paperSet={Object.assign({}, metas, {types: [Object.assign({}, set.doc, {index: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})}
+                    key={psKey}
+                    query={query}
+                    onOpenFile={(id, page) => {
+                        AppState.dispatch({type: 'previewFile', fileId: id, page, psKey})
+                      }}
+                    />)
+                  let previewing = null
+                  if ((previewing = this.props.previewing) !== null) {
+                    if (previewing.psKey === psKey) {
+                      elements.push(
+                        <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
+                      )
+                    }
+                  }
+                })
+                return elements
+            })()}
           </div>
         )
       default:

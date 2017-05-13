@@ -3,34 +3,14 @@ const Subjects = require('./CIESubjects.js')
 const PaperUtils = require('./paperutils.js')
 const IndexContent = require('./indexcontent.jsx')
 const AppState = require('./appstate.js')
-const FilePreview = require('./filepreview.jsx')
 
 class PaperSet extends React.Component {
   constructor () {
     super()
-    this.state = {
-      previewing: null
-    }
-    this.handleAppStateUpdate = this.handleAppStateUpdate.bind(this)
+    this.state = {}
     if (AppState.getState().serverrender) {
       this.state.server = true
     }
-  }
-  handleAppStateUpdate () {
-    let previewingState = AppState.getState().previewing
-    if (previewingState && this.props.psKey && this.props.psKey === previewingState.psKey) {
-      this.setState({previewing: previewingState})
-    } else {
-      this.setState({previewing: null})
-    }
-  }
-  componentDidMount () {
-    this.handleAppStateUpdate()
-    this.unsub = AppState.subscribe(this.handleAppStateUpdate)
-  }
-  componentWillUnmount () {
-    this.unsub()
-    this.unsub = null
   }
   render () {
     let set = this.props.paperSet
@@ -43,7 +23,6 @@ class PaperSet extends React.Component {
     }
     // sortedTypes is all the document in this set *except* the one that gets displayed its content in full text search.
     sortedTypes = set.types.slice(firstDoc !== null ? 1 : 0).sort((a, b) => PaperUtils.funcSortType(a.type, b.type))
-    let showPreview = firstDoc !== null && this.state.previewing
     return (
       <div className='set'>
         <div className='setname'>
@@ -98,12 +77,6 @@ class PaperSet extends React.Component {
             </div>
           )
           : null}
-        {showPreview && !this.state.server
-          ? (
-            <FilePreview doc={this.state.previewing.id} page={this.state.previewing.page} highlightingQ={this.state.previewing.highlightingQ} />
-          )
-          : null
-        }
         <div className={firstDoc !== null ? 'related' : 'files'}>
           {firstDoc ? 'Related: ' : null}
           {sortedTypes.map(file => {
@@ -129,16 +102,13 @@ class PaperSet extends React.Component {
             )
           })}
         </div>
-        {!showPreview && this.state.previewing
-          ? (
-            <FilePreview doc={this.state.previewing.id} page={this.state.previewing.page} highlightingQ={this.state.previewing.highlightingQ} />
-          )
-          : null}
       </div>
     )
   }
   openFile (id, page = 0) {
-    AppState.dispatch({type: 'previewFile', fileId: id, page: page, psKey: this.props.psKey})
+    if (this.props.onOpenFile) {
+      this.props.onOpenFile(id, page)
+    }
   }
   fileUrl (id) {
     return '/doc/' + encodeURIComponent(id)

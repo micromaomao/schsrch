@@ -333,10 +333,11 @@ body
     padding: 3rem 5rem
   .error
     @extend .errorbox
-  .set
-    padding: 0 0 0.5rem 0
+  .set, .filepreview
     margin-top: 0.5rem
     margin-bottom: 0.3rem
+  .set
+    padding: 0 0 0.5rem 0
     background-color: rgba($color-primary, 0.05)
     .setname
       padding: 0.5rem 1rem 
@@ -388,10 +389,9 @@ body
         color: $color-secondary-text
         .highlight
           color: $color-primary
-    .filepreview
-      width: 100%
-      height: 90vh
-      margin-top: 1rem
+  .filepreview
+    width: 100%
+    height: 90vh
   .searchprompt
     padding-left: 0.5rem
     padding-right: 0.5rem
