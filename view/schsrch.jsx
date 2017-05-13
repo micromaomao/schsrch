@@ -6,6 +6,7 @@ const Feedback = require('./feedback.jsx')
 const Disclaimer = require('./disclaimer.jsx')
 const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
+const FilePreview = require('./filepreview.jsx')
 
 class SchSrch extends React.Component {
   constructor () {
@@ -60,6 +61,7 @@ class SchSrch extends React.Component {
           return this.renderDisclaim()
       }
     })()
+    let previewing = AppState.getState().previewing
     return (
       <div className='schsrch'>
         {this.state.server ? null : (
@@ -89,11 +91,22 @@ class SchSrch extends React.Component {
               )
             : null
           }
-          {view}
+          <div className='viewcontain'>
+            {view}
+            {this.shouldShowBigPreview() && previewing
+              ? (
+                  <FilePreview doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
+                )
+              : null
+            }
+          </div>
         </div>
         {this.state.server ? null : <Feedback.Frame />}
       </div>
     )
+  }
+  shouldShowBigPreview () {
+    return this.state.server ? false : window.innerWidth >= 1100
   }
   renderHome () {
     return (
@@ -108,19 +121,21 @@ class SchSrch extends React.Component {
   renderSearch () {
     let query = AppState.getState().querying || {}
     query = query.query
+    let previewing = AppState.getState().previewing
+    let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
-      <div className='view view-search'>
-        <div className={'searchbarcontain' + (this.state.viewScrollAtTop ? '' : ' shadow')}>
+      <div className={'view view-search' + (displayingBigPreview ? ' sidepane' : '')}>
+        <div className={'searchbarcontain prepare-shadow' + (this.state.viewScrollAtTop ? '' : ' shadow')}>
           <SearchBar key='searchbar' ref={f => this.searchbar = f} big={false} onQuery={this.handleQuery}
             loading={AppState.getState().querying.loading || false} />
         </div>
         <div className='searchcontain' onScroll={this.handleSearchContainScroll}>
           <SearchResult
             querying={AppState.getState().querying}
-            previewing={AppState.getState().previewing}
+            previewing={this.shouldShowBigPreview() ? null : previewing}
             onRetry={() => this.handleQuery(AppState.getState().querying.query)}
             onChangeQuery={nQuery => this.handleQuery(nQuery)}
-            smallerSetName={this.state.server ? false : window.innerWidth <= 500} />
+            smallerSetName={this.state.server ? false : window.innerWidth <= 500 || displayingBigPreview} />
         </div>
         {AppState.getState().serverrender ? null : (
             <a className='fbBtn' onClick={evt => Feedback.show((AppState.getState().querying || {}).query)}>Report issues/missing/errors with this search...</a>

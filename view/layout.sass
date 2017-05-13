@@ -56,13 +56,27 @@ body
     noscript
       flex-grow: 0
       flex-shrink: 1
-    .view
+    > .viewcontain
       flex-grow: 1
-      > *
-        transition: box-shadow 200ms
-      > .shadow
-        box-shadow: 0 2px 2px rgba(black, 0.3)
-        z-index: 10
+      display: flex
+      flex-wrap: nowrap
+      flex-direction: row
+      align-items: stretch
+      > .view
+        flex-grow: 1
+        > .prepare-shadow
+          transition: box-shadow 200ms
+          will-change: box-shadow
+        > .shadow
+          box-shadow: 0 2px 2px rgba(black, 0.3)
+          z-index: 10
+      > .view.sidepane
+        flex-grow: 0
+        flex-basis: 500px
+      > .filepreview
+        flex-grow: 3
+        flex-shrink: 0
+        border-left: solid 2px $color-primary
 
 .contentblackcover
   z-index: 2
@@ -181,13 +195,13 @@ body
     margin-top: 20vh
     .banner
       display: inline-block
-      max-width: 70vw
+      max-width: 70%
   .inputContain
     display: block
     text-align: center
     margin-top: 1rem
     .inputPositionWrap, .subjecthints
-      width: 90vw
+      width: 90%
     .querybox, .placeholder
       text-align: center
     .placeholder
@@ -226,7 +240,7 @@ body
   .inputContain.hidebanner
     margin-left: 0
     .inputPositionWrap, .subjecthints
-      width: 90vw
+      width: 90%
 
 .schsrch .home-desc
   margin-top: 3rem
@@ -298,7 +312,6 @@ body
   display: flex
   flex-direction: column
   flex-wrap: nowrap
-  height: 100%
   .searchcontain
     flex-grow: 1
     overflow-y: auto
@@ -592,6 +605,7 @@ $feedback-top-height: 2rem + 1.3rem
     flex-shrink: 1
     background-color: white
     display: flex
+    position: relative
     flex-direction: column
     flex-wrap: nowrap
     overflow: hidden
@@ -608,6 +622,7 @@ $feedback-top-height: 2rem + 1.3rem
   .pdfview.dirty
     opacity: 0.3
   .sspdfview
+    position: absolute
     .questionln
       background-color: rgba($color-primary, 0.1)
       cursor: pointer
