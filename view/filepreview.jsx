@@ -20,15 +20,29 @@ class FilePreview extends React.Component {
       dirError: null,
       showingDir: false,
       relatedDirJson: null,
-      relatedDocId: null
+      relatedDocId: null,
+      measuredViewWidth: 0,
+      measuredViewHeight: 0
     }
     this.currentLoading = null
+    this.measureViewDimAF = null
     this.handlePageInputChange = this.handlePageInputChange.bind(this)
+    this.measureViewDim = this.measureViewDim.bind(this)
+  }
+  measureViewDim () {
+    if (!this.sspdfContainer) return (this.measureViewDimAF = requestAnimationFrame(this.measureViewDim))
+    this.measureViewDimAF = null
+    let cs = window.getComputedStyle(this.sspdfContainer)
+    let nState = {measuredViewWidth: parseFloat(cs.width) || 0, measuredViewHeight: parseFloat(cs.height) || 0}
+    if (Math.abs(this.state.measuredViewWidth - nState.measuredViewWidth) < 1
+      && Math.abs(this.state.measuredViewHeight - nState.measuredViewHeight) < 1) return
+    this.setState(nState)
   }
   componentDidMount () {
     if (this.props && this.props.doc) {
       this.loadFromProps(this.props)
     }
+    this.measureViewDim()
   }
   componentWillReceiveProps (nextProps) {
     if (!this.props || nextProps.doc !== this.props.doc || nextProps.page !== this.props.page) {
@@ -42,8 +56,16 @@ class FilePreview extends React.Component {
   }
   componentDidUpdate (prevProps, prevState) {
     if (prevProps.doc !== this.props.doc || prevProps.page !== this.props.page) {
-      this.pdfView.reCenter()
+      this.sspdfView.reCenter()
       this.setState({pageInputValue: null, showingDir: false})
+    }
+    this.measureViewDim()
+  }
+  componentWillUnmount () {
+    if (this.measureViewDimAF !== null) {
+      cancelAnimationFrame(this.measureViewDimAF)
+      this.measureViewDimAF = null
+      return
     }
   }
   load (doc = this.props.doc, page = this.props.page) {
@@ -162,16 +184,14 @@ class FilePreview extends React.Component {
           : null}
         {!this.state.error && this.state.docJson
           ? (
-            <div className='whitebg'>
-              <div className={this.state.loading ? 'pdfview dirty' : 'pdfview'}>
-                {this.state.showingDir ? <DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={(question, i) => this.selectQuestion(question, i)} /> : null}
-                <div className={!this.state.dirJson || !this.state.showingDir ? 'show' : 'hide'}>
-                  <SsPdfView ref={f => this.pdfView = f} docJson={this.state.docJson} overlay={this.renderOverlay()} />
-                </div>
+            <div className={this.state.loading ? 'pdfview dirty' : 'pdfview'} ref={f => this.sspdfContainer = f}>
+              {this.state.showingDir ? <DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={(question, i) => this.selectQuestion(question, i)} /> : null}
+              <div className={!this.state.dirJson || !this.state.showingDir ? 'show' : 'hide'}>
+                <SsPdfView ref={f => this.sspdfView = f} docJson={this.state.docJson} overlay={this.renderOverlay()} width={this.state.measuredViewWidth} height={this.state.measuredViewHeight} />
               </div>
             </div>
           )
-          : null}
+          : (this.sspdfContainer = null)}
       </div>
     )
   }

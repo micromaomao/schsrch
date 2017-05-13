@@ -12,7 +12,7 @@ class SsPdfView extends React.Component {
       cacheCanvas: null
     }
     this.ctAnimation = null
-    this.lastViewWidth = this.lastViewHeight = this.viewWidth = this.viewHeight = 0
+    this.lastViewWidth = this.lastViewHeight = 0
     this.handleDown = this.handleDown.bind(this)
     this.handleMove = this.handleMove.bind(this)
     this.handleUp = this.handleUp.bind(this)
@@ -24,13 +24,12 @@ class SsPdfView extends React.Component {
     }
   }
   render () {
-    if (this.state.server) return
+    if (this.state.server) return null
+    if (!this.props.width || !this.props.height) return null
     let docJson = this.props.docJson
     if (!docJson) {
       return null
     }
-    this.viewWidth = window.innerWidth
-    this.viewHeight = Math.min(this.viewWidth * (docJson.height / docJson.width), window.innerHeight - 25)
     let svgUrl = this.state.blobUrl
     if (this.state.cacheCanvas && (this.state.dragOrig || this.ctAnimation)) {
       this.needPaintDirtyLayer = true
@@ -44,26 +43,26 @@ class SsPdfView extends React.Component {
       backgroundSize: `${this.state.ctSize[0]}px ${this.state.ctSize[1]}px`
     }
     return (
-      <div className='sspdfview' style={{height: this.viewHeight + 'px'}}>
+      <div className='sspdfview' style={{width: this.props.width + 'px', height: this.props.height + 'px'}}>
         <div className='pointereventcover' ref={f => this.eventTarget = f}>
           {(this.props.overlay || []).map((item, i) => {
             let ltPoint = this.doc2view(item.lt)
             let rbPoint = this.doc2view(item.rb)
-            let xBound = x => item.boundX ? Math.max(Math.min(x, this.viewWidth), 0) : x
-            let yBound = y => item.boundY ? Math.max(Math.min(y, this.viewHeight), 0) : y
+            let xBound = x => item.boundX ? Math.max(Math.min(x, this.props.width), 0) : x
+            let yBound = y => item.boundY ? Math.max(Math.min(y, this.props.height), 0) : y
             return (
               <div className={item.className || ''} key={i} style={{
                 position: 'absolute',
                 left: xBound(ltPoint[0]) + 'px',
                 top: yBound(ltPoint[1]) + 'px',
-                right: (this.viewWidth - xBound(rbPoint[0])) + 'px',
-                bottom: (this.viewHeight - yBound(rbPoint[1])) + 'px'
+                right: (this.props.width - xBound(rbPoint[0])) + 'px',
+                bottom: (this.props.height - yBound(rbPoint[1])) + 'px'
               }} onClick={item.onClick} onTouchEnd={item.onClick}>{item.stuff}</div>
             )
           })}
         </div>
         <div className='svglayer' ref={f => this.svgLayer = f} style={svgStyle} />
-        <canvas className='dirtylayer' ref={f => this.dirtyLayer = f} width={this.viewWidth} height={this.viewHeight} />
+        <canvas className='dirtylayer' ref={f => this.dirtyLayer = f} width={this.props.width} height={this.props.height} />
       </div>
     )
   }
@@ -190,9 +189,9 @@ class SsPdfView extends React.Component {
     // Limit resize (no too big, no too small)
     let nStat = this.ctAnimationGetFinalState()
     let resizeCenter = this.state.dragOrig.resize ? this.state.dragOrig.pointA.point : ['x', 'y'].map(p => this.state.dragOrig[p])
-    if (nStat.ctSize[0] > this.viewWidth * 5) {
-      nStat = this.calcResizeOnPoint(this.client2view(resizeCenter), this.viewWidth * 5 / nStat.ctSize[0])
-    } else if (nStat.ctSize[0] < this.viewWidth && nStat.ctSize[1] < this.viewHeight) {
+    if (nStat.ctSize[0] > this.props.width * 5) {
+      nStat = this.calcResizeOnPoint(this.client2view(resizeCenter), this.props.width * 5 / nStat.ctSize[0])
+    } else if (nStat.ctSize[0] < this.props.width && nStat.ctSize[1] < this.props.height) {
       nStat = this.calcCenter()
     } else {
       nStat.ctPos = this.calcBound(nStat)
@@ -215,8 +214,8 @@ class SsPdfView extends React.Component {
       evt.preventDefault()
       let point = this.client2view([evt.clientX, evt.clientY])
       let nStat = this.calcResizeOnPoint(point, Math.pow(2, -Math.sign(evt.deltaY) * 0.3))
-      if (nStat.ctSize[0] > this.viewWidth * 5) return
-      if (nStat.ctSize[0] < this.viewWidth && nStat.ctSize[1] < this.viewHeight) {
+      if (nStat.ctSize[0] > this.props.width * 5) return
+      if (nStat.ctSize[0] < this.props.width && nStat.ctSize[1] < this.props.height) {
         nStat = this.calcCenter()
       } else {
         nStat.ctPos = this.calcBound(nStat)
@@ -233,7 +232,7 @@ class SsPdfView extends React.Component {
     return [point[0] - (rect.left + scrollX), point[1] - (rect.top + scrollY)]
   }
   calcBound (viewState = this.ctAnimationGetFinalState()) {
-    let [viWid, viHig] = [this.viewWidth, this.viewHeight]
+    let [viWid, viHig] = [this.props.width, this.props.height]
     let [ctX, ctY] = viewState.ctPos
     let [ctWid, ctHig] = viewState.ctSize
     if (ctWid < viWid) {
@@ -251,7 +250,7 @@ class SsPdfView extends React.Component {
     return [ctX, ctY]
   }
   isInitialSize (viewState = this.ctAnimationGetFinalState()) {
-    let [viWid, viHig] = [this.viewWidth, this.viewHeight]
+    let [viWid, viHig] = [this.props.width, this.props.height]
     let [ctWid, ctHig] = viewState.ctSize
     return viWid >= ctWid && viHig >= ctHig
   }
@@ -281,11 +280,12 @@ class SsPdfView extends React.Component {
     this.componentDidUpdate({}, {})
   }
   componentDidUpdate (prevProps, prevState) {
-    if (this.lastViewWidth !== this.viewWidth || this.lastViewHeight !== this.viewHeight) {
-      this.lastViewWidth = this.viewWidth
-      this.lastViewHeight = this.viewHeight
+    if (this.lastViewWidth !== this.props.width || this.lastViewHeight !== this.props.height) {
+      this.lastViewWidth = this.props.width
+      this.lastViewHeight = this.props.height
       this.reCenter()
     }
+    if (!this.dirtyLayer) return
     let ctx = this.dirtyLayer.getContext('2d')
     if (this.needPaintDirtyLayer) {
       this.needPaintDirtyLayer = false
@@ -342,7 +342,7 @@ class SsPdfView extends React.Component {
   }
   calcCenter () {
     let [docWid, docHig] = ['width', 'height'].map(p => this.props.docJson[p])
-    let [viWid, viHig] = [this.viewWidth, this.viewHeight]
+    let [viWid, viHig] = [this.props.width, this.props.height]
     let [sfX, sfY] = [viWid / docWid, viHig / docHig]
     let sfM = Math.min(sfX, sfY)
     let ndocSiz = [docWid * sfM, docHig * sfM]
@@ -427,7 +427,7 @@ class SsPdfView extends React.Component {
   }
   doc2view ([x, y]) {
     if (x === -Infinity) return [0, this.doc2view([0, y])[1]]
-    if (x === Infinity) return [this.viewWidth, this.doc2view([0, y])[1]]
+    if (x === Infinity) return [this.props.width, this.doc2view([0, y])[1]]
     let [docWid, docHig] = ['width', 'height'].map(p => this.props.docJson[p])
     return [(x / docWid) * this.state.ctSize[0] + this.state.ctPos[0],
             (y / docHig) * this.state.ctSize[1] + this.state.ctPos[1]]

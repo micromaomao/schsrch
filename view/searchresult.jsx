@@ -9,6 +9,7 @@ const SearchPrompt = require('./searchprompt.jsx')
 
 class SearchResult extends React.Component {
   shouldComponentUpdate (nextProps, nextState) {
+    if (AppState.getState().previewing) return true
     let nQ = nextProps.querying
     let tQ = this.props.querying || {}
     return nQ.error !== tQ.error

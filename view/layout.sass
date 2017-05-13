@@ -62,6 +62,7 @@ body
         transition: box-shadow 200ms
       > .shadow
         box-shadow: 0 2px 2px rgba(black, 0.3)
+        z-index: 10
 
 .contentblackcover
   z-index: 2
@@ -333,12 +334,11 @@ body
   .error
     @extend .errorbox
   .set
-    padding: 0.5rem 1rem
+    padding: 0 0 0.5rem 0
     margin-top: 0.5rem
-    margin-bottom: 1rem
+    margin-bottom: 0.3rem
     background-color: rgba($color-primary, 0.05)
     .setname
-      margin: -0.5rem -1rem 0 -1rem
       padding: 0.5rem 1rem 
       background-color: rgba($color-primary, 0.1)
       font-size: 1rem
@@ -363,9 +363,12 @@ body
     .related
       padding-top: 0.5rem
       padding-left: 2rem
+      padding-right: 2rem
       .file
         padding: 0.1rem 0.5rem
     .files, .related
+      padding-left: 1rem
+      padding-right: 1rem
       color: $color-secondary-text
     .file
       cursor: pointer
@@ -385,7 +388,10 @@ body
         color: $color-secondary-text
         .highlight
           color: $color-primary
-
+    .filepreview
+      width: 100%
+      height: 100vh
+      margin-top: 1rem
   .searchprompt
     padding-left: 0.5rem
     padding-right: 0.5rem
@@ -514,26 +520,30 @@ $feedback-top-height: 2rem + 1.3rem
       font-size: 1.2rem
 
 .filepreview
-  margin: 0.5rem -1rem
   color: white
-  background-color: darken($color-primary, 20%)
+  display: flex
+  flex-direction: column
+  flex-wrap: nowrap
+  background-color: white
   .loading, .error
     padding: 1rem 2rem
-  .error
-    @extend .errorbox
-    color: $color-primary
-    background-color: white
-  .error, .loading
-    .download
-      color: $color-primary
-      cursor: pointer
-  .error
-    .download
-      padding-left: 1.2rem
+    flex-grow: 0
+    flex-shrink: 0
+  .loading, .error, .top
+    background-color: darken($color-primary, 20%)
   .top
     text-align: center
     font-size: 1rem
     line-height: 2
+    flex-grow: 0
+    flex-shrink: 0
+    display: flex
+    justify-content: center
+    flex-direction: row
+    align-items: center
+    > *
+      flex-shrink: 0
+      flex-grow: 0
     .page
       display: inline-block
       .icon
@@ -566,12 +576,32 @@ $feedback-top-height: 2rem + 1.3rem
       opacity: 0.5
     .prev
       margin-right: 1rem
-  .whitebg
+  .error
+    @extend .errorbox
+    color: $color-primary
+    background-color: white
+  .error, .loading
+    .download
+      color: $color-primary
+      cursor: pointer
+  .error
+    .download
+      padding-left: 1.2rem
+  .pdfview
+    flex-grow: 1
+    flex-shrink: 1
+    background-color: white
+    display: flex
+    flex-direction: column
+    flex-wrap: nowrap
     background-color: white
   .pdfview.dirty
     opacity: 0.3
-  .pdfview .hide
-    display: none
+    > .hide
+      display: none
+    > .show
+      flex-grow: 1
+      flex-shrink: 1
   .sspdfview
     .questionln
       background-color: rgba($color-primary, 0.1)

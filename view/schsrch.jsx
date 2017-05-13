@@ -13,7 +13,7 @@ class SchSrch extends React.Component {
     this.state = {
       coverHideAnimation: 0,
       view: 'home',
-      viewScrollAtTop: false
+      viewScrollAtTop: true
     }
     this.handleUpdate = this.handleUpdate.bind(this)
     this.handleQuery = this.handleQuery.bind(this)
