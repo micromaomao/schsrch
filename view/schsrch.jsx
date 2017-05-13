@@ -12,9 +12,12 @@ class SchSrch extends React.Component {
     super()
     this.state = {
       coverHideAnimation: 0,
-      view: 'home'
+      view: 'home',
+      viewScrollAtTop: false
     }
     this.handleUpdate = this.handleUpdate.bind(this)
+    this.handleQuery = this.handleQuery.bind(this)
+    this.handleSearchContainScroll = this.handleSearchContainScroll.bind(this)
     // UI Components should support server rendering to allow javascript-disabled users to use this App.
     // The DOM produced by server and client javascript could (and should) differ.
     if (AppState.getState().serverrender) {
@@ -95,7 +98,9 @@ class SchSrch extends React.Component {
   renderHome () {
     return (
       <div className='view view-home'>
-        <SearchBar ref={f => this.searchbar = f} big={true} onQuery={this.handleQuery} loading={false} />
+        <div className={'searchbarcontain'}>
+          <SearchBar key='searchbar' ref={f => this.searchbar = f} big={true} onQuery={this.handleQuery} loading={false} />
+        </div>
         <Description />
       </div>
     )
@@ -105,9 +110,11 @@ class SchSrch extends React.Component {
     query = query.query
     return (
       <div className='view view-search'>
-        <SearchBar ref={f => this.searchbar = f} big={false} onQuery={this.handleQuery}
-          loading={AppState.getState().querying.loading || false} />
-        <div className='searchcontain'>
+        <div className={'searchbarcontain' + (this.state.viewScrollAtTop ? '' : ' shadow')}>
+          <SearchBar key='searchbar' ref={f => this.searchbar = f} big={false} onQuery={this.handleQuery}
+            loading={AppState.getState().querying.loading || false} />
+        </div>
+        <div className='searchcontain' onScroll={this.handleSearchContainScroll}>
           <SearchResult
             querying={AppState.getState().querying}
             onRetry={() => this.handleQuery(AppState.getState().querying.query)}
@@ -119,6 +126,9 @@ class SchSrch extends React.Component {
           )}
       </div>
     )
+  }
+  handleSearchContainScroll (evt) {
+    this.setState({viewScrollAtTop: evt.target.scrollTop < 5})
   }
 
   handleQuery (query) {
@@ -137,6 +147,7 @@ class SchSrch extends React.Component {
         AppState.dispatch({type: 'queryError', query, error: err})
       })
     }
+    this.setState({viewScrollAtTop: true})
   }
   renderDisclaim () {
     return (<Disclaimer />)
