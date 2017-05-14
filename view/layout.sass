@@ -70,13 +70,15 @@ body
         > .shadow
           box-shadow: 0 2px 2px rgba(black, 0.3)
           z-index: 10
-      > .view.sidepane
-        flex-grow: 0
-        flex-basis: 500px
       > .filepreview
         flex-grow: 3
         flex-shrink: 0
         border-left: solid 2px $color-primary
+    > .viewcontain.sidepane
+      > .view
+        flex-grow: 0
+        flex-shrink: 1
+        flex-basis: 500px
 
 .contentblackcover
   z-index: 2

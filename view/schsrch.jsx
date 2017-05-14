@@ -62,6 +62,7 @@ class SchSrch extends React.Component {
       }
     })()
     let previewing = AppState.getState().previewing
+    let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
       <div className='schsrch'>
         {this.state.server ? null : (
@@ -91,7 +92,7 @@ class SchSrch extends React.Component {
               )
             : null
           }
-          <div className='viewcontain'>
+          <div className={'viewcontain' + (displayingBigPreview ? ' sidepane' : '')}>
             {view}
             {this.shouldShowBigPreview() && previewing
               ? (
@@ -109,10 +110,8 @@ class SchSrch extends React.Component {
     return this.state.server ? false : window.innerWidth >= 1100
   }
   renderHome () {
-    let previewing = AppState.getState().previewing
-    let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
-      <div className={'view view-home' + (displayingBigPreview ? ' sidepane' : '')}>
+      <div className='view view-home'>
         <div className={'searchbarcontain'}>
           <SearchBar key='searchbar' ref={f => this.searchbar = f} big={true} onQuery={this.handleQuery} loading={false} />
         </div>
@@ -126,7 +125,7 @@ class SchSrch extends React.Component {
     let previewing = AppState.getState().previewing
     let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
-      <div className={'view view-search' + (displayingBigPreview ? ' sidepane' : '')}>
+      <div className='view view-search'>
         <div className={'searchbarcontain prepare-shadow' + (this.state.viewScrollAtTop ? '' : ' shadow')}>
           <SearchBar key='searchbar' ref={f => this.searchbar = f} big={false} onQuery={this.handleQuery}
             loading={AppState.getState().querying.loading || false} />
@@ -168,7 +167,11 @@ class SchSrch extends React.Component {
     this.setState({viewScrollAtTop: true})
   }
   renderDisclaim () {
-    return (<Disclaimer />)
+    return (
+        <div className='view'>
+          <Disclaimer />
+        </div>
+      )
   }
   componentDidMount () {
     this.handleUpdate()
