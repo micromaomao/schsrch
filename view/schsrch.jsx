@@ -109,8 +109,10 @@ class SchSrch extends React.Component {
     return this.state.server ? false : window.innerWidth >= 1100
   }
   renderHome () {
+    let previewing = AppState.getState().previewing
+    let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
-      <div className='view view-home'>
+      <div className={'view view-home' + (displayingBigPreview ? ' sidepane' : '')}>
         <div className={'searchbarcontain'}>
           <SearchBar key='searchbar' ref={f => this.searchbar = f} big={true} onQuery={this.handleQuery} loading={false} />
         </div>
