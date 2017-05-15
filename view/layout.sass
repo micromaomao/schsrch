@@ -23,6 +23,8 @@ body
   font-family: sans-serif
   *
     box-sizing: border-box
+    overflow-wrap: break-word
+    word-wrap: break-word
 
 .schsrch
   min-width: 200px
@@ -64,6 +66,8 @@ body
       align-items: stretch
       > .view
         flex-grow: 1
+        flex-shrink: 1
+        max-width: 100%
         > .prepare-shadow
           transition: box-shadow 200ms
           will-change: box-shadow
@@ -79,6 +83,7 @@ body
         flex-grow: 0
         flex-shrink: 1
         flex-basis: 500px
+        max-width: 500px
 
 .contentblackcover
   z-index: 2
