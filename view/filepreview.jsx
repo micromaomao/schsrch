@@ -56,7 +56,7 @@ class FilePreview extends React.Component {
   }
   componentDidUpdate (prevProps, prevState) {
     if (prevProps.doc !== this.props.doc || prevProps.page !== this.props.page) {
-      this.sspdfView.reCenter()
+      this.sspdfView && this.sspdfView.reCenter()
       this.setState({pageInputValue: null, showingDir: false})
     }
     this.measureViewDim()
