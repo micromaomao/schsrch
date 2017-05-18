@@ -1,6 +1,7 @@
 $color-primary: #FF5722
 $color-link: #E91E63
 $color-secondary-text: #727272
+$color-filepreview-top: darken($color-primary, 20%)
 
 .icon
   display: inline-block
@@ -458,6 +459,11 @@ body
     &:hover
       color: lighten($color-link, 20%)
 
+.sidepane .view-search .searchresult
+  .set.current-previewing
+    background-color: rgba(#aaa, 0.1)
+    border-right: solid 2px $color-primary
+
 $feedback-top-height: 2rem + 1.3rem
 .feedback.hide
   visibility: hidden
@@ -549,7 +555,7 @@ $feedback-top-height: 2rem + 1.3rem
     flex-grow: 0
     flex-shrink: 0
   .loading, .error, .top
-    background-color: darken($color-primary, 20%)
+    background-color: $color-filepreview-top
   .top
     text-align: center
     font-size: 1rem

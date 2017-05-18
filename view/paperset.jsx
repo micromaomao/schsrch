@@ -24,7 +24,7 @@ class PaperSet extends React.Component {
     // sortedTypes is all the document in this set *except* the one that gets displayed its content in full text search.
     sortedTypes = set.types.slice(firstDoc !== null ? 1 : 0).sort((a, b) => PaperUtils.funcSortType(a.type, b.type))
     return (
-      <div className='set'>
+      <div className={'set' + (this.props.current ? ' current-previewing' : '')}>
         <div className='setname'>
           {subject
             ? <span className='subject'>

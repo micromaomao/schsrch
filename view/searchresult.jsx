@@ -97,18 +97,20 @@ class SearchResult extends React.Component {
               let elements = []
               bucket.sort(PaperUtils.funcSortSet).forEach(set => {
                 let psKey = PaperUtils.setToString(set)
-                elements.push(<PaperSet paperSet={set} key={psKey}
+                let previewing = this.props.previewing
+                let current = previewing !== null && previewing.psKey === psKey
+                elements.push(<PaperSet
+                    paperSet={set}
+                    key={psKey}
+                    current={current}
                     onOpenFile={(id, page) => {
                         AppState.dispatch({type: 'previewFile', fileId: id, page, psKey})
                       }}
-                  />)
-                let previewing = null
-                if ((previewing = this.props.previewing) !== null) {
-                  if (previewing.psKey === psKey) {
-                    elements.push(
-                      <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
-                    )
-                  }
+                    />)
+                if (current && this.props.showSmallPreview) {
+                  elements.push(
+                    <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
+                  )
                 }
               })
               return elements
@@ -125,21 +127,21 @@ class SearchResult extends React.Component {
                   // paperSet: { subject: ..., paper: ..., ..., types: [ {_id: <docId>, type: ..., index: { ... }}, {_id: <docId>, type: ...}... ] }
                   // query: the words user searched. Used for highlighting content.
                   let psKey = '!!index!' + set.index._id
+                  let previewing = this.props.previewing
+                  let current = previewing !== null && previewing.psKey === psKey
                   elements.push(<PaperSet
                     paperSet={Object.assign({}, metas, {types: [Object.assign({}, set.doc, {index: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})}
                     key={psKey}
                     query={query}
+                    current={current}
                     onOpenFile={(id, page) => {
                         AppState.dispatch({type: 'previewFile', fileId: id, page, psKey})
                       }}
                     />)
-                  let previewing = null
-                  if ((previewing = this.props.previewing) !== null) {
-                    if (previewing.psKey === psKey) {
-                      elements.push(
-                        <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
-                      )
-                    }
+                  if (current && this.props.showSmallPreview) {
+                    elements.push(
+                      <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
+                    )
                   }
                 })
                 return elements
