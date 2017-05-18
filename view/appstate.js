@@ -44,10 +44,9 @@ let AppState = createStore(function (state = {}, action) {
           querying: null
         })
       }
-      if (state.querying && state.querying.query === action.query.trim()) return state // Search query not changed.
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
-          query: action.query.trim(),
+          query: action.query,
           loading: true
         }),
         previewing: null
@@ -64,7 +63,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'queryError':
-      if (!(state.querying && state.querying.query === action.query.trim())) return state
+      if (!(state.querying && state.querying.query.trim() === action.query.trim())) return state
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
           loading: false,
@@ -73,7 +72,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'queryResult':
-      if (!(state.querying && state.querying.query === action.query.trim())) return state
+      if (!(state.querying && state.querying.query.trim() === action.query.trim())) return state
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
           loading: false,

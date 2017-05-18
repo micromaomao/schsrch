@@ -41,7 +41,7 @@ class SearchBar extends React.Component {
     }
     this.setState({query: val, lastQueryChange: Date.now(), lastTimeout: setTimeout(() => {
       if (val !== this.state.lastQuerySubmited)
-        this.props.onQuery && this.props.onQuery(val.trim())
+        this.props.onQuery && this.props.onQuery(val)
       this.setState({lastTimeout: null, lastQuerySubmited: val})
     }, immediate ? 1 : this.inputDelay), subjectHintSelect: null})
   }

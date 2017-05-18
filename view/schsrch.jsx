@@ -150,11 +150,15 @@ class SchSrch extends React.Component {
 
   handleQuery (query) {
     this.searchbar && this.searchbar.setQuery(query)
+    if (query.trim().length === 0) {
+      AppState.dispatch({type: 'query', query: ''})
+      return
+    }
     let oldQuery = AppState.getState().querying ? AppState.getState().querying.query : ''
     AppState.dispatch({type: 'query', query})
-    if (AppState.getState().querying && (AppState.getState().querying.query !== oldQuery || !AppState.getState().querying.result)) {
+    if (AppState.getState().querying && (AppState.getState().querying.query.trim() !== oldQuery.trim() || !AppState.getState().querying.result)) {
       AppState.dispatch({type: 'queryStartRequest'})
-      fetch('/search/?query=' + encodeURIComponent(query) + '&as=json').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
+      fetch('/search/?query=' + encodeURIComponent(query.trim()) + '&as=json').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
         if (result.response === 'error') {
           AppState.dispatch({type: 'queryError', query, error: result.err})
           return
@@ -163,6 +167,8 @@ class SchSrch extends React.Component {
       }, err => {
         AppState.dispatch({type: 'queryError', query, error: err})
       })
+    } else {
+      AppState.dispatch({type: 'queryResult', query, result: AppState.getState().querying.result})
     }
     this.setState({viewScrollAtTop: true})
   }
