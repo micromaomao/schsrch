@@ -48,8 +48,7 @@ let AppState = createStore(function (state = {}, action) {
         querying: Object.assign({}, state.querying || {}, {
           query: action.query,
           loading: true
-        }),
-        previewing: null
+        })
       })
     case 'replaceQuerying':
       return Object.assign({}, state, {
