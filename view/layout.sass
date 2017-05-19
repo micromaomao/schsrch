@@ -49,7 +49,7 @@ body
     width: 100%
     height: 100%
     min-width: 200px
-  > .content
+  > .content // This thing is 100%wh absolute positioned and will contain all main content. (i.e. not feedback dialog and it's back cover)
     overflow-x: hidden
     overflow-y: auto
     z-index: 1
@@ -60,7 +60,13 @@ body
       flex-grow: 0
       flex-shrink: 1
     > .viewcontain
+      // Contain all views:
+      //   .view-home
+      //   .view-search
+      //   .view-search + .filepreview (side pane)
       flex-grow: 1
+      flex-shrink: 1
+      max-height: 100vh
       display: flex
       flex-wrap: nowrap
       flex-direction: row
