@@ -192,6 +192,24 @@ class FilePreview extends React.Component {
             </div>
           )
           : (this.sspdfContainer = null)}
+        {!this.state.error && this.state.loading && !this.state.docJson
+          ? (
+            <div className='pdfview' ref={f => this.sspdfContainer = f}>
+              <SsPdfView
+                ref={f => this.sspdfView = f}
+                docJson={{
+                    width: 420,
+                    height: 594,
+                    rects: [],
+                    text: 'Loading placeholder',
+                    svg: require('raw-loader!./sspdf-loading-ani.svg')
+                  }}
+                width={this.state.measuredViewWidth}
+                height={this.state.measuredViewHeight}
+                noCacheImage={true} />
+            </div>
+          )
+          : null}
       </div>
     )
   }

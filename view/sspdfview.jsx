@@ -9,7 +9,7 @@ class SsPdfView extends React.Component {
       dragOrig: null,
       lastTapTime: 0,
       blobUrl: null,
-      cacheCanvas: null
+      cacheCanvas: null // will be set as a cached image of the document svg on `processDoc`
     }
     this.ctAnimation = null
     this.lastViewWidth = this.lastViewHeight = 0
@@ -18,7 +18,7 @@ class SsPdfView extends React.Component {
     this.handleUp = this.handleUp.bind(this)
     this.handleScroll = this.handleScroll.bind(this)
     this.ctAnimationId = 0
-    this.needPaintDirtyLayer = this.needClearDirtyLayer = false
+    this.needPaintDirtyLayer = this.needClearDirtyLayer = false // set by `render`: indicating whether to paint/clear the canvas once react rendered it.
     if (AppState.getState().serverrender) {
       this.state.server = true
     }
@@ -285,6 +285,8 @@ class SsPdfView extends React.Component {
       this.lastViewHeight = this.props.height
       this.reCenter()
     }
+
+    // Paint dirtyLayer when user drag/resize.
     if (!this.dirtyLayer) return
     let ctx = this.dirtyLayer.getContext('2d')
     if (this.needPaintDirtyLayer) {
@@ -319,7 +321,7 @@ class SsPdfView extends React.Component {
     }
   }
   processDoc ({svg, width, height}) {
-    const sf = 3
+    // Create blob url for putting in background-image.
     let oldUrl = this.state.blobUrl
     let blob = new Blob([svg], {type: 'image/svg+xml'})
     let blobUrl = URL.createObjectURL(blob)
@@ -327,6 +329,13 @@ class SsPdfView extends React.Component {
     if (oldUrl) {
       URL.revokeObjectURL(oldUrl)
     }
+
+    // Create cached image ("screenshot") of the document.
+    if (this.props.noCacheImage) {
+      this.setState({cacheCanvas: null})
+      return
+    }
+    const sf = 3
     let canvas = document.createElement('canvas')
     canvas.width = width * sf
     canvas.height = height * sf
