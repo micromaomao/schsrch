@@ -65,11 +65,21 @@ class FilePreview extends React.Component {
       || evt.key === '1' || evt.keyCode === 49) {
       this.changePage(0)
     } else if (evt.key === 'f' || evt.keyCode === 70) {
-      // TODO: fullscreen
+      this.toggleFullScreen()
     } else if (evt.key === 'd' || evt.keyCode === 68) {
       this.toggleDir()
     } else if (evt.key === 'q' || evt.keyCode === 81) {
       AppState.dispatch({type: 'closePreview'})
+    }
+  }
+  toggleFullScreen () {
+    if (window.document.fullscreenElement) {
+      window.document.exitFullscreen()
+      return
+    }
+    if (this.mainDiv) {
+      if (this.mainDiv.requestFullscreen)
+        this.mainDiv.requestFullscreen()
     }
   }
   componentWillReceiveProps (nextProps) {
@@ -153,7 +163,7 @@ class FilePreview extends React.Component {
       couldNext = this.props.page + 1 < this.state.docMeta.numPages
     }
     return (
-      <div className='filepreview'>
+      <div className='filepreview' ref={f => this.mainDiv = f}>
         {!this.state.docMeta && this.state.loading && !this.state.error
           ? <div className='loading'>
               Loading document...

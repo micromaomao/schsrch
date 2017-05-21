@@ -3,6 +3,7 @@
 require('babel-polyfill')
 require('fetch-polyfill')
 require('offline-plugin/runtime').install()
+require('fullscreen-api-polyfill')
 
 // AppState is like a global variable, where UI components can listen to change of state and response.
 // States include things like current query, current previewing documents, etc.
