@@ -28,6 +28,7 @@ class FilePreview extends React.Component {
     this.measureViewDimAF = null
     this.handlePageInputChange = this.handlePageInputChange.bind(this)
     this.measureViewDim = this.measureViewDim.bind(this)
+    this.handleGlobaleKey = this.handleGlobaleKey.bind(this)
   }
   measureViewDim () {
     if (!this.sspdfContainer) return (this.measureViewDimAF = requestAnimationFrame(this.measureViewDim))
@@ -43,6 +44,33 @@ class FilePreview extends React.Component {
       this.loadFromProps(this.props)
     }
     this.measureViewDim()
+    window.document.addEventListener('keydown', this.handleGlobaleKey, AppState.browserSupportsPassiveEvents ? {passive: true} : false)
+  }
+  componentWillUnmount () {
+    if (this.measureViewDimAF !== null) {
+      cancelAnimationFrame(this.measureViewDimAF)
+      this.measureViewDimAF = null
+      return
+    }
+    window.document.removeEventListener('keydown', this.handleGlobaleKey)
+  }
+  handleGlobaleKey (evt) {
+    if (evt.key === 'ArrowLeft' || evt.keyCode === 37
+      || evt.key === 'h' || evt.keyCode === 72) {
+      this.changePage(this.props.page - 1)
+    } else if (evt.key === 'ArrowRight' || evt.keyCode === 39
+      || evt.key === 'l' || evt.keyCode === 76) {
+      this.changePage(this.props.page + 1)
+    } else if (evt.key === '0' || evt.keyCode === 48
+      || evt.key === '1' || evt.keyCode === 49) {
+      this.changePage(0)
+    } else if (evt.key === 'f' || evt.keyCode === 70) {
+      // TODO: fullscreen
+    } else if (evt.key === 'd' || evt.keyCode === 68) {
+      this.toggleDir()
+    } else if (evt.key === 'q' || evt.keyCode === 81) {
+      AppState.dispatch({type: 'closePreview'})
+    }
   }
   componentWillReceiveProps (nextProps) {
     if (!this.props || nextProps.doc !== this.props.doc || nextProps.page !== this.props.page) {
@@ -60,13 +88,6 @@ class FilePreview extends React.Component {
       this.setState({pageInputValue: null, showingDir: false})
     }
     this.measureViewDim()
-  }
-  componentWillUnmount () {
-    if (this.measureViewDimAF !== null) {
-      cancelAnimationFrame(this.measureViewDimAF)
-      this.measureViewDimAF = null
-      return
-    }
   }
   load (doc = this.props.doc, page = this.props.page) {
     if (this.currentLoading && this.currentLoading.doc === doc && this.currentLoading.page === page) return // Avoid duplicate requests.
@@ -253,6 +274,7 @@ class FilePreview extends React.Component {
     window.open(`/doc/${this.state.docMeta ? this.state.docMeta._id : this.props.doc}/`)
   }
   changePage (page, highlightingQ) {
+    if (page < 0 || page >= this.state.docMeta.numPages) return
     AppState.dispatch({type: 'previewChangePage', page, highlightingQ})
   }
   selectQuestion (question, i) {
