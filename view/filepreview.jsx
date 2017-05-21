@@ -55,6 +55,7 @@ class FilePreview extends React.Component {
     window.document.removeEventListener('keydown', this.handleGlobaleKey)
   }
   handleGlobaleKey (evt) {
+    if (!AppState.shouldResponseKeyboardShortcut()) return
     if (evt.key === 'ArrowLeft' || evt.keyCode === 37
       || evt.key === 'h' || evt.keyCode === 72) {
       this.changePage(this.props.page - 1)
