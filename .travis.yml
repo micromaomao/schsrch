@@ -10,7 +10,7 @@ env:
 install:
   - find /usr -name '*poppler*.so*'
   - npm install -g npm@latest
-  - npm install --dev
+  - npm install
   - npm install coveralls
   - npm install istanbul
 services:
