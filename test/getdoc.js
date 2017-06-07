@@ -45,7 +45,7 @@ module.exports = (schsrch, dbModel) =>
                 }
               })
             })
-          })
+        })
       }
     }
     it('/doc/?as=blob', testBody(true))
