@@ -181,8 +181,14 @@ class SearchBar extends React.Component {
               value={this.state.query}
               placeholder={this.state.server && !this.state.query ? placeholderText : null}
               onChange={this.handleQueryChange}
-              onFocus={evt => this.setState({focus: true})}
-              onBlur={evt => this.setState({focus: false, subjectHintSelect: null})}
+              onFocus={evt => {
+                this.setState({focus: true})
+                AppState.dispatch({type: 'queryFocus'})
+              }}
+              onBlur={evt => {
+                this.setState({focus: false, subjectHintSelect: null})
+                AppState.dispatch({type: 'queryUnfocus'})
+              }}
               onKeyDown={this.handleKey}
               name='query'
               autoComplete='off' />

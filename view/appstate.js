@@ -1,4 +1,4 @@
-const InterfaceVersion = 4
+const InterfaceVersion = 5
 const { createStore } = require('redux')
 
 const init = {
@@ -13,7 +13,8 @@ const init = {
   serverrender: null,
   view: 'home',
   previewPages: {},
-  version: InterfaceVersion
+  version: InterfaceVersion,
+  queryFocusing: false
 }
 
 function setPreviewPages (previewPages, doc, page) {
@@ -140,6 +141,14 @@ let AppState = createStore(function (state = {}, action) {
         }),
         view: 'home'
       })
+    case 'queryFocus':
+      return Object.assign({}, state, {
+        queryFocusing: true
+      })
+    case 'queryUnfocus':
+      return Object.assign({}, state, {
+        queryFocusing: false
+      })
   }
 })
 
@@ -156,5 +165,7 @@ AppState.browserSupportsPassiveEvents = (() => {
   } catch (e) {}
   return supportsPassive
 })()
+
+AppState.shouldResponseKeyboardShortcut = () => !AppState.getState().queryFocusing // TODO: Ugly but quick hack, FIXME!
 
 module.exports = AppState
