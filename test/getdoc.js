@@ -22,7 +22,6 @@ module.exports = (schsrch, dbModel) =>
             .expect(res => res.header['content-length'].should.be.above(0))
             .buffer()
             .parse((res, callback) => {
-              res.setEncoding('binary')
               res.on('data', chunk => {
                 hash.write(chunk)
               })
