@@ -1,4 +1,4 @@
-const InterfaceVersion = 5
+const InterfaceVersion = 8
 const { createStore } = require('redux')
 
 const init = {
@@ -11,6 +11,7 @@ const init = {
   },
   previewing: null,
   serverrender: null,
+  collection: null,
   view: 'home',
   previewPages: {},
   version: InterfaceVersion,
@@ -31,7 +32,8 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, init, {
         serverrender: action.serverrender || true,
         view: action.serverrender.view || 'home',
-        querying: action.serverrender.querying || null
+        querying: action.serverrender.querying || null,
+        collection: action.serverrender.collection || null
       })
     case 'load':
       if (action.state.version !== InterfaceVersion) {
@@ -150,8 +152,13 @@ let AppState = createStore(function (state = {}, action) {
         queryFocusing: false
       })
     case 'view-collections':
+      if (state.view === 'collections' && state.collection.id === action.collectionId) return state
       return Object.assign({}, state, {
-        view: 'collections'
+        view: 'collections',
+        collection: {
+          id: action.collectionId,
+          loading: true
+        }
       })
   }
 })

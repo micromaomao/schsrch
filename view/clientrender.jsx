@@ -48,8 +48,8 @@ if (history.state) {
     }
   } else if (loc === '/disclaim/') {
     AppState.dispatch({type: 'disclaim'})
-  } else if (loc === '/collections/') {
-    AppState.dispatch({type: 'view-collections'})
+  } else if ((queryMatch = loc.match(/^\/collections\/([0-9a-f]+)\/$/))) {
+    AppState.dispatch({type: 'view-collections', collectionId: queryMatch[1]})
   } else {
     let nsState = readFromLocalStorage()
     nsState && AppState.dispatch({type: 'load', state: nsState})
@@ -66,9 +66,11 @@ AppState.subscribe(() => {
     if (nState.view !== 'home') {
       switch (nState.view) {
         case 'collections':
-        url = '/collections/'
+        url = `/collections/${nState.collection.id}/`
+        break
         default:
         url = '/' + encodeURIComponent(nState.view) + '/'
+        break
       }
     } else if (nState.querying && nState.querying.query.length > 0) {
       url = '/search/?as=page&query=' + encodeURIComponent(nState.querying.query)

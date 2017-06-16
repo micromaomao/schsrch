@@ -159,10 +159,11 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       }).catch(err => next(err))
     })
 
-    rMain.get('/collections/', function (req, res, next) {
+    rMain.get('/collections/:collectionId', function (req, res, next) {
+      let { collectionId } = req.params
       res.type('html')
       let $ = cheerio.load(indexHtml)
-      $('.react-root').html(serverRender({view: 'collections'}))
+      $('.react-root').html(serverRender({view: 'collections', collection: {id: collectionId}}))
       res.send($.html())
     })
 

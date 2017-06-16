@@ -7,6 +7,7 @@ const Disclaimer = require('./disclaimer.jsx')
 const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
 const FilePreview = require('./filepreview.jsx')
+const { CollectionsView } = require('./collections.jsx')
 
 class SchSrch extends React.Component {
   constructor () {
@@ -184,9 +185,9 @@ class SchSrch extends React.Component {
   }
   renderViewCollections () {
     return (
-        <div className='view view-collections'>
-          Hello world! Secret place.
-        </div>
+      <div className='view view-collections'>
+        <CollectionsView collection={AppState.getState().collection} />
+      </div>
     )
   }
   componentDidMount () {

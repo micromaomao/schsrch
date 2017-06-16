@@ -30,7 +30,7 @@ html
   body
     .react-root
     script.
-      document.getElementsByClassName('querybox')[0].placeholder = 'Still loading...'
+      (document.getElementsByClassName('querybox')[0] || {}).placeholder = 'Still loading...'
     each js in htmlWebpackPlugin.files.js
       script(src=js, async)
     != require('raw-loader!./index.svg')
