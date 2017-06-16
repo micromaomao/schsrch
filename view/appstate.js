@@ -157,8 +157,15 @@ let AppState = createStore(function (state = {}, action) {
         view: 'collections',
         collection: {
           id: action.collectionId,
-          loading: true
+          loading: true,
+          content: null
         }
+      })
+    case 'collection-edit-content':
+      return Object.assign({}, state, {
+        collection: Object.assign({}, state.collection, {
+          content: action.content
+        })
       })
   }
 })

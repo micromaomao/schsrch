@@ -1,19 +1,25 @@
 const React = require('react')
+const AppState = require('./appstate.js')
 
 class CollectionsView extends React.Component {
   constructor () {
     super()
-    this.state = {
-      content: ''
-    }
     this.handleInputChange = this.handleInputChange.bind(this)
   }
   handleInputChange (content) {
-    this.setState({content})
+    AppState.dispatch({type: 'collection-edit-content', content})
   }
   render () {
     let col = this.props.collection
     if (col === null) return null
+    if (AppState.getState().serverrender) {
+      return (
+        <noscript>
+          Collections can only be shown if you enable JavaScript.
+          <div className='small'>Sorry about that.</div>
+        </noscript>
+      )
+    }
     return (
       <div className='list'>
         <div className='top'>
@@ -22,7 +28,13 @@ class CollectionsView extends React.Component {
           <div className='menu'>&hellip;</div>
         </div>
         <div className='editorcontain'>
-          <Editor content={this.state.content} onChange={this.handleInputChange} />
+          {col.loading
+            ? (
+                <div className='loading'>Loading&hellip;</div>
+              )
+            : (
+                <Editor content={col.content} onChange={this.handleInputChange} />
+              )}
         </div>
         <div className='bottom'>
           Not saving&hellip;

@@ -26,7 +26,7 @@ body
 
 .schsrch
   min-width: 200px
-  noscript
+  > .content > noscript
     display: block
     text-align: center
     padding: 2rem
@@ -745,6 +745,14 @@ $feedback-top-height: 2rem + 1.3rem
         font-size: 75%
 
 .schsrch .view.view-collections
+  noscript
+    font-size: 1.1rem
+    text-align: center
+    padding: 1rem
+    display: block
+    .small
+      font-size: 0.8rem
+      color: $color-secondary-text
   > div
     width: 100%
     height: 100%
@@ -794,3 +802,8 @@ $feedback-top-height: 2rem + 1.3rem
         flex-grow: 1
         flex-shrink: 1
         overflow: auto
+        > .loading
+          text-align: center
+          color: $color-secondary-text
+          font-size: 1.2rem
+          line-height: 2
