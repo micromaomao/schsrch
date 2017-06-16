@@ -6,6 +6,7 @@ class CollectionsView extends React.Component {
   constructor (props) {
     super(props)
     this.handleInputChange = this.handleInputChange.bind(this)
+    this.handleTitleChange = this.handleTitleChange.bind(this)
     let col = this.props.collection
     if (!AppState.getState().serverrender) {
       if (col.lastSave && !col.lastSave.done) {
@@ -20,6 +21,11 @@ class CollectionsView extends React.Component {
   handleInputChange (content) {
     AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
       text: content
+    })})
+  }
+  handleTitleChange (evt) {
+    AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
+      name: evt.target.value
     })})
   }
   render () {
@@ -42,7 +48,14 @@ class CollectionsView extends React.Component {
       <div className='list'>
         <div className='top'>
           <div className='close'>Close</div>
-          <h1>{col.loading || col.error ? 'Collection\u2026' : col.id}</h1>
+          <h1>
+            {col.loading || col.error ? 'Collection\u2026'
+              : (col.content ? (typeof col.content.name === 'string' ? (
+                <input type='text' value={col.content.name} onInput={this.handleTitleChange} placeholder='(empty title)' />
+              ) : (
+                <input type='text' value='' placeholder='Untitled' className='untitled' onInput={this.handleTitleChange} />
+              )) : null)}
+          </h1>
           <div className='menu'>&hellip;</div>
         </div>
         <div className='editorcontain'>
