@@ -149,6 +149,10 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         queryFocusing: false
       })
+    case 'view-collections':
+      return Object.assign({}, state, {
+        view: 'collections'
+      })
   }
 })
 

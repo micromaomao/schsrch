@@ -59,6 +59,8 @@ class SchSrch extends React.Component {
           return AppState.getState().querying ? this.renderSearch() : this.renderHome()
         case 'disclaim':
           return this.renderDisclaim()
+        case 'collections':
+          return this.renderViewCollections()
       }
     })()
     let previewing = AppState.getState().previewing
@@ -179,6 +181,13 @@ class SchSrch extends React.Component {
           <Disclaimer />
         </div>
       )
+  }
+  renderViewCollections () {
+    return (
+        <div className='view view-collections'>
+          Hello world! Secret place.
+        </div>
+    )
   }
   componentDidMount () {
     this.handleUpdate()

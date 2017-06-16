@@ -159,6 +159,13 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       }).catch(err => next(err))
     })
 
+    rMain.get('/collections/', function (req, res, next) {
+      res.type('html')
+      let $ = cheerio.load(indexHtml)
+      $('.react-root').html(serverRender({view: 'collections'}))
+      res.send($.html())
+    })
+
     function processSSPDF (doc, pn) {
       return new Promise((resolve, reject) => {
         function postCache (stuff) {

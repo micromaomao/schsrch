@@ -37,7 +37,8 @@ if (history.state) {
 } else {
   AppState.dispatch({type: 'init'})
   let queryMatch
-  if ((queryMatch = window.location.toString().match(/\/search\/\?/))) {
+  let loc = location.pathname
+  if ((queryMatch = loc.match(/^\/search\/\?/))) {
     try {
       let o = JSON.parse(document.getElementsByClassName('react-root')[0].dataset.querying)
       if (typeof o !== 'object') throw new Error()
@@ -45,8 +46,10 @@ if (history.state) {
     } catch (e) {
       AppState.dispatch({type: 'query', query: ''})
     }
-  } else if ((queryMatch = window.location.toString().match(/\/disclaim\/$/))) {
+  } else if (loc === '/disclaim/') {
     AppState.dispatch({type: 'disclaim'})
+  } else if (loc === '/collections/') {
+    AppState.dispatch({type: 'view-collections'})
   } else {
     let nsState = readFromLocalStorage()
     nsState && AppState.dispatch({type: 'load', state: nsState})
@@ -61,9 +64,12 @@ AppState.subscribe(() => {
     let nState = AppState.getState()
     let url = '/'
     if (nState.view !== 'home') {
-      url = '/' + encodeURIComponent(nState.view) + '/'
-    } else if (nState.previewing) {
-      url = '/search/?as=page&query=' + encodeURIComponent(nState.previewing.psKey)
+      switch (nState.view) {
+        case 'collections':
+        url = '/collections/'
+        default:
+        url = '/' + encodeURIComponent(nState.view) + '/'
+      }
     } else if (nState.querying && nState.querying.query.length > 0) {
       url = '/search/?as=page&query=' + encodeURIComponent(nState.querying.query)
     }
