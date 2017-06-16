@@ -33,6 +33,7 @@ function readFromLocalStorage () {
 }
 
 if (history.state) {
+  console.log(history.state)
   AppState.dispatch({type: 'load', state: history.state})
 } else {
   AppState.dispatch({type: 'init'})

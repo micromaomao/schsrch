@@ -7,8 +7,14 @@ class CollectionsView extends React.Component {
     super(props)
     this.handleInputChange = this.handleInputChange.bind(this)
     let col = this.props.collection
-    if (col && col.loading && !AppState.getState().serverrender) {
-      this.startLoad()
+    if (!AppState.getState().serverrender) {
+      if (col.lastSave && !col.lastSave.done) {
+        this.uploadContentNow(true)
+      } else if (col && col.loading) {
+        this.startLoad()
+      } else if (col && !col.loading && col.rand === col.lastSave.rand) {
+        AppState.dispatch({type: 'collection-reload'})
+      }
     }
   }
   handleInputChange (content) {
@@ -61,7 +67,7 @@ class CollectionsView extends React.Component {
         </div>
         <div className='bottom'>
           {!col.content ? 'Fetching content from server\u2026' : null}
-          {col.lastSave && col.lastSave.done ? `Last saved: ${Math.round((Date.now() - (col.lastSave.time.getTime())) / 1000)}s ago.` : null}
+          {col.lastSave && col.lastSave.done ? `Last saved: ${Math.round((Date.now() - (col.lastSave.time)) / 1000)}s ago.` : null}
           {col.lastSave && !col.lastSave.done ? 'Saving\u2026' : null}
         </div>
       </div>
@@ -92,11 +98,11 @@ class CollectionsView extends React.Component {
     })
   }
 
-  uploadContentNow () {
+  uploadContentNow (force) {
     let col = this.props.collection
     if (!col || !col.content) return
     if (col.lastSave) {
-      if (col.lastSave.rand === col.rand) return
+      if (col.lastSave.rand === col.rand && !force) return
     }
     AppState.dispatch({type: 'collection-put-start', rand: col.rand})
     let ctHeaders = new Headers()
@@ -115,15 +121,21 @@ class CollectionsView extends React.Component {
     if (!col.lastSave || col.lastSave.done) {
       this.uploadContentNow()
     } else {
-      setTimeout(() => {
-        this.tryUpload()
-      }, 1000)
-      let lastSaveTime = col.lastSave.time
-      setTimeout(() => {
-        if (this.props.collection.lastSave && this.props.collection.lastSave.time === lastSaveTime) {
-          this.uploadContentNow()
-        }
-      }, 5000)
+      if (!this.last1sTimeout) {
+        this.last1sTimeout = setTimeout(() => {
+          this.last1sTimeout = null
+          this.tryUpload()
+        }, 1000)
+      }
+      let lastSaveRand = col.lastSave.rand
+      if (!this.last5sTimeout) {
+        this.last5sTimeout = setTimeout(() => {
+          this.last5sTimeout = null
+          if (this.props.collection.lastSave && this.props.collection.lastSave.rand === lastSaveRand && !this.props.collection.lastSave.done) {
+            this.uploadContentNow(true)
+          }
+        }, 5000)
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-const InterfaceVersion = 9
+const InterfaceVersion = 10
 const { createStore } = require('redux')
 
 const init = {
@@ -206,7 +206,7 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           lastSave: {
-            time: new Date(),
+            time: Date.now(),
             error: null,
             done: true,
             rand: action.rand
@@ -218,7 +218,7 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           lastSave: {
-            time: new Date(),
+            time: Date.now(),
             error: action.error,
             done: true
           }
@@ -229,7 +229,7 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           lastSave: {
-            time: new Date(),
+            time: Date.now(),
             error: null,
             done: false,
             rand: action.rand
