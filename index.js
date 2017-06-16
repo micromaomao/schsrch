@@ -215,6 +215,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
         req.on('data', chunk => {
           if (done) return
           body += chunk
+          // TODO length check
         })
         req.on('end', () => {
           if (done) return
