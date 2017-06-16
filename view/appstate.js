@@ -1,4 +1,4 @@
-const InterfaceVersion = 8
+const InterfaceVersion = 9
 const { createStore } = require('redux')
 
 const init = {
@@ -158,13 +158,82 @@ let AppState = createStore(function (state = {}, action) {
         collection: {
           id: action.collectionId,
           loading: true,
-          content: null
+          loadingError: null,
+          content: null,
+          lastSave: null,
+          rand: Math.random()
         }
       })
     case 'collection-edit-content':
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
-          content: action.content
+          content: action.content,
+          rand: Math.random()
+        })
+      })
+    case 'collection-load-error':
+      if (!state.collection) return
+      return Object.assign({}, state, {
+        collection: Object.assign({}, state.collection, {
+          error: action.error,
+          loading: false,
+          lastSave: null,
+          rand: Math.random()
+        })
+      })
+    case 'collection-load-data':
+      if (!state.collection) return
+      return Object.assign({}, state, {
+        collection: Object.assign({}, state.collection, {
+          error: null,
+          content: action.content,
+          loading: false,
+          lastSave: null,
+          rand: Math.random()
+        })
+      })
+    case 'collection-reload':
+      return Object.assign({}, state, {
+        collection: Object.assign({}, state.collection, {
+          error: null,
+          loading: true,
+          lastSave: null,
+          rand: Math.random()
+        })
+      })
+    case 'collection-put-done':
+      if (!state.collection) return
+      return Object.assign({}, state, {
+        collection: Object.assign({}, state.collection, {
+          lastSave: {
+            time: new Date(),
+            error: null,
+            done: true,
+            rand: action.rand
+          }
+        })
+      })
+    case 'collection-put-error':
+      if (!state.collection) return
+      return Object.assign({}, state, {
+        collection: Object.assign({}, state.collection, {
+          lastSave: {
+            time: new Date(),
+            error: action.error,
+            done: true
+          }
+        })
+      })
+    case 'collection-put-start':
+      if (!state.collection) return
+      return Object.assign({}, state, {
+        collection: Object.assign({}, state.collection, {
+          lastSave: {
+            time: new Date(),
+            error: null,
+            done: false,
+            rand: action.rand
+          }
         })
       })
   }

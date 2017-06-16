@@ -1,13 +1,20 @@
 const React = require('react')
 const AppState = require('./appstate.js')
+const FetchErrorPromise = require('./fetcherrorpromise.js')
 
 class CollectionsView extends React.Component {
-  constructor () {
-    super()
+  constructor (props) {
+    super(props)
     this.handleInputChange = this.handleInputChange.bind(this)
+    let col = this.props.collection
+    if (col && col.loading && !AppState.getState().serverrender) {
+      this.startLoad()
+    }
   }
   handleInputChange (content) {
-    AppState.dispatch({type: 'collection-edit-content', content})
+    AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
+      text: content
+    })})
   }
   render () {
     let col = this.props.collection
@@ -20,11 +27,16 @@ class CollectionsView extends React.Component {
         </noscript>
       )
     }
+    if (col.lastSave && col.lastSave.done) {
+      setTimeout(() => {
+        this.forceUpdate()
+      }, 1000)
+    }
     return (
       <div className='list'>
         <div className='top'>
           <div className='close'>Close</div>
-          <h1>{col.loading ? 'Collection\u2026' : col.name}</h1>
+          <h1>{col.loading || col.error ? 'Collection\u2026' : col.id}</h1>
           <div className='menu'>&hellip;</div>
         </div>
         <div className='editorcontain'>
@@ -32,15 +44,87 @@ class CollectionsView extends React.Component {
             ? (
                 <div className='loading'>Loading&hellip;</div>
               )
-            : (
-                <Editor content={col.content} onChange={this.handleInputChange} />
-              )}
+            : null}
+          {col.error
+            ? (
+                <div className='error'>
+                  Error: {col.error.message}
+                  <div className='retry' onClick={evt => AppState.dispatch({type: 'collection-reload'})}>Retry</div>
+                </div>
+              )
+            : null}
+          {col.content !== null && !col.loading
+            ? (
+                <Editor content={col.content.text || ''} onChange={this.handleInputChange} />
+              )
+            : null}
         </div>
         <div className='bottom'>
-          Not saving&hellip;
+          {!col.content ? 'Fetching content from server\u2026' : null}
+          {col.lastSave && col.lastSave.done ? `Last saved: ${Math.round((Date.now() - (col.lastSave.time.getTime())) / 1000)}s ago.` : null}
+          {col.lastSave && !col.lastSave.done ? 'Saving\u2026' : null}
         </div>
       </div>
     )
+  }
+  componentDidUpdate (prevProps, prevState) {
+    let col = this.props.collection
+    if (col && col.loading && (!prevProps.col || !prevProps.col.loading)) {
+      this.startLoad()
+    } else if (col && !col.loading && col.content) {
+      this.tryUpload()
+    }
+  }
+
+  startLoad () {
+    let col = this.props.collection
+    if (!col || !col.loading) return
+    fetch(`/collections/${col.id}/cloudstorage/`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
+      if (this.props.collection.id !== col.id) return
+      if (result.error) {
+        AppState.dispatch({type: 'collection-load-error', error: result.error})
+      } else {
+        AppState.dispatch({type: 'collection-load-data', content: result})
+      }
+    }, err => {
+      if (this.props.collection.id !== col.id) return
+      AppState.dispatch({type: 'collection-load-error', error: err})
+    })
+  }
+
+  uploadContentNow () {
+    let col = this.props.collection
+    if (!col || !col.content) return
+    if (col.lastSave) {
+      if (col.lastSave.rand === col.rand) return
+    }
+    AppState.dispatch({type: 'collection-put-start', rand: col.rand})
+    let ctHeaders = new Headers()
+    ctHeaders.append('Content-Type', 'application/json')
+    fetch(`/collections/${col.id}/cloudstorage/`, {method: 'PUT', body: JSON.stringify(col.content), headers: ctHeaders})
+      .then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
+        AppState.dispatch({type: 'collection-put-done', rand: col.rand})
+      }, err => {
+        AppState.dispatch({type: 'collection-put-error', error: err})
+      })
+  }
+
+  tryUpload () {
+    let col = this.props.collection
+    if (!col || col.loading || !col.content) return
+    if (!col.lastSave || col.lastSave.done) {
+      this.uploadContentNow()
+    } else {
+      setTimeout(() => {
+        this.tryUpload()
+      }, 1000)
+      let lastSaveTime = col.lastSave.time
+      setTimeout(() => {
+        if (this.props.collection.lastSave && this.props.collection.lastSave.time === lastSaveTime) {
+          this.uploadContentNow()
+        }
+      }, 5000)
+    }
   }
 }
 

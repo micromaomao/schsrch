@@ -28,7 +28,7 @@ if (process.env.NODE_ENV !== 'production') {
 module.exports = ({mongodb: db, elasticsearch: es}) => {
   let rMain = express.Router()
 
-  require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord}) => {
+  require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord, PastPaperCollection}) => {
     function statusInfo () {
       return Promise.all([PastPaperDoc.count({}), PastPaperIndex.count({}), PastPaperRequestRecord.count({})])
         .then(([docCount, indexCount, requestCount]) => {
@@ -165,6 +165,90 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       let $ = cheerio.load(indexHtml)
       $('.react-root').html(serverRender({view: 'collections', collection: {id: collectionId, loading: true}}))
       res.send($.html())
+    })
+
+    // TODO: record these requests.
+
+    rMain.get('/collections/:collectionId/cloudstorage/', function (req, res, next) {
+      let { collectionId } = req.params
+      PastPaperCollection.findOne({_id: collectionId}).then(doc => {
+        if (!doc) {
+          next()
+          return
+        }
+        res.type('json')
+        res.send(doc.content)
+      }, err => {
+        next(err)
+      })
+    })
+
+    rMain.post('/collections/new', function (req, res, next) {
+      let cl = new PastPaperCollection({
+        creationTime: Date.now(),
+        content: {}
+      })
+      cl.save().then(() => {
+        res.send({id: cl._id.toString()})
+      }, err => {
+        res.send({error: err.message})
+      })
+    })
+
+    rMain.put('/collections/:collectionId/cloudstorage/', function (req, res, next) {
+      let { collectionId } = req.params
+      PastPaperCollection.findOne({_id: collectionId}).then(collectionDoc => {
+        if (!collectionDoc) {
+          next()
+          return
+        }
+        let ctype = req.get('Content-Type')
+        let done = false
+        if (ctype !== 'application/json') {
+          res.status(415)
+          res.send('Content type incorrect.')
+          done = true
+          return
+        }
+        let body = ''
+        req.setEncoding('utf8')
+        req.on('data', chunk => {
+          if (done) return
+          body += chunk
+        })
+        req.on('end', () => {
+          if (done) return
+          done = true
+          body = body.trim()
+          if (body.length === 0) {
+            res.status(403)
+            res.send('Content is empty.')
+            return
+          }
+          let parsed = null
+          try {
+            parsed = JSON.parse(body)
+            if (typeof parsed !== 'object') {
+              throw new Error()
+            }
+          } catch (e) {
+            res.status(403)
+            res.send('Content is not valid JSON.')
+            return
+          }
+          // TODO: Validate ownership. DON'T FORGET.
+          collectionDoc.content = parsed
+          collectionDoc.save().then(() => {
+            res.status(200)
+            res.end()
+          }, err => {
+            res.status(403)
+            res.send(err.message)
+          })
+        })
+      }, err => {
+        next(err)
+      })
     })
 
     function processSSPDF (doc, pn) {
