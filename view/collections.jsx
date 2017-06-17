@@ -2,6 +2,8 @@ const React = require('react')
 const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
 
+const AllowedFormattingNodes = /^([biu]|del)$/i // <b>, <i>, <del>, <u>
+
 class CollectionsView extends React.Component {
   constructor (props) {
     super(props)
@@ -20,7 +22,7 @@ class CollectionsView extends React.Component {
   }
   handleInputChange (content) {
     AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
-      text: content
+      structure: content
     })})
   }
   handleTitleChange (evt) {
@@ -74,7 +76,7 @@ class CollectionsView extends React.Component {
             : null}
           {col.content !== null && !col.loading
             ? (
-                <Editor content={col.content.text || ''} onChange={this.handleInputChange} />
+                <Editor structure={col.content.structure || []} onChange={this.handleInputChange} />
               )
             : null}
         </div>
@@ -154,9 +156,19 @@ class CollectionsView extends React.Component {
 }
 
 class Editor extends React.Component {
-  constructor () {
-    super()
+  constructor (props) {
+    super(props)
     this.handleInput = this.handleInput.bind(this)
+  }
+  componentDidMount () {
+    if (this.props.structure && this.editorDOM) {
+      this.structure2dom(this.props.structure, this.editorDOM)
+    }
+  }
+  componentDidUpdate () {
+    if (this.props.structure && this.editorDOM) {
+      this.structure2dom(this.props.structure, this.editorDOM)
+    }
   }
   normalizeHTML (html = '') {
     let parser = new DOMParser()
@@ -168,7 +180,7 @@ class Editor extends React.Component {
     for (let i = 0; i < nodes.length; i++) {
       let node = nodes[i]
       if (node.nodeName === '#text') continue
-      if (node.nodeName.match(/^([bi]|del)$/i)) {
+      if (AllowedFormattingNodes.test(node.nodeName)) {
         let newElement = parsedDOM.createElement(node.nodeName)
         newElement.innerHTML = this.normalizeHTML(node.innerHTML)
         parsedDOM.body.replaceChild(newElement, nodes[i])
@@ -182,23 +194,119 @@ class Editor extends React.Component {
     }
     return parsedDOM.body.innerHTML
   }
-  handleInput (evt) {
-    if (this.props.onChange) {
-      this.props.onChange(this.normalizeHTML(evt.target.innerHTML))
+  html2structure (html) {
+    let parser = new DOMParser()
+    let parsedDOM = parser.parseFromString(html, 'text/html')
+    if (!parsedDOM.body) {
+      throw new Error('HTML invalid.')
+    }
+    let structure = [] // This get stored in the content of the collection.
+    /*
+      Each element of this structure array is either a:
+        * Paragraph containing formatted text: { type: 'text', html: normalizedHTML }
+          Mergeable.
+    */
+    let isLastNodeInline = false // Whether the last node is a part of a paragraph. I.e. #text, b, i, etc., rather than a concrete paragraph.
+    let nodes = parsedDOM.body.childNodes
+    for (let i = 0; i < nodes.length; i ++) {
+      let node = nodes[i]
+      if (node.nodeName.toLowerCase() === '#text' || AllowedFormattingNodes.test(node.nodeName)) {
+        if (isLastNodeInline && structure.length > 0) {
+          let lastStructure = Object.assign({}, structure[structure.length - 1])
+          if (!lastStructure.type === 'text') {
+            throw new Error("lastStructure isn't of type text but isLastNodeInline == true.")
+          }
+          lastStructure.html = this.normalizeHTML(lastStructure.html + (node.outerHTML || node.nodeValue || ''))
+          structure[structure.length - 1] = lastStructure
+        } else {
+          structure.push({
+            type: 'text',
+            html: this.normalizeHTML(node.outerHTML || node.nodeValue || '')
+          })
+        }
+        isLastNodeInline = true
+      } else if (node.nodeName.toLowerCase() === 'p') {
+        structure.push({
+          type: 'text',
+          html: this.normalizeHTML(node.innerHTML || node.nodeValue || '')
+        })
+        isLastNodeInline = false
+      } else if (node.nodeName.toLowerCase() === 'br') {
+        isLastNodeInline = false
+      } else {
+        isLastNodeInline = true
+      }
+    }
+    if (structure.length === 0) structure.push({type: 'text', html: ''})
+    let emptyParagraph = st => st.type === 'text' && st.html.trim() === ''
+    while(structure.length > 1 && emptyParagraph(structure[structure.length - 1])) {
+      structure.splice(structure.length - 1, 1)
+    }
+    return structure
+  }
+  structure2dom (structure, domElement) {
+    let createReplacementElementFromStructure = current => {
+      let newElement
+      switch (current.type) {
+        case 'text':
+        newElement = document.createElement('p')
+        newElement.innerHTML = this.normalizeHTML(current.html)
+        return newElement
+        default: return null
+      }
+    }
+    let i
+    for (i = 0; i < structure.length; i ++) {
+      let current = structure[i]
+      let currentElement = domElement.childNodes[i]
+      if (!currentElement) {
+        domElement.appendChild(createReplacementElementFromStructure(current))
+        continue
+      }
+      switch (current.type) {
+        case 'text':
+          if (currentElement.nodeName.toLowerCase() === 'p'
+              && currentElement.innerHTML === this.normalizeHTML(current.html)) continue
+          else {
+            domElement.replaceChild(createReplacementElementFromStructure(current), currentElement)
+          }
+          break
+        default:
+          break
+      }
+    }
+    // i == structure.length
+    while (domElement.childNodes.length > i) {
+      domElement.childNodes[i].remove()
+    }
+    let moveCursor = false
+    if (structure.length === 0) {
+      domElement.innerHTML = '<p></p>'
+      moveCursor = true
+    }
+    if (structure.length === 1 && structure[0].type === 'text' && /^.?$/.test(structure[0].html)) {
+      moveCursor = true
+    }
+    if (moveCursor) {
+      if (document.activeElement !== domElement) return
+      let rge = document.createRange()
+      rge.selectNodeContents(domElement.childNodes[0])
+      rge.collapse(false)
+      let sel = window.getSelection()
+      sel.removeAllRanges()
+      sel.addRange(rge)
     }
   }
-  shouldComponentUpdate(nextProps, nextState) {
-    if (!this.editorDOM) return true
-    if (this.normalizeHTML(nextProps.content) === this.editorDOM.innerHTML) {
-      return false
+  handleInput (evt) {
+    if (this.props.onChange) {
+      let structure = this.html2structure(evt.target.innerHTML)
+      this.props.onChange(structure)
     }
-    return true
   }
   render () {
     return (
       <div className='collectionEditor'>
-        <div className='content' contentEditable='true' ref={f => this.editorDOM = f} onInput={this.handleInput}
-          dangerouslySetInnerHTML={{__html: this.normalizeHTML(this.props.content)}} />
+        <div className='content' contentEditable='true' ref={f => this.editorDOM = f} onInput={this.handleInput} />
       </div>
     )
   }
