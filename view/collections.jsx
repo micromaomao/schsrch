@@ -134,7 +134,7 @@ class CollectionsView extends React.Component {
   tryUpload () {
     let col = this.props.collection
     if (!col || col.loading || !col.content) return
-    if (!col.lastSave || col.lastSave.done) {
+    if (!col.lastSave || col.lastSave.done && col.lastSave.time <= Date.now() - 1000) {
       this.uploadContentNow()
     } else {
       if (!this.last1sTimeout) {
