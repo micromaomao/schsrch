@@ -82,7 +82,8 @@ class CollectionsView extends React.Component {
         </div>
         <div className='bottom'>
           {!col.content ? 'Fetching content from server\u2026' : null}
-          {col.lastSave && col.lastSave.done ? `Last saved: ${Math.round((Date.now() - (col.lastSave.time)) / 1000)}s ago.` : null}
+          {col.lastSave && col.lastSave.done && !col.lastSave.error ? `Last saved: ${Math.round((Date.now() - (col.lastSave.time)) / 1000)}s ago.` : null}
+          {col.lastSave && col.lastSave.done && col.lastSave.error ? `Error saving collection: ${col.lastSave.error.message}` : null}
           {col.lastSave && !col.lastSave.done ? 'Saving\u2026' : null}
         </div>
       </div>
