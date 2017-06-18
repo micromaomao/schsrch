@@ -255,7 +255,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       })
     })
 
-    function requireAuthorization (req, res, next) {
+    function requireAuthentication (req, res, next) {
       let authHeader = req.get('Authorization')
       let tokenMatch
       if (!authHeader || !(tokenMatch = authHeader.match(/^Bearer\s+([0-9a-f]+)$/))) {
@@ -279,7 +279,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       }, err => next(err))
     }
 
-    rMain.get('/auth/', requireAuthorization, function (req, res, next) {
+    rMain.get('/auth/', requireAuthentication, function (req, res, next) {
       res.send(req.authId)
     })
     rMain.post('/auth/:username', function (req, res, next) {
