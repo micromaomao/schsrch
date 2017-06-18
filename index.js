@@ -5,6 +5,7 @@ const PaperUtils = require('./view/paperutils')
 const sspdf = require('./lib/sspdf')
 const fs = require('fs')
 const cheerio = require('cheerio')
+const crypto = require('crypto')
 require('./dist-server/serverrender')
 const serverRender = global.serverRender
 global.serverRender = null
@@ -28,7 +29,7 @@ if (process.env.NODE_ENV !== 'production') {
 module.exports = ({mongodb: db, elasticsearch: es}) => {
   let rMain = express.Router()
 
-  require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord, PastPaperCollection}) => {
+  require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord, PastPaperCollection, PastPaperId}) => {
     function statusInfo () {
       return Promise.all([PastPaperDoc.count({}), PastPaperIndex.count({}), PastPaperRequestRecord.count({})])
         .then(([docCount, indexCount, requestCount]) => {
@@ -186,6 +187,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     rMain.post('/collections/new', function (req, res, next) {
       let cl = new PastPaperCollection({
         creationTime: Date.now(),
+        ownerModifyTime: Date.now(),
         content: {}
       })
       cl.save().then(() => {
@@ -238,6 +240,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
             return
           }
           // TODO: Validate ownership. DON'T FORGET.
+          // TODO: collectionDoc.ownerModifyTime = Date.now()
           collectionDoc.content = parsed
           collectionDoc.save().then(() => {
             res.status(200)
@@ -250,6 +253,63 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       }, err => {
         next(err)
       })
+    })
+
+    function requireAuthorization (req, res, next) {
+      let authHeader = req.get('Authorization')
+      let tokenMatch
+      if (!authHeader || !(tokenMatch = authHeader.match(/^Bearer\s+([0-9a-f]+)$/))) {
+        res.status(400)
+        res.send('Authorization header invalid.')
+        return
+      }
+      let token = Buffer.from(tokenMatch[1], 'hex')
+      PastPaperId.findOneAndUpdate({authToken: token}, {$set: {lastSuccessLoginIp: req.ip, lastSuccessLoginTime: Date.now()}}, {
+        'new': false,
+        upsert: false,
+        fields: {authToken: false}
+      }).then(iddoc => {
+        if (!iddoc) {
+          res.status(401)
+          res.send('Authorization token invalid.')
+        } else {
+          req.authId = iddoc
+          next()
+        }
+      }, err => next(err))
+    }
+
+    rMain.get('/auth/', requireAuthorization, function (req, res, next) {
+      res.send(req.authId)
+    })
+    rMain.post('/auth/:username', function (req, res, next) {
+      let username = req.params.username.trim()
+      if (!/^[^\s]{1,}$/.test(username)) {
+        res.status(400)
+        res.send('Username invalid. Must not contain space.')
+        return
+      }
+      PastPaperId.findOne({username}, {_id: true}).then(existingId => {
+        if (existingId) {
+          res.status(400)
+          res.send(`Username ${username} already existed.`)
+          return
+        }
+        crypto.randomBytes(16, (err, newToken) => {
+          if (err) {
+            next(err)
+            return
+          }
+          let newId = new PastPaperId({
+            authToken: newToken,
+            creationTime: Date.now(),
+            username
+          })
+          newId.save().then(() => {
+            res.send({authToken: newToken.toString('hex')})
+          }, err => next(err))
+        })
+      }, err => next(err))
     })
 
     function processSSPDF (doc, pn) {
