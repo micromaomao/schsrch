@@ -76,5 +76,7 @@ function doTests () {
   require('./feedback.js')(schsrch, dbModel)
   require('./ciesubjects.js')()
   require('./paperutils.js')()
+  require('./auth.js')(schsrch, dbModel)
+  require('./collections.js')(schsrch, dbModel)
   run()
 }
