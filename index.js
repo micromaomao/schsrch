@@ -186,6 +186,15 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       }, err => next(err))
     }
 
+    function optionalAuthentication (req, res, next) {
+      if (req.get('Authorization')) {
+        requireAuthentication(req, res, next)
+      } else {
+        req.authId = null
+        next()
+      }
+    }
+
     rMain.get('/auth/', requireAuthentication, function (req, res, next) {
       res.send(req.authId)
     })
@@ -241,7 +250,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       res.send($.html())
     })
 
-    rMain.get('/collections/:collectionId/cloudstorage/', requireAuthentication, function (req, res, next) {
+    rMain.get('/collections/:collectionId/cloudstorage/', optionalAuthentication, function (req, res, next) {
       let { collectionId } = req.params
       PastPaperCollection.findOne({_id: collectionId}).then(doc => {
         if (!doc) {
@@ -249,11 +258,11 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           return
         }
         let allowedRead = false
-        if (req.authId._id.equals(doc.owner)) {
+        if (req.authId && req.authId._id.equals(doc.owner)) {
           allowedRead = true
         } else if (doc.publicRead) {
           allowedRead = true
-        } else if (doc.allowedRead.find(x => req.authId._id.equals(x))) {
+        } else if (req.authId && doc.allowedRead.find(x => req.authId._id.equals(x))) {
           allowedRead = true
         }
         if (allowedRead) {
