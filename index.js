@@ -160,100 +160,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       }).catch(err => next(err))
     })
 
-    rMain.get('/collections/:collectionId', function (req, res, next) {
-      let { collectionId } = req.params
-      res.type('html')
-      let $ = cheerio.load(indexHtml)
-      $('.react-root').html(serverRender({view: 'collections', collection: {id: collectionId, loading: true}}))
-      res.send($.html())
-    })
-
     // TODO: record these requests.
-
-    rMain.get('/collections/:collectionId/cloudstorage/', function (req, res, next) {
-      let { collectionId } = req.params
-      PastPaperCollection.findOne({_id: collectionId}).then(doc => {
-        if (!doc) {
-          next()
-          return
-        }
-        res.type('json')
-        res.send(doc.content)
-      }, err => {
-        next(err)
-      })
-    })
-
-    rMain.post('/collections/new', function (req, res, next) {
-      let cl = new PastPaperCollection({
-        creationTime: Date.now(),
-        ownerModifyTime: Date.now(),
-        content: {}
-      })
-      cl.save().then(() => {
-        res.send({id: cl._id.toString()})
-      }, err => {
-        res.send({error: err.message})
-      })
-    })
-
-    rMain.put('/collections/:collectionId/cloudstorage/', function (req, res, next) {
-      let { collectionId } = req.params
-      PastPaperCollection.findOne({_id: collectionId}).then(collectionDoc => {
-        if (!collectionDoc) {
-          next()
-          return
-        }
-        let ctype = req.get('Content-Type')
-        let done = false
-        if (ctype !== 'application/json') {
-          res.status(415)
-          res.send('Content type incorrect.')
-          done = true
-          return
-        }
-        let body = ''
-        req.setEncoding('utf8')
-        req.on('data', chunk => {
-          if (done) return
-          body += chunk
-          // TODO length check
-        })
-        req.on('end', () => {
-          if (done) return
-          done = true
-          body = body.trim()
-          if (body.length === 0) {
-            res.status(403)
-            res.send('Content is empty.')
-            return
-          }
-          let parsed = null
-          try {
-            parsed = JSON.parse(body)
-            if (typeof parsed !== 'object') {
-              throw new Error()
-            }
-          } catch (e) {
-            res.status(403)
-            res.send('Content is not valid JSON.')
-            return
-          }
-          // TODO: Validate ownership. DON'T FORGET.
-          // TODO: collectionDoc.ownerModifyTime = Date.now()
-          collectionDoc.content = parsed
-          collectionDoc.save().then(() => {
-            res.status(200)
-            res.end()
-          }, err => {
-            res.status(403)
-            res.send(err.message)
-          })
-        })
-      }, err => {
-        next(err)
-      })
-    })
 
     function requireAuthentication (req, res, next) {
       let authHeader = req.get('Authorization')
@@ -310,6 +217,123 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           }, err => next(err))
         })
       }, err => next(err))
+    })
+
+    rMain.post('/collections/new', requireAuthentication, function (req, res, next) {
+      let cl = new PastPaperCollection({
+        creationTime: Date.now(),
+        ownerModifyTime: Date.now(),
+        content: {},
+        owner: req.authId._id
+      })
+      cl.save().then(() => {
+        res.send({id: cl._id.toString()})
+      }, err => {
+        res.send({error: err.message})
+      })
+    })
+
+    rMain.get('/collections/:collectionId', function (req, res, next) {
+      let { collectionId } = req.params
+      res.type('html')
+      let $ = cheerio.load(indexHtml)
+      $('.react-root').html(serverRender({view: 'collections', collection: {id: collectionId, loading: true}}))
+      res.send($.html())
+    })
+
+    rMain.get('/collections/:collectionId/cloudstorage/', requireAuthentication, function (req, res, next) {
+      let { collectionId } = req.params
+      PastPaperCollection.findOne({_id: collectionId}).then(doc => {
+        if (!doc) {
+          next()
+          return
+        }
+        let allowedRead = false
+        if (req.authId._id.equals(doc.owner)) {
+          allowedRead = true
+        } else if (doc.publicRead) {
+          allowedRead = true
+        } else if (doc.allowedRead.find(x => req.authId._id.equals(x))) {
+          allowedRead = true
+        }
+        if (allowedRead) {
+          res.type('json')
+          res.send(doc.content)
+        } else {
+          res.status(401)
+          res.send('Access denied.')
+        }
+      }, err => {
+        next(err)
+      })
+    })
+
+    rMain.put('/collections/:collectionId/cloudstorage/', requireAuthentication, function (req, res, next) {
+      let { collectionId } = req.params
+      PastPaperCollection.findOne({_id: collectionId}).then(collectionDoc => {
+        if (!collectionDoc) {
+          next()
+          return
+        }
+        let ctype = req.get('Content-Type')
+        let done = false
+        if (ctype !== 'application/json') {
+          res.status(415)
+          res.send('Content type incorrect.')
+          done = true
+          return
+        }
+        let body = ''
+        req.setEncoding('utf8')
+        req.on('data', chunk => {
+          if (done) return
+          body += chunk
+          // TODO length check
+        })
+        req.on('end', () => {
+          if (done) return
+          done = true
+          body = body.trim()
+          if (body.length === 0) {
+            res.status(403)
+            res.send('Content is empty.')
+            return
+          }
+          let parsed = null
+          try {
+            parsed = JSON.parse(body)
+            if (typeof parsed !== 'object') {
+              throw new Error()
+            }
+          } catch (e) {
+            res.status(403)
+            res.send('Content is not valid JSON.')
+            return
+          }
+          let allowEdit = false
+          if (req.authId._id.equals(collectionDoc.owner)) {
+            allowEdit = true
+            collectionDoc.ownerModifyTime = Date.now()
+          } else if (collectionDoc.allowedWrite.find(x => req.authId._id.equals(x))) {
+            allowEdit = true
+          }
+          if (allowEdit) {
+            collectionDoc.content = parsed
+            collectionDoc.save().then(() => {
+              res.status(200)
+              res.end()
+            }, err => {
+              res.status(403)
+              res.send(err.message)
+            })
+          } else {
+            res.status(401)
+            res.send("Access denied.")
+          }
+        })
+      }, err => {
+        next(err)
+      })
     })
 
     function processSSPDF (doc, pn) {
