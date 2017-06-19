@@ -206,4 +206,181 @@ module.exports = (schsrch, dbModel) =>
         }, err => done(err))
       }, err => done(err))
     })
+
+    it('should not allow non-authenticated client to create collections.', function (done) {
+      PastPaperCollection.count().then(oldNum => {
+        supertest(schsrch)
+          .post('/collections/new/')
+          .expect(401)
+          .end(err => {
+            if (err) {
+              done(err)
+              return
+            }
+            PastPaperCollection.count().then(newNum => {
+              try {
+                newNum.should.equal(oldNum)
+                done()
+              } catch (e) {
+                done(e)
+              }
+            }, err => done(err))
+          })
+      }, err => done(err))
+    })
+    it('should create collections', function (done) {
+      let createdCollectionId
+      getNewId().then(newId => {
+        supertest(schsrch)
+          .post('/collections/new/')
+          .set('Authorization', 'Bearer ' + newId.tokenHex)
+          .expect(200)
+          .expect(res => res.body.should.be.an.Object())
+          .expect(res => (createdCollectionId = res.body.id).should.be.a.String())
+          .end(err => {
+            if (err) {
+              done(err)
+              return
+            }
+            PastPaperCollection.findOne({_id: createdCollectionId}).then(collectionDoc => {
+              try {
+                should.exist(collectionDoc, 'should have created the collection.')
+                collectionDoc.should.be.an.Object()
+                collectionDoc.creationTime.should.equal(collectionDoc.ownerModifyTime)
+                collectionDoc.owner.equals(newId.id).should.be.true()
+                done()
+              } catch (e) {
+                done(e)
+              }
+            }, err => done(err))
+          })
+      }, err => done(err))
+    })
+    
+    it('should be able to write to own collection', function (done) {
+      getNewId().then(owner => {
+        let col = new PastPaperCollection({
+          creationTime: Date.now(),
+          ownerModifyTime: Date.now(),
+          content: {},
+          owner: owner.id,
+          allowedWrite: []
+        })
+        let testContent = {name: 'test set name'}
+        col.save(() => {
+          supertest(schsrch)
+            .put(`/collections/${col._id}/cloudstorage/`)
+            .set('Authorization', 'Bearer ' + owner.tokenHex)
+            .set('Content-Type', 'application/json')
+            .send(testContent)
+            .expect(200)
+            .end(err => {
+              if (err) {
+                done(err)
+                return
+              }
+              PastPaperCollection.findOne({_id: col._id}).then(col => {
+                try {
+                  should.exist(col)
+                  col.should.be.an.Object()
+                  col.content.should.deepEqual(testContent)
+                  done()
+                } catch (e) {
+                  done(e)
+                }
+              }, err => done(err))
+            })
+        }, err => done(err))
+      }, err => done(err))
+    })
+
+    function allowedWriteTest (numPeers, testPeer, _antiTest) {
+      it(`should ${_antiTest ? 'not ' : ''}allow those ${_antiTest ? 'not ' : ''}in allowedWrite to write to the collection. (${_antiTest ? `outsider,` : `#${testPeer} in`} ${numPeers} peers)`, function (done) {
+        getNewId().then(owner => {
+          let idPromises = []
+          for (let i = 0; i < numPeers; i ++) {
+            idPromises.push(getNewId())
+          }
+          getNewId().then(stranger => {
+            Promise.all(idPromises).then(peers => {
+              let contentName = `Test ${owner.id.toString()}`
+              let originalContent = {name: contentName}
+              let testContentEdit = {name: 'Some new name' + contentName, text: 'Some new content ' + contentName}
+              let testee = new PastPaperCollection({
+                creationTime: Date.now(),
+                ownerModifyTime: Date.now(),
+                content: originalContent,
+                owner: owner.id,
+                publicRead: false,
+                allowedWrite: peers.map(peer => peer.id)
+              })
+              if (!_antiTest) {
+                testee.save().then(() => {
+                  supertest(schsrch)
+                    .put(`/collections/${testee._id.toString()}/cloudstorage/`)
+                    .set('Authorization', `Bearer ${peers[testPeer].tokenHex}`)
+                    .set('Content-Type', 'application/json')
+                    .send(testContentEdit)
+                    .expect(200)
+                    .end(err => {
+                      if (err) {
+                        done(err)
+                        return
+                      }
+                      PastPaperCollection.findOne({_id: testee._id}).then(testee => {
+                        try {
+                          should.exist(testee)
+                          testee.should.be.an.Object()
+                          testee.content.should.deepEqual(testContentEdit)
+                          done()
+                        } catch (e) {
+                          done(e)
+                        }
+                      })
+                    })
+                }, err => done(err))
+              } else {
+                testee.save().then(() => {
+                  supertest(schsrch)
+                    .put(`/collections/${testee._id.toString()}/cloudstorage/`)
+                    .set('Authorization', `Bearer ${stranger.tokenHex}`)
+                    .set('Content-Type', 'application/json')
+                    .send({content: testContentEdit})
+                    .expect(401)
+                    .expect(res => res.text.should.match(/denied/i))
+                    .end(err => {
+                      if (err) {
+                        done(err)
+                        return
+                      }
+                      PastPaperCollection.findOne({_id: testee._id}).then(testee => {
+                        try {
+                          should.exist(testee)
+                          testee.should.be.an.Object()
+                          testee.content.should.deepEqual(originalContent)
+                          done()
+                        } catch (e) {
+                          done(e)
+                        }
+                      })
+                    })
+                }, err => done(err))
+              }
+            })
+          })
+        }, err => done(err))
+      })
+      if (!_antiTest && testPeer === 0)
+        allowedWriteTest(numPeers, testPeer, true)
+    }
+
+    allowedWriteTest(1, 0)
+    allowedWriteTest(2, 0)
+    allowedWriteTest(2, 1)
+    allowedWriteTest(3, 0)
+    allowedWriteTest(3, 1)
+    allowedWriteTest(3, 2)
+    allowedWriteTest(30, 0)
+    for (let i = 0; i < 4; i ++)
+      allowedWriteTest(30, Math.floor(Math.random() * 30))
   })

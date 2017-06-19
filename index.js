@@ -165,7 +165,12 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     function requireAuthentication (req, res, next) {
       let authHeader = req.get('Authorization')
       let tokenMatch
-      if (!authHeader || !(tokenMatch = authHeader.match(/^Bearer\s+([0-9a-f]+)$/))) {
+      if (!authHeader) {
+        res.status(401)
+        res.send('Need login.')
+        return
+      }
+      if (!(tokenMatch = authHeader.match(/^Bearer\s+([0-9a-f]+)$/))) {
         res.status(400)
         res.send('Authorization header invalid.')
         return
