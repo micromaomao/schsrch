@@ -203,6 +203,20 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     rMain.get('/auth/', requireAuthentication, function (req, res, next) {
       res.send(req.authId)
     })
+
+    rMain.head('/auth/:username', function (req, res, next) {
+      let username = req.params.username.trim()
+      PastPaperId.count({username}).then(ct => {
+        if (ct === 0) {
+          res.status(404)
+          res.end()
+        } else {
+          res.status(200)
+          res.end()
+        }
+      })
+      // TODO: implement GET for this
+    })
     rMain.post('/auth/:username', function (req, res, next) {
       let username = req.params.username.trim()
       if (!/^[^\s]{1,}$/.test(username)) {

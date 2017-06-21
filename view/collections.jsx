@@ -7,15 +7,18 @@ const AllowedFormattingNodes = /^([biu]|del)$/i // <b>, <i>, <del>, <u>
 class CollectionsView extends React.Component {
   constructor (props) {
     super(props)
+    this.state = {
+      noEditAccess: false
+    }
     this.handleInputChange = this.handleInputChange.bind(this)
     this.handleTitleChange = this.handleTitleChange.bind(this)
     let col = this.props.collection
     if (!AppState.getState().serverrender) {
-      if (col.lastSave && !col.lastSave.done) {
+      if (col.lastSave && (!col.lastSave.done || col.lastSave.error)) {
         this.uploadContentNow(true)
       } else if (col && col.loading) {
         this.startLoad()
-      } else if (col && !col.loading && col.rand === col.lastSave.rand) {
+      } else if (col && !col.loading && (!col.lastSave || !col.lastSave.rand || col.rand === col.lastSave.rand)) {
         AppState.dispatch({type: 'collection-reload'})
       }
     }
@@ -46,16 +49,18 @@ class CollectionsView extends React.Component {
         this.forceUpdate()
       }, 1000)
     }
+    let lastSaveError = col.lastSave && col.lastSave.done && col.lastSave.error
+    let editDisabled = !AppState.getState().authToken || this.state.noEditAccess
     return (
-      <div className='list'>
+      <div className='doc'>
         <div className='top'>
           <div className='close'>Close</div>
           <h1>
             {col.loading || col.error ? 'Collection\u2026'
               : (col.content ? (typeof col.content.name === 'string' ? (
-                <input type='text' value={col.content.name} onInput={this.handleTitleChange} placeholder='(empty title)' />
+                <input type='text' value={col.content.name} onInput={this.handleTitleChange} placeholder='(empty title)' disabled={editDisabled} />
               ) : (
-                <input type='text' value='' placeholder='Untitled' className='untitled' onInput={this.handleTitleChange} />
+                <input type='text' value='' placeholder='Untitled' className='untitled' onInput={this.handleTitleChange} disabled={editDisabled} />
               )) : null)}
           </h1>
           <div className='menu'>&hellip;</div>
@@ -69,21 +74,33 @@ class CollectionsView extends React.Component {
           {col.error
             ? (
                 <div className='error'>
-                  Error: {col.error.message}
+                  Error: {col.error}
                   <div className='retry' onClick={evt => AppState.dispatch({type: 'collection-reload'})}>Retry</div>
+                </div>
+              )
+            : null}
+          {!AppState.getState().authToken
+            ? (
+                <div className='nologin'>
+                  <div className='big'>You aren't logged in.</div>
+                  <div>Please <a onClick={evt => AppState.dispatch({type: 'login-view'})}>log in</a> in order to edit or fork this collection.</div>
                 </div>
               )
             : null}
           {col.content !== null && !col.loading
             ? (
-                <Editor structure={col.content.structure || []} onChange={this.handleInputChange} />
+                <Editor structure={col.content.structure || []} onChange={this.handleInputChange} disabled={editDisabled} />
               )
             : null}
         </div>
-        <div className='bottom'>
+        <div className={'bottom' + (lastSaveError ? ' error' : '')}>
           {!col.content ? 'Fetching content from server\u2026' : null}
           {col.lastSave && col.lastSave.done && !col.lastSave.error ? `Last saved: ${Math.round((Date.now() - (col.lastSave.time)) / 1000)}s ago.` : null}
-          {col.lastSave && col.lastSave.done && col.lastSave.error ? `Error saving collection: ${col.lastSave.error.message}` : null}
+          {lastSaveError ? (
+            !this.state.noEditAccess
+              ? `Error saving collection: ${col.lastSave.error}. Your edit isn't uploaded yet.`
+              : `You can't edit this collection.`
+          ) : null}
           {col.lastSave && !col.lastSave.done ? 'Saving\u2026' : null}
         </div>
       </div>
@@ -91,7 +108,8 @@ class CollectionsView extends React.Component {
   }
   componentDidUpdate (prevProps, prevState) {
     let col = this.props.collection
-    if (col && col.loading && (!prevProps.col || !prevProps.col.loading)) {
+    if (col && col.loading // New collection not yet loaded
+      && (!prevProps.collection || !(prevProps.collection.loading && prevProps.collection.id === col.id))) {
       this.startLoad()
     } else if (col && !col.loading && col.content) {
       this.tryUpload()
@@ -101,7 +119,10 @@ class CollectionsView extends React.Component {
   startLoad () {
     let col = this.props.collection
     if (!col || !col.loading) return
-    fetch(`/collections/${col.id}/cloudstorage/`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
+    let authHeaders = new Headers()
+    if (AppState.getState().authToken)
+      authHeaders.append('Authorization', 'Bearer ' + AppState.getState().authToken)
+    fetch(`/collections/${col.id}/cloudstorage/`, {headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
       if (this.props.collection.id !== col.id) return
       if (result.error) {
         AppState.dispatch({type: 'collection-load-error', error: result.error})
@@ -110,7 +131,7 @@ class CollectionsView extends React.Component {
       }
     }, err => {
       if (this.props.collection.id !== col.id) return
-      AppState.dispatch({type: 'collection-load-error', error: err})
+      AppState.dispatch({type: 'collection-load-error', error: err.message})
     })
   }
 
@@ -121,19 +142,25 @@ class CollectionsView extends React.Component {
       if (col.lastSave.rand === col.rand && !force) return
     }
     AppState.dispatch({type: 'collection-put-start', rand: col.rand})
-    let ctHeaders = new Headers()
-    ctHeaders.append('Content-Type', 'application/json')
-    fetch(`/collections/${col.id}/cloudstorage/`, {method: 'PUT', body: JSON.stringify(col.content), headers: ctHeaders})
+    let headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    if (AppState.getState().authToken)
+      headers.append('Authorization', 'Bearer ' + AppState.getState().authToken)
+    fetch(`/collections/${col.id}/cloudstorage/`, {method: 'PUT', body: JSON.stringify(col.content), headers: headers})
       .then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
         AppState.dispatch({type: 'collection-put-done', rand: col.rand})
       }, err => {
-        AppState.dispatch({type: 'collection-put-error', error: err})
+        if (err.message.toString().match(/401/)) {
+          this.setState({noEditAccess: true})
+          AppState.dispatch({type: 'collection-reload'})
+        }
+        AppState.dispatch({type: 'collection-put-error', error: err.message})
       })
   }
 
   tryUpload () {
     let col = this.props.collection
-    if (!col || col.loading || !col.content) return
+    if (!col || col.loading || !col.content || this.state.noEditAccess) return
     if (!col.lastSave || col.lastSave.done && col.lastSave.time <= Date.now() - 1000) {
       this.uploadContentNow()
     } else {

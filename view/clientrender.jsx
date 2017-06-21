@@ -64,13 +64,17 @@ AppState.subscribe(() => {
   requestIdleCallback(() => {
     let nState = AppState.getState()
     let url = '/'
-    if (nState.view !== 'home') {
-      switch (nState.view) {
+    let stateView = nState.view
+    if (stateView === 'login') {
+      stateView = nState.loginView.from
+    }
+    if (stateView !== 'home') {
+      switch (stateView) {
         case 'collections':
         url = `/collections/${nState.collection.id}/`
         break
         default:
-        url = '/' + encodeURIComponent(nState.view) + '/'
+        url = '/' + encodeURIComponent(stateView) + '/'
         break
       }
     } else if (nState.querying && nState.querying.query.length > 0) {

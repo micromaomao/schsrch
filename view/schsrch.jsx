@@ -8,6 +8,7 @@ const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
 const FilePreview = require('./filepreview.jsx')
 const { CollectionsView } = require('./collections.jsx')
+const { LoginView } = require('./auth.jsx')
 
 class SchSrch extends React.Component {
   constructor () {
@@ -62,6 +63,8 @@ class SchSrch extends React.Component {
           return this.renderDisclaim()
         case 'collections':
           return this.renderViewCollections()
+        case 'login':
+          return this.renderViewLogin()
       }
     })()
     let previewing = AppState.getState().previewing
@@ -187,6 +190,13 @@ class SchSrch extends React.Component {
     return (
       <div className='view view-collections'>
         <CollectionsView collection={AppState.getState().collection} />
+      </div>
+    )
+  }
+  renderViewLogin () {
+    return (
+      <div className='view view-login'>
+        <LoginView loginState={AppState.getState().loginView} currentAuthToken={AppState.getState().authToken} />
       </div>
     )
   }

@@ -1,4 +1,4 @@
-const InterfaceVersion = 10
+const InterfaceVersion = 13
 const { createStore } = require('redux')
 
 const init = {
@@ -15,7 +15,9 @@ const init = {
   view: 'home',
   previewPages: {},
   version: InterfaceVersion,
-  queryFocusing: false
+  queryFocusing: false,
+  authToken: null,
+  loginView: null
 }
 
 function setPreviewPages (previewPages, doc, page) {
@@ -235,6 +237,19 @@ let AppState = createStore(function (state = {}, action) {
             rand: action.rand
           }
         })
+      })
+    case 'login-view':
+      return Object.assign({}, state, {
+        view: 'login',
+        loginView: {
+          from: state.view
+        }
+      })
+    case 'finish-login':
+      return Object.assign({}, state, {
+        authToken: action.token,
+        loginView: null,
+        view: (state.loginView ? state.loginView.from : state.view)
       })
   }
 })
