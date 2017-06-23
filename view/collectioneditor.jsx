@@ -80,11 +80,11 @@ class Editor extends React.Component {
       if (node.nodeName === '#text') continue
       if (AllowedFormattingNodes.test(node.nodeName)) {
         let newElement = parsedDOM.createElement(node.nodeName)
-        newElement.innerHTML = this.normalizeHTML(node.innerHTML)
+        newElement.innerHTML = this.normalizeHTML(node.innerHTML, nestedEditorNodeCallback)
         parsedDOM.body.replaceChild(newElement, node)
       } else if (/^(del|strike)$/i.test(node.nodeName)) {
         let newElement = parsedDOM.createElement('s') // <del>/<strike> -> <s>
-        newElement.innerHTML = this.normalizeHTML(node.innerHTML)
+        newElement.innerHTML = this.normalizeHTML(node.innerHTML, nestedEditorNodeCallback)
         parsedDOM.body.replaceChild(newElement, node)
       } else if (node.nodeName.toLowerCase() === 'br' && i === nodes.length - 1) { // Firefox wired behavior
         let newNode = parsedDOM.createElement('br')
@@ -92,6 +92,7 @@ class Editor extends React.Component {
       } else if (this.nodeIsEditorNode(node)) {
         if (nestedEditorNodeCallback) {
           nestedEditorNodeCallback(node)
+          this.recycleNode(node)
           node.remove()
         } else {
           let newNode = parsedDOM.createTextNode('<Invalid editor node>')
@@ -208,13 +209,14 @@ class Editor extends React.Component {
           this.recycleNode(currentElement)
           currentElement.remove() // To not complicate matters.
         }
-        return
+        return null
       }
       let reactElement = React.createElement(componentClass, {
         structure: current
       })
       let nodeSet = this.currentEditorNodes
       if (currentElement && this.nodeIsEditorNode(currentElement)) {
+        currentElement.dataset.editornode = 'true'
         currentElement.dataset.enType = current.type
         currentElement.contentEditable = 'false'
         ReactDOM.render(reactElement, currentElement, function () {
@@ -222,10 +224,11 @@ class Editor extends React.Component {
           nodeSet.set(currentElement, this)
         })
         touchedEditorNodes.add(currentElement)
+        return null
       } else {
         // Create a new node and render it.
         let newNode = document.createElement('div')
-        newNode.dataset.editornode = "true"
+        newNode.dataset.editornode = 'true'
         newNode.dataset.enType = current.type
         newNode.contentEditable = 'false'
         // <div data-editornode="true" data-en-type="hider"></div>
@@ -233,8 +236,11 @@ class Editor extends React.Component {
           this.recycleNode(currentElement)
           domElement.replaceChild(newNode, currentElement)
         }
-        ReactDOM.render(reactElement, newNode, a => {
+        ReactDOM.render(reactElement, newNode, function () {
           nodeSet.set(newNode, this)
+          if (this instanceof Editor || !this.props) {
+            debugger
+          }
         })
         touchedEditorNodes.add(newNode)
         return newNode
@@ -298,7 +304,8 @@ class Editor extends React.Component {
 
   handleInput (evt) {
     if (this.props.onChange) {
-      let structure = this.dom2structure(evt.target)
+      if (!evt && !this.editorDOM) return
+      let structure = this.dom2structure(evt ? evt.target : this.editorDOM)
       this.props.onChange(structure)
     }
   }
@@ -307,23 +314,52 @@ class Editor extends React.Component {
     if (this.commandBtnDisabled(cmd)) return
     document.execCommand('styleWithCSS', null, false)
     document.execCommand(cmd)
+    this.handleInput()
   }
   commandBtnDisabled (cmd) {
     let ele = this.editorDOM
     if (!ele || document.activeElement !== ele || (document.queryCommandEnabled && !document.queryCommandEnabled(cmd))) return true
     return false
   }
+  canInsertNow (type) {
+    let ele = this.editorDOM
+    if (!ele || document.activeElement !== ele) return false
+    let sel = window.getSelection()
+    if (sel.rangeCount !== 1) return false
+    if (document.queryCommandEnabled && !document.queryCommandEnabled('insertHTML')) return false
+      // Although this command is not used, queryCommandEnabled can be used to test if the cursor is in areas editable.
+    return true
+  }
+  insertEditorNode (type) {
+    if (!this.canInsertNow(type)) return
+    let sel = window.getSelection()
+    if (sel.rangeCount > 0) {
+      let range = sel.getRangeAt(0)
+      range.collapse(false)
+      let newNode = document.createElement('div')
+      newNode.dataset.editornode = 'true'
+      newNode.dataset.enType = type
+      newNode.contentEditable = 'false'
+      range.insertNode(newNode)
+      this.handleInput()
+    }
+  }
 
   render () {
     let commandBtnClass = cmd => cmd + (this.commandBtnDisabled(cmd) ? ' disabled' : '')
+    let canInsertBtnClass = cmd => cmd + (!this.canInsertNow(cmd) ? ' disabled' : '')
     return (
       <div className='collectionEditor'>
         <div className='sidebar' onMouseDown={evt => evt.preventDefault()}>
-          <div className='description'>fmt&hellip;</div>
+          <div className='description'>Aa</div>
           <div className={commandBtnClass('bold')} title='bold' onClick={evt => this.execCommandDirect('bold')}><b>B</b></div>
           <div className={commandBtnClass('italic')} title='italic' onClick={evt => this.execCommandDirect('italic')}><i>I</i></div>
           <div className={commandBtnClass('strikeThrough')} title='strike through' onClick={evt => this.execCommandDirect('strikeThrough')}><s>D</s></div>
           <div className={commandBtnClass('underline')} title='underline' onClick={evt => this.execCommandDirect('underline')}><u>U</u></div>
+          <div className='description'>+</div>
+          <div className={canInsertBtnClass('hider')} title='hider' onClick={evt => this.insertEditorNode('hider')}>
+            <svg className="icon ii-hider"><use href="#ii-hider" xlinkHref="#ii-hider" /></svg>
+          </div>
         </div>
         <div
           className={'content' + (this.props.disabled ? ' disabled' : '')}
