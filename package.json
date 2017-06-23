@@ -42,6 +42,8 @@
     "babel-preset-es2015": "^6.24.1",
     "css-loader": "^0.28.4",
     "elasticsearch": "^13.1.0",
+    "es6-map": "^0.1.5",
+    "es6-set": "^0.1.5",
     "express": "^4.15.3",
     "fetch-polyfill": "^0.8.2",
     "file-loader": "^0.11.2",
