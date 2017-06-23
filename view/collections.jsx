@@ -2,7 +2,7 @@ const React = require('react')
 const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
 
-const AllowedFormattingNodes = /^([biu]|del)$/i // <b>, <i>, <del>, <u>
+const AllowedFormattingNodes = /^([bius])$/i // <b>, <i>, <s>, <u>
 
 class CollectionsView extends React.Component {
   constructor (props) {
@@ -10,6 +10,7 @@ class CollectionsView extends React.Component {
     this.state = {
       noEditAccess: false
     }
+    this.setIntervaled = null
     this.handleInputChange = this.handleInputChange.bind(this)
     this.handleTitleChange = this.handleTitleChange.bind(this)
     let col = this.props.collection
@@ -43,11 +44,6 @@ class CollectionsView extends React.Component {
           <div className='small'>Sorry about that.</div>
         </noscript>
       )
-    }
-    if (col.lastSave && col.lastSave.done) {
-      setTimeout(() => {
-        this.forceUpdate()
-      }, 1000)
     }
     let lastSaveError = col.lastSave && col.lastSave.done && col.lastSave.error
     let editDisabled = !AppState.getState().authToken || this.state.noEditAccess
@@ -106,6 +102,7 @@ class CollectionsView extends React.Component {
       </div>
     )
   }
+
   componentDidUpdate (prevProps, prevState) {
     let col = this.props.collection
     if (col && col.loading // New collection not yet loaded
@@ -113,6 +110,16 @@ class CollectionsView extends React.Component {
       this.startLoad()
     } else if (col && !col.loading && col.content) {
       this.tryUpload()
+    }
+    if (col.lastSave && col.lastSave.done && !col.lastSave.error) {
+      if (!this.setIntervaled) {
+        this.setIntervaled = setInterval(() => {
+          this.forceUpdate()
+        }, 1000)
+      }
+    } else if (this.setIntervaled) {
+      clearInterval(this.setIntervaled)
+      this.setIntervaled = null
     }
   }
 
@@ -187,6 +194,7 @@ class Editor extends React.Component {
   constructor (props) {
     super(props)
     this.handleInput = this.handleInput.bind(this)
+    this.currentDOMStructure = null
   }
   componentDidMount () {
     if (this.props.structure && this.editorDOM) {
@@ -212,6 +220,10 @@ class Editor extends React.Component {
         let newElement = parsedDOM.createElement(node.nodeName)
         newElement.innerHTML = this.normalizeHTML(node.innerHTML)
         parsedDOM.body.replaceChild(newElement, nodes[i])
+      } else if (/^(del|strike)$/i.test(node.nodeName)) {
+        let newElement = parsedDOM.createElement('s') // <del>/<strike> -> <s>
+        newElement.innerHTML = this.normalizeHTML(node.innerHTML)
+        parsedDOM.body.replaceChild(newElement, nodes[i])
       } else if (node.nodeName.toLowerCase() === 'br' && i === nodes.length - 1) { // Firefox wired behavior
         let newNode = parsedDOM.createElement('br')
         parsedDOM.body.replaceChild(newNode, nodes[i])
@@ -222,6 +234,7 @@ class Editor extends React.Component {
     }
     return parsedDOM.body.innerHTML
   }
+
   html2structure (html) {
     let parser = new DOMParser()
     let parsedDOM = parser.parseFromString(html, 'text/html')
@@ -265,14 +278,18 @@ class Editor extends React.Component {
         isLastNodeInline = true
       }
     }
-    if (structure.length === 0) structure.push({type: 'text', html: ''})
-    let emptyParagraph = st => st.type === 'text' && st.html.trim() === ''
-    while(structure.length > 1 && emptyParagraph(structure[structure.length - 1])) {
+    let emptyParagraph = st => st.type === 'text' && st.html.replace(/<br>/i, '').trim() === ''
+    while (structure.length >= 2 && emptyParagraph(structure[structure.length - 1]) && emptyParagraph(structure[structure.length - 2])) {
       structure.splice(structure.length - 1, 1)
     }
-    return structure
+    return structure // Do not modify on top of this. Always create a new one.
   }
+
   structure2dom (structure, domElement) {
+    if (this.currentDOMStructure === structure) {
+      return
+    }
+    console.log('structure2dom')
     let createReplacementElementFromStructure = current => {
       let newElement
       switch (current.type) {
@@ -307,34 +324,49 @@ class Editor extends React.Component {
     while (domElement.childNodes.length > i) {
       domElement.childNodes[i].remove()
     }
-    let moveCursor = false
     if (structure.length === 0) {
       domElement.innerHTML = '<p></p>'
-      moveCursor = true
     }
-    if (structure.length === 1 && structure[0].type === 'text' && /^.?$/.test(structure[0].html)) {
-      moveCursor = true
+    if (document.activeElement === domElement) {
+      document.execCommand('insertBrOnReturn', null, false)
     }
-    if (moveCursor) {
-      if (document.activeElement !== domElement) return
-      let rge = document.createRange()
-      rge.selectNodeContents(domElement.childNodes[0])
-      rge.collapse(false)
-      let sel = window.getSelection()
-      sel.removeAllRanges()
-      sel.addRange(rge)
-    }
+    this.currentDOMStructure = structure
   }
+
   handleInput (evt) {
     if (this.props.onChange) {
       let structure = this.html2structure(evt.target.innerHTML)
       this.props.onChange(structure)
     }
   }
+  execCommandDirect (cmd) {
+    let ele = this.editorDOM
+    if (this.commandBtnDisabled(cmd)) return
+    document.execCommand('styleWithCSS', null, false)
+    document.execCommand(cmd)
+  }
+  commandBtnDisabled (cmd) {
+    let ele = this.editorDOM
+    if (!ele || document.activeElement !== ele || (document.queryCommandEnabled && !document.queryCommandEnabled(cmd))) return true
+    return false
+  }
+
   render () {
+    let commandBtnClass = cmd => cmd + (this.commandBtnDisabled(cmd) ? ' disabled' : '')
     return (
       <div className='collectionEditor'>
-        <div className='content' contentEditable='true' ref={f => this.editorDOM = f} onInput={this.handleInput} />
+        <div className='sidebar' onMouseDown={evt => evt.preventDefault()}>
+          <div className='description'>fmt&hellip;</div>
+          <div className={commandBtnClass('bold')} title='bold' onClick={evt => this.execCommandDirect('bold')}><b>B</b></div>
+          <div className={commandBtnClass('italic')} title='italic' onClick={evt => this.execCommandDirect('italic')}><i>I</i></div>
+          <div className={commandBtnClass('strikeThrough')} title='strike through' onClick={evt => this.execCommandDirect('strikeThrough')}><s>D</s></div>
+          <div className={commandBtnClass('underline')} title='underline' onClick={evt => this.execCommandDirect('underline')}><u>U</u></div>
+        </div>
+        <div
+          className={'content' + (this.props.disabled ? ' disabled' : '')}
+          contentEditable={this.props.disabled ? 'false' : 'true'}
+          ref={f => this.editorDOM = f}
+          onInput={this.handleInput} />
       </div>
     )
   }
