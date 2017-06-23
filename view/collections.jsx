@@ -114,7 +114,7 @@ class CollectionsView extends React.Component {
       if (!this.setIntervaled) {
         this.setIntervaled = setInterval(() => {
           this.forceUpdate()
-        }, 1000)
+        }, 500)
       }
     } else if (this.setIntervaled) {
       clearInterval(this.setIntervaled)
