@@ -105,12 +105,7 @@ class Editor extends React.Component {
     return parsedDOM.body.innerHTML
   }
 
-  html2structure (html) {
-    let parser = new DOMParser()
-    let parsedDOM = parser.parseFromString(html, 'text/html')
-    if (!parsedDOM.body) {
-      throw new Error('HTML invalid.')
-    }
+  dom2structure (domElement) {
     let structure = [] // This get stored in the content of the collection.
     /*
       Each element of this structure array is either a:
@@ -118,7 +113,7 @@ class Editor extends React.Component {
           Mergeable.
     */
     let isLastNodeInline = false // Whether the last node is a part of a paragraph. I.e. #text, b, i, etc., rather than a concrete paragraph.
-    let nodes = parsedDOM.body.childNodes
+    let nodes = domElement.childNodes
     for (let i = 0; i < nodes.length; i ++) {
       let node = nodes[i]
       let hangingEditorNodes = []
@@ -303,7 +298,7 @@ class Editor extends React.Component {
 
   handleInput (evt) {
     if (this.props.onChange) {
-      let structure = this.html2structure(evt.target.innerHTML)
+      let structure = this.dom2structure(evt.target)
       this.props.onChange(structure)
     }
   }
