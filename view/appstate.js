@@ -251,6 +251,15 @@ let AppState = createStore(function (state = {}, action) {
         loginView: null,
         view: (state.loginView ? state.loginView.from : state.view)
       })
+    case 'cancel-login':
+      return Object.assign({}, state, {
+        loginView: null,
+        view: (state.loginView ? state.loginView.from : state.view)
+      })
+    case 'clear-token':
+      return Object.assign({}, state, {
+        authToken: null
+      })
   }
 })
 

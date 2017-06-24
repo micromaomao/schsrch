@@ -69,7 +69,7 @@ class CollectionsView extends React.Component {
           {col.error
             ? (
                 <div className='error'>
-                  Error: {col.error}
+                  {col.error}
                   <div className='retry' onClick={evt => AppState.dispatch({type: 'collection-reload'})}>Retry</div>
                 </div>
               )

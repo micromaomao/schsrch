@@ -15,6 +15,19 @@ class LoginView extends React.Component {
     this.handleTokenInput = this.handleTokenInput.bind(this)
     this.handleUsernameInput = this.handleUsernameInput.bind(this)
   }
+  componentDidUpdate () {
+    this.tryExistingToken()
+  }
+  componentDidMount () {
+    this.tryExistingToken()
+  }
+  tryExistingToken () {
+    let existingToken = AppState.getState().authToken
+    if (existingToken && !this.state.requestState) {
+      AppState.dispatch({type: 'clear-token'})
+      this.tryToken(existingToken)
+    }
+  }
   render () {
     if (!this.props.loginState) return null
     let existingToken = AppState.getState().authToken
@@ -31,6 +44,7 @@ class LoginView extends React.Component {
         {!this.state.requestState && !existingToken && this.state.loginRegister === 'select'
           ? (
               <div className='rlSelect'>
+                <div className='back' onClick={evt => this.cancel()}>Close</div>
                 <p>
                   If you haven't created a SchSrch authentication token yet, please choose "New
                   Token". If you did created a token before and you backed it up, please enter
@@ -148,6 +162,7 @@ class LoginView extends React.Component {
       }
     })
   }
+
   doRegister (username = this.state.usernameInput) {
     if (username.length === 0) {
       this.setState({
@@ -170,6 +185,10 @@ class LoginView extends React.Component {
         lastError: err.message
       })
     })
+  }
+
+  cancel () {
+    AppState.dispatch({type: 'cancel-login'})
   }
 }
 
