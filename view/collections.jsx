@@ -187,6 +187,12 @@ class CollectionsView extends React.Component {
       }
     }
   }
+
+  componentWillUnmount () {
+    if (this.setIntervaled) {
+      clearInterval(this.setIntervaled)
+    }
+  }
 }
 
 module.exports = { CollectionsView }
