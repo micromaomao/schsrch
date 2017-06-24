@@ -88,14 +88,11 @@ class CollectionsView extends React.Component {
               )
             : null}
         </div>
-        <div className={'bottom' + (lastSaveError ? ' error' : '')}>
-          {!col.content ? 'Fetching content from server\u2026' : null}
-          {col.lastSave && col.lastSave.done && !col.lastSave.error ? `Last saved: ${Math.round((Date.now() - (col.lastSave.time)) / 1000)}s ago.` : null}
-          {lastSaveError ? (
-            !this.state.noEditAccess
-              ? `Error saving collection: ${col.lastSave.error}. Your edit isn't uploaded yet.`
-              : `You can't edit this collection.`
-          ) : null}
+        <div className={'bottom' + ((lastSaveError || this.state.noEditAccess) ? ' error' : '')}>
+          {col.loading ? 'Fetching content from server\u2026' : null}
+          {!this.state.noEditAccess && col.lastSave && col.lastSave.done && !col.lastSave.error ? `Last saved: ${Math.round((Date.now() - (col.lastSave.time)) / 1000)}s ago.` : null}
+          {!this.state.noEditAccess && lastSaveError ? `Error saving collection: ${col.lastSave.error}. Your edit isn't uploaded yet.` : null}
+          {this.state.noEditAccess ? `You can't edit this collection.` : null}
           {col.lastSave && !col.lastSave.done ? 'Saving\u2026' : null}
         </div>
       </div>
