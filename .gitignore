@@ -4,3 +4,4 @@ node_modules
 build
 coverage
 bootstrapPapers.dbdump.*
+package-lock.json
