@@ -14,7 +14,8 @@ class BaseEditorNodeComponent extends React.Component {
   constructor (props) {
     super(props)
     // props.structure: structure for this editor node.
-    if (new.target === Abstract) throw new Error('abstract.')
+    this.handleDelete = this.handleDelete.bind(this)
+    if (new.target === BaseEditorNodeComponent) throw new Error('abstract.')
   }
   render () {
     // assert(this.props.structure.type === ...)
@@ -24,9 +25,15 @@ class BaseEditorNodeComponent extends React.Component {
     // return { enType: ..., ... }
     throw new Error('abstract.')
   }
+  handleDelete (evt) {
+    if (!this.props.onUpdateStructure) {
+      throw new Error('no props.onUpdateStructure')
+    }
+    this.props.onUpdateStructure(null)
+  }
 }
 
-class HiderEditorNode extends React.Component {
+class HiderEditorNode extends BaseEditorNodeComponent {
   static structureFromDataset (dataset) {
     if (dataset.enType !== 'hider') throw new Error('dataset invalid.')
     return {
@@ -35,7 +42,10 @@ class HiderEditorNode extends React.Component {
   }
   render () {
     return (
-      <div>
+      <div className='enHider'>
+        <span className='delete' onClick={this.handleDelete}>
+          <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
+        </span>
         Hello world! Time: {Date.now()}.
       </div>
     )
@@ -211,8 +221,18 @@ class Editor extends React.Component {
         }
         return null
       }
+      let thisEditor = this
       let reactElement = React.createElement(componentClass, {
-        structure: current
+        structure: current,
+        onUpdateStructure: function (newStructure) {
+          if (thisEditor.props.structure !== structure) {
+            thisEditor.forceUpdate()
+            return
+          }
+          let newStructureArr = structure.map(st => (st === current ? newStructure : st))
+            .filter(a => a !== null)
+          thisEditor.props.onChange(newStructureArr)
+        }
       })
       let nodeSet = this.currentEditorNodes
       if (currentElement && this.nodeIsEditorNode(currentElement)) {
@@ -238,9 +258,6 @@ class Editor extends React.Component {
         }
         ReactDOM.render(reactElement, newNode, function () {
           nodeSet.set(newNode, this)
-          if (this instanceof Editor || !this.props) {
-            debugger
-          }
         })
         touchedEditorNodes.add(newNode)
         return newNode
