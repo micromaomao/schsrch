@@ -173,9 +173,9 @@ class FilePreview extends React.Component {
         {this.state.docMeta
           ? (
               <div className='top'>
-                <span className={'prev' + (couldPrev ? '' : ' disabled')} onClick={evt => couldPrev && this.changePage(this.props.page - 1)}>
+                <a className={'prev' + (couldPrev ? '' : ' disabled')} onClick={evt => couldPrev && this.changePage(this.props.page - 1)}>
                   <svg className="icon ii-l"><use href="#ii-l" xlinkHref="#ii-l"></use></svg>
-                </span>
+                </a>
                 <span className='doc'>
                   {this.state.docMeta.type.toUpperCase()}
                 </span>
@@ -189,6 +189,7 @@ class FilePreview extends React.Component {
                 <a className='dir' onClick={evt => this.toggleDir()}>
                   <svg className="icon ii-dir"><use href="#ii-dir" xlinkHref="#ii-dir" /></svg>
                 </a>
+                &nbsp;
                 <a className='download' onClick={evt => this.download()}>
                   <svg className="icon ii-dl"><use href="#ii-dl" xlinkHref="#ii-dl" /></svg>
                 </a>
@@ -196,9 +197,10 @@ class FilePreview extends React.Component {
                 <a className='close' onClick={evt => AppState.dispatch({type: 'closePreview'})}>
                   <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
                 </a>
-                <span className={'next' + (couldNext ? '' : ' disabled')} onClick={evt => couldNext && this.changePage(this.props.page + 1)}>
+                &nbsp;
+                <a className={'next' + (couldNext ? '' : ' disabled')} onClick={evt => couldNext && this.changePage(this.props.page + 1)}>
                   <svg className="icon ii-r"><use href="#ii-r" xlinkHref="#ii-r"></use></svg>
-                </span>
+                </a>
               </div>
             )
           : null}
