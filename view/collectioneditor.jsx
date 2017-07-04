@@ -15,6 +15,7 @@ class BaseEditorNodeComponent extends React.Component {
     super(props)
     // props.structure: structure for this editor node.
     this.handleDelete = this.handleDelete.bind(this)
+    this.handleSorthand = this.handleSorthand.bind(this)
     if (new.target === BaseEditorNodeComponent) throw new Error('abstract.')
   }
   render () {
@@ -24,6 +25,27 @@ class BaseEditorNodeComponent extends React.Component {
   toDataset () {
     // return { enType: ..., ... }
     throw new Error('abstract.')
+  }
+  getSorthand () {
+    if (this.props.disabled) return null
+    return (
+      <span className='sorthand' onMouseDown={this.handleSorthand} onMouseUp={this.handleSorthand} onTouchStart={this.handleSorthand}>
+        <svg className="icon ii-sorthand"><use href="#ii-sorthand" xlinkHref="#ii-sorthand" /></svg>
+      </span>
+    )
+  }
+  getDeleteBtn () {
+    if (this.props.disabled) return null
+    return (
+      <span className='delete' onClick={this.handleDelete}>
+        <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
+      </span>
+    )
+  }
+  handleSorthand () {
+    if (this.props.onSorthand) {
+      this.props.onSorthand()
+    }
   }
   handleDelete (evt) {
     if (!this.props.onUpdateStructure) {
@@ -51,12 +73,8 @@ class HiderEditorNode extends BaseEditorNodeComponent {
     return (
       <div className='enHider'>
         <div className='menu'>
-          {!this.props.disabled
-            ? (
-                <span className='delete' onClick={this.handleDelete}>
-                  <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
-                </span>
-              ) : null}
+          {this.getSorthand()}
+          {this.getDeleteBtn()}
           <span className='hide' onClick={this.toggleHide}>
             <svg className="icon ii-hider"><use href="#ii-hider" xlinkHref="#ii-hider" /></svg>
           </span>
@@ -99,6 +117,34 @@ class HiderEditorNode extends BaseEditorNodeComponent {
 }
 editorNodeTypeNameTable.hider = HiderEditorNode
 
+class PaperCropEditorNode extends BaseEditorNodeComponent {
+  static structureFromDataset (dataset) {
+    if (dataset.enType !== 'paperCrop') throw new Error('dataset invalid.')
+    return {
+      type: 'paperCrop'
+    }
+  }
+  constructor (props) {
+    super(props)
+  }
+  render () {
+    return (
+      <div className='enPaperCrop'>
+        {this.getSorthand()}
+        {this.getDeleteBtn()}
+        &nbsp;
+        Hello.
+      </div>
+    )
+  }
+  toDataset () {
+    return {
+      enType: 'paperCrop'
+    }
+  }
+}
+editorNodeTypeNameTable.paperCrop = PaperCropEditorNode
+
 class Editor extends React.Component {
   constructor (props) {
     super(props)
@@ -111,7 +157,7 @@ class Editor extends React.Component {
     if (this.props.structure && this.editorDOM) {
       this.structure2dom(this.props.structure, this.editorDOM)
     }
-    if (this.btnStateInterval === null) this.btnStateInterval = setInterval(() => this.forceUpdate(), 100)
+    if (this.btnStateInterval === null) this.btnStateInterval = setInterval(() => this.forceUpdate(), 1000)
   }
   componentWillUnmount () {
     if (this.btnStateInterval !== null) {
@@ -162,7 +208,11 @@ class Editor extends React.Component {
         parsedDOM.body.replaceChild(newNode, node)
       }
     }
-    return parsedDOM.body.innerHTML
+    let newHtml = parsedDOM.body.innerHTML
+    if (newHtml === '') {
+      return '&nbsp;'
+    }
+    return newHtml
   }
 
   dom2structure (domElement) {
@@ -271,6 +321,7 @@ class Editor extends React.Component {
         return null
       }
       let thisEditor = this
+      let enDOM = null
       let reactElement = React.createElement(componentClass, {
         structure: current,
         disabled: thisEditor.props.disabled,
@@ -282,6 +333,15 @@ class Editor extends React.Component {
           let newStructureArr = structure.map(st => (st === current ? newStructure : st))
             .filter(a => a !== null)
           thisEditor.props.onChange(newStructureArr)
+        },
+        onSorthand: function () {
+          if (enDOM !== null) {
+            let sel = window.getSelection()
+            let range = document.createRange()
+            range.selectNode(enDOM)
+            sel.removeAllRanges()
+            sel.addRange(range)
+          }
         }
       })
       let nodeSet = this.currentEditorNodes
@@ -295,6 +355,7 @@ class Editor extends React.Component {
           Object.assign(currentElement.dataset, this.toDataset())
         })
         touchedEditorNodes.add(currentElement)
+        enDOM = currentElement
         return null
       } else {
         // Create a new node and render it.
@@ -312,6 +373,7 @@ class Editor extends React.Component {
           Object.assign(newNode.dataset, this.toDataset())
         })
         touchedEditorNodes.add(newNode)
+        enDOM = newNode
         return newNode
       }
     }
@@ -354,9 +416,6 @@ class Editor extends React.Component {
       this.recycleNode(node)
       node.remove()
     }
-    if (structure.length === 0) {
-      domElement.innerHTML = '<p></p>'
-    }
     if (document.activeElement === domElement) {
       document.execCommand('insertBrOnReturn', null, false)
     }
@@ -391,7 +450,7 @@ class Editor extends React.Component {
     if (!ele || document.activeElement !== ele || (document.queryCommandEnabled && !document.queryCommandEnabled(cmd))) return true
     return false
   }
-  canInsertNow (type) {
+  canInsertNow () {
     let ele = this.editorDOM
     if (!ele || document.activeElement !== ele) return false
     let sel = window.getSelection()
@@ -429,6 +488,9 @@ class Editor extends React.Component {
           <div className='description'>+</div>
           <div className={canInsertBtnClass('hider')} title='hider' onClick={evt => this.insertEditorNode('hider')}>
             <svg className="icon ii-hider"><use href="#ii-hider" xlinkHref="#ii-hider" /></svg>
+          </div>
+          <div className={canInsertBtnClass('paperCrop')} title='paper crop' onClick={evt => this.insertEditorNode('paperCrop')}>
+            <svg className="icon ii-crop"><use href="#ii-crop" xlinkHref="#ii-crop" /></svg>
           </div>
         </div>
         <div
