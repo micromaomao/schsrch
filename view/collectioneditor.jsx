@@ -37,23 +37,64 @@ class HiderEditorNode extends BaseEditorNodeComponent {
   static structureFromDataset (dataset) {
     if (dataset.enType !== 'hider') throw new Error('dataset invalid.')
     return {
-      type: 'hider'
+      type: 'hider',
+      hidden: dataset.hidden === 'true',
+      content: JSON.parse(dataset.content || '[]')
     }
+  }
+  constructor (props) {
+    super(props)
+    this.handleInputChange = this.handleInputChange.bind(this)
+    this.toggleHide = this.toggleHide.bind(this)
   }
   render () {
     return (
       <div className='enHider'>
-        <span className='delete' onClick={this.handleDelete}>
-          <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
-        </span>
-        Hello world! Time: {Date.now()}.
+        <div className='menu'>
+          {!this.props.disabled
+            ? (
+                <span className='delete' onClick={this.handleDelete}>
+                  <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
+                </span>
+              ) : null}
+          <span className='hide' onClick={this.toggleHide}>
+            <svg className="icon ii-hider"><use href="#ii-hider" xlinkHref="#ii-hider" /></svg>
+          </span>
+        </div>
+        <div className='contentcontain'>
+          {this.props.structure.hidden
+            ? (
+                <div className='hiddenplaceholder'>
+                  Content hidden. Click&nbsp;
+                  <span onClick={this.toggleHide}>
+                    <svg className="icon ii-hider"><use href="#ii-hider" xlinkHref="#ii-hider" /></svg>
+                  </span>
+                  &nbsp;to reveal.
+                </div>
+              )
+            : (
+                <Editor structure={this.props.structure.content || []} onChange={this.handleInputChange} disabled={this.props.disabled} />
+              )}
+        </div>
       </div>
     )
   }
+  handleInputChange (nContent) {
+    this.props.onUpdateStructure(Object.assign({}, this.props.structure, {
+      content: nContent
+    }))
+  }
   toDataset () {
     return {
-      enType: 'hider'
+      enType: 'hider',
+      hidden: (this.props.structure.hidden ? 'true' : 'false'),
+      content: JSON.stringify(this.props.structure.content || '[]')
     }
+  }
+  toggleHide () {
+    this.props.onUpdateStructure(Object.assign({}, this.props.structure, {
+      hidden: !this.props.structure.hidden
+    }))
   }
 }
 editorNodeTypeNameTable.hider = HiderEditorNode
@@ -61,6 +102,7 @@ editorNodeTypeNameTable.hider = HiderEditorNode
 class Editor extends React.Component {
   constructor (props) {
     super(props)
+    this.btnStateInterval = null
     this.handleInput = this.handleInput.bind(this)
     this.currentDOMStructure = null
     this.currentEditorNodes = new Map() // dom node -> component
@@ -68,6 +110,13 @@ class Editor extends React.Component {
   componentDidMount () {
     if (this.props.structure && this.editorDOM) {
       this.structure2dom(this.props.structure, this.editorDOM)
+    }
+    if (this.btnStateInterval === null) this.btnStateInterval = setInterval(() => this.forceUpdate(), 100)
+  }
+  componentWillUnmount () {
+    if (this.btnStateInterval !== null) {
+      clearInterval(this.btnStateInterval)
+      this.btnStateInterval = null
     }
   }
   componentDidUpdate () {
@@ -224,6 +273,7 @@ class Editor extends React.Component {
       let thisEditor = this
       let reactElement = React.createElement(componentClass, {
         structure: current,
+        disabled: thisEditor.props.disabled,
         onUpdateStructure: function (newStructure) {
           if (thisEditor.props.structure !== structure) {
             thisEditor.forceUpdate()
@@ -242,6 +292,7 @@ class Editor extends React.Component {
         ReactDOM.render(reactElement, currentElement, function () {
           // `this` is the component.
           nodeSet.set(currentElement, this)
+          Object.assign(currentElement.dataset, this.toDataset())
         })
         touchedEditorNodes.add(currentElement)
         return null
@@ -258,6 +309,7 @@ class Editor extends React.Component {
         }
         ReactDOM.render(reactElement, newNode, function () {
           nodeSet.set(newNode, this)
+          Object.assign(newNode.dataset, this.toDataset())
         })
         touchedEditorNodes.add(newNode)
         return newNode
@@ -321,8 +373,9 @@ class Editor extends React.Component {
 
   handleInput (evt) {
     if (this.props.onChange) {
-      if (!evt && !this.editorDOM) return
-      let structure = this.dom2structure(evt ? evt.target : this.editorDOM)
+      if (!this.editorDOM) return
+      if (evt && evt.target !== this.editorDOM) return
+      let structure = this.dom2structure(this.editorDOM)
       this.props.onChange(structure)
     }
   }
