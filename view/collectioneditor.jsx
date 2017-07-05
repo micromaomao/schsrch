@@ -146,8 +146,12 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
         <div className='menu'>
           {this.getSorthand()}
           {this.getDeleteBtn()}
+          {this.props.disabled && !this.props.structure.doc
+            ? (
+                <span>Empty clip.</span>
+              ) : null}
         </div>
-        {!this.props.structure.doc && !AppState.getState().paperCropClipboard
+        {!this.props.structure.doc && !AppState.getState().paperCropClipboard && !this.props.disabled
           ? (
               <div className='prompt'>
                 Select a paper by&nbsp;
@@ -158,10 +162,24 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
               </div>
             )
           : null}
-        {!this.props.structure.doc && AppState.getState().paperCropClipboard
+        {!this.props.structure.doc && AppState.getState().paperCropClipboard && !this.props.disabled
           ? (
               <div className='prompt apply'>
                 <a onClick={this.handleApplySelection}>Apply selection here</a>
+              </div>
+            )
+          : null}
+        {!this.props.structure.doc && AppState.getState().paperCropClipboard && this.props.disabled
+          ? (
+              <div className='prompt'>
+                Can't apply your selection here since you can't edit this collection.
+              </div>
+            )
+          : null}
+        {this.props.structure.doc
+          ? (
+              <div>
+                {this.props.structure.doc} - {this.props.structure.page}
               </div>
             )
           : null}
@@ -179,6 +197,13 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
     }
   }
   handleApplySelection () {
+    let clip = AppState.getState().paperCropClipboard
+    if (!clip) return
+    if (!clip.doc) return
+    this.props.onUpdateStructure(Object.assign({}, this.props.structure, {
+      doc: clip.doc,
+      page: clip.page
+    }))
   }
 }
 editorNodeTypeNameTable.paperCrop = PaperCropEditorNode
