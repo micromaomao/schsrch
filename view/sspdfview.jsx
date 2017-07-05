@@ -252,7 +252,7 @@ class SsPdfView extends React.Component {
   isInitialSize (viewState = this.ctAnimationGetFinalState()) {
     let [viWid, viHig] = [this.props.width, this.props.height]
     let [ctWid, ctHig] = viewState.ctSize
-    return viWid >= ctWid && viHig >= ctHig
+    return viWid - ctWid >= -2 && viHig - ctHig >= -2
   }
   calcResizeOnPoint (point, factor) {
     let [ctX, ctY] = this.ctAnimationGetFinalState().ctPos
