@@ -265,14 +265,14 @@ let AppState = createStore(function (state = {}, action) {
 
 AppState.browserSupportsPassiveEvents = (() => {
   // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md#feature-detection
-  let supportsPassive = false;
+  let supportsPassive = false
   try {
     let opts = Object.defineProperty({}, 'passive', {
       get: function() {
-        supportsPassive = true;
+        supportsPassive = true
       }
     });
-    window.addEventListener("test", null, opts);
+    window.addEventListener("test", null, opts)
   } catch (e) {}
   return supportsPassive
 })()
