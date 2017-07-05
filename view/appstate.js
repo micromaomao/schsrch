@@ -142,10 +142,10 @@ let AppState = createStore(function (state = {}, action) {
     case 'home':
       return Object.assign({}, state, {
         view: 'home',
-        collection: Object.assign({}, collection, {
+        collection: Object.assign({}, state.collection || {}, {
           homeFromCollection: false
         }),
-        feedback: Object.assign({}, state.feedback, {
+        feedback: Object.assign({}, state.feedback || {}, {
           show: false
         })
       })
@@ -160,7 +160,7 @@ let AppState = createStore(function (state = {}, action) {
     case 'view-collections':
       if (state.view === 'collections' && state.collection.id === action.collectionId) {
         return Object.assign({}, state, {
-          collection: Object.assign({}, collection, {
+          collection: Object.assign({}, state.collection, {
             homeFromCollection: false
           })
         })
@@ -320,6 +320,6 @@ AppState.browserSupportsPassiveEvents = (() => {
   return supportsPassive
 })()
 
-AppState.shouldResponseKeyboardShortcut = () => !AppState.getState().queryFocusing // TODO: Ugly but quick hack, FIXME!
+AppState.shouldResponseKeyboardShortcut = () => !AppState.getState().queryFocusing && !(document.activeElement && document.activeElement.contentEditable === 'true') // TODO: Ugly but quick hack, FIXME!
 
 module.exports = AppState

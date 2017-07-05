@@ -129,7 +129,10 @@ class SchSrch extends React.Component {
                   <span className='paperName'>
                     {paperCropClipboard.docMeta
                       ? (
-                          <a onClick={evt => this.handleQuery(PaperUtils.setToString(paperCropClipboard.docMeta))}>
+                          <a onClick={evt => {
+                              this.handleQuery(PaperUtils.setToString(paperCropClipboard.docMeta))
+                              AppState.dispatch({type: 'home'})
+                            }}>
                             {PaperUtils.setToString(paperCropClipboard.docMeta)}_{paperCropClipboard.docMeta.type}
                           </a>
                         )
