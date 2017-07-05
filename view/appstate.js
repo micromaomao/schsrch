@@ -1,4 +1,4 @@
-const InterfaceVersion = 13
+const InterfaceVersion = 15
 const { createStore } = require('redux')
 
 const init = {
@@ -17,7 +17,8 @@ const init = {
   version: InterfaceVersion,
   queryFocusing: false,
   authToken: null,
-  loginView: null
+  loginView: null,
+  paperCropClipboard: null
 }
 
 function setPreviewPages (previewPages, doc, page) {
@@ -140,10 +141,13 @@ let AppState = createStore(function (state = {}, action) {
       })
     case 'home':
       return Object.assign({}, state, {
+        view: 'home',
+        collection: Object.assign({}, collection, {
+          homeFromCollection: false
+        }),
         feedback: Object.assign({}, state.feedback, {
           show: false
-        }),
-        view: 'home'
+        })
       })
     case 'queryFocus':
       return Object.assign({}, state, {
@@ -154,7 +158,13 @@ let AppState = createStore(function (state = {}, action) {
         queryFocusing: false
       })
     case 'view-collections':
-      if (state.view === 'collections' && state.collection.id === action.collectionId) return state
+      if (state.view === 'collections' && state.collection.id === action.collectionId) {
+        return Object.assign({}, state, {
+          collection: Object.assign({}, collection, {
+            homeFromCollection: false
+          })
+        })
+      }
       return Object.assign({}, state, {
         view: 'collections',
         collection: {
@@ -163,14 +173,16 @@ let AppState = createStore(function (state = {}, action) {
           loadingError: null,
           content: null,
           lastSave: null,
-          rand: Math.random()
+          rand: Math.random(),
+          homeFromCollection: false
         }
       })
     case 'collection-edit-content':
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           content: action.content,
-          rand: Math.random()
+          rand: Math.random(),
+          homeFromCollection: false
         })
       })
     case 'collection-load-error':
@@ -259,6 +271,37 @@ let AppState = createStore(function (state = {}, action) {
     case 'clear-token':
       return Object.assign({}, state, {
         authToken: null
+      })
+    case 'home-from-collection':
+      if (!state.collection) {
+        return Object.assign({}, state, {
+          view: 'home'
+        })
+      }
+      return Object.assign({}, state, {
+        view: 'home',
+        collection: Object.assign({}, state.collection, {
+          homeFromCollection: true
+        })
+      })
+    case 'set-paper-crop-clipboard':
+      if (!action.doc || !Number.isSafeInteger(action.page)) {
+        return Object.assign({}, state, {
+          paperCropClipboard: null
+        })
+      }
+      return Object.assign({}, state, {
+        paperCropClipboard: {
+          doc: action.doc,
+          page: action.page,
+          docMeta: action.docMeta || null
+        }
+      })
+    case 'clear-home-from-collection':
+      return Object.assign({}, state, {
+        collection: Object.assign({}, state.collection || {}, {
+          homeFromCollection: false
+        })
       })
   }
 })

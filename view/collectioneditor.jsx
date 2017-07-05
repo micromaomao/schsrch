@@ -2,6 +2,7 @@ const Set = require('es6-set')
 const Map = require('es6-map')
 const React = require('react')
 const ReactDOM = require('react-dom')
+const AppState = require('./appstate.js')
 
 const AllowedFormattingNodes = /^([bius])$/i // <b>, <i>, <s>, <u>
 let editorNodeTypeNameTable = {}
@@ -38,7 +39,7 @@ class BaseEditorNodeComponent extends React.Component {
     if (this.props.disabled) return null
     return (
       <span className='delete' onClick={this.handleDelete}>
-        <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
+        <svg className="icon ii-del"><use href="#ii-del" xlinkHref="#ii-del" /></svg>
       </span>
     )
   }
@@ -120,27 +121,64 @@ editorNodeTypeNameTable.hider = HiderEditorNode
 class PaperCropEditorNode extends BaseEditorNodeComponent {
   static structureFromDataset (dataset) {
     if (dataset.enType !== 'paperCrop') throw new Error('dataset invalid.')
-    return {
-      type: 'paperCrop'
+    let struct = {
+      type: 'paperCrop',
+      doc: dataset.doc === 'null' ? null : dataset.doc,
+      page: dataset.page === 'null' ? null : parseInt(dataset.page)
     }
+    if (!Number.isSafeInteger(struct.page) || (Number.isSafeInteger(struct.page) && struct.page < 0)) struct.page = null
+    if (!struct.doc) struct.doc = null
+    return struct
   }
   constructor (props) {
     super(props)
+    this.handleApplySelection = this.handleApplySelection.bind(this)
+  }
+  componentDidMount () {
+    this.unsub = AppState.subscribe(() => {this.forceUpdate()})
+  }
+  componentWillUnmount () {
+    this.unsub()
   }
   render () {
     return (
       <div className='enPaperCrop'>
-        {this.getSorthand()}
-        {this.getDeleteBtn()}
-        &nbsp;
-        Hello.
+        <div className='menu'>
+          {this.getSorthand()}
+          {this.getDeleteBtn()}
+        </div>
+        {!this.props.structure.doc && !AppState.getState().paperCropClipboard
+          ? (
+              <div className='prompt'>
+                Select a paper by&nbsp;
+                  <a onClick={evt => AppState.dispatch({type: 'home-from-collection'})}>searching</a>
+                  &nbsp;for some and click the <span>
+                  <svg className="icon ii-crop"><use href="#ii-crop" xlinkHref="#ii-crop" /></svg>
+                </span> button, then go here and apply it.
+              </div>
+            )
+          : null}
+        {!this.props.structure.doc && AppState.getState().paperCropClipboard
+          ? (
+              <div className='prompt apply'>
+                <a onClick={this.handleApplySelection}>Apply selection here</a>
+              </div>
+            )
+          : null}
       </div>
     )
   }
   toDataset () {
+    let dataPage = this.props.structure.page
+    if (Number.isSafeInteger(dataPage)) dataPage = dataPage.toString()
+    else dataPage = 'null'
     return {
-      enType: 'paperCrop'
+      enType: 'paperCrop',
+      doc: this.props.structure.doc || 'null',
+      page: dataPage
     }
+  }
+  handleApplySelection () {
   }
 }
 editorNodeTypeNameTable.paperCrop = PaperCropEditorNode
@@ -379,6 +417,11 @@ class Editor extends React.Component {
     }
 
     let replacementElementFromCurrentStructure = current => {
+      if (!current || !current.type) {
+        let errorMsg = document.createElement('p')
+        errorMsg.innerText = '<invalid structure>'
+        return errorMsg
+      }
       let newElement
       switch (current.type) {
         case 'text':
@@ -395,6 +438,11 @@ class Editor extends React.Component {
       let currentElement = domElement.childNodes[i]
       if (!currentElement) {
         domElement.appendChild(replacementElementFromCurrentStructure(current))
+        continue
+      }
+      if (!current || !current.type) {
+        this.recycleNode(currentElement)
+        domElement.replaceChild(replacementElementFromCurrentStructure(current), currentElement)
         continue
       }
       switch (current.type) {

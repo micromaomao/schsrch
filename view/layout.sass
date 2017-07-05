@@ -87,6 +87,32 @@ body
         flex-grow: 0
         flex-shrink: 0
         width: 500px
+    > .bottom
+      flex-grow: 0
+      flex-shrink: 1
+      border-top: solid 1px #aaa
+      padding: 0.5rem 1rem
+      background-color: lighten($color-link, 40%)
+      > a
+        background-color: $color-primary
+        display: inline-block
+        padding: 0.5rem 1rem
+        color: white
+        cursor: pointer
+        transition: background-color 200ms, box-shadow 200ms
+        &:hover
+          background-color: $color-link
+          box-shadow: 0 -2px 0 rgba(black, 0.4) inset
+        &:active
+          box-shadow: 0 2px 0 rgba(black, 0.4) inset
+      .paperName
+        a
+          color: $color-link
+          transition: color 200ms
+          cursor: pointer
+          &:hover
+            color: darken($color-link, 10%)
+            border-bottom: solid 1px #aaa
 
 .contentblackcover
   z-index: 2
@@ -595,12 +621,12 @@ $feedback-top-height: 2rem + 1.3rem
         font: inherit
         line-height: 1
         vertical-align: middle
-    .dir, .download, .close, .prev, .next
+    .dir, .crop, .download, .close, .prev, .next
       margin-left: 0.5rem
       cursor: pointer
       vertical-align: middle
       line-height: 0
-    .dir, .download, .close
+    .dir, .crop, .download, .close
       font-size: 1.2rem
     .prev.disabled, .next.disabled
       opacity: 0.5
@@ -883,8 +909,6 @@ $feedback-top-height: 2rem + 1.3rem
               margin-left: auto
               margin-right: auto
               cursor: default
-            .enHider
-              background-color: lighten($color-divider, 15%)
               .menu
                 background-color: lighten($color-primary, 30%)
                 border-top: solid 1px $color-divider
@@ -899,6 +923,22 @@ $feedback-top-height: 2rem + 1.3rem
                   padding-right: 0.5rem
                   flex-shrink: 0
                   flex-grow: 0
+            .enHider
+              background-color: lighten($color-divider, 15%)
+            .enPaperCrop
+              .prompt
+                span
+                  font-size: 1.2rem
+                  vertical-align: middle
+                a
+                  cursor: pointer
+                  color: $color-link
+                &.apply
+                  a
+                    display: inline-block
+                    margin: 0.5rem
+                    padding: 1rem
+                    border: solid 1px rgba($color-primary, 0.2)
         > .nologin
           text-align: center
           padding: 0.5rem

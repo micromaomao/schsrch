@@ -189,11 +189,12 @@ class FilePreview extends React.Component {
                 <a className='dir' onClick={evt => this.toggleDir()}>
                   <svg className="icon ii-dir"><use href="#ii-dir" xlinkHref="#ii-dir" /></svg>
                 </a>
-                &nbsp;
+                <a className='crop' onClick={evt => this.crop()}>
+                  <svg className="icon ii-crop"><use href="#ii-crop" xlinkHref="#ii-crop" /></svg>
+                </a>
                 <a className='download' onClick={evt => this.download()}>
                   <svg className="icon ii-dl"><use href="#ii-dl" xlinkHref="#ii-dl" /></svg>
                 </a>
-                &nbsp;
                 <a className='close' onClick={evt => AppState.dispatch({type: 'closePreview'})}>
                   <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
                 </a>
@@ -293,6 +294,14 @@ class FilePreview extends React.Component {
   selectQuestion (question, i) {
     this.setState({showingDir: false})
     this.changePage(question.page, i)
+  }
+  crop () {
+    AppState.dispatch({
+      type: 'set-paper-crop-clipboard',
+      doc: this.props.doc,
+      page: this.props.page,
+      docMeta: this.state.docMeta
+    })
   }
 }
 

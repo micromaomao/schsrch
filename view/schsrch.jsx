@@ -9,6 +9,7 @@ const FetchErrorPromise = require('./fetcherrorpromise.js')
 const FilePreview = require('./filepreview.jsx')
 const { CollectionsView } = require('./collections.jsx')
 const { LoginView } = require('./auth.jsx')
+const PaperUtils = require('./paperutils.js')
 
 class SchSrch extends React.Component {
   constructor () {
@@ -67,7 +68,10 @@ class SchSrch extends React.Component {
           return this.renderViewLogin()
       }
     })()
-    let previewing = AppState.getState().previewing
+    let aState = AppState.getState()
+    let previewing = aState.previewing
+    let collection = aState.collection
+    let paperCropClipboard = aState.paperCropClipboard
     let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
       <div className='schsrch'>
@@ -78,7 +82,7 @@ class SchSrch extends React.Component {
           {
             this.state.server
             ? (
-                AppState.getState().serverrender.query
+                aState.serverrender.query
                 ? (
                     <noscript className='small'>
                       {noScriptFirstP}
@@ -107,6 +111,45 @@ class SchSrch extends React.Component {
               : null
             }
           </div>
+          {!aState.paperCropClipboard && collection && collection.homeFromCollection
+            ? (
+                <div className='bottom'>
+                  No paper crop selected. <a
+                    onClick={evt => AppState.dispatch({type: 'view-collections', collectionId: collection.id})}>
+                    return to collection</a>
+                  &nbsp;
+                  <a onClick={evt => AppState.dispatch({type: 'clear-home-from-collection'})}>close</a>
+                </div>
+              )
+            : null}
+          {paperCropClipboard
+            ? (
+                <div className='bottom'>
+                  Paper&nbsp;
+                  <span className='paperName'>
+                    {paperCropClipboard.docMeta
+                      ? (
+                          <a onClick={evt => this.handleQuery(PaperUtils.setToString(paperCropClipboard.docMeta))}>
+                            {PaperUtils.setToString(paperCropClipboard.docMeta)}_{paperCropClipboard.docMeta.type}
+                          </a>
+                        )
+                      : (
+                          <a>{paperCropClipboard.doc}</a>
+                        )}
+                  </span>
+                  &nbsp;selected.&nbsp;
+                  <a onClick={evt => AppState.dispatch({type: 'set-paper-crop-clipboard', doc: null})}>clear</a>
+                  &nbsp;
+                  {collection && collection.homeFromCollection
+                    ? (
+                        <a onClick={evt => AppState.dispatch({type: 'view-collections', collectionId: collection.id})}>
+                          return to collection
+                        </a>
+                      )
+                    : null}
+                </div>
+              )
+            : null}
         </div>
         {this.state.server ? null : <Feedback.Frame />}
       </div>
