@@ -67,6 +67,7 @@ class SsPdfView extends React.Component {
     )
   }
   handleDown (evt) {
+    if (!this.svgLayer) return
     if (!evt.touches) {
       evt.preventDefault()
       let [ncx, ncy] = this.client2view([evt.clientX, evt.clientY])
@@ -103,6 +104,7 @@ class SsPdfView extends React.Component {
     }})
   }
   handleMove (evt, prevent = true) {
+    if (!this.svgLayer) return
     let dragOrig = this.state.dragOrig
     if (!dragOrig) return
     if (prevent) evt.preventDefault()
@@ -163,6 +165,7 @@ class SsPdfView extends React.Component {
     this.ctAnimationStopToState({ctPos: [odocX + dx, odocY + dy]})
   }
   handleUp (evt) {
+    if (!this.svgLayer) return
     if (!evt.touches && !evt.changedTouches) {
       this.handleMove(evt, false)
       if (this.state.dragOrig) {
@@ -194,6 +197,7 @@ class SsPdfView extends React.Component {
     }
   }
   finishDrag () {
+    if (!this.svgLayer) return
     if (!this.state.dragOrig) return
     this.ctAnimationStartFromState({ctPos: this.calcBound()})
 
@@ -216,6 +220,7 @@ class SsPdfView extends React.Component {
     this.setState({dragOrig: null})
   }
   handleDoubleTap (point) {
+    if (!this.svgLayer) return
     this.setState({dragOrig: null})
     if (!this.isInitialSize()) {
       this.ctAnimationStartFromState(this.calcCenter())
@@ -225,6 +230,7 @@ class SsPdfView extends React.Component {
     }
   }
   handleScroll (evt) {
+    if (!this.svgLayer) return
     if (evt.ctrlKey) {
       evt.preventDefault()
       let point = this.client2view([evt.clientX, evt.clientY])
