@@ -183,9 +183,14 @@ class SsPdfView extends React.Component {
     )
   }
   handleDown (evt) {
+    document.removeEventListener('mousemove', this.handleMove)
+    document.removeEventListener('mouseup', this.handleUp)
     if (!this.svgLayer) return
     if (!evt.touches) {
       evt.preventDefault()
+      let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
+      document.addEventListener('mousemove', this.handleMove, noPassiveEventsArgument)
+      document.addEventListener('mouseup', this.handleUp, noPassiveEventsArgument)
       let [ncx, ncy] = this.client2view([evt.clientX, evt.clientY])
       this.setState({dragOrig: {
         touch: null, x: ncx, y: ncy
@@ -283,6 +288,8 @@ class SsPdfView extends React.Component {
   handleUp (evt) {
     if (!this.svgLayer) return
     if (!evt.touches && !evt.changedTouches) {
+      document.removeEventListener('mousemove', this.handleMove)
+      document.removeEventListener('mouseup', this.handleUp)
       this.handleMove(evt, false)
       if (this.state.dragOrig) {
         evt.preventDefault()
