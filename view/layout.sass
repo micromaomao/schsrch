@@ -11,6 +11,19 @@ $color-filepreview-top: darken($color-primary, 20%)
   stroke: currentColor
   fill: currentColor
 
+.material_button
+  background-color: $color-primary
+  display: inline-block
+  padding: 0.5rem 1rem
+  color: white
+  cursor: pointer
+  transition: background-color 200ms, box-shadow 200ms
+  &:hover
+    background-color: $color-link
+    box-shadow: 0 -2px 0 rgba(black, 0.4) inset
+  &:active
+    box-shadow: 0 2px 0 rgba(black, 0.4) inset
+
 body
   background-color: white
   font-size: 16px
@@ -94,17 +107,7 @@ body
       padding: 0.5rem 1rem
       background-color: lighten($color-link, 40%)
       > a
-        background-color: $color-primary
-        display: inline-block
-        padding: 0.5rem 1rem
-        color: white
-        cursor: pointer
-        transition: background-color 200ms, box-shadow 200ms
-        &:hover
-          background-color: $color-link
-          box-shadow: 0 -2px 0 rgba(black, 0.4) inset
-        &:active
-          box-shadow: 0 2px 0 rgba(black, 0.4) inset
+        @extend .material_button
       .paperName
         a
           color: $color-link
@@ -440,7 +443,7 @@ body
           color: $color-primary
   .filepreview
     width: 100%
-    height: 90vh
+    height: 80vh
   .searchprompt
     padding-left: 0.5rem
     padding-right: 0.5rem
@@ -552,16 +555,8 @@ $feedback-top-height: 2rem + 1.3rem
     .email
       border-bottom: solid 1px $color-primary
     .submit
-      padding: 0.5rem 1rem
-      background-color: $color-primary
-      color: white
-      font-size: 1rem
       margin: 0.5rem 0
-      box-shadow: 0 2px 2px rgba(#000, 0.4)
-      display: inline-block
-      transition: background-color 200ms
-    .submit:active
-      background-color: lighten($color-primary, 15%)
+      @extend .material_button
     .submitting, .error
       font-size: 0.8rem
       margin: 0.5rem 0
@@ -671,6 +666,9 @@ $feedback-top-height: 2rem + 1.3rem
       cursor: pointer
     .questionln.highlight
       background-color: rgba($color-link, 0.2)
+  .selectprompt
+    a
+      @extend .material_button
 
 .sspdfview
   background-color: white

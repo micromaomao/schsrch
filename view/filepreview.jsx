@@ -30,6 +30,8 @@ class FilePreview extends React.Component {
     this.handlePageInputChange = this.handlePageInputChange.bind(this)
     this.measureViewDim = this.measureViewDim.bind(this)
     this.handleGlobaleKey = this.handleGlobaleKey.bind(this)
+    this.handleSelect = this.handleSelect.bind(this)
+    this.handleResetCrop = this.handleResetCrop.bind(this)
   }
   measureViewDim () {
     if (!this.sspdfContainer) return (this.measureViewDimAF = requestAnimationFrame(this.measureViewDim))
@@ -254,6 +256,17 @@ class FilePreview extends React.Component {
             </div>
           )
           : null}
+        {this.state.cropBoundary
+          ? (
+              <div className='selectprompt'>
+                <a onClick={this.handleSelect}>select this crop</a>
+                &nbsp;
+                <a onClick={this.handleResetCrop}>reset crop area</a>
+                &nbsp;
+                <a onClick={evt => this.setState({cropBoundary: null})}>cancel</a>
+              </div>
+            )
+          : null}
       </div>
     )
   }
@@ -307,12 +320,14 @@ class FilePreview extends React.Component {
   crop () {
     if (!this.state.docJson || !this.state.docMeta || this.state.cropBoundary || !this.sspdfView) return
     this.sspdfView.startCrop()
-    // AppState.dispatch({
-    //   type: 'set-paper-crop-clipboard',
-    //   doc: this.props.doc,
-    //   page: this.props.page,
-    //   docMeta: this.state.docMeta
-    // })
+  }
+  handleSelect () {
+  }
+  handleResetCrop () {
+    if (!this.state.docJson) return
+    this.setState({
+      cropBoundary: [0, 0, this.state.docJson.width, this.state.docJson.height]
+    })
   }
 }
 
