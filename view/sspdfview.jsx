@@ -9,7 +9,8 @@ class SsPdfView extends React.Component {
       dragOrig: null,
       lastTapTime: 0,
       blobUrl: null,
-      cacheCanvas: null // will be set as a cached image of the document svg on `processDoc`
+      cacheCanvas: null, // will be set as a cached image of the document svg on `processDoc`
+      cropDragState: null
     }
     this.ctAnimation = null
     this.lastViewWidth = this.lastViewHeight = 0
@@ -17,6 +18,9 @@ class SsPdfView extends React.Component {
     this.handleMove = this.handleMove.bind(this)
     this.handleUp = this.handleUp.bind(this)
     this.handleScroll = this.handleScroll.bind(this)
+    this.handleCropDown = this.handleCropDown.bind(this)
+    this.handleCropMove = this.handleCropMove.bind(this)
+    this.handleCropUp = this.handleCropUp.bind(this)
     this.ctAnimationId = 0
     this.needPaintDirtyLayer = this.needClearDirtyLayer = false // set by `render`: indicating whether to paint/clear the canvas once react rendered it.
     if (AppState.getState().serverrender) {
@@ -42,10 +46,120 @@ class SsPdfView extends React.Component {
       backgroundPosition: (this.needPaintDirtyLayer ? '0 0' : `${this.state.ctPos[0]}px ${this.state.ctPos[1]}px`),
       backgroundSize: (this.needPaintDirtyLayer ? '0 0' : `${this.state.ctSize[0]}px ${this.state.ctSize[1]}px`)
     }
+    let overlays = this.props.overlay || []
+    let cropOverlay = null
+    let cropMask = null
+    if (this.props.cropBoundary) {
+      let [x1, y1, x2, y2] = this.props.cropBoundary
+      let lt = this.doc2view([x1, y1])
+      let rb = this.doc2view([x2, y2])
+      const markerSize = 40
+      const maskLineStroke = 1
+      cropOverlay = (
+          <div className='cropoverlay' ref={f => this.cropOverlay = f}>
+            <div className='lt'
+              style={{
+                left: (lt[0] - markerSize) + 'px',
+                top: (lt[1] - markerSize) + 'px'
+              }} />
+            <div className='t'
+              style={{
+                left: lt[0] + 'px',
+                top: (lt[1] - markerSize) + 'px',
+                width: (rb[0] - lt[0]) + 'px'
+              }} />
+            <div className='rt'
+              style={{
+                left: rb[0] + 'px',
+                top: (lt[1] - markerSize) + 'px'
+              }} />
+            <div className='r'
+              style={{
+                left: rb[0] + 'px',
+                top: lt[1] + 'px',
+                height: (rb[1] - lt[1]) + 'px'
+              }} />
+            <div className='rb'
+              style={{
+                left: rb[0] + 'px',
+                top: rb[1] + 'px'
+              }} />
+            <div className='b'
+              style={{
+                left: lt[0] + 'px',
+                top: rb[1] + 'px',
+                width: (rb[0] - lt[0]) + 'px'
+              }} />
+            <div className='lb'
+              style={{
+                left: (lt[0] - markerSize) + 'px',
+                top: rb[1] + 'px'
+              }} />
+            <div className='l'
+              style={{
+                left: (lt[0] - markerSize) + 'px',
+                top: lt[1] + 'px',
+                height: (rb[1] - lt[1]) + 'px'
+              }} />
+          </div>
+        )
+        cropMask = (
+          <div className='cropmask'>
+            <div style={{
+              top: '0',
+              left: '0',
+              width: Math.max(lt[0] - maskLineStroke, 0) + 'px',
+              height: Math.max(lt[1] - maskLineStroke, 0) + 'px'
+            }} />
+            <div style={{
+              top: '0',
+              left: lt[0] + 'px',
+              width: Math.max(rb[0] - lt[0], 0) + 'px',
+              height: Math.max(lt[1] - maskLineStroke, 0) + 'px'
+            }} />
+            <div style={{
+              top: '0',
+              left: (rb[0] + maskLineStroke) + 'px',
+              right: 0,
+              height: Math.max(lt[1] - maskLineStroke, 0) + 'px'
+            }} />
+            <div style={{
+              top: lt[1] + 'px',
+              left: (rb[0] + maskLineStroke) + 'px',
+              height: Math.max(rb[1] - lt[1], 0) + 'px',
+              right: 0
+            }} />
+            <div style={{
+              left: (rb[0] + maskLineStroke) + 'px',
+              top: (rb[1] + maskLineStroke) + 'px',
+              right: 0,
+              bottom: 0
+            }} />
+            <div style={{
+              left: lt[0] + 'px',
+              top: (rb[1] + maskLineStroke) + 'px',
+              width: Math.max(rb[0] - lt[0], 0) + 'px',
+              bottom: 0
+            }} />
+            <div style={{
+              left: 0,
+              width: Math.max(lt[0] - maskLineStroke, 0) + 'px',
+              top: (rb[1] + maskLineStroke) + 'px',
+              bottom: 0
+            }} />
+            <div style={{
+              left: 0,
+              width: Math.max(lt[0] - maskLineStroke, 0) + 'px',
+              top: lt[1] + 'px',
+              height: Math.max(rb[1] - lt[1], 0) + 'px'
+            }} />
+          </div>
+        )
+    }
     return (
       <div className='sspdfview' style={{width: this.props.width + 'px', height: this.props.height + 'px'}}>
         <div className='pointereventcover' ref={f => this.eventTarget = f}>
-          {(this.props.overlay || []).map((item, i) => {
+          {overlays.map((item, i) => {
             let ltPoint = this.doc2view(item.lt)
             let rbPoint = this.doc2view(item.rb)
             let xBound = x => item.boundX ? Math.max(Math.min(x, this.props.width), 0) : x
@@ -60,6 +174,8 @@ class SsPdfView extends React.Component {
               }} onClick={item.onClick} onTouchEnd={item.onClick}>{item.stuff}</div>
             )
           })}
+          {cropOverlay}
+          {cropMask}
         </div>
         <div className='svglayer' ref={f => this.svgLayer = f} style={svgStyle} />
         <canvas className='dirtylayer' ref={f => this.dirtyLayer = f} width={this.props.width} height={this.props.height} />
@@ -310,6 +426,8 @@ class SsPdfView extends React.Component {
       this.lastViewWidth = this.props.width
       this.lastViewHeight = this.props.height
       this.reCenter()
+    } else if (!prevProps.cropBoundary && this.props.cropBoundary) {
+      this.reCenter()
     }
 
     // Paint dirtyLayer when user drag/resize.
@@ -339,6 +457,18 @@ class SsPdfView extends React.Component {
       et.addEventListener('touchcancel', this.handleUp, noPassiveEventsArgument)
       et.addEventListener('wheel', this.handleScroll, noPassiveEventsArgument)
       et.addEventListener('mousewheel', this.handleScroll, noPassiveEventsArgument)
+    }
+    let co = this.cropOverlay
+    if (co && co.getAttribute(etAttr) !== 'true') {
+      co.setAttribute(etAttr, 'true')
+      let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
+      co.addEventListener('mousedown', this.handleCropDown, noPassiveEventsArgument)
+      co.addEventListener('touchstart', this.handleCropDown, noPassiveEventsArgument)
+      co.addEventListener('mousemove', this.handleCropMove, noPassiveEventsArgument)
+      co.addEventListener('touchmove', this.handleCropMove, noPassiveEventsArgument)
+      co.addEventListener('mouseup', this.handleCropUp, noPassiveEventsArgument)
+      co.addEventListener('touchend', this.handleCropUp, noPassiveEventsArgument)
+      co.addEventListener('touchcancel', this.handleCropUp, noPassiveEventsArgument)
     }
   }
   componentWillReceiveProps (nextProps) {
@@ -372,6 +502,8 @@ class SsPdfView extends React.Component {
       this.setState({cacheCanvas: canvas})
     }
     img.src = blobUrl
+
+    if (this.props.cropBoundary) this.props.onCropBoundaryChange(null)
   }
   reCenter () {
     this.ctAnimationStartFromState(this.calcCenter())
@@ -382,6 +514,9 @@ class SsPdfView extends React.Component {
     let [sfX, sfY] = [viWid / docWid, viHig / docHig]
     let sfM = Math.min(sfX, sfY)
     let ndocSiz = [docWid * sfM, docHig * sfM]
+    if (this.props.cropBoundary) {
+      ndocSiz = ndocSiz.map(x => x / 1.2)
+    }
     let ndocPos = [0, 0]
     ndocPos[1] = viHig - ndocSiz[1]
     ndocPos[0] = viWid - ndocSiz[0]
@@ -469,6 +604,105 @@ class SsPdfView extends React.Component {
     let [docWid, docHig] = ['width', 'height'].map(p => this.props.docJson[p])
     return [((x - this.state.ctPos[0]) / this.state.ctSize[0]) * docWid,
             ((y - this.state.ctPos[1]) / this.state.ctSize[1]) * docHig]
+  }
+
+  startCrop () {
+    if (!this.props.docJson || this.props.cropBoundary || !this.props.onCropBoundaryChange) return
+    let [docWid, docHig] = ['width', 'height'].map(p => this.props.docJson[p])
+    this.props.onCropBoundaryChange([0, 0, docWid, docHig])
+  }
+
+  handleCropDown (evt) {
+    document.removeEventListener('mousemove', this.handleCropMove)
+    document.removeEventListener('mouseup', this.handleCropUp)
+    if (!this.props.cropBoundary) return
+    if (evt.touches && evt.touches.length !== 1) return
+    evt.preventDefault()
+    evt.stopPropagation()
+    const shifting = {
+      // x1, y1, x2, y2
+      lt: [1, 1, 0, 0],
+      t: [0, 1, 0, 0],
+      rt: [0, 1, 1, 0],
+      r: [0, 0, 1, 0],
+      rb: [0, 0, 1, 1],
+      b: [0, 0, 0, 1],
+      lb: [1, 0, 0, 1],
+      l: [1, 0, 0, 0]
+    }
+    let cl = evt.target.classList
+    let shiftVector = null
+    Object.keys(shifting).forEach(sk => {
+      if (cl.contains(sk)) {
+        shiftVector = shifting[sk]
+      }
+    })
+    if (!shiftVector) shiftVector = [1, 1, 1, 1]
+    let t = evt
+    if (evt.touches) t = evt.touches[0]
+    let cp = this.client2view([t.clientX, t.clientY])
+    this.setState({cropDragState: {
+      shiftVector, cp,
+      touchIdentifier: Number.isInteger(t.identifier) ? t.identifier : null
+    }})
+    if (!evt.touches) {
+      let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
+      document.addEventListener('mousemove', this.handleCropMove, noPassiveEventsArgument)
+      document.addEventListener('mouseup', this.handleCropUp, noPassiveEventsArgument)
+    }
+  }
+  handleCropMove (evt, noPrevent) {
+    if (!this.state.cropDragState) return
+    if (!this.props.cropBoundary) return
+    if (evt.touches && evt.touches.length !== 1) {
+      this.handleCropUp(evt, true)
+      return
+    }
+    if (!noPrevent) {
+      evt.preventDefault()
+      evt.stopPropagation()
+    }
+    let cp
+    if (!evt.touches) {
+      if (this.state.cropDragState.touchIdentifier) return
+      cp = this.client2view([evt.clientX, evt.clientY])
+    } else {
+      if (this.state.cropDragState.touchIdentifier !== evt.touches[0].identifier) return
+      cp = this.client2view([evt.touches[0].clientX, evt.touches[0].clientY])
+    }
+
+    let [cx, cy] = cp
+    let [dx, dy] = [0, 1].map(p => cp[p] - this.state.cropDragState.cp[p])
+    let ob = this.props.cropBoundary
+    let sv = this.state.cropDragState.shiftVector
+    let fct = 1 / this.calcFactorDoc()
+    this.props.onCropBoundaryChange([Math.min(ob[0] + sv[0] * dx * fct, ob[2]), Math.min(ob[1] + sv[1] * dy * fct, ob[3]), Math.max(ob[2] + sv[2] * dx * fct, ob[0]), Math.max(ob[3] + sv[3] * dy * fct, ob[1])])
+    this.setState({
+      cropDragState: Object.assign({}, this.state.cropDragState, { cp })
+    })
+  }
+  handleCropUp (evt, noPrevent) {
+    if (!this.state.cropDragState || !this.props.cropBoundary) return
+    if (!noPrevent) {
+      evt.stopPropagation()
+      evt.preventDefault()
+    }
+    if (!evt.touches) {
+      this.handleCropMove(evt, true)
+      document.removeEventListener('mousemove', this.handleCropMove)
+      document.removeEventListener('mouseup', this.handleCropUp)
+    }
+    this.setState({cropDragState: null})
+    this.normalizeCropBoundary()
+  }
+  normalizeCropBoundary () {
+    let bdy = this.props.cropBoundary
+    if (!bdy) return
+    if (!this.props.docJson) return
+    bdy = bdy.map(x => Math.max(0, x))
+    ;[0, 2].forEach(p => bdy[p] = Math.min(bdy[p], this.props.docJson.width))
+    ;[1, 3].forEach(p => bdy[p] = Math.min(bdy[p], this.props.docJson.height))
+    this.props.onCropBoundaryChange(bdy)
   }
 }
 

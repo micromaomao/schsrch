@@ -22,7 +22,8 @@ class FilePreview extends React.Component {
       relatedDirJson: null,
       relatedDocId: null,
       measuredViewWidth: 0,
-      measuredViewHeight: 0
+      measuredViewHeight: 0,
+      cropBoundary: null
     }
     this.currentLoading = null
     this.measureViewDimAF = null
@@ -222,7 +223,14 @@ class FilePreview extends React.Component {
             <div className={this.state.loading ? 'pdfview dirty' : 'pdfview'} ref={f => this.sspdfContainer = f}>
               {this.state.showingDir ? <div className='dircontain'><DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={(question, i) => this.selectQuestion(question, i)} /></div> : null}
               <div className={!this.state.dirJson || !this.state.showingDir ? 'show' : 'hide'}>
-                <SsPdfView ref={f => this.sspdfView = f} docJson={this.state.docJson} overlay={this.renderOverlay()} width={this.state.measuredViewWidth} height={this.state.measuredViewHeight} />
+                <SsPdfView
+                  ref={f => this.sspdfView = f}
+                  docJson={this.state.docJson}
+                  overlay={this.renderOverlay()}
+                  width={this.state.measuredViewWidth}
+                  height={this.state.measuredViewHeight}
+                  cropBoundary={this.state.cropBoundary}
+                  onCropBoundaryChange={cropBoundary => this.setState({cropBoundary})} />
               </div>
             </div>
           )
@@ -241,7 +249,8 @@ class FilePreview extends React.Component {
                   }}
                 width={this.state.measuredViewWidth}
                 height={this.state.measuredViewHeight}
-                noCacheImage={true} />
+                noCacheImage={true}
+                cropBoundary={null} />
             </div>
           )
           : null}
@@ -296,12 +305,14 @@ class FilePreview extends React.Component {
     this.changePage(question.page, i)
   }
   crop () {
-    AppState.dispatch({
-      type: 'set-paper-crop-clipboard',
-      doc: this.props.doc,
-      page: this.props.page,
-      docMeta: this.state.docMeta
-    })
+    if (!this.state.docJson || !this.state.docMeta || this.state.cropBoundary || !this.sspdfView) return
+    this.sspdfView.startCrop()
+    // AppState.dispatch({
+    //   type: 'set-paper-crop-clipboard',
+    //   doc: this.props.doc,
+    //   page: this.props.page,
+    //   docMeta: this.state.docMeta
+    // })
   }
 }
 

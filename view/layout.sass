@@ -677,7 +677,7 @@ $feedback-top-height: 2rem + 1.3rem
   overflow: hidden
   width: 100%
   position: relative
-  .svglayer, .selectlayer, .dirtylayer, .pointereventcover, .msref
+  .svglayer, .selectlayer, .dirtylayer, .pointereventcover, .msref, .pointereventcover > .cropoverlay
     position: absolute
     top: 0
     right: 0
@@ -698,6 +698,41 @@ $feedback-top-height: 2rem + 1.3rem
     z-index: 3
     color: black
     font-size: 1.2rem
+
+    .cropoverlay
+      $bdr: solid 3px $color-primary
+      > div
+        position: absolute
+        width: 40px
+        height: 40px
+        cursor: move
+        z-index: 2
+      .lt
+        border-bottom: $bdr
+        border-right: $bdr
+      .t
+        border-bottom: $bdr
+      .rt
+        border-left: $bdr
+        border-bottom: $bdr
+      .rb
+        border-top: $bdr
+        border-left: $bdr
+      .r
+        border-left: $bdr
+      .b
+        border-top: $bdr
+      .lb
+        border-top: $bdr
+        border-right: $bdr
+      .l
+        border-right: $bdr
+    .cropmask
+      pointer-events: none
+      > div
+        background-color: rgba(black, 0.5)
+        position: absolute
+        z-index: 1
 
 .disclaimer
   padding: 1.5rem
