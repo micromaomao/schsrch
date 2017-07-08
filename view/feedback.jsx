@@ -2,8 +2,8 @@ const React = require('react')
 const AppState = require('./appstate.js')
 
 class FeedbackFrame extends React.Component {
-  constructor () {
-    super()
+  constructor (props) {
+    super(props)
     this.state = {
       show: false,
       topAnimationStart: 0,

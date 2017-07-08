@@ -2,8 +2,8 @@ const React = require('react')
 const AppState = require('./appstate.js')
 
 class Disclaimer extends React.Component {
-  constructor () {
-    super()
+  constructor (props) {
+    super(props)
     this.state = {}
     if (AppState.getState().serverrender) {
       this.state.server = true

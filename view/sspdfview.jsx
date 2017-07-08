@@ -1,8 +1,8 @@
 const React = require('react')
 
 class SsPdfView extends React.Component {
-  constructor () {
-    super()
+  constructor (props) {
+    super(props)
     this.state = {
       ctPos: [0, 0],
       ctSize: [0, 0],

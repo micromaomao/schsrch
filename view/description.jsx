@@ -39,8 +39,8 @@ function fetchStatusInfo () {
 }
 
 class Description extends React.Component {
-  constructor () {
-    super()
+  constructor (props) {
+    super(props)
     this.state = {}
     if (AppState.getState().serverrender) {
       this.state.server = true

@@ -5,8 +5,8 @@ const IndexContent = require('./indexcontent.jsx')
 const AppState = require('./appstate.js')
 
 class PaperSet extends React.Component {
-  constructor () {
-    super()
+  constructor (props) {
+    super(props)
     this.state = {}
     if (AppState.getState().serverrender) {
       this.state.server = true

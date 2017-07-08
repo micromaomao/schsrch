@@ -12,8 +12,8 @@ const { LoginView } = require('./auth.jsx')
 const PaperUtils = require('./paperutils.js')
 
 class SchSrch extends React.Component {
-  constructor () {
-    super()
+  constructor (props) {
+    super(props)
     this.state = {
       coverHideAnimation: 0,
       view: 'home',

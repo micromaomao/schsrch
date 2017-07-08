@@ -5,8 +5,8 @@ const URL_BANNER = require('./banner.png')
 const URL_BANNER_SMALL = require('./banner-small.png')
 
 class SearchBar extends React.Component {
-  constructor () {
-    super()
+  constructor (props) {
+    super(props)
     this.state = {
       query: '',
       lastQueryChange: 0,

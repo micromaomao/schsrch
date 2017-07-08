@@ -3,8 +3,8 @@ const React = require('react')
 const wordSpliter = /[^a-zA-Z]/
 
 class IndexContent extends React.Component {
-  constructor () {
-    super()
+  constructor (props) {
+    super(props)
     this.state = {
       tokens: []
     }

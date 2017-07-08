@@ -8,8 +8,8 @@ const FetchErrorPromise = require('./fetcherrorpromise.js')
 // TODO: Highlight
 
 class FilePreview extends React.Component {
-  constructor () {
-    super()
+  constructor (props) {
+    super(props)
     this.state = {
       loading: false,
       error: null,
