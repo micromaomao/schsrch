@@ -541,7 +541,7 @@ class SsPdfView extends React.Component {
     nStat = Object.assign({}, this.ctAnimationGetFinalState(), nStat)
     this.ctAnimationStart(nStat.ctPos, nStat.ctSize)
   }
-  ctAnimationStopToState (nStat) {
+  ctAnimationStopToState (nStat = {}) {
     nStat = Object.assign({}, this.ctAnimationGetFinalState(), nStat)
     this.ctAnimationStopTo(nStat.ctPos, nStat.ctSize)
   }
@@ -599,6 +599,9 @@ class SsPdfView extends React.Component {
       this.ctAnimation = null
     }
     this.setState({ctPos: nctPos, ctSize: nctSize})
+  }
+  componentWillUnmount () {
+    this.ctAnimationStopToState()
   }
   doc2view ([x, y]) {
     if (x === -Infinity) return [0, this.doc2view([0, y])[1]]
