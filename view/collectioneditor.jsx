@@ -3,6 +3,8 @@ const Map = require('es6-map')
 const React = require('react')
 const ReactDOM = require('react-dom')
 const AppState = require('./appstate.js')
+const FetchErrorPromise = require('./fetcherrorpromise.js')
+const SsPdfView = require('./sspdfview.jsx')
 
 const AllowedFormattingNodes = /^([bius])$/i // <b>, <i>, <s>, <u>
 let editorNodeTypeNameTable = {}
@@ -119,24 +121,90 @@ class HiderEditorNode extends BaseEditorNodeComponent {
 editorNodeTypeNameTable.hider = HiderEditorNode
 
 class PaperCropEditorNode extends BaseEditorNodeComponent {
+  static isValidBoundary (boundary) {
+    if (!Array.isArray(boundary)) return false
+    if (boundary.length !== 4) return false
+    for (let i = 0; i < boundary.length; i ++) {
+      let b = boundary[i]
+      if (!Number.isFinite(b)) return false
+      if (b < 0) return false
+    }
+    if (boundary[0] >= boundary[2]) return false
+    if (boundary[1] >= boundary[3]) return false
+    return true
+  }
   static structureFromDataset (dataset) {
     if (dataset.enType !== 'paperCrop') throw new Error('dataset invalid.')
     let struct = {
       type: 'paperCrop',
       doc: dataset.doc === 'null' ? null : dataset.doc,
-      page: dataset.page === 'null' ? null : parseInt(dataset.page)
+      page: dataset.page === 'null' ? null : parseInt(dataset.page),
+      boundary: dataset.boundary ? JSON.parse(dataset.boundary) : null
     }
     if (!Number.isSafeInteger(struct.page) || (Number.isSafeInteger(struct.page) && struct.page < 0)) struct.page = null
     if (!struct.doc) struct.doc = null
+    if (!/^[0-9a-f]+$/.test(struct.doc)) struct.doc = null
+    if (!PaperCropEditorNode.isValidBoundary(struct.boundary)) struct.boundary = null
+    if (struct.doc && (struct.page === null || !struct.boundary)) throw new Error('dataset invalid.')
     return struct
   }
+
   constructor (props) {
     super(props)
+    this.state = {
+      loading: false,
+      error: null,
+      docJson: null,
+      docMeta: null,
+      measuredViewWidth: 0
+    }
     this.handleApplySelection = this.handleApplySelection.bind(this)
   }
+
   componentDidMount () {
     this.unsub = AppState.subscribe(() => {this.forceUpdate()})
+    if (this.props.structure.doc) {
+      this.loadDoc()
+    }
+    this.measureViewDim()
   }
+  componentDidUpdate (prevProps, prevState) {
+    let cStruct = this.props.structure
+    let pStruct = prevProps.structure
+    if ((cStruct.doc !== pStruct.doc || cStruct.page !== pStruct.page) && cStruct.doc) {
+      this.loadDoc()
+    }
+    this.measureViewDim()
+  }
+  measureViewDim () {
+    if (!this.docContain) {
+      if (this.state.measuredViewWidth === 0) return
+      this.setState({
+        measuredViewWidth: 0
+      })
+    } else {
+      let cs = window.getComputedStyle(this.docContain)
+      let width = parseFloat(cs.width) || 0
+      if (Math.abs(this.state.measuredViewWidth - width) < 1) return
+      this.setState({measuredViewWidth: width})
+    }
+  }
+
+  loadDoc (doc = this.props.structure.doc, page = this.props.structure.page) {
+    if (!doc || !/^[0-9a-f]+$/.test(doc)) return
+    if (!Number.isSafeInteger(page)) return
+    if (this.loading) return
+    this.setState({loading: null, error: null})
+    fetch(`/doc/${doc}/?page=${page}&as=sspdf`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
+      if (this.props.structure.doc !== doc || this.props.structure.page !== page) return
+      this.setState({loading: false, error: null, docJson: json, docMeta: json.doc})
+    }, err => {
+      if (this.props.structure.doc !== doc || this.props.structure.page !== page) return
+      this.setState({loading: false, error: err, docJson: null, docMeta: null})
+    })
+    this.setState({loading: true, error: null})
+  }
+
   componentWillUnmount () {
     this.unsub()
   }
@@ -176,16 +244,43 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
               </div>
             )
           : null}
-        {this.props.structure.doc
+        {this.props.structure.doc && PaperCropEditorNode.isValidBoundary(this.props.structure.boundary)
           ? (
-              <div>
-                {this.props.structure.doc} - {this.props.structure.page}
+              <div className='doccontain' ref={f => this.docContain = f}>
+                {!this.state.error && this.state.docJson
+                  ? (
+                      <SsPdfView
+                        docJson={this.state.docJson}
+                        overlay={this.renderOverlay()}
+                        width={this.state.measuredViewWidth}
+                        height={this.calcSspdfHeight()}
+                        fixedBoundary={this.props.structure.boundary} />
+                    ) : null}
+                {!this.state.error && this.state.loading && !this.state.docJson
+                  ? (
+                      <div className='loading'>Loading</div>
+                    ) : null}
+                {this.state.error
+                  ? (
+                      <div className='error'>{this.state.error.message}</div>
+                    ) : null}
               </div>
             )
           : null}
       </div>
     )
   }
+
+  calcSspdfHeight () {
+    let boundary = this.props.structure.boundary
+    if (!PaperCropEditorNode.isValidBoundary(this.props.structure.boundary)) return 0
+    return (boundary[3] - boundary[1]) / (boundary[2] - boundary[0]) * this.state.measuredViewWidth
+  }
+
+  renderOverlay () {
+    return []
+  }
+
   toDataset () {
     let dataPage = this.props.structure.page
     if (Number.isSafeInteger(dataPage)) dataPage = dataPage.toString()
@@ -193,7 +288,8 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
     return {
       enType: 'paperCrop',
       doc: this.props.structure.doc || 'null',
-      page: dataPage
+      page: dataPage,
+      boundary: JSON.stringify(this.props.structure.boundary)
     }
   }
   handleApplySelection () {
@@ -202,7 +298,8 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
     if (!clip.doc) return
     this.props.onUpdateStructure(Object.assign({}, this.props.structure, {
       doc: clip.doc,
-      page: clip.page
+      page: clip.page,
+      boundary: clip.boundary
     }))
   }
 }
@@ -232,6 +329,7 @@ class Editor extends React.Component {
     if (this.props.structure && this.editorDOM) {
       this.structure2dom(this.props.structure, this.editorDOM)
     }
+    this.currentEditorNodes.forEach(comp => {comp.forceUpdate()})
   }
   nodeIsEditorNode (node) {
     return node.dataset.editornode === 'true'
@@ -361,6 +459,7 @@ class Editor extends React.Component {
 
   recycleNode (node) {
     if (!(node instanceof Element)) return
+    console.log('recycling ', node)
     if (this.currentEditorNodes.has(node)) {
       this.currentEditorNodes.delete(node)
     }
@@ -493,12 +592,10 @@ class Editor extends React.Component {
       document.execCommand('insertBrOnReturn', null, false)
     }
     this.currentDOMStructure = structure
-    // TODO: call this.recycleNode for node disappeared.
 
     this.currentEditorNodes.forEach((comp, node) => {
       if (!touchedEditorNodes.has(node)) {
         this.recycleNode(node)
-        console.log('node gc')
       }
     })
   }

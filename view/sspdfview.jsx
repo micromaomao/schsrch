@@ -322,6 +322,9 @@ class SsPdfView extends React.Component {
   finishDrag () {
     if (!this.svgLayer) return
     if (!this.state.dragOrig) return
+
+    if (this.props.fixedBoundary) this.ctAnimationStartFromState(this.calcFixedBoundary())
+
     this.ctAnimationStartFromState({ctPos: this.calcBound()})
 
     // Limit resize (no too big, no too small)
@@ -511,11 +514,14 @@ class SsPdfView extends React.Component {
     img.src = blobUrl
 
     if (this.props.cropBoundary) this.props.onCropBoundaryChange(null)
+
+    if (this.props.fixedBoundary) this.ctAnimationStartFromState(this.calcFixedBoundary)
   }
   reCenter () {
     this.ctAnimationStartFromState(this.calcCenter())
   }
   calcCenter () {
+    if (this.props.fixedBoundary) return this.calcFixedBoundary()
     let [docWid, docHig] = ['width', 'height'].map(p => this.props.docJson[p])
     let [viWid, viHig] = [this.props.width, this.props.height]
     let [sfX, sfY] = [viWid / docWid, viHig / docHig]
@@ -713,6 +719,23 @@ class SsPdfView extends React.Component {
     ;[0, 2].forEach(p => bdy[p] = Math.min(bdy[p], this.props.docJson.width))
     ;[1, 3].forEach(p => bdy[p] = Math.min(bdy[p], this.props.docJson.height))
     this.props.onCropBoundaryChange(bdy)
+  }
+  calcFixedBoundary () {
+    let bdy = this.props.fixedBoundary
+    if (!bdy) return this.ctAnimationGetFinalState()
+    if (!this.props.docJson) return this.ctAnimationGetFinalState()
+    let { width: docW, height: docH } = this.props.docJson
+    let [bx, by, bw, bh] = [bdy[0], bdy[1], bdy[2] - bdy[0], bdy[3] - bdy[1]]
+    if (bw < 1) bw = 1
+    if (bh < 1) bh = 1
+    let [viWid, viHig] = [this.props.width, this.props.height]
+    if (viWid < 1) viWid = 1
+    if (viHig < 1) viHig = 1
+    let [sX, sY] = [viWid / bw, viHig / bh]
+    let s = Math.min(sX, sY)
+    let nctSize = [docW * s, docH * s]
+    let nctPos = [-bx * s, -by * s]
+    return {ctPos: nctPos, ctSize: nctSize}
   }
 }
 

@@ -294,7 +294,8 @@ let AppState = createStore(function (state = {}, action) {
         paperCropClipboard: {
           doc: action.doc,
           page: action.page,
-          docMeta: action.docMeta || null
+          docMeta: action.docMeta || null,
+          boundary: action.boundary
         }
       })
     case 'clear-home-from-collection':

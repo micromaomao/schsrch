@@ -44,7 +44,7 @@ class FilePreview extends React.Component {
   }
   componentDidMount () {
     if (this.props && this.props.doc) {
-      this.loadFromProps(this.props)
+      this.load()
     }
     this.measureViewDim()
     window.document.addEventListener('keydown', this.handleGlobaleKey, AppState.browserSupportsPassiveEvents ? {passive: true} : false)
@@ -322,6 +322,14 @@ class FilePreview extends React.Component {
     this.sspdfView.startCrop()
   }
   handleSelect () {
+    AppState.dispatch({
+      type: 'set-paper-crop-clipboard',
+      doc: this.props.doc,
+      page: this.props.page,
+      docMeta: this.state.docMeta,
+      boundary: this.state.cropBoundary
+    })
+    this.setState({cropBoundary: null})
   }
   handleResetCrop () {
     if (!this.state.docJson) return
