@@ -955,10 +955,23 @@ $feedback-top-height: 2rem + 1.3rem
                   padding-right: 0.5rem
                   flex-shrink: 0
                   flex-grow: 0
+                > a
+                  padding-left: 0.5rem
+                  padding-right: 0.5rem
             .enHider
               background-color: lighten($color-divider, 15%)
             .enPaperCrop
               max-width: 1200px
+              .menu
+                font-size: 0.75rem
+                height: 1.5rem
+                > .doc
+                  color: $color-primary
+                  cursor: pointer
+                  transition: color 200ms
+                  &:hover
+                    color: $color-link
+                    border-bottom: solid 1px #aaa
               .prompt
                 span
                   font-size: 1.2rem

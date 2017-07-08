@@ -5,6 +5,7 @@ const ReactDOM = require('react-dom')
 const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
 const SsPdfView = require('./sspdfview.jsx')
+const PaperUtils = require('./paperutils.js')
 
 const AllowedFormattingNodes = /^([bius])$/i // <b>, <i>, <s>, <u>
 let editorNodeTypeNameTable = {}
@@ -173,6 +174,8 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
     let pStruct = prevProps.structure
     if ((cStruct.doc !== pStruct.doc || cStruct.page !== pStruct.page) && cStruct.doc) {
       this.loadDoc()
+    } else if (!cStruct.doc && pStruct.doc) {
+      this.setState({loading: false, error: null, docJson: null, docMeta: null})
     }
     this.measureViewDim()
   }
@@ -217,6 +220,10 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
           {this.props.disabled && !this.props.structure.doc
             ? (
                 <span>Empty clip.</span>
+              ) : null}
+          {this.props.structure.doc && this.state.docMeta
+            ? (
+                <a className='doc' onClick={evt => this.openDoc()}>{PaperUtils.setToString(this.state.docMeta)} - page {this.props.structure.page}</a>
               ) : null}
         </div>
         {!this.props.structure.doc && !AppState.getState().paperCropClipboard && !this.props.disabled
@@ -301,6 +308,13 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
       page: clip.page,
       boundary: clip.boundary
     }))
+  }
+  
+  openDoc () {
+    if (!this.state.docMeta || !this.props.structure.doc) return
+    AppState.dispatch({type: 'home'})
+    AppState.dispatch({type: 'query', query: PaperUtils.setToString(this.state.docMeta) + '_' + this.state.docMeta.type})
+    AppState.dispatch({type: 'previewFile', psKey: PaperUtils.setToString(this.state.docMeta), fileId: this.props.structure.doc, page: this.props.structure.page})
   }
 }
 editorNodeTypeNameTable.paperCrop = PaperCropEditorNode

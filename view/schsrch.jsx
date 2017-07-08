@@ -33,6 +33,10 @@ class SchSrch extends React.Component {
     let state = AppState.getState()
     this.setState({feedbackShowed: state.feedback.show, coverHideAnimation: Date.now()})
     this.setState({view: AppState.getState().view})
+
+    if (state.querying && !state.querying.loading && !state.querying.error && !state.querying.result) {
+      this.handleQuery(state.querying.query)
+    }
   }
   render () {
     let blackCoverStyle = {}
@@ -208,7 +212,7 @@ class SchSrch extends React.Component {
       return
     }
     let oldQuery = AppState.getState().querying ? AppState.getState().querying.query : ''
-    AppState.dispatch({type: 'query', query})
+    AppState.dispatch({type: 'query-perpare', query})
     if (AppState.getState().querying && (AppState.getState().querying.query.trim() !== oldQuery.trim() || !AppState.getState().querying.result)) {
       AppState.dispatch({type: 'queryStartRequest'})
       fetch('/search/?query=' + encodeURIComponent(query.trim()) + '&as=json').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {

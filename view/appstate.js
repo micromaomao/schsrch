@@ -53,6 +53,15 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
           query: action.query,
+          loading: false,
+          result: null,
+          error: null
+        })
+      })
+    case 'query-perpare':
+      return Object.assign({}, state, {
+        querying: Object.assign({}, state.querying || {}, {
+          query: action.query,
           loading: true
         })
       })
