@@ -223,7 +223,7 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
               ) : null}
           {this.props.structure.doc && this.state.docMeta
             ? (
-                <a className='doc' onClick={evt => this.openDoc()}>{PaperUtils.setToString(this.state.docMeta)} - page {this.props.structure.page}</a>
+                <a className='doc' onClick={evt => this.openDoc()}>{PaperUtils.setToString(this.state.docMeta)} - page {this.props.structure.page + 1}</a>
               ) : null}
         </div>
         {!this.props.structure.doc && !AppState.getState().paperCropClipboard && !this.props.disabled
