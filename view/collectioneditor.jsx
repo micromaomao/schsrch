@@ -429,6 +429,18 @@ class Editor extends React.Component {
     while (structure.length >= 2 && emptyParagraph(structure[structure.length - 1]) && emptyParagraph(structure[structure.length - 2])) {
       structure.splice(structure.length - 1, 1)
     }
+    if (structure.length >= 1 && structure[structure.length - 1].type !== 'text') {
+      structure.push({
+        type: 'text',
+        html: '&nbsp;'
+      })
+    }
+    if (structure.length >= 1 && structure[0].type !== 'text') {
+      structure.splice(0, 0, {
+        type: 'text',
+        html: '&nbsp;'
+      })
+    }
     return structure // Do not modify on top of this. Always create a new one.
   }
 
