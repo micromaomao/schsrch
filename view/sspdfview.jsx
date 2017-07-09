@@ -10,7 +10,9 @@ class SsPdfView extends React.Component {
       lastTapTime: 0,
       blobUrl: null,
       cacheCanvas: null, // will be set as a cached image of the document svg on `processDoc`
-      cropDragState: null
+      cropDragState: null,
+      touchClickValidIdentifier: null,
+      clickValid: false
     }
     this.ctAnimation = null
     this.lastViewWidth = this.lastViewHeight = 0
@@ -164,6 +166,14 @@ class SsPdfView extends React.Component {
             let rbPoint = this.doc2view(item.rb)
             let xBound = x => item.boundX ? Math.max(Math.min(x, this.props.width), 0) : x
             let yBound = y => item.boundY ? Math.max(Math.min(y, this.props.height), 0) : y
+            let handleTouchEnd = evt => {
+              if (!evt.touches || (evt.touches.length !== 1 && evt.changedTouches.length !== 1)) return
+              if (this.state.touchClickValidIdentifier !== (evt.changedTouches[0] || evt.touches[0]).identifier) return
+              item.onClick(evt)
+            }
+            let handleClick = evt => {
+              if (this.state.clickValid) item.onClick(evt)
+            }
             return (
               <div className={item.className || ''} key={i} style={{
                 position: 'absolute',
@@ -171,7 +181,7 @@ class SsPdfView extends React.Component {
                 top: yBound(ltPoint[1]) + 'px',
                 right: (this.props.width - xBound(rbPoint[0])) + 'px',
                 bottom: (this.props.height - yBound(rbPoint[1])) + 'px'
-              }} onClick={item.onClick} onTouchEnd={item.onClick}>{item.stuff}</div>
+              }} onClick={handleClick} onTouchEnd={handleTouchEnd}>{item.stuff}</div>
             )
           })}
           {cropOverlay}
@@ -196,11 +206,12 @@ class SsPdfView extends React.Component {
       let [ncx, ncy] = this.client2view([evt.clientX, evt.clientY])
       this.setState({dragOrig: {
         touch: null, x: ncx, y: ncy
-      }})
+      }, clickValid: true})
       return
     }
     if (evt.touches.length > 1) {
       evt.preventDefault()
+      this.setState({touchClickValidIdentifier: null})
       let t0 = evt.touches[0]
       let t1 = evt.touches[1]
       this.setState({lastTapTime: 0, dragOrig: {
@@ -216,6 +227,11 @@ class SsPdfView extends React.Component {
       }})
       return
     }
+    if (evt.touches.length === 1) {
+      this.setState({touchClickValidIdentifier: evt.touches[0].identifier})
+    } else {
+      this.setState({touchClickValidIdentifier: null})
+    }
     if (this.isInitialSize()) {
       return
     }
@@ -227,11 +243,15 @@ class SsPdfView extends React.Component {
     }})
   }
   handleMove (evt, prevent = true) {
-    if (!this.svgLayer) return
+    if (!this.svgLayer) {
+      this.setState({clickValid: false, touchClickValidIdentifier: null})
+      return
+    }
     let dragOrig = this.state.dragOrig
     if (!dragOrig) return
     if (prevent) evt.preventDefault()
     if (dragOrig.resize) {
+      this.setState({touchClickValidIdentifier: null})
       if (evt.touches.length !== 2) {
         this.setState({dragOrig: null})
         return
@@ -267,6 +287,9 @@ class SsPdfView extends React.Component {
     if (!evt.touches && !evt.changedTouches) {
       let [ncx, ncy] = this.client2view([evt.clientX, evt.clientY])
       let [dx, dy] = [ncx - dragOrig.x, ncy - dragOrig.y]
+      if (Math.pow(dx, 2) + Math.pow(dy, 2) > 4) {
+        this.setState({clickValid: false})
+      }
       let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
       this.setState({dragOrig: Object.assign({}, dragOrig, {x: ncx, y: ncy, touch: null})})
       this.ctAnimationStopToState({ctPos: [odocX + dx, odocY + dy]})
@@ -274,15 +297,20 @@ class SsPdfView extends React.Component {
     }
     if ((evt.touches.length !== 1 && !(evt.changedTouches.length === 1 && evt.touches.length === 0)) || !dragOrig) {
       this.setState({dragOrig: null})
+      this.setState({touchClickValidIdentifier: null})
       return
     }
     let touch = evt.changedTouches[0]
     if (touch.identifier !== dragOrig.touch) {
       this.setState({dragOrig: null})
+      this.setState({touchClickValidIdentifier: null})
       return
     }
     let [ncx, ncy] = this.client2view([touch.clientX, touch.clientY])
     let [dx, dy] = [ncx - dragOrig.x, ncy - dragOrig.y]
+    if (Math.pow(dx, 2) + Math.pow(dy, 2) > 4) {
+      this.setState({touchClickValidIdentifier: null})
+    }
     let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
     this.setState({dragOrig: Object.assign({}, dragOrig, {x: ncx, y: ncy})})
     this.ctAnimationStopToState({ctPos: [odocX + dx, odocY + dy]})
