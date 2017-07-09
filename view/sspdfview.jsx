@@ -12,7 +12,8 @@ class SsPdfView extends React.Component {
       cacheCanvas: null, // will be set as a cached image of the document svg on `processDoc`
       cropDragState: null,
       touchClickValidIdentifier: null,
-      clickValid: false
+      clickValid: false,
+      pressTime: null
     }
     this.ctAnimation = null
     this.lastViewWidth = this.lastViewHeight = 0
@@ -166,13 +167,8 @@ class SsPdfView extends React.Component {
             let rbPoint = this.doc2view(item.rb)
             let xBound = x => item.boundX ? Math.max(Math.min(x, this.props.width), 0) : x
             let yBound = y => item.boundY ? Math.max(Math.min(y, this.props.height), 0) : y
-            let handleTouchEnd = evt => {
-              if (!evt.touches || (evt.touches.length !== 1 && evt.changedTouches.length !== 1)) return
-              if (this.state.touchClickValidIdentifier !== (evt.changedTouches[0] || evt.touches[0]).identifier) return
-              item.onClick(evt)
-            }
-            let handleClick = evt => {
-              if (this.state.clickValid) item.onClick(evt)
+            let handleClickTap = evt => {
+              if (this.isClickOrTap(evt) && item.onClick) item.onClick(evt)
             }
             return (
               <div className={item.className || ''} key={i} style={{
@@ -181,7 +177,7 @@ class SsPdfView extends React.Component {
                 top: yBound(ltPoint[1]) + 'px',
                 right: (this.props.width - xBound(rbPoint[0])) + 'px',
                 bottom: (this.props.height - yBound(rbPoint[1])) + 'px'
-              }} onClick={handleClick} onTouchEnd={handleTouchEnd}>{item.stuff}</div>
+              }} onClick={handleClickTap} onTouchEnd={handleClickTap}>{item.stuff}</div>
             )
           })}
           {cropOverlay}
@@ -206,12 +202,12 @@ class SsPdfView extends React.Component {
       let [ncx, ncy] = this.client2view([evt.clientX, evt.clientY])
       this.setState({dragOrig: {
         touch: null, x: ncx, y: ncy
-      }, clickValid: true})
+      }, clickValid: true, pressTime: Date.now()})
       return
     }
     if (evt.touches.length > 1) {
       evt.preventDefault()
-      this.setState({touchClickValidIdentifier: null})
+      this.setState({touchClickValidIdentifier: null, pressTime: null})
       let t0 = evt.touches[0]
       let t1 = evt.touches[1]
       this.setState({lastTapTime: 0, dragOrig: {
@@ -227,6 +223,7 @@ class SsPdfView extends React.Component {
       }})
       return
     }
+    this.setState({pressTime: Date.now()})
     if (evt.touches.length === 1) {
       this.setState({touchClickValidIdentifier: evt.touches[0].identifier})
     } else {
@@ -244,14 +241,14 @@ class SsPdfView extends React.Component {
   }
   handleMove (evt, prevent = true) {
     if (!this.svgLayer) {
-      this.setState({clickValid: false, touchClickValidIdentifier: null})
+      this.setState({clickValid: false, touchClickValidIdentifier: null, pressTime: null})
       return
     }
     let dragOrig = this.state.dragOrig
     if (!dragOrig) return
     if (prevent) evt.preventDefault()
     if (dragOrig.resize) {
-      this.setState({touchClickValidIdentifier: null})
+      this.setState({touchClickValidIdentifier: null, pressTime: null})
       if (evt.touches.length !== 2) {
         this.setState({dragOrig: null})
         return
@@ -297,19 +294,19 @@ class SsPdfView extends React.Component {
     }
     if ((evt.touches.length !== 1 && !(evt.changedTouches.length === 1 && evt.touches.length === 0)) || !dragOrig) {
       this.setState({dragOrig: null})
-      this.setState({touchClickValidIdentifier: null})
+      this.setState({touchClickValidIdentifier: null, pressTime: null})
       return
     }
     let touch = evt.changedTouches[0]
     if (touch.identifier !== dragOrig.touch) {
       this.setState({dragOrig: null})
-      this.setState({touchClickValidIdentifier: null})
+      this.setState({touchClickValidIdentifier: null, pressTime: null})
       return
     }
     let [ncx, ncy] = this.client2view([touch.clientX, touch.clientY])
     let [dx, dy] = [ncx - dragOrig.x, ncy - dragOrig.y]
     if (Math.pow(dx, 2) + Math.pow(dy, 2) > 4) {
-      this.setState({touchClickValidIdentifier: null})
+      this.setState({touchClickValidIdentifier: null, pressTime: null})
     }
     let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
     this.setState({dragOrig: Object.assign({}, dragOrig, {x: ncx, y: ncy})})
@@ -347,6 +344,31 @@ class SsPdfView extends React.Component {
     }
     if (notResize && isDoubleTap) {
       this.handleDoubleTap(this.client2view([touch.clientX, touch.clientY]))
+    }
+  }
+  isSingleTouch (evt) {
+    if (!evt.touches && !evt.changedTouches) return false
+    if ((!evt.touches || evt.touches.length === 0) && evt.changedTouches.length !== 1) return false
+    if (evt.touches.length === 1 && evt.changedTouches.length > 1) return false
+    if (evt.touches.length > 1) return false
+    if ((!evt.touches || evt.touches.length === 0) && evt.changedTouches.length === 1) return this.state.touchClickValidIdentifier === evt.changedTouches[0].identifier
+    if (evt.touches && evt.touches.length === 1) return this.state.touchClickValidIdentifier === evt.touches[0].identifier
+    return false
+  }
+  isLongPress (evt) {
+    if (evt.touches || evt.changedTouches) {
+      if (!this.isSingleTouch(evt)) return false
+      return Date.now() - this.state.pressTime > 500
+    } else {
+      return this.state.clickValid && (Date.now() - this.state.pressTime > 500)
+    }
+  }
+  isClickOrTap (evt) {
+    if (evt.touches || evt.changedTouches) {
+      if (!this.isSingleTouch(evt)) return false
+      return Date.now() - this.state.pressTime <= 500
+    } else {
+      return this.state.clickValid && (Date.now() - this.state.pressTime <= 500)
     }
   }
   finishDrag () {
