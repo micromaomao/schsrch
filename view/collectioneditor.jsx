@@ -212,6 +212,7 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
     this.unsub()
   }
   render () {
+    let sspdfDim = this.calcSspdfDim()
     return (
       <div className='enPaperCrop'>
         <div className='menu'>
@@ -259,8 +260,8 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
                       <SsPdfView
                         docJson={this.state.docJson}
                         overlay={this.renderOverlay()}
-                        width={this.state.measuredViewWidth}
-                        height={this.calcSspdfHeight()}
+                        width={sspdfDim[0]}
+                        height={sspdfDim[1]}
                         fixedBoundary={this.props.structure.boundary} />
                     ) : null}
                 {!this.state.error && this.state.loading && !this.state.docJson
@@ -278,10 +279,17 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
     )
   }
 
-  calcSspdfHeight () {
+  calcSspdfDim () {
+    let mw = this.state.measuredViewWidth
+    if (mw < 1) return [0, 0]
     let boundary = this.props.structure.boundary
     if (!PaperCropEditorNode.isValidBoundary(this.props.structure.boundary)) return 0
-    return (boundary[3] - boundary[1]) / (boundary[2] - boundary[0]) * this.state.measuredViewWidth
+    let [bw, bh] = [boundary[2] - boundary[0], boundary[3] - boundary[1]]
+    let priHight =  bh / bw * mw
+    if (priHight / bh > 1.5) {
+      return [mw, bh * 1.5]
+    }
+    return [mw, priHight]
   }
 
   renderOverlay () {

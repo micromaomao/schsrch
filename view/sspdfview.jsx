@@ -186,6 +186,7 @@ class SsPdfView extends React.Component {
     document.removeEventListener('mousemove', this.handleMove)
     document.removeEventListener('mouseup', this.handleUp)
     if (!this.svgLayer) return
+    if (this.props.onDragState) this.props.onDragState(true)
     if (!evt.touches) {
       evt.preventDefault()
       let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
@@ -323,27 +324,29 @@ class SsPdfView extends React.Component {
     if (!this.svgLayer) return
     if (!this.state.dragOrig) return
 
-    if (this.props.fixedBoundary) this.ctAnimationStartFromState(this.calcFixedBoundary())
-
-    this.ctAnimationStartFromState({ctPos: this.calcBound()})
-
-    // Limit resize (no too big, no too small)
-    let nStat = this.ctAnimationGetFinalState()
-    let abAverage = null
-    if (this.state.dragOrig.resize) {
-      abAverage = [0, 1].map(p => (this.state.dragOrig.pointA.point[p] + this.state.dragOrig.pointB.point[p]) / 2)
-    }
-    let resizeCenter = abAverage ? abAverage : ['x', 'y'].map(p => this.state.dragOrig[p])
-    if (nStat.ctSize[0] > this.props.width * 5) {
-      nStat = this.calcResizeOnPoint(resizeCenter, this.props.width * 5 / nStat.ctSize[0])
-    } else if (nStat.ctSize[0] < this.props.width && nStat.ctSize[1] < this.props.height) {
-      nStat = this.calcCenter()
+    if (this.props.fixedBoundary) {
+      this.ctAnimationStartFromState(this.calcFixedBoundary())
     } else {
-      nStat.ctPos = this.calcBound(nStat)
-    }
-    this.ctAnimationStartFromState(nStat)
+      this.ctAnimationStartFromState({ctPos: this.calcBound()})
 
+      // Limit resize (no too big, no too small)
+      let nStat = this.ctAnimationGetFinalState()
+      let abAverage = null
+      if (this.state.dragOrig.resize) {
+        abAverage = [0, 1].map(p => (this.state.dragOrig.pointA.point[p] + this.state.dragOrig.pointB.point[p]) / 2)
+      }
+      let resizeCenter = abAverage ? abAverage : ['x', 'y'].map(p => this.state.dragOrig[p])
+      if (nStat.ctSize[0] > this.props.width * 5) {
+        nStat = this.calcResizeOnPoint(resizeCenter, this.props.width * 5 / nStat.ctSize[0])
+      } else if (nStat.ctSize[0] < this.props.width && nStat.ctSize[1] < this.props.height) {
+        nStat = this.calcCenter()
+      } else {
+        nStat.ctPos = this.calcBound(nStat)
+      }
+      this.ctAnimationStartFromState(nStat)
+    }
     this.setState({dragOrig: null})
+    if (this.props.onDragState) this.props.onDragState(false)
   }
   handleDoubleTap (point) {
     if (!this.svgLayer) return
@@ -517,8 +520,12 @@ class SsPdfView extends React.Component {
 
     if (this.props.fixedBoundary) this.ctAnimationStartFromState(this.calcFixedBoundary)
   }
-  reCenter () {
-    this.ctAnimationStartFromState(this.calcCenter())
+  reCenter (noAnimation) {
+    if (!noAnimation) {
+      this.ctAnimationStartFromState(this.calcCenter())
+    } else {
+      this.ctAnimationStopToState(this.calcCenter())
+    }
   }
   calcCenter () {
     if (this.props.fixedBoundary) return this.calcFixedBoundary()
@@ -735,6 +742,12 @@ class SsPdfView extends React.Component {
     let s = Math.min(sX, sY)
     let nctSize = [docW * s, docH * s]
     let nctPos = [-bx * s, -by * s]
+    if ((bw * s) < this.props.width) {
+      nctPos[0] += (this.props.width - (bw * s)) / 2
+    }
+    if ((bh * s) < this.props.height) {
+      nctPos[1] += (this.props.height - (bh * s)) / 2
+    }
     return {ctPos: nctPos, ctSize: nctSize}
   }
 }
