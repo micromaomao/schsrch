@@ -157,9 +157,11 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
       error: null,
       docJson: null,
       docMeta: null,
-      measuredViewWidth: 0
+      measuredViewWidth: 0,
+      reCropping: null
     }
     this.handleApplySelection = this.handleApplySelection.bind(this)
+    this.handleCropBoundaryChange = this.handleCropBoundaryChange.bind(this)
   }
 
   componentDidMount () {
@@ -220,11 +222,29 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
           {this.getDeleteBtn()}
           {this.props.disabled && !this.props.structure.doc
             ? (
-                <span>Empty clip.</span>
+                <a>Empty clip.</a>
               ) : null}
-          {this.props.structure.doc && this.state.docMeta
+          {!this.state.reCropping && this.props.structure.doc && this.state.docMeta
             ? (
                 <a className='doc' onClick={evt => this.openDoc()}>{PaperUtils.setToString(this.state.docMeta)} - page {this.props.structure.page + 1}</a>
+              ) : null}
+          {!this.props.disabled && !this.state.reCropping && this.props.structure.doc && this.state.docMeta
+            ? (
+                <span onClick={evt => this.startReCrop()}>
+                  <svg className="icon ii-edit"><use href="#ii-edit" xlinkHref="#ii-edit" /></svg>
+                </span>
+              ) : null}
+          {!this.props.disabled && this.state.reCropping
+            ? (
+                <span onClick={evt => this.finishReCrop()}>
+                  <svg className="icon ii-save"><use href="#ii-save" xlinkHref="#ii-save" /></svg>
+                </span>
+              ) : null}
+          {!this.props.disabled && this.state.reCropping
+            ? (
+                <span onClick={evt => this.cancelReCrop()}>
+                  <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
+                </span>
               ) : null}
         </div>
         {!this.props.structure.doc && !AppState.getState().paperCropClipboard && !this.props.disabled
@@ -262,7 +282,9 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
                         overlay={this.renderOverlay()}
                         width={sspdfDim[0]}
                         height={sspdfDim[1]}
-                        fixedBoundary={this.props.structure.boundary} />
+                        fixedBoundary={!this.state.reCropping ? this.props.structure.boundary : null}
+                        cropBoundary={this.state.reCropping || null}
+                        onCropBoundaryChange={this.state.reCropping ? this.handleCropBoundaryChange : null}/>
                     ) : null}
                 {!this.state.error && this.state.loading && !this.state.docJson
                   ? (
@@ -282,6 +304,10 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
   calcSspdfDim () {
     let mw = this.state.measuredViewWidth
     if (mw < 1) return [0, 0]
+    if (this.state.reCropping && this.state.docJson) {
+      let [dw, dh] = ['width', 'height'].map(p => this.state.docJson[p])
+      return [mw, Math.min(mw * (dh / dw), window.innerHeight)]
+    }
     let boundary = this.props.structure.boundary
     if (!PaperCropEditorNode.isValidBoundary(this.props.structure.boundary)) return 0
     let [bw, bh] = [boundary[2] - boundary[0], boundary[3] - boundary[1]]
@@ -307,6 +333,7 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
       boundary: JSON.stringify(this.props.structure.boundary)
     }
   }
+
   handleApplySelection () {
     let clip = AppState.getState().paperCropClipboard
     if (!clip) return
@@ -323,6 +350,28 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
     AppState.dispatch({type: 'home'})
     AppState.dispatch({type: 'query', query: PaperUtils.setToString(this.state.docMeta) + '_' + this.state.docMeta.type})
     AppState.dispatch({type: 'previewFile', psKey: PaperUtils.setToString(this.state.docMeta), fileId: this.props.structure.doc, page: this.props.structure.page})
+  }
+
+  handleCropBoundaryChange (boundary) {
+    if (!this.state.reCropping) return
+    this.setState({reCropping: boundary})
+  }
+
+  startReCrop () {
+    if (!this.state.docJson || this.state.reCropping) return
+    this.setState({reCropping: (this.props.structure.boundary || [0, 0, this.state.docJson.width, this.state.docJson.height])})
+  }
+
+  finishReCrop () {
+    if (!PaperCropEditorNode.isValidBoundary(this.state.reCropping)) return
+    this.props.onUpdateStructure(Object.assign({}, this.props.structure, {
+      boundary: this.state.reCropping
+    }))
+    this.setState({reCropping: null})
+  }
+
+  cancelReCrop () {
+    this.setState({reCropping: null})
   }
 }
 editorNodeTypeNameTable.paperCrop = PaperCropEditorNode

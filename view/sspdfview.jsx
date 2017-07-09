@@ -182,6 +182,7 @@ class SsPdfView extends React.Component {
       </div>
     )
   }
+
   handleDown (evt) {
     document.removeEventListener('mousemove', this.handleMove)
     document.removeEventListener('mouseup', this.handleUp)
@@ -439,7 +440,9 @@ class SsPdfView extends React.Component {
       this.lastViewWidth = this.props.width
       this.lastViewHeight = this.props.height
       this.reCenter()
-    } else if (!prevProps.cropBoundary && this.props.cropBoundary) {
+    } else if (!!prevProps.cropBoundary !== !!this.props.cropBoundary) {
+      this.reCenter()
+    } else if (prevProps.fixedBoundary !== this.props.fixedBoundary) {
       this.reCenter()
     }
 
