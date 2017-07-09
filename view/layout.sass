@@ -675,6 +675,10 @@ $feedback-top-height: 2rem + 1.3rem
   overflow: hidden
   width: 100%
   position: relative
+  &.textsel
+    cursor: text
+  &.textsel .questionln
+    display: none
   .svglayer, .selectlayer, .dirtylayer, .pointereventcover, .msref, .pointereventcover > .cropoverlay
     position: absolute
     top: 0
@@ -731,6 +735,32 @@ $feedback-top-height: 2rem + 1.3rem
         background-color: rgba(black, 0.5)
         position: absolute
         z-index: 1
+    .wordsel
+      background-color: rgba($color-primary, 0.2)
+      cursor: text
+    .wordsel-border
+      border: dashed 1px $color-primary
+    .textmenu
+      overflow: visible
+      div
+        position: absolute
+        top: 0
+        left: 0
+        width: auto
+        height: auto
+        background-color: white
+        box-shadow: 2px 2px 5px rgba(black, 0.3)
+        opacity: 0.9
+        font-size: 0.8rem
+        font-weight: lighter
+        padding: 0.8rem
+        span
+          display: inline-block
+          padding: 0.3rem 1rem
+          border-right: solid 1px #aaa
+          &:last-child
+            border-right: none
+          cursor: pointer
 
 .disclaimer
   padding: 1.5rem

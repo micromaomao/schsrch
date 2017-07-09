@@ -1,4 +1,13 @@
 const React = require('react')
+const rbush = require('rbush')
+
+const RectSort = (rect1, rect2) => {
+  let s1 = rect1.minY - rect2.minY
+  if (Math.abs(s1) > 10) {
+    return Math.sign(s1)
+  }
+  return Math.sign(rect1.minX - rect2.minX)
+}
 
 class SsPdfView extends React.Component {
   constructor (props) {
@@ -13,7 +22,11 @@ class SsPdfView extends React.Component {
       cropDragState: null,
       touchClickValidIdentifier: null,
       clickValid: false,
-      pressTime: null
+      pressTime: null,
+      longPressDetectionTimeout: null,
+      textSelection: null,
+      textSelectionTouchId: null,
+      textSelectionPressing: false
     }
     this.ctAnimation = null
     this.lastViewWidth = this.lastViewHeight = 0
@@ -24,11 +37,13 @@ class SsPdfView extends React.Component {
     this.handleCropDown = this.handleCropDown.bind(this)
     this.handleCropMove = this.handleCropMove.bind(this)
     this.handleCropUp = this.handleCropUp.bind(this)
+    this.longPressDetect = this.longPressDetect.bind(this)
     this.ctAnimationId = 0
     this.needPaintDirtyLayer = this.needClearDirtyLayer = false // set by `render`: indicating whether to paint/clear the canvas once react rendered it.
     if (AppState.getState().serverrender) {
       this.state.server = true
     }
+    this.rbush = rbush(14)
   }
   render () {
     if (this.state.server) return null
@@ -50,6 +65,7 @@ class SsPdfView extends React.Component {
       backgroundSize: (this.needPaintDirtyLayer ? '0 0' : `${this.state.ctSize[0]}px ${this.state.ctSize[1]}px`)
     }
     let overlays = this.props.overlay || []
+    overlays = overlays.concat(this.getWordOverlay())
     let cropOverlay = null
     let cropMask = null
     if (this.props.cropBoundary) {
@@ -160,7 +176,7 @@ class SsPdfView extends React.Component {
         )
     }
     return (
-      <div className='sspdfview' style={{width: this.props.width + 'px', height: this.props.height + 'px'}}>
+      <div className={'sspdfview' + (this.state.textSelection ? ' textsel' : '')} style={{width: this.props.width + 'px', height: this.props.height + 'px'}}>
         <div className='pointereventcover' ref={f => this.eventTarget = f}>
           {overlays.map((item, i) => {
             let ltPoint = this.doc2view(item.lt)
@@ -193,6 +209,9 @@ class SsPdfView extends React.Component {
     document.removeEventListener('mousemove', this.handleMove)
     document.removeEventListener('mouseup', this.handleUp)
     if (!this.svgLayer) return
+    this.setState({
+      textSelectionTouchId: null
+    })
     if (this.props.onDragState) this.props.onDragState(true)
     if (!evt.touches) {
       evt.preventDefault()
@@ -202,12 +221,16 @@ class SsPdfView extends React.Component {
       let [ncx, ncy] = this.client2view([evt.clientX, evt.clientY])
       this.setState({dragOrig: {
         touch: null, x: ncx, y: ncy
-      }, clickValid: true, pressTime: Date.now()})
+      }, clickValid: true, pressTime: Date.now(), longPressDetectionTimeout: setTimeout(this.longPressDetect, 500)})
       return
     }
     if (evt.touches.length > 1) {
       evt.preventDefault()
       this.setState({touchClickValidIdentifier: null, pressTime: null})
+      if (this.state.longPressDetectionTimeout) {
+        clearTimeout(this.state.longPressDetectionTimeout)
+        this.setState({longPressDetectionTimeout: null})
+      }
       let t0 = evt.touches[0]
       let t1 = evt.touches[1]
       this.setState({lastTapTime: 0, dragOrig: {
@@ -226,8 +249,13 @@ class SsPdfView extends React.Component {
     this.setState({pressTime: Date.now()})
     if (evt.touches.length === 1) {
       this.setState({touchClickValidIdentifier: evt.touches[0].identifier})
+      this.setState({longPressDetectionTimeout: setTimeout(this.longPressDetect, 500)})
     } else {
       this.setState({touchClickValidIdentifier: null})
+      if (this.state.longPressDetectionTimeout) {
+        clearTimeout(this.state.longPressDetectionTimeout)
+        this.setState({longPressDetectionTimeout: null})
+      }
     }
     if (this.isInitialSize()) {
       return
@@ -239,16 +267,35 @@ class SsPdfView extends React.Component {
       touch: touch.identifier, x: ncx, y: ncy
     }})
   }
+  longPressDetect () {
+    if (!this.state.clickValid && this.state.touchClickValidIdentifier === null || !this.state.dragOrig || this.state.pressTime === null) return
+    if (this.state.pressTime > 500) {
+      this.handleLongPress()
+    } else {
+      this.setState({longPressDetectionTimeout: setTimeout(this.longPressDetect, 500 - this.state.pressTime)})
+    }
+  }
   handleMove (evt, prevent = true) {
     if (!this.svgLayer) {
       this.setState({clickValid: false, touchClickValidIdentifier: null, pressTime: null})
+      if (this.state.longPressDetectionTimeout) {
+        clearTimeout(this.state.longPressDetectionTimeout)
+        this.setState({longPressDetectionTimeout: null})
+      }
       return
     }
     let dragOrig = this.state.dragOrig
-    if (!dragOrig) return
+    if (!dragOrig) {
+      this.handleMove2(evt)
+      return
+    }
     if (prevent) evt.preventDefault()
     if (dragOrig.resize) {
       this.setState({touchClickValidIdentifier: null, pressTime: null})
+      if (this.state.longPressDetectionTimeout) {
+        clearTimeout(this.state.longPressDetectionTimeout)
+        this.setState({longPressDetectionTimeout: null})
+      }
       if (evt.touches.length !== 2) {
         this.setState({dragOrig: null})
         return
@@ -286,6 +333,10 @@ class SsPdfView extends React.Component {
       let [dx, dy] = [ncx - dragOrig.x, ncy - dragOrig.y]
       if (Math.pow(dx, 2) + Math.pow(dy, 2) > 4) {
         this.setState({clickValid: false})
+        if (this.state.longPressDetectionTimeout) {
+          clearTimeout(this.state.longPressDetectionTimeout)
+          this.setState({longPressDetectionTimeout: null})
+        }
       }
       let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
       this.setState({dragOrig: Object.assign({}, dragOrig, {x: ncx, y: ncy, touch: null})})
@@ -295,25 +346,74 @@ class SsPdfView extends React.Component {
     if ((evt.touches.length !== 1 && !(evt.changedTouches.length === 1 && evt.touches.length === 0)) || !dragOrig) {
       this.setState({dragOrig: null})
       this.setState({touchClickValidIdentifier: null, pressTime: null})
+      if (this.state.longPressDetectionTimeout) {
+        clearTimeout(this.state.longPressDetectionTimeout)
+        this.setState({longPressDetectionTimeout: null})
+      }
       return
     }
     let touch = evt.changedTouches[0]
     if (touch.identifier !== dragOrig.touch) {
       this.setState({dragOrig: null})
       this.setState({touchClickValidIdentifier: null, pressTime: null})
+      if (this.state.longPressDetectionTimeout) {
+        clearTimeout(this.state.longPressDetectionTimeout)
+        this.setState({longPressDetectionTimeout: null})
+      }
       return
     }
     let [ncx, ncy] = this.client2view([touch.clientX, touch.clientY])
     let [dx, dy] = [ncx - dragOrig.x, ncy - dragOrig.y]
     if (Math.pow(dx, 2) + Math.pow(dy, 2) > 4) {
       this.setState({touchClickValidIdentifier: null, pressTime: null})
+      if (this.state.longPressDetectionTimeout) {
+        clearTimeout(this.state.longPressDetectionTimeout)
+        this.setState({longPressDetectionTimeout: null})
+      }
     }
     let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
     this.setState({dragOrig: Object.assign({}, dragOrig, {x: ncx, y: ncy})})
     this.ctAnimationStopToState({ctPos: [odocX + dx, odocY + dy]})
   }
+  handleMove2 (evt, prevent = true) {
+    if (this.state.textSelection === null || !this.state.textSelectionPressing) return
+    let mergeArea = point => {
+      let ts = this.state.textSelection
+      this.setState({
+        textSelection: [ts[0], ts[1], point[0], point[1]]
+      })
+    }
+    if (!evt.touches) {
+      mergeArea(this.view2doc(this.client2view([evt.clientX, evt.clientY])))
+    } else {
+      if (evt.touches.length !== 1 || evt.touches[0].identifier !== this.state.textSelectionTouchId) {
+        this.setState({
+          textSelection: null,
+          textSelectionTouchId: null
+        })
+      } else {
+        let t = evt.touches[0]
+        mergeArea(this.view2doc(this.client2view([t.clientX, t.clientY])))
+      }
+    }
+  }
   handleUp (evt) {
+    if (this.state.longPressDetectionTimeout) {
+      clearTimeout(this.state.longPressDetectionTimeout)
+      this.setState({longPressDetectionTimeout: null})
+    }
     if (!this.svgLayer) return
+    this.setState({
+      textSelectionTouchId: null,
+      textSelectionPressing: false
+    })
+    if (this.isClickOrTap(evt)) {
+      setTimeout(() => {
+        this.setState({
+          textSelection: null
+        })
+      }, 1)
+    }
     if (!evt.touches && !evt.changedTouches) {
       document.removeEventListener('mousemove', this.handleMove)
       document.removeEventListener('mouseup', this.handleUp)
@@ -332,18 +432,22 @@ class SsPdfView extends React.Component {
     if (this.state.dragOrig && !this.state.dragOrig.resize) {
       this.handleMove(evt, false)
     }
-    let notResize = !this.state.dragOrig || !this.state.dragOrig.resize
-    if (!notResize || isDoubleTap) {
+    let touch = evt.changedTouches[0] || evt.touches[0]
+    if (!this.isClickOrTap(evt)) {
       this.setState({lastTapTime: 0})
     } else {
-      this.setState({lastTapTime: Date.now()})
+      let notResize = !this.state.dragOrig || !this.state.dragOrig.resize
+      if (!notResize || isDoubleTap) {
+        this.setState({lastTapTime: 0})
+      } else {
+        this.setState({lastTapTime: Date.now()})
+      }
+      if (notResize && isDoubleTap) {
+        this.handleDoubleTap(this.client2view([touch.clientX, touch.clientY]))
+      }
     }
-    let touch = evt.changedTouches[0]
     if (this.state.dragOrig) {
       this.finishDrag()
-    }
-    if (notResize && isDoubleTap) {
-      this.handleDoubleTap(this.client2view([touch.clientX, touch.clientY]))
     }
   }
   isSingleTouch (evt) {
@@ -356,6 +460,7 @@ class SsPdfView extends React.Component {
     return false
   }
   isLongPress (evt) {
+    if (this.pressTime === null) return
     if (evt.touches || evt.changedTouches) {
       if (!this.isSingleTouch(evt)) return false
       return Date.now() - this.state.pressTime > 500
@@ -364,6 +469,7 @@ class SsPdfView extends React.Component {
     }
   }
   isClickOrTap (evt) {
+    if (this.pressTime === null) return
     if (evt.touches || evt.changedTouches) {
       if (!this.isSingleTouch(evt)) return false
       return Date.now() - this.state.pressTime <= 500
@@ -409,6 +515,99 @@ class SsPdfView extends React.Component {
       this.ctAnimationStartFromState({ctPos: this.calcBound(rsState), ctSize: rsState.ctSize})
     }
   }
+  handleLongPress () {
+    if (!this.rbush) return
+    let { x: cx, y: cy } = this.state.dragOrig
+    let [docX, docY] = this.view2doc([cx, cy])
+    this.setState({
+      textSelection: [docX, docY, docX, docY],
+      dragOrig: null,
+      textSelectionTouchId: this.state.dragOrig.touch,
+      textSelectionPressing: true
+    })
+  }
+  getWordOverlay () {
+    if (this.state.textSelection === null) return []
+    let ts = this.state.textSelection.slice()
+    if (ts[0] > ts[2]) {
+      let sw = ts[0]
+      ts[0] = ts[2]
+      ts[2] = sw
+    }
+    if (ts[1] > ts[3]) {
+      let sw = ts[1]
+      ts[1] = ts[3]
+      ts[3] = sw
+    }
+    let wordrectsUm = this.rbush.search({
+      minX: ts[0],
+      minY: ts[1],
+      maxX: ts[2],
+      maxY: ts[3]
+    }).sort(RectSort)
+    let wordrects = []
+    let minminX = Infinity
+    let minminY = Infinity
+    for (let i = 0; i < wordrectsUm.length; i ++) {
+      let cRect = wordrectsUm[i]
+      minminX = Math.min(minminX, cRect.minX)
+      minminY = Math.min(minminY, cRect.minY)
+      if (wordrects.length === 0) {
+        wordrects.push(cRect)
+      } else {
+        let pRect = wordrects[wordrects.length - 1]
+        if (Math.abs(pRect.minY - cRect.minY) < 2 && Math.abs(pRect.maxY - cRect.maxY) < 2 &&
+          Math.abs(pRect.maxX - cRect.minX) < 2) {
+            pRect = Object.assign({}, pRect)
+            pRect.word += cRect.word
+            pRect.minX = Math.min(pRect.minX, cRect.minX)
+            pRect.minY = Math.min(pRect.minY, cRect.minY)
+            pRect.maxX = Math.max(pRect.maxX, cRect.maxX)
+            pRect.maxY = Math.max(pRect.maxY, cRect.maxY)
+            wordrects[wordrects.length - 1] = pRect
+          } else {
+            wordrects.push(cRect)
+          }
+      }
+    }
+    let olay = wordrects.map(wr => ({
+      lt: [wr.minX, wr.minY],
+      rb: [wr.maxX, wr.maxY],
+      className: 'wordsel',
+      stuff: null
+    }))
+    if (this.state.textSelectionPressing || this.state.textSelectionTouchId) {
+      olay = olay.concat([{
+        lt: [ts[0], ts[1]],
+        rb: [ts[2], ts[3]],
+        className: 'wordsel-border',
+        stuff: null
+      }])
+    } else if (wordrects.length > 0 && this.props.docJson) {
+      let fulltext = wordrects.map(x => x.word).join('')
+      let shortened = fulltext.length > 40 ? fulltext.substr(0, 40) + '\u2026' : fulltext
+      shortened = shortened.replace(/\s/g, ' ')
+      let handleCopy = evt => {
+        // TODO: Copy text
+      }
+      olay = olay.concat({
+        lt: [minminX, minminY],
+        rb: [Infinity, Infinity],
+        boundX: true,
+        boundY: true,
+        className: 'textmenu',
+        stuff: (
+          <div>
+            <span onClick={handleCopy}>Copy</span>
+            <span>Google "{shortened}"</span>
+            <span>Crop to collection</span>
+          </div>
+        )
+      })
+    }
+    return olay
+  }
+
   handleScroll (evt) {
     if (!this.svgLayer) return
     if (evt.ctrlKey) {
@@ -542,7 +741,7 @@ class SsPdfView extends React.Component {
       this.processDoc(nextProps.docJson)
     }
   }
-  processDoc ({svg, width, height}) {
+  processDoc ({svg, width, height, rects, text}) {
     // Create blob url for putting in background-image.
     let oldUrl = this.state.blobUrl
     let blob = new Blob([svg], {type: 'image/svg+xml'})
@@ -572,6 +771,35 @@ class SsPdfView extends React.Component {
     if (this.props.cropBoundary) this.props.onCropBoundaryChange(null)
 
     if (this.props.fixedBoundary) this.ctAnimationStartFromState(this.calcFixedBoundary)
+
+    this.rbush.clear()
+    let wordRects = []
+    for (let i = 0; i < rects.length; i ++) {
+      let cChar = text[i]
+      let cRect = rects[i]
+      let isPartOfWord = /^[a-zA-Z0-9]$/.test(cChar)
+      if (!cChar) break
+      if ((isPartOfWord && (wordRects.length === 0 || wordRects[wordRects.length - 1] === null)) || (!isPartOfWord)) {
+        wordRects.push({
+          word: cChar,
+          minX: cRect.x1,
+          minY: cRect.y1,
+          maxX: cRect.x2,
+          maxY: cRect.y2
+        })
+        if (!isPartOfWord) {
+          wordRects.push(null)
+        }
+      } else if (isPartOfWord && wordRects.length > 0) {
+        let lastRect = wordRects[wordRects.length - 1]
+        lastRect.word += cChar
+        lastRect.minX = Math.min(lastRect.minX, cRect.x1)
+        lastRect.minY = Math.min(lastRect.minY, cRect.y1)
+        lastRect.maxX = Math.max(lastRect.maxX, cRect.x2)
+        lastRect.maxY = Math.max(lastRect.maxY, cRect.y2)
+      }
+    }
+    this.rbush.load(wordRects.filter(x => x !== null))
   }
   reCenter (noAnimation) {
     if (!noAnimation) {
