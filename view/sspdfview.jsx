@@ -1,5 +1,30 @@
 const React = require('react')
 const rbush = require('rbush')
+const copyStuff = require('./copystuff.js')
+
+const delayEvent = handler => {
+  return evt => {
+    evt.preventDefault()
+    setTimeout(() => {
+      // By this time the event handlers for children, which is called by
+      // React, has completed. Let's call this
+
+      // NOTE: by this time the handlers for the parents, which is called by
+      // React, has also been called. But this isn't an issue yet.
+      handler(evt, false)
+    }, 0)
+  }
+  /*
+    Since React handles all events at the topest level, some events need to be
+    addEventListener'd manually (i.e. not by using React's on props). This means
+    that if a child of the addEventListener'd element triggered a event that
+    propagates, e.g. touchstart, and the child uses React's event props, event
+    handler for the parent element (the element that is being addEventListener'd),
+    which should have been the handler that's being passed into this function, will
+    be called first - before handler for the child is called. This violates the
+    rules of event handling. Therefore, this function is intended to fix it.
+  */
+}
 
 const RectSort = (rect1, rect2) => {
   let s1 = rect1.minY - rect2.minY
@@ -193,7 +218,7 @@ class SsPdfView extends React.Component {
                 top: yBound(ltPoint[1]) + 'px',
                 right: (this.props.width - xBound(rbPoint[0])) + 'px',
                 bottom: (this.props.height - yBound(rbPoint[1])) + 'px'
-              }} onClick={handleClickTap} onTouchEnd={handleClickTap}>{item.stuff}</div>
+              }} onMouseUp={handleClickTap} onTouchEnd={handleClickTap}>{item.stuff}</div>
             )
           })}
           {cropOverlay}
@@ -209,12 +234,12 @@ class SsPdfView extends React.Component {
     document.removeEventListener('mousemove', this.handleMove)
     document.removeEventListener('mouseup', this.handleUp)
     if (!this.svgLayer) return
+    if (this.state.cropDragState) return
     this.setState({
       textSelectionTouchId: null
     })
     if (this.props.onDragState) this.props.onDragState(true)
     if (!evt.touches) {
-      evt.preventDefault()
       let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
       document.addEventListener('mousemove', this.handleMove, noPassiveEventsArgument)
       document.addEventListener('mouseup', this.handleUp, noPassiveEventsArgument)
@@ -225,7 +250,6 @@ class SsPdfView extends React.Component {
       return
     }
     if (evt.touches.length > 1) {
-      evt.preventDefault()
       this.setState({touchClickValidIdentifier: null, pressTime: null})
       if (this.state.longPressDetectionTimeout) {
         clearTimeout(this.state.longPressDetectionTimeout)
@@ -260,7 +284,6 @@ class SsPdfView extends React.Component {
     if (this.isInitialSize()) {
       return
     }
-    evt.preventDefault()
     let touch = evt.changedTouches[0]
     let [ncx, ncy] = this.client2view([touch.clientX, touch.clientY])
     this.setState({dragOrig: {
@@ -408,27 +431,19 @@ class SsPdfView extends React.Component {
       textSelectionPressing: false
     })
     if (this.isClickOrTap(evt)) {
-      setTimeout(() => {
-        this.setState({
-          textSelection: null
-        })
-      }, 1)
+      this.setState({
+        textSelection: null
+      })
     }
     if (!evt.touches && !evt.changedTouches) {
       document.removeEventListener('mousemove', this.handleMove)
       document.removeEventListener('mouseup', this.handleUp)
       this.handleMove(evt, false)
-      if (this.state.dragOrig) {
-        evt.preventDefault()
-      }
       this.finishDrag()
       return
     }
     let doubleTapTime = 300
     let isDoubleTap = Date.now() - this.state.lastTapTime < doubleTapTime
-    if (this.state.dragOrig || isDoubleTap) {
-      evt.preventDefault()
-    }
     if (this.state.dragOrig && !this.state.dragOrig.resize) {
       this.handleMove(evt, false)
     }
@@ -519,6 +534,9 @@ class SsPdfView extends React.Component {
     if (!this.rbush) return
     let { x: cx, y: cy } = this.state.dragOrig
     let [docX, docY] = this.view2doc([cx, cy])
+    if (this.props.onCropBoundaryChange) {
+      this.props.onCropBoundaryChange(null)
+    }
     this.setState({
       textSelection: [docX, docY, docX, docY],
       dragOrig: null,
@@ -528,6 +546,7 @@ class SsPdfView extends React.Component {
   }
   getWordOverlay () {
     if (this.state.textSelection === null) return []
+    if (!this.props.docJson) return []
     let ts = this.state.textSelection.slice()
     if (ts[0] > ts[2]) {
       let sw = ts[0]
@@ -546,12 +565,16 @@ class SsPdfView extends React.Component {
       maxY: ts[3]
     }).sort(RectSort)
     let wordrects = []
-    let minminX = Infinity
-    let minminY = Infinity
+    let minminX = this.props.docJson.width
+    let minminY = this.props.docJson.height
+    let maxmaxX = 0
+    let maxmaxY = 0
     for (let i = 0; i < wordrectsUm.length; i ++) {
       let cRect = wordrectsUm[i]
       minminX = Math.min(minminX, cRect.minX)
       minminY = Math.min(minminY, cRect.minY)
+      maxmaxX = Math.max(maxmaxX, cRect.maxX)
+      maxmaxY = Math.max(maxmaxY, cRect.maxY)
       if (wordrects.length === 0) {
         wordrects.push(cRect)
       } else {
@@ -570,6 +593,14 @@ class SsPdfView extends React.Component {
           }
       }
     }
+    if (minminX > maxmaxX) {
+      minminX = ts[0]
+      maxmaxX = ts[2]
+    }
+    if (minminY > maxmaxY) {
+      minminY = ts[1]
+      maxmaxY = ts[3]
+    }
     let olay = wordrects.map(wr => ({
       lt: [wr.minX, wr.minY],
       rb: [wr.maxX, wr.maxY],
@@ -583,12 +614,21 @@ class SsPdfView extends React.Component {
         className: 'wordsel-border',
         stuff: null
       }])
-    } else if (wordrects.length > 0 && this.props.docJson) {
+    } else {
       let fulltext = wordrects.map(x => x.word).join('')
       let shortened = fulltext.length > 40 ? fulltext.substr(0, 40) + '\u2026' : fulltext
       shortened = shortened.replace(/\s/g, ' ')
       let handleCopy = evt => {
-        // TODO: Copy text
+        if (!this.isClickOrTap(evt)) return
+        copyStuff(fulltext)
+      }
+      let handleSearch = evt => {
+        if (!this.isClickOrTap(evt)) return
+        window.open('https://www.google.com/search?q=' + encodeURIComponent(fulltext))
+      }
+      let handleCrop = evt => {
+        if (!this.isClickOrTap(evt)) return
+        this.startCrop([minminX, minminY, maxmaxX, maxmaxY])
       }
       olay = olay.concat({
         lt: [minminX, minminY],
@@ -598,12 +638,20 @@ class SsPdfView extends React.Component {
         className: 'textmenu',
         stuff: (
           <div>
-            <span onClick={handleCopy}>Copy</span>
-            <span>Google "{shortened}"</span>
-            <span>Crop to collection</span>
+            {wordrects.length > 0 ? (<span onMouseUp={handleCopy} onTouchEnd={handleCopy}>Copy</span>) : null}
+            {wordrects.length > 0 ? (<span onMouseUp={handleSearch} onTouchEnd={handleSearch}>Google "{shortened}"</span>) : null}
+            <span onMouseUp={handleCrop} onTouchEnd={handleCrop}>Crop to collection</span>
           </div>
         )
       })
+      if (wordrects.length === 0) {
+        olay = olay.concat({
+          lt: [ts[0], ts[1]],
+          rb: [ts[2], ts[3]],
+          className: 'wordsel-border',
+          stuff: null
+        })
+      }
     }
     return olay
   }
@@ -713,27 +761,31 @@ class SsPdfView extends React.Component {
     if (et.getAttribute(etAttr) !== 'true') {
       et.setAttribute(etAttr, 'true')
       let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
-      et.addEventListener('mousedown', this.handleDown, noPassiveEventsArgument)
-      et.addEventListener('touchstart', this.handleDown, noPassiveEventsArgument)
-      et.addEventListener('mousemove', this.handleMove, noPassiveEventsArgument)
-      et.addEventListener('touchmove', this.handleMove, noPassiveEventsArgument)
-      et.addEventListener('mouseup', this.handleUp, noPassiveEventsArgument)
-      et.addEventListener('touchend', this.handleUp, noPassiveEventsArgument)
-      et.addEventListener('touchcancel', this.handleUp, noPassiveEventsArgument)
-      et.addEventListener('wheel', this.handleScroll, noPassiveEventsArgument)
-      et.addEventListener('mousewheel', this.handleScroll, noPassiveEventsArgument)
+      et.addEventListener('mousedown', delayEvent(this.handleDown), noPassiveEventsArgument)
+      et.addEventListener('touchstart', delayEvent(this.handleDown), noPassiveEventsArgument)
+      // et.addEventListener('mousemove', delayEvent(this.handleMove), noPassiveEventsArgument)
+      et.addEventListener('touchmove', delayEvent(this.handleMove), noPassiveEventsArgument)
+      // et.addEventListener('mouseup', delayEvent(this.handleUp), noPassiveEventsArgument)
+      et.addEventListener('touchend', delayEvent(this.handleUp), noPassiveEventsArgument)
+      et.addEventListener('touchcancel', delayEvent(this.handleUp), noPassiveEventsArgument)
+      et.addEventListener('wheel', delayEvent(this.handleScroll), noPassiveEventsArgument)
+      et.addEventListener('mousewheel', delayEvent(this.handleScroll), noPassiveEventsArgument)
     }
     let co = this.cropOverlay
     if (co && co.getAttribute(etAttr) !== 'true') {
       co.setAttribute(etAttr, 'true')
       let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
-      co.addEventListener('mousedown', this.handleCropDown, noPassiveEventsArgument)
-      co.addEventListener('touchstart', this.handleCropDown, noPassiveEventsArgument)
-      co.addEventListener('mousemove', this.handleCropMove, noPassiveEventsArgument)
-      co.addEventListener('touchmove', this.handleCropMove, noPassiveEventsArgument)
-      co.addEventListener('mouseup', this.handleCropUp, noPassiveEventsArgument)
-      co.addEventListener('touchend', this.handleCropUp, noPassiveEventsArgument)
-      co.addEventListener('touchcancel', this.handleCropUp, noPassiveEventsArgument)
+      let downHandler = delayEvent(this.handleCropDown)
+      co.addEventListener('mousedown', evt => {
+        evt.stopPropagation() // Prevent dragging.
+        downHandler(evt)
+      }, noPassiveEventsArgument)
+      co.addEventListener('touchstart', delayEvent(this.handleCropDown), noPassiveEventsArgument)
+      // co.addEventListener('mousemove', delayEvent(this.handleCropMove), noPassiveEventsArgument)
+      co.addEventListener('touchmove', delayEvent(this.handleCropMove), noPassiveEventsArgument)
+      // co.addEventListener('mouseup', delayEvent(this.handleCropUp), noPassiveEventsArgument)
+      co.addEventListener('touchend', delayEvent(this.handleCropUp), noPassiveEventsArgument)
+      co.addEventListener('touchcancel', delayEvent(this.handleCropUp), noPassiveEventsArgument)
     }
   }
   componentWillReceiveProps (nextProps) {
@@ -910,10 +962,19 @@ class SsPdfView extends React.Component {
             ((y - this.state.ctPos[1]) / this.state.ctSize[1]) * docHig]
   }
 
-  startCrop () {
+  startCrop (initBoundary = null) {
     if (!this.props.docJson || this.props.cropBoundary || !this.props.onCropBoundaryChange) return
     let [docWid, docHig] = ['width', 'height'].map(p => this.props.docJson[p])
-    this.props.onCropBoundaryChange([0, 0, docWid, docHig])
+    this.setState({
+      textSelection: null,
+      textSelectionPressing: false,
+      textSelectionTouchId: null
+    })
+    if (!initBoundary) {
+      this.props.onCropBoundaryChange([0, 0, docWid, docHig])
+    } else {
+      this.props.onCropBoundaryChange(initBoundary)
+    }
   }
 
   handleCropDown (evt) {
@@ -921,8 +982,6 @@ class SsPdfView extends React.Component {
     document.removeEventListener('mouseup', this.handleCropUp)
     if (!this.props.cropBoundary) return
     if (evt.touches && evt.touches.length !== 1) return
-    evt.preventDefault()
-    evt.stopPropagation()
     const shifting = {
       // x1, y1, x2, y2
       lt: [1, 1, 0, 0],
@@ -959,12 +1018,11 @@ class SsPdfView extends React.Component {
     if (!this.state.cropDragState) return
     if (!this.props.cropBoundary) return
     if (evt.touches && evt.touches.length !== 1) {
-      this.handleCropUp(evt, true)
+      this.handleCropUp(evt)
       return
     }
     if (!noPrevent) {
       evt.preventDefault()
-      evt.stopPropagation()
     }
     let cp
     if (!evt.touches) {
@@ -985,12 +1043,8 @@ class SsPdfView extends React.Component {
       cropDragState: Object.assign({}, this.state.cropDragState, { cp })
     })
   }
-  handleCropUp (evt, noPrevent) {
+  handleCropUp (evt) {
     if (!this.state.cropDragState || !this.props.cropBoundary) return
-    if (!noPrevent) {
-      evt.stopPropagation()
-      evt.preventDefault()
-    }
     if (!evt.touches) {
       this.handleCropMove(evt, true)
       document.removeEventListener('mousemove', this.handleCropMove)
