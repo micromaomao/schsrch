@@ -27,6 +27,7 @@ const delayEvent = function (handler, prevent = true) {
     rules of event handling. Therefore, this function is intended to fix it.
   */
 }
+const etAttr = 'data-event-bind'
 
 const RectSort = (rect1, rect2) => {
   let s1 = rect1.minY - rect2.minY
@@ -39,6 +40,7 @@ const RectSort = (rect1, rect2) => {
 class SsPdfView extends React.Component {
   constructor (props) {
     super(props)
+    this.md = Math.floor(Math.random() * 1000)
     this.state = {
       ctPos: [0, 0],
       ctSize: [0, 0],
@@ -56,6 +58,7 @@ class SsPdfView extends React.Component {
       textSelectionPressing: false
     }
     this.ctAnimation = null
+    this.mounted = false
     this.lastViewWidth = this.lastViewHeight = 0
     this.handleDown = this.handleDown.bind(this)
     this.handleMove = this.handleMove.bind(this)
@@ -728,12 +731,14 @@ class SsPdfView extends React.Component {
     return state.ctSize[0] / this.props.docJson.width
   }
   componentDidMount () {
+    this.mounted = true
     if (this.props.docJson) {
       this.processDoc(this.props.docJson)
     }
     this.componentDidUpdate({}, {})
   }
   componentDidUpdate (prevProps, prevState) {
+    if (!this.mounted) return
     if (this.lastViewWidth !== this.props.width || this.lastViewHeight !== this.props.height) {
       this.lastViewWidth = this.props.width
       this.lastViewHeight = this.props.height
@@ -757,18 +762,20 @@ class SsPdfView extends React.Component {
       this.needClearDirtyLayer = false
       ctx.clearRect(0, 0, this.dirtyLayer.width, this.dirtyLayer.height)
     }
-    const etAttr = 'data-event-bind'
     let et = this.eventTarget
     if (et.getAttribute(etAttr) !== 'true') {
       et.setAttribute(etAttr, 'true')
       let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
-      et.addEventListener('mousedown', delayEvent(this.handleDown), noPassiveEventsArgument)
-      et.addEventListener('touchstart', delayEvent(this.handleDown), noPassiveEventsArgument)
-      // et.addEventListener('mousemove', delayEvent(this.handleMove), noPassiveEventsArgument)
-      et.addEventListener('touchmove', delayEvent(this.handleMove), noPassiveEventsArgument)
-      // et.addEventListener('mouseup', delayEvent(this.handleUp), noPassiveEventsArgument)
-      et.addEventListener('touchend', delayEvent(this.handleUp), noPassiveEventsArgument)
-      et.addEventListener('touchcancel', delayEvent(this.handleUp), noPassiveEventsArgument)
+      let downHandler = delayEvent(this.handleDown)
+      et.addEventListener('mousedown', downHandler, noPassiveEventsArgument)
+      et.addEventListener('touchstart', downHandler, noPassiveEventsArgument)
+      let moveHandler = delayEvent(this.handleMove)
+      // et.addEventListener('mousemove', moveHandler, noPassiveEventsArgument)
+      et.addEventListener('touchmove', moveHandler, noPassiveEventsArgument)
+      let upHandler = delayEvent(this.handleUp)
+      // et.addEventListener('mouseup', uoHandler, noPassiveEventsArgument)
+      et.addEventListener('touchend', upHandler, noPassiveEventsArgument)
+      et.addEventListener('touchcancel', upHandler, noPassiveEventsArgument)
       let scrollHandler = delayEvent(this.handleScroll, false)
       let scrollHandlerPreventer = evt => {
         if (evt.ctrlKey) {
@@ -778,30 +785,59 @@ class SsPdfView extends React.Component {
       }
       et.addEventListener('wheel', scrollHandlerPreventer, noPassiveEventsArgument)
       et.addEventListener('mousewheel', scrollHandlerPreventer, noPassiveEventsArgument)
+      this._removeEtListener = et => {
+        if (et.getAttribute(etAttr) !== 'true') return
+        et.removeEventListener('mousedown', downHandler)
+        et.removeEventListener('touchstart', downHandler)
+        et.removeEventListener('touchmove', moveHandler)
+        et.removeEventListener('touchend', upHandler)
+        et.removeEventListener('touchcancel', upHandler)
+        et.removeEventListener('wheel', scrollHandlerPreventer)
+        et.removeEventListener('mousewheel', scrollHandlerPreventer)
+        this._removeEtListener = null
+      }
     }
     let co = this.cropOverlay
     if (co && co.getAttribute(etAttr) !== 'true') {
       co.setAttribute(etAttr, 'true')
       let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
-      let downHandler = delayEvent(this.handleCropDown)
-      co.addEventListener('mousedown', evt => {
+      let _downHandler = delayEvent(this.handleCropDown)
+      let downHandler = evt => {
         evt.stopPropagation() // Prevent dragging.
-        downHandler(evt)
-      }, noPassiveEventsArgument)
-      co.addEventListener('touchstart', delayEvent(this.handleCropDown), noPassiveEventsArgument)
-      // co.addEventListener('mousemove', delayEvent(this.handleCropMove), noPassiveEventsArgument)
-      co.addEventListener('touchmove', delayEvent(this.handleCropMove), noPassiveEventsArgument)
-      // co.addEventListener('mouseup', delayEvent(this.handleCropUp), noPassiveEventsArgument)
-      co.addEventListener('touchend', delayEvent(this.handleCropUp), noPassiveEventsArgument)
-      co.addEventListener('touchcancel', delayEvent(this.handleCropUp), noPassiveEventsArgument)
+        _downHandler(evt)
+      }
+      co.addEventListener('mousedown', downHandler, noPassiveEventsArgument)
+      co.addEventListener('touchstart', downHandler, noPassiveEventsArgument)
+      let moveHandler = delayEvent(this.handleCropMove)
+      // co.addEventListener('mousemove', moveHandler, noPassiveEventsArgument)
+      co.addEventListener('touchmove', moveHandler, noPassiveEventsArgument)
+      let upHandler = delayEvent(this.handleCropUp)
+      // co.addEventListener('mouseup', upHandler, noPassiveEventsArgument)
+      co.addEventListener('touchend', upHandler, noPassiveEventsArgument)
+      co.addEventListener('touchcancel', upHandler, noPassiveEventsArgument)
+      this._removeCoListener = co => {
+        co.removeEventListener('mousedown', downHandler)
+        co.removeEventListener('touchstart', downHandler)
+        co.removeEventListener('touchmove', moveHandler)
+        co.removeEventListener('touchend', upHandler)
+        co.removeEventListener('touchcancel', upHandler)
+        this._removeCoListener = null
+      }
     }
   }
   componentWillReceiveProps (nextProps) {
+    if (!this.mounted) return
     if (nextProps.docJson && (!this.props.docJson || this.props.docJson.svg !== nextProps.docJson.svg)) {
       this.processDoc(nextProps.docJson)
     }
   }
   processDoc ({svg, width, height, rects, text}) {
+    this.setState({
+      cropDragState: null,
+      textSelection: null
+    })
+    if (this.props.onCropBoundaryChange) this.props.onCropBoundaryChange(null)
+
     // Create blob url for putting in background-image.
     let oldUrl = this.state.blobUrl
     let blob = new Blob([svg], {type: 'image/svg+xml'})
@@ -955,7 +991,41 @@ class SsPdfView extends React.Component {
     this.setState({ctPos: nctPos, ctSize: nctSize})
   }
   componentWillUnmount () {
-    this.ctAnimationStopToState()
+    try {
+      this.mounted = false
+      this.ctAnimationStopToState()
+      if (this.state.blobUrl) {
+        URL.revokeObjectURL(this.state.blobUrl)
+      }
+      this.setState({
+        dragOrig: null,
+        lastTapTime: 0,
+        blobUrl: null,
+        cacheCanvas: null,
+        cropDragState: null,
+        touchClickValidIdentifier: null,
+        clickValid: false,
+        pressTime: null,
+        longPressDetectionTimeout: null,
+        textSelection: null,
+        textSelectionTouchId: null,
+        textSelectionPressing: false
+      })
+      this.rbush.clear()
+      this.rbush = null
+
+      let et = this.eventTarget
+      if (this._removeEtListener && et) this._removeEtListener(et)
+      let co = this.cropOverlay
+      if (this._removeCoListener && co) this._removeCoListener(co)
+
+      document.removeEventListener('mousemove', this.handleCropMove)
+      document.removeEventListener('mouseup', this.handleCropUp)
+      document.removeEventListener('mousemove', this.handleMove)
+      document.removeEventListener('mouseup', this.handleUp)
+    } catch (e) {
+      console.error(e)
+    }
   }
   doc2view ([x, y]) {
     if (x === -Infinity) return [0, this.doc2view([0, y])[1]]
