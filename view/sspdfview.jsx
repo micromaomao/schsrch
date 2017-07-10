@@ -2,9 +2,11 @@ const React = require('react')
 const rbush = require('rbush')
 const copyStuff = require('./copystuff.js')
 
-const delayEvent = handler => {
+const delayEvent = function (handler, prevent = true) {
   return evt => {
-    evt.preventDefault()
+    if (prevent) {
+      evt.preventDefault()
+    }
     setTimeout(() => {
       // By this time the event handlers for children, which is called by
       // React, has completed. Let's call this
@@ -640,7 +642,7 @@ class SsPdfView extends React.Component {
           <div>
             {wordrects.length > 0 ? (<span onMouseUp={handleCopy} onTouchEnd={handleCopy}>Copy</span>) : null}
             {wordrects.length > 0 ? (<span onMouseUp={handleSearch} onTouchEnd={handleSearch}>Google "{shortened}"</span>) : null}
-            <span onMouseUp={handleCrop} onTouchEnd={handleCrop}>Crop to collection</span>
+            {this.props.onCropBoundaryChange ? (<span onMouseUp={handleCrop} onTouchEnd={handleCrop}>Crop to collection</span>) : null}
           </div>
         )
       })
@@ -659,7 +661,6 @@ class SsPdfView extends React.Component {
   handleScroll (evt) {
     if (!this.svgLayer) return
     if (evt.ctrlKey) {
-      evt.preventDefault()
       let point = this.client2view([evt.clientX, evt.clientY])
       let nStat = this.calcResizeOnPoint(point, Math.pow(2, -Math.sign(evt.deltaY) * 0.3))
       if (nStat.ctSize[0] > this.props.width * 5) return
@@ -768,8 +769,15 @@ class SsPdfView extends React.Component {
       // et.addEventListener('mouseup', delayEvent(this.handleUp), noPassiveEventsArgument)
       et.addEventListener('touchend', delayEvent(this.handleUp), noPassiveEventsArgument)
       et.addEventListener('touchcancel', delayEvent(this.handleUp), noPassiveEventsArgument)
-      et.addEventListener('wheel', delayEvent(this.handleScroll), noPassiveEventsArgument)
-      et.addEventListener('mousewheel', delayEvent(this.handleScroll), noPassiveEventsArgument)
+      let scrollHandler = delayEvent(this.handleScroll, false)
+      let scrollHandlerPreventer = evt => {
+        if (evt.ctrlKey) {
+          evt.preventDefault()
+        }
+        scrollHandler(evt, false)
+      }
+      et.addEventListener('wheel', scrollHandlerPreventer, noPassiveEventsArgument)
+      et.addEventListener('mousewheel', scrollHandlerPreventer, noPassiveEventsArgument)
     }
     let co = this.cropOverlay
     if (co && co.getAttribute(etAttr) !== 'true') {
