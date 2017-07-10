@@ -732,20 +732,24 @@ class Editor extends React.Component {
     let canInsertBtnClass = cmd => cmd + (!this.canInsertNow(cmd) ? ' disabled' : '')
     return (
       <div className='collectionEditor'>
-        <div className='sidebar' onMouseDown={evt => evt.preventDefault()}>
-          <div className='description'>Aa</div>
-          <div className={commandBtnClass('bold')} title='bold' onClick={evt => this.execCommandDirect('bold')}><b>B</b></div>
-          <div className={commandBtnClass('italic')} title='italic' onClick={evt => this.execCommandDirect('italic')}><i>I</i></div>
-          <div className={commandBtnClass('strikeThrough')} title='strike through' onClick={evt => this.execCommandDirect('strikeThrough')}><s>D</s></div>
-          <div className={commandBtnClass('underline')} title='underline' onClick={evt => this.execCommandDirect('underline')}><u>U</u></div>
-          <div className='description'>+</div>
-          <div className={canInsertBtnClass('hider')} title='hider' onClick={evt => this.insertEditorNode('hider')}>
-            <svg className="icon ii-hider"><use href="#ii-hider" xlinkHref="#ii-hider" /></svg>
-          </div>
-          <div className={canInsertBtnClass('paperCrop')} title='paper crop' onClick={evt => this.insertEditorNode('paperCrop')}>
-            <svg className="icon ii-crop"><use href="#ii-crop" xlinkHref="#ii-crop" /></svg>
-          </div>
-        </div>
+        {this.props.disabled
+          ? null
+          : (
+              <div className='sidebar' onMouseDown={evt => evt.preventDefault()}>
+                <div className='description'>Aa</div>
+                <div className={commandBtnClass('bold')} title='bold' onClick={evt => this.execCommandDirect('bold')}><b>B</b></div>
+                <div className={commandBtnClass('italic')} title='italic' onClick={evt => this.execCommandDirect('italic')}><i>I</i></div>
+                <div className={commandBtnClass('strikeThrough')} title='strike through' onClick={evt => this.execCommandDirect('strikeThrough')}><s>D</s></div>
+                <div className={commandBtnClass('underline')} title='underline' onClick={evt => this.execCommandDirect('underline')}><u>U</u></div>
+                <div className='description'>+</div>
+                <div className={canInsertBtnClass('hider')} title='hider' onClick={evt => this.insertEditorNode('hider')}>
+                  <svg className="icon ii-hider"><use href="#ii-hider" xlinkHref="#ii-hider" /></svg>
+                </div>
+                <div className={canInsertBtnClass('paperCrop')} title='paper crop' onClick={evt => this.insertEditorNode('paperCrop')}>
+                  <svg className="icon ii-crop"><use href="#ii-crop" xlinkHref="#ii-crop" /></svg>
+                </div>
+              </div>
+            )}
         <div
           className={'content' + (this.props.disabled ? ' disabled' : '')}
           contentEditable={this.props.disabled ? 'false' : 'true'}
