@@ -49,7 +49,7 @@ class CollectionsView extends React.Component {
     return (
       <div className='doc'>
         <div className='top'>
-          <div className='close'>Close</div>
+          <div className='close' onClick={evt => AppState.dispatch({type: 'home'})}>Close</div>
           <h1>
             {col.loading || col.error ? 'Collection\u2026'
               : (col.content ? (typeof col.content.name === 'string' ? (
@@ -77,8 +77,9 @@ class CollectionsView extends React.Component {
           {!AppState.getState().authToken
             ? (
                 <div className='nologin'>
-                  <div className='big'>You aren't logged in.</div>
-                  <div>Please <a onClick={evt => AppState.dispatch({type: 'login-view'})}>log in</a> in order to edit or fork this collection.</div>
+                  <div className='big'>This is a secret feature.</div>
+                  <div>If you want to create collections, please dig in the code and use the API. The editor is functional for collections created by you.</div>
+                  <div>Collections will go public once all features are complete and security audited.</div>
                 </div>
               )
             : null}
