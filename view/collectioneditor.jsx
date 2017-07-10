@@ -395,6 +395,7 @@ class Editor extends React.Component {
       clearInterval(this.btnStateInterval)
       this.btnStateInterval = null
     }
+    if (this.editorDOM) this.structure2dom({}, this.editorDOM) // Unrender react components.
   }
   componentDidUpdate () {
     if (this.props.structure && this.editorDOM) {
