@@ -286,9 +286,6 @@ class SsPdfView extends React.Component {
         this.setState({longPressDetectionTimeout: null})
       }
     }
-    if (this.isInitialSize()) {
-      return
-    }
     let touch = evt.changedTouches[0]
     let [ncx, ncy] = this.client2view([touch.clientX, touch.clientY])
     this.setState({dragOrig: {
