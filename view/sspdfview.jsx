@@ -286,9 +286,6 @@ class SsPdfView extends React.Component {
         this.setState({longPressDetectionTimeout: null})
       }
     }
-    if (this.isInitialSize()) {
-      return
-    }
     let touch = evt.changedTouches[0]
     let [ncx, ncy] = this.client2view([touch.clientX, touch.clientY])
     this.setState({dragOrig: {
@@ -662,7 +659,7 @@ class SsPdfView extends React.Component {
   }
 
   handleScroll (evt) {
-    if (!this.svgLayer) return
+    if (!this.shouldPreventScrollDefault(evt)) return
     if (evt.ctrlKey) {
       let point = this.client2view([evt.clientX, evt.clientY])
       let nStat = this.calcResizeOnPoint(point, Math.pow(2, -Math.sign(evt.deltaY) * 0.3))
@@ -673,8 +670,32 @@ class SsPdfView extends React.Component {
         nStat.ctPos = this.calcBound(nStat)
       }
       this.ctAnimationStartFromState(nStat)
+    } else {
+      this.ctAnimationStartFromState(this.scrollGetNewCt(evt))
     }
   }
+
+  shouldPreventScrollDefault (evt) {
+    if (!this.svgLayer) return false
+    if (evt.ctrlKey) return true
+    if (this.props.fixedBoundary) return false
+    let ns = this.scrollGetNewCt(evt)
+    return !this.stateSimillar(this.ctAnimationGetFinalState(), ns)
+  }
+  scrollGetNewCt (evt) {
+    if (evt.ctrlKey) return this.ctAnimationGetFinalState()
+    let dx = -Math.sign(evt.deltaX) * 100
+    let dy = -Math.sign(evt.deltaY) * 100
+    if (Math.abs(dx) < 0.1 && evt.shiftKey) {
+      dx = dy
+      dy = 0
+    }
+    let os = this.ctAnimationGetFinalState()
+    let ops = os.ctPos
+    let ns = {ctPos: [ops[0] + dx, ops[1] + dy], ctSize: os.ctSize}
+    return {ctPos: this.calcBound(ns), ctSize: ns.ctSize}
+  }
+
   client2view (point) {
     if (!Array.isArray(point)) throw new Error('Expected point to be an array.')
     if (typeof point[0] !== 'number' && typeof point[1] !== 'number') throw new Error('Expected number in array.')
@@ -778,7 +799,7 @@ class SsPdfView extends React.Component {
       et.addEventListener('touchcancel', upHandler, noPassiveEventsArgument)
       let scrollHandler = delayEvent(this.handleScroll, false)
       let scrollHandlerPreventer = evt => {
-        if (evt.ctrlKey) {
+        if (this.shouldPreventScrollDefault(evt)) {
           evt.preventDefault()
         }
         scrollHandler(evt, false)
