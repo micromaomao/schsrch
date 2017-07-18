@@ -1,6 +1,7 @@
 const React = require('react')
 const rbush = require('rbush')
 const copyStuff = require('./copystuff.js')
+const { client2view, pointDistance } = require('./pointutils.js')
 
 const delayEvent = function (handler, prevent = true) {
   return evt => {
@@ -697,16 +698,7 @@ class SsPdfView extends React.Component {
   }
 
   client2view (point) {
-    if (!Array.isArray(point)) throw new Error('Expected point to be an array.')
-    if (typeof point[0] !== 'number' && typeof point[1] !== 'number') throw new Error('Expected number in array.')
-    let rect = this.svgLayer.getBoundingClientRect()
-    if (rect.left === 0 && rect.top === 0)
-      console.warn("client2view won't work if svgLayer isn't affecting layout. (e.g. display: none)")
-    var supportPageOffset = window.pageXOffset !== undefined;
-    var isCSS1Compat = ((document.compatMode || "") === "CSS1Compat");
-    var scrollX = supportPageOffset ? window.pageXOffset : isCSS1Compat ? document.documentElement.scrollLeft : document.body.scrollLeft;
-    var scrollY = supportPageOffset ? window.pageYOffset : isCSS1Compat ? document.documentElement.scrollTop : document.body.scrollTop;
-    return [point[0] - (rect.left + scrollX), point[1] - (rect.top + scrollY)]
+    return client2view(point, this.svgLayer)
   }
   calcBound (viewState = this.ctAnimationGetFinalState()) {
     let [viWid, viHig] = [this.props.width, this.props.height]
@@ -740,8 +732,8 @@ class SsPdfView extends React.Component {
     return {ctPos: [ctX, ctY], ctSize: finalState.ctSize.map(x => x * factor)}
   }
   calcPointsResize (op0, op1, np0, np1) {
-    let [sr0, sr1] = [[np0, np1], [op0, op1]].map(([[x0, y0], [x1, y1]]) => Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2)))
-    if (sr0 === 0 || sr1 === 0) {
+    let [sr0, sr1] = [pointDistance(np0, np1), pointDistance(op0, op1)]
+    if (sr0 < 0.00001 || sr1 < 0.00001) {
       throw new Error('Messy points.')
     }
     let fact = sr0 / sr1
@@ -756,6 +748,7 @@ class SsPdfView extends React.Component {
     if (this.props.docJson) {
       this.processDoc(this.props.docJson)
     }
+    if (this.props.onViewboxChange) this.props.onViewboxChange({ctPos: this.state.ctPos, ctSize: this.state.ctSize})
     this.componentDidUpdate({}, {})
   }
   componentDidUpdate (prevProps, prevState) {
@@ -768,6 +761,12 @@ class SsPdfView extends React.Component {
       this.reCenter()
     } else if (prevProps.fixedBoundary !== this.props.fixedBoundary) {
       this.reCenter()
+    }
+
+    if (prevState.ctPos !== this.state.ctPos || prevState.ctSize !== this.state.ctSize) {
+      if (this.props.onViewboxChange) {
+        this.props.onViewboxChange({ctPos: this.state.ctPos, ctSize: this.state.ctSize})
+      }
     }
 
     // Paint dirtyLayer when user drag/resize.
@@ -1044,6 +1043,8 @@ class SsPdfView extends React.Component {
       document.removeEventListener('mouseup', this.handleCropUp)
       document.removeEventListener('mousemove', this.handleMove)
       document.removeEventListener('mouseup', this.handleUp)
+
+      if (this.props.onViewboxChange) this.props.onViewboxChange(null)
     } catch (e) {
       console.error(e)
     }
