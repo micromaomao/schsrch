@@ -27,6 +27,7 @@ class AnnotationLayer extends React.Component {
   render () {
     if (!this.props.width || !this.props.height) return null
     if (!this.props.viewOffset || !this.props.viewScale) return null
+    let scale = this.props.viewScale
     return (
       <div className='annotations' ref={f => this.eventTarget = f} onMouseMove={this.handleMouseMove}
         style={{
@@ -108,7 +109,7 @@ class AnnotationLayer extends React.Component {
                   return (
                     <div className='ano sketch' key={i}>
                       <svg width={this.props.width} height={this.props.height}>
-                        <path d={svgPath} stroke='#FF5722' fill='none' strokeWidth={highlight ? '2' : '1'} />
+                        <path d={svgPath} stroke='#FF5722' fill='none' strokeWidth={(highlight ? 2 : 1) * scale / 1.3} />
                       </svg>
                     </div>
                   )
