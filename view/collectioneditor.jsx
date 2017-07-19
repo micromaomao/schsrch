@@ -812,8 +812,7 @@ class AnnotationLayer extends React.Component {
       creating: {
         type: 'sketch',
         target: sketchAnnotation,
-        sketching: true,
-        redoPathQueue: []
+        sketching: true
       }
     })
   }

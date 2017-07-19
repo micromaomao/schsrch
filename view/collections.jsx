@@ -24,6 +24,7 @@ class CollectionsView extends React.Component {
     }
   }
   handleInputChange (content) {
+    AppState.dispatch({type: 'collection-push-undostack'})
     AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
       structure: content
     })})
@@ -46,10 +47,27 @@ class CollectionsView extends React.Component {
     }
     let lastSaveError = col.lastSave && col.lastSave.done && col.lastSave.error
     let editDisabled = !AppState.getState().authToken || this.state.noEditAccess
+
+    let haveUndo = col.contentUndoStack && col.contentUndoStack.length > 0
+    let haveRedo = col.contentRedoStack && col.contentRedoStack.length > 0
     return (
       <div className='doc'>
         <div className='top'>
-          <div className='close'>Close</div>
+          <div className='close'>
+            <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
+          </div>
+          {!editDisabled
+            ? (
+                <div className={'undo' + (!haveUndo ? ' disabled' : '')} title='Undo' onClick={evt => this.undo()}>
+                  <svg className="icon ii-undo"><use href="#ii-undo" xlinkHref="#ii-undo" /></svg>
+                </div>
+              ) : null}
+          {!editDisabled
+            ? (
+                <div className={'redo' + (!haveRedo ? ' disabled' : '')} title='Redo' onClick={evt => this.redo()}>
+                  <svg className="icon ii-redo"><use href="#ii-redo" xlinkHref="#ii-redo" /></svg>
+                </div>
+              ) : null}
           <h1>
             {col.loading || col.error ? 'Collection\u2026'
               : (col.content ? (typeof col.content.name === 'string' ? (
@@ -182,6 +200,21 @@ class CollectionsView extends React.Component {
           }
         }, 5000)
       }
+    }
+  }
+
+  undo () {
+    let col = this.props.collection
+    if (!col || !col.content) return
+    if (col.contentUndoStack && col.contentUndoStack.length > 0) {
+      AppState.dispatch({type: 'collection-undo'})
+    }
+  }
+  redo () {
+    let col = this.props.collection
+    if (!col || !col.content) return
+    if (col.contentRedoStack && col.contentRedoStack.length > 0) {
+      AppState.dispatch({type: 'collection-redo'})
     }
   }
 

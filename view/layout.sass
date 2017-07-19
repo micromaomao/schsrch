@@ -867,13 +867,15 @@ $feedback-top-height: 2rem + 1.3rem
         align-items: center
         border-bottom: 1px solid $color-divider
         overflow: hidden
-        > .close, .menu
+        > .close, .undo, .redo, .menu
           flex-shrink: 0
           flex-grow: 0
-          color: $color-secondary-text
-          font-size: 1.1rem
+          color: $color-primary
+          font-size: 1rem
           padding: 0.5rem 1rem
           cursor: pointer
+          &.disabled
+            opacity: 0.5
         > .menu
           font-weight: bold
         > h1
