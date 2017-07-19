@@ -193,7 +193,8 @@ let AppState = createStore(function (state = {}, action) {
         collection: Object.assign({}, state.collection, {
           content: action.content,
           rand: Math.random(),
-          homeFromCollection: false
+          homeFromCollection: false,
+          contentRedoStack: []
         })
       })
     case 'collection-load-error':
