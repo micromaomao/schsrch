@@ -193,7 +193,8 @@ let AppState = createStore(function (state = {}, action) {
         collection: Object.assign({}, state.collection, {
           content: action.content,
           rand: Math.random(),
-          homeFromCollection: false
+          homeFromCollection: false,
+          contentRedoStack: []
         })
       })
     case 'collection-load-error':
@@ -266,6 +267,7 @@ let AppState = createStore(function (state = {}, action) {
         if (!state.collection) return state
         if (!state.collection.content) return state
         let undoStack = (state.collection.contentUndoStack || []).concat([state.collection.content])
+        if (undoStack.length >= 2 && undoStack[undoStack.length - 1] === undoStack[undoStack.length - 2]) return state
         if (undoStack.length > 20) {
           undoStack = undoStack.slice(-20)
         }
@@ -285,6 +287,11 @@ let AppState = createStore(function (state = {}, action) {
         if (!undoStack || undoStack.length === 0) return state
         undoStack = undoStack.slice()
         let replaceContent = undoStack.pop()
+        if (replaceContent === state.collection.content) {
+          replaceContent = undoStack.pop()
+          if (!replaceContent) return state
+        }
+        undoStack.push(replaceContent) // The undo stack should always have the last content.
         redoStack = redoStack.concat([state.collection.content])
         return Object.assign({}, state, {
           collection: Object.assign({}, state.collection, {
@@ -303,7 +310,7 @@ let AppState = createStore(function (state = {}, action) {
         if (!redoStack || redoStack.length === 0) return state
         redoStack = redoStack.slice()
         let replaceContent = redoStack.pop()
-        undoStack = undoStack.concat([state.collection.content])
+        undoStack = undoStack.concat([state.collection.content, replaceContent])
         return Object.assign({}, state, {
           collection: Object.assign({}, state.collection, {
             content: replaceContent,

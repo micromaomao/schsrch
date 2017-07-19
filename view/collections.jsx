@@ -23,9 +23,16 @@ class CollectionsView extends React.Component {
         AppState.dispatch({type: 'collection-reload'})
       }
     }
+    this.pushUndoStackTimeout = null
   }
   handleInputChange (content) {
-    AppState.dispatch({type: 'collection-push-undostack'})
+    if (this.pushUndoStackTimeout !== null) {
+      clearTimeout(this.pushUndoStackTimeout)
+    }
+    this.pushUndoStackTimeout = setTimeout(() => {
+      AppState.dispatch({type: 'collection-push-undostack'})
+      this.pushUndoStackTimeout = null
+    }, 500)
     AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
       structure: content
     })})
@@ -137,6 +144,9 @@ class CollectionsView extends React.Component {
       clearInterval(this.setIntervaled)
       this.setIntervaled = null
     }
+    if (col.content && (!prevProps.collection || !prevProps.collection.content)) {
+      AppState.dispatch({type: 'collection-push-undostack'})
+    }
   }
 
   startLoad () {
@@ -206,6 +216,10 @@ class CollectionsView extends React.Component {
   }
 
   undo () {
+    if (this.pushUndoStackTimeout !== null) {
+      clearTimeout(this.pushUndoStackTimeout)
+      this.pushUndoStackTimeout = null
+    }
     let col = this.props.collection
     if (!col || !col.content) return
     if (col.contentUndoStack && col.contentUndoStack.length > 0) {
@@ -213,6 +227,10 @@ class CollectionsView extends React.Component {
     }
   }
   redo () {
+    if (this.pushUndoStackTimeout !== null) {
+      clearTimeout(this.pushUndoStackTimeout)
+      this.pushUndoStackTimeout = null
+    }
     let col = this.props.collection
     if (!col || !col.content) return
     if (col.contentRedoStack && col.contentRedoStack.length > 0) {
@@ -235,11 +253,18 @@ class CollectionsView extends React.Component {
 
   componentDidMount () {
     window.document.addEventListener('keydown', this.handleGlobaleKey, AppState.browserSupportsPassiveEvents ? {passive: false} : false)
+    if (this.props.collection && this.props.collection.content) {
+      AppState.dispatch({type: 'collection-push-undostack'})
+    }
   }
   componentWillUnmount () {
     window.document.removeEventListener('keydown', this.handleGlobaleKey)
     if (this.setIntervaled) {
       clearInterval(this.setIntervaled)
+    }
+    if (this.pushUndoStackTimeout != null) {
+      clearTimeout(this.pushUndoStackTimeout)
+      this.pushUndoStackTimeout = null
     }
   }
 }
