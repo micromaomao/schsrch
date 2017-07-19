@@ -491,8 +491,8 @@ class AnnotationLayer extends React.Component {
                 }
                 if (creating.type === 'sketch') {
                   return (
-                    <div className='sketchCreate'>
-                      Sketching&hellip;
+                    <div className='sketchCreate' ref={f => this.sketchCreateDoneBtn = f}>
+                      Done
                     </div>
                   )
                 }
@@ -504,15 +504,26 @@ class AnnotationLayer extends React.Component {
               this.props.annotations.map((ano, i) => {
                 if (ano.type === 'sketch') {
                   let svgPath = ano.paths.map(path => {
-                    return path.map((point, i) => {
-                      let viewPoint = this.doc2view(point)
-                      let lead = 'L'
-                      if (i === 0) {
-                        lead = 'M'
+                    if (!Array.isArray(path)) return ''
+                    if (path.length < 2) return ''
+                    let haveValidLead = false
+                    let svgSubPath = path.map((point, i) => {
+                      try {
+                        let viewPoint = this.doc2view(point)
+                        let lead = 'L'
+                        if (i === 0) {
+                          lead = 'M'
+                          haveValidLead = true
+                        }
+                        return `${lead} ${viewPoint[0]} ${viewPoint[1]}`
+                      } catch (e) {
+                        return ''
                       }
-                      return `${lead} ${viewPoint[0]} ${viewPoint[1]}`
                     }).join(' ')
+                    if (!haveValidLead) return ''
+                    return svgSubPath
                   }).join(' ')
+                  if (svgPath.trim().length === 0) return null
                   return (
                     <div className='ano sketch' key={i}>
                       <svg width={this.props.width} height={this.props.height}>
@@ -576,7 +587,7 @@ class AnnotationLayer extends React.Component {
       }
 
       let pos = this.client2view([evt.clientX, evt.clientY])
-      this.pressDown(pos)
+      this.pressDown(pos, evt.target)
       this.setState({
         downEventTimestamp: Date.now(),
         downEventPos: pos,
@@ -596,7 +607,7 @@ class AnnotationLayer extends React.Component {
         // 1 point touch
         let t = evt.touches[0]
         let pos = this.client2view([t.clientX, t.clientY])
-        this.pressDown(pos)
+        this.pressDown(pos, evt.target)
         this.setState({
           downEventTimestamp: Date.now(),
           downEventPos: pos,
@@ -694,28 +705,41 @@ class AnnotationLayer extends React.Component {
       } else if (this.creationPromptSketch.contains(evt.target) || evt.target === this.creationPromptSketch) {
         this.sketchCreate()
       }
+    } else if (this.state.creating && this.state.creating.type === 'sketch' && !this.state.creating.sketching &&
+        (this.sketchCreateDoneBtn && (this.sketchCreateDoneBtn.contains(evt.target) || evt.target === this.sketchCreateDoneBtn))) {
+      this.setState({
+        creating: null
+      })
     }
   }
 
-  pressDown (point) {
+  pressDown (point, target) {
     if (this.state.creating && this.state.creating.type === 'sketch') {
-      let creatingState = this.state.creating
-      let sketchingPath = [this.view2doc(point)]
-      let modAno = Object.assign({}, creatingState.target)
-      modAno.paths = modAno.paths.concat([sketchingPath])
-      let annotationChanged = !this.commitAnnotationObjectModification(modAno, creatingState.target)
-      if (!annotationChanged) {
+      if (this.sketchCreateDoneBtn && (this.sketchCreateDoneBtn.contains(target) || target === this.sketchCreateDoneBtn)) {
         this.setState({
-          creating: {
-            type: 'sketch',
-            target: modAno,
-            sketching: true,
-            redoPathQueue: []
-          }
+          creating: Object.assign({}, this.state.creating, {
+            sketching: false
+          })
         })
       } else {
-        this.sketchCreate()
-        this.pressDown(point)
+        this.delayedSketchUpdates = []
+        let creatingState = this.state.creating
+        let sketchingPath = [this.view2doc(point)]
+        let modAno = Object.assign({}, creatingState.target)
+        modAno.paths = modAno.paths.concat([sketchingPath])
+        let annotationChanged = !this.commitAnnotationObjectModification(modAno, creatingState.target)
+        if (!annotationChanged) {
+          this.setState({
+            creating: {
+              type: 'sketch',
+              target: modAno,
+              sketching: true
+            }
+          })
+        } else {
+          this.sketchCreate()
+          this.pressDown(point, target)
+        }
       }
     }
   }
@@ -736,8 +760,7 @@ class AnnotationLayer extends React.Component {
             creating: {
               type: 'sketch',
               target: newAno,
-              sketching: true,
-              redoPathQueue: []
+              sketching: true
             }
           })
         }
@@ -762,8 +785,7 @@ class AnnotationLayer extends React.Component {
         creating: {
           type: 'sketch',
           target: newAno,
-          sketching: false,
-          redoPathQueue: []
+          sketching: false
         }
       })
       this.lastSketchUpdateTime = null
