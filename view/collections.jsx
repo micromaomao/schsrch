@@ -12,6 +12,7 @@ class CollectionsView extends React.Component {
     this.setIntervaled = null
     this.handleInputChange = this.handleInputChange.bind(this)
     this.handleTitleChange = this.handleTitleChange.bind(this)
+    this.handleGlobaleKey = this.handleGlobaleKey.bind(this)
     let col = this.props.collection
     if (!AppState.getState().serverrender) {
       if (col.lastSave && (!col.lastSave.done || col.lastSave.error)) {
@@ -24,6 +25,7 @@ class CollectionsView extends React.Component {
     }
   }
   handleInputChange (content) {
+    AppState.dispatch({type: 'collection-push-undostack'})
     AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
       structure: content
     })})
@@ -46,10 +48,27 @@ class CollectionsView extends React.Component {
     }
     let lastSaveError = col.lastSave && col.lastSave.done && col.lastSave.error
     let editDisabled = !AppState.getState().authToken || this.state.noEditAccess
+
+    let haveUndo = col.contentUndoStack && col.contentUndoStack.length > 0
+    let haveRedo = col.contentRedoStack && col.contentRedoStack.length > 0
     return (
       <div className='doc'>
         <div className='top'>
-          <div className='close' onClick={evt => AppState.dispatch({type: 'home'})}>Close</div>
+          <div className='close' onClick={evt => AppState.dispatch({type: 'home'})}>
+            <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
+          </div>
+          {!editDisabled
+            ? (
+                <div className={'undo' + (!haveUndo ? ' disabled' : '')} title='Undo' onClick={evt => this.undo()}>
+                  <svg className="icon ii-undo"><use href="#ii-undo" xlinkHref="#ii-undo" /></svg>
+                </div>
+              ) : null}
+          {!editDisabled
+            ? (
+                <div className={'redo' + (!haveRedo ? ' disabled' : '')} title='Redo' onClick={evt => this.redo()}>
+                  <svg className="icon ii-redo"><use href="#ii-redo" xlinkHref="#ii-redo" /></svg>
+                </div>
+              ) : null}
           <h1>
             {col.loading || col.error ? 'Collection\u2026'
               : (col.content ? (typeof col.content.name === 'string' ? (
@@ -165,7 +184,7 @@ class CollectionsView extends React.Component {
   tryUpload () {
     let col = this.props.collection
     if (!col || col.loading || !col.content || this.state.noEditAccess) return
-    if (!col.lastSave || col.lastSave.done && col.lastSave.time <= Date.now() - 1000) {
+    if (!col.lastSave || (col.lastSave.done && col.lastSave.time <= Date.now() - 1000)) {
       this.uploadContentNow()
     } else {
       if (!this.last1sTimeout) {
@@ -186,7 +205,39 @@ class CollectionsView extends React.Component {
     }
   }
 
+  undo () {
+    let col = this.props.collection
+    if (!col || !col.content) return
+    if (col.contentUndoStack && col.contentUndoStack.length > 0) {
+      AppState.dispatch({type: 'collection-undo'})
+    }
+  }
+  redo () {
+    let col = this.props.collection
+    if (!col || !col.content) return
+    if (col.contentRedoStack && col.contentRedoStack.length > 0) {
+      AppState.dispatch({type: 'collection-redo'})
+    }
+  }
+
+  handleGlobaleKey (evt) {
+    if (evt.ctrlKey && !evt.shiftKey && (evt.key.toLowerCase() === 'z' || evt.keyCode === 90)) {
+      evt.preventDefault()
+      this.undo()
+    } else if (evt.ctrlKey && (
+        (!evt.shiftKey && (evt.key.toLowerCase() === 'y' || evt.keyCode === 89)) ||
+        (evt.shiftKey && (evt.key.toLowerCase() === 'z' || evt.keyCode === 90))
+      )) {
+      evt.preventDefault()
+      this.redo()
+    }
+  }
+
+  componentDidMount () {
+    window.document.addEventListener('keydown', this.handleGlobaleKey, AppState.browserSupportsPassiveEvents ? {passive: false} : false)
+  }
   componentWillUnmount () {
+    window.document.removeEventListener('keydown', this.handleGlobaleKey)
     if (this.setIntervaled) {
       clearInterval(this.setIntervaled)
     }

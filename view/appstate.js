@@ -1,4 +1,4 @@
-const InterfaceVersion = 15
+const InterfaceVersion = 16
 const { createStore } = require('redux')
 
 const init = {
@@ -181,6 +181,8 @@ let AppState = createStore(function (state = {}, action) {
           loading: true,
           loadingError: null,
           content: null,
+          contentUndoStack: null,
+          contentRedoStack: null,
           lastSave: null,
           rand: Math.random(),
           homeFromCollection: false
@@ -195,7 +197,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'collection-load-error':
-      if (!state.collection) return
+      if (!state.collection) return state
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           error: action.error,
@@ -205,7 +207,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'collection-load-data':
-      if (!state.collection) return
+      if (!state.collection) return state
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           error: null,
@@ -225,7 +227,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'collection-put-done':
-      if (!state.collection) return
+      if (!state.collection) return state
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           lastSave: {
@@ -237,7 +239,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'collection-put-error':
-      if (!state.collection) return
+      if (!state.collection) return state
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           lastSave: {
@@ -248,7 +250,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'collection-put-start':
-      if (!state.collection) return
+      if (!state.collection) return state
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           lastSave: {
@@ -259,6 +261,57 @@ let AppState = createStore(function (state = {}, action) {
           }
         })
       })
+    case 'collection-push-undostack':
+      return (() => {
+        if (!state.collection) return state
+        if (!state.collection.content) return state
+        let undoStack = (state.collection.contentUndoStack || []).concat([state.collection.content])
+        if (undoStack.length > 20) {
+          undoStack = undoStack.slice(-20)
+        }
+        return Object.assign({}, state, {
+          collection: Object.assign({}, state.collection, {
+            contentUndoStack: undoStack,
+            contentRedoStack: []
+          })
+        })
+      })()
+    case 'collection-undo':
+      return (() => {
+        if (!state.collection) return state
+        if (!state.collection.content) return state
+        let undoStack = state.collection.contentUndoStack
+        let redoStack = state.collection.contentRedoStack || []
+        if (!undoStack || undoStack.length === 0) return state
+        undoStack = undoStack.slice()
+        let replaceContent = undoStack.pop()
+        redoStack = redoStack.concat([state.collection.content])
+        return Object.assign({}, state, {
+          collection: Object.assign({}, state.collection, {
+            content: replaceContent,
+            contentUndoStack: undoStack,
+            contentRedoStack: redoStack
+          })
+        })
+      })()
+    case 'collection-redo':
+      return (() => {
+        if (!state.collection) return state
+        if (!state.collection.content) return state
+        let undoStack = state.collection.contentUndoStack || []
+        let redoStack = state.collection.contentRedoStack
+        if (!redoStack || redoStack.length === 0) return state
+        redoStack = redoStack.slice()
+        let replaceContent = redoStack.pop()
+        undoStack = undoStack.concat([state.collection.content])
+        return Object.assign({}, state, {
+          collection: Object.assign({}, state.collection, {
+            content: replaceContent,
+            contentUndoStack: undoStack,
+            contentRedoStack: redoStack
+          })
+        })
+      })()
     case 'login-view':
       return Object.assign({}, state, {
         view: 'login',
