@@ -195,7 +195,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'collection-load-error':
-      if (!state.collection) return
+      if (!state.collection) return state
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           error: action.error,
@@ -205,7 +205,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'collection-load-data':
-      if (!state.collection) return
+      if (!state.collection) return state
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           error: null,
@@ -225,7 +225,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'collection-put-done':
-      if (!state.collection) return
+      if (!state.collection) return state
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           lastSave: {
@@ -237,7 +237,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'collection-put-error':
-      if (!state.collection) return
+      if (!state.collection) return state
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           lastSave: {
@@ -248,7 +248,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'collection-put-start':
-      if (!state.collection) return
+      if (!state.collection) return state
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           lastSave: {
