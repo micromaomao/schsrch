@@ -87,8 +87,8 @@ class AnnotationLayer extends React.Component {
               if (modifying.state === 'selected') {
                 let bBox = this.annotationBoundingBox(target)
                 if (bBox === null) bBox = [-Infinity, -Infinity, Infinity, Infinity]
-                const menuWidth = 40
-                const menuHeight = 40
+                const menuWidth = 40 * 2
+                const menuHeight = 40 + 2
                 let point = this.doc2view([(bBox[0] + bBox[2]) / 2, bBox[3]])
                 point[0] = Math.max(0, Math.min(point[0] - menuWidth / 2, this.props.width - menuWidth))
                 point[1] = Math.max(0, Math.min(point[1], this.props.height - menuHeight))
@@ -100,6 +100,9 @@ class AnnotationLayer extends React.Component {
                       width: menuWidth + 'px',
                       height: menuHeight + 'px'
                     }}>
+                    <span ref={f => this.modifyingSelectedMove = f} className='move'>
+                      <svg className="icon ii-move"><use href="#ii-move" xlinkHref="#ii-move" /></svg>
+                    </span>
                     <span ref={f => this.modifyingSelectedDel = f}>
                       <svg className="icon ii-del"><use href="#ii-del" xlinkHref="#ii-del" /></svg>
                     </span>
@@ -392,6 +395,16 @@ class AnnotationLayer extends React.Component {
           this.pressDown(point, target)
         }
       }
+    } else if (this.state.modifying && this.state.modifying.state === 'selected') {
+      if (this.modifyingSelectedMove && (this.modifyingSelectedMove === target || this.modifyingSelectedMove.contains(target))) {
+        this.setState({
+          modifying: {
+            target: this.state.modifying.target,
+            state: 'moving',
+            lastPoint: point
+          }
+        })
+      }
     }
   }
   pressMove (point) {
@@ -420,6 +433,19 @@ class AnnotationLayer extends React.Component {
       } else {
         this.delayedSketchUpdates.push(this.view2doc(point))
       }
+    } else if (this.state.modifying && this.state.modifying.state === 'moving') {
+      let {target: ano, lastPoint} = this.state.modifying
+      let scale = this.props.viewScale || 1
+      let shift = [0, 1].map(p => point[p] - lastPoint[p]).map(x => x / scale)
+      let nAno = this.annotationShift(ano, shift)
+      this.commitAnnotationObjectModification(nAno, ano)
+      this.setState({
+        modifying: {
+          target: nAno,
+          state: 'moving',
+          lastPoint: point
+        }
+      })
     }
   }
   pressUp () {
@@ -441,6 +467,13 @@ class AnnotationLayer extends React.Component {
       })
       this.lastSketchUpdateTime = null
       this.delayedSketchUpdates = []
+    } else if (this.state.modifying && this.state.modifying.state === 'moving') {
+      this.setState({
+        modifying: {
+          target: this.state.modifying.target,
+          state: 'selected'
+        }
+      })
     }
   }
 
@@ -553,6 +586,15 @@ class AnnotationLayer extends React.Component {
       return [minX, minY, maxX, maxY]
     }
     return null
+  }
+
+  annotationShift (ano, shift) {
+    if (ano.type === 'sketch') {
+      let nAno = Object.assign({}, ano)
+      nAno.paths = nAno.paths.map(path => path.map(point => point.map((x, i) => x + shift[i])))
+      return nAno
+    }
+    return Object.assign({}, ano)
   }
 }
 
