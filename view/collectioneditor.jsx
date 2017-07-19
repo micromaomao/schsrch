@@ -434,12 +434,14 @@ class AnnotationLayer extends React.Component {
       downEventPos: null,
       tapValid: false,
       tapIdentifier: null,
-      creating: null
+      creating: null,
+      highlightAno: null
     }
     this.documentEventBound = false
     this.handleDown = this.handleDown.bind(this)
     this.handleMove = this.handleMove.bind(this)
     this.handleUp = this.handleUp.bind(this)
+    this.handleMouseMove = this.handleMouseMove.bind(this)
   }
   emptyAnnotations () {
     return this.props.annotations === null || !Array.isArray(this.props.annotations) || this.props.annotations.length === 0
@@ -448,7 +450,7 @@ class AnnotationLayer extends React.Component {
     if (!this.props.width || !this.props.height) return null
     if (!this.props.viewOffset || !this.props.viewScale) return null
     return (
-      <div className='annotations' ref={f => this.eventTarget = f}
+      <div className='annotations' ref={f => this.eventTarget = f} onMouseMove={this.handleMouseMove}
         style={{
           width: this.props.width + 'px',
           height: this.props.height + 'px',
@@ -502,6 +504,7 @@ class AnnotationLayer extends React.Component {
         {!this.emptyAnnotations()
           ? (
               this.props.annotations.map((ano, i) => {
+                let highlight = this.state.highlightAno === ano
                 if (ano.type === 'sketch') {
                   let svgPath = ano.paths.map(path => {
                     if (!Array.isArray(path)) return ''
@@ -527,7 +530,7 @@ class AnnotationLayer extends React.Component {
                   return (
                     <div className='ano sketch' key={i}>
                       <svg width={this.props.width} height={this.props.height}>
-                        <path d={svgPath} stroke='#FF5722' fill='none' strokeWidth='1' />
+                        <path d={svgPath} stroke='#FF5722' fill='none' strokeWidth={highlight ? '2' : '1'} />
                       </svg>
                     </div>
                   )
@@ -665,6 +668,19 @@ class AnnotationLayer extends React.Component {
       }
     }
   }
+  handleMouseMove (evt) {
+    if (!this.state.creating) {
+      let point = this.client2view([evt.clientX, evt.clientY])
+      requestAnimationFrame(() => {
+        if (this.state.creating) return
+        if (this.state.downEventTimestamp === null) {
+          let docPoint = this.view2doc(point)
+          let ano = this.rayAnnotations(docPoint)
+          this.setState({highlightAno: ano})
+        }
+      })
+    }
+  }
   handleUp (evt) {
     evt.preventDefault()
     if (!evt.touches) {
@@ -692,6 +708,7 @@ class AnnotationLayer extends React.Component {
       tapIdentifier: false
     })
   }
+
   handleTap (evt) {
     if (!this.props.disabled && !this.state.creating) {
       let point = this.view2doc(this.state.downEventPos)
@@ -842,6 +859,41 @@ class AnnotationLayer extends React.Component {
         sketching: true
       }
     })
+  }
+
+  rayAnnotations (point) {
+    let annotations = this.props.annotations
+    let scale = this.props.viewScale || 1
+    let threshold = 10 / scale
+    if (!annotations) return null
+    for (let ano of annotations) {
+      if (ano.type === 'sketch') {
+        let paths = ano.paths
+        for (let path of paths) {
+          if (path.length === 0) continue
+          if (path.length === 1) {
+            let pt = path[0]
+            if (pointDistance(pt, point) <= threshold) return ano
+          } else {
+            for (let i = 0; i < path.length - 1; i ++) {
+              let p1 = path[i]
+              let p2 = path[i + 1]
+              let pDist = pointDistance(p1, p2)
+              if (pDist < threshold) {
+                if (pointDistance(p1, point) <= threshold || pointDistance(p2, point) <= threshold) return ano
+              } else {
+                for (let i = 0; i < pDist; i += threshold) {
+                  let weight = i / pDist
+                  let np = [0, 1].map(a => p1[a] * (1 - weight) + p2[a] * weight)
+                  if (pointDistance(np, point) <= threshold) return ano
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return null
   }
 }
 
