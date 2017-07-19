@@ -480,7 +480,7 @@ class AnnotationLayer extends React.Component {
                         width: promptWidth + 'px',
                         height: promptHeight + 'px'
                       }}>
-                      <span onClick={evt => this.sketchCreate()}>
+                      <span ref={f => this.creationPromptSketch = f}>
                         <svg className="icon ii-pencil"><use href="#ii-pencil" xlinkHref="#ii-pencil" /></svg>
                       </span>
                       <span>
@@ -691,6 +691,8 @@ class AnnotationLayer extends React.Component {
     } else if (this.state.creating && this.state.creating.type === 'prompt' && this.creationPrompt) {
       if (!this.creationPrompt.contains(evt.target)) {
         this.setState({creating: null})
+      } else if (this.creationPromptSketch.contains(evt.target) || evt.target === this.creationPromptSketch) {
+        this.sketchCreate()
       }
     }
   }
