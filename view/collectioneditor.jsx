@@ -492,7 +492,7 @@ class AnnotationLayer extends React.Component {
                 if (creating.type === 'sketch') {
                   return (
                     <div className='sketchCreate'>
-                      Undo | Redo | Done
+                      Sketching&hellip;
                     </div>
                   )
                 }
@@ -703,15 +703,20 @@ class AnnotationLayer extends React.Component {
       let sketchingPath = [this.view2doc(point)]
       let modAno = Object.assign({}, creatingState.target)
       modAno.paths = modAno.paths.concat([sketchingPath])
-      this.commitAnnotationObjectModification(modAno, creatingState.target)
-      this.setState({
-        creating: {
-          type: 'sketch',
-          target: modAno,
-          sketching: true,
-          redoPathQueue: []
-        }
-      })
+      let annotationChanged = !this.commitAnnotationObjectModification(modAno, creatingState.target)
+      if (!annotationChanged) {
+        this.setState({
+          creating: {
+            type: 'sketch',
+            target: modAno,
+            sketching: true,
+            redoPathQueue: []
+          }
+        })
+      } else {
+        this.sketchCreate()
+        this.pressDown(point)
+      }
     }
   }
   pressMove (point) {
