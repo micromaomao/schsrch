@@ -12,6 +12,7 @@ class CollectionsView extends React.Component {
     this.setIntervaled = null
     this.handleInputChange = this.handleInputChange.bind(this)
     this.handleTitleChange = this.handleTitleChange.bind(this)
+    this.handleGlobaleKey = this.handleGlobaleKey.bind(this)
     let col = this.props.collection
     if (!AppState.getState().serverrender) {
       if (col.lastSave && (!col.lastSave.done || col.lastSave.error)) {
@@ -218,7 +219,24 @@ class CollectionsView extends React.Component {
     }
   }
 
+  handleGlobaleKey (evt) {
+    if (evt.ctrlKey && !evt.shiftKey && (evt.key.toLowerCase() === 'z' || evt.keyCode === 90)) {
+      evt.preventDefault()
+      this.undo()
+    } else if (evt.ctrlKey && (
+        (!evt.shiftKey && (evt.key.toLowerCase() === 'y' || evt.keyCode === 89)) ||
+        (evt.shiftKey && (evt.key.toLowerCase() === 'z' || evt.keyCode === 90))
+      )) {
+      evt.preventDefault()
+      this.redo()
+    }
+  }
+
+  componentDidMount () {
+    window.document.addEventListener('keydown', this.handleGlobaleKey, AppState.browserSupportsPassiveEvents ? {passive: false} : false)
+  }
   componentWillUnmount () {
+    window.document.removeEventListener('keydown', this.handleGlobaleKey)
     if (this.setIntervaled) {
       clearInterval(this.setIntervaled)
     }
