@@ -160,7 +160,8 @@ class AnnotationLayer extends React.Component {
         tapValid: false,
         tapIdentifier: null,
         creating: null,
-        modifying: null
+        modifying: null,
+        highlightAno: null
       })
     }
   }
