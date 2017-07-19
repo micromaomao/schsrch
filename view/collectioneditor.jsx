@@ -303,7 +303,8 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
                         fixedBoundary={!this.state.reCropping ? this.props.structure.boundary : null}
                         cropBoundary={this.state.reCropping || null}
                         onCropBoundaryChange={this.state.reCropping ? this.handleCropBoundaryChange : null}
-                        onViewboxChange={this.handleSspdfViewboxChange} />
+                        onViewboxChange={this.handleSspdfViewboxChange}
+                        ref={f => this.sspdf = f} />
                     ) : null}
                 {!this.state.error && this.state.docJson && !this.state.reCropping && this.state.contentViewBox
                   ? (
@@ -407,6 +408,9 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
   }
 
   startAnnotating () {
+    if (this.sspdf) {
+      this.sspdf.reCenter()
+    }
     this.setState({annotating: true})
   }
   finishAnnotating () {

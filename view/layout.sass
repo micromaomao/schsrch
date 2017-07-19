@@ -1045,10 +1045,8 @@ $feedback-top-height: 2rem + 1.3rem
                   color: $color-primary
                   opacity: 0.7
                   margin: 0.5rem
-              .creationPrompt
+              .creationPrompt, .selectionMenu
                 position: absolute
-                border-radius: 10px
-                border: solid 2px $color-filepreview-top
                 background-color: $color-primary
                 color: white
                 font-size: 1rem
@@ -1061,6 +1059,11 @@ $feedback-top-height: 2rem + 1.3rem
                   line-height: 40px
                   text-align: center
                   cursor: pointer
+              .creationPrompt
+                border-radius: 10px
+                border: solid 2px $color-filepreview-top
+              .selectionMenu
+                border-top: solid 1px $color-filepreview-top
               .sketchCreate
                 position: absolute
                 right: 0

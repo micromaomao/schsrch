@@ -13,6 +13,7 @@ class AnnotationLayer extends React.Component {
       tapValid: false,
       tapIdentifier: null,
       creating: null,
+      modifying: null,
       highlightAno: null
     }
     this.documentEventBound = false
@@ -34,7 +35,7 @@ class AnnotationLayer extends React.Component {
           width: this.props.width + 'px',
           height: this.props.height + 'px',
           pointerEvents: (this.props.disabled ? 'none' : 'auto')}} >
-        {this.emptyAnnotations() && !this.props.disabled && !this.state.creating
+        {this.emptyAnnotations() && !this.props.disabled && !this.state.creating && !this.state.modifying
           ? (
               <div className='placeholder'>
                 <div className='pen'>
@@ -43,47 +44,74 @@ class AnnotationLayer extends React.Component {
                 No annotations yet. Tap anywhere to create one.<br />
               </div>
             ) : null}
-        {this.state.creating && !this.props.disabled
+        {this.state.creating && !this.state.modifying && !this.props.disabled
           ? (() => {
-                let creating = this.state.creating
-                if (creating.type === 'prompt') {
-                  const promptWidth = 40 * 2 + 2*2
-                  const promptHeight = 40 + 2*2
-                  // 2*2 for borders.
+              let creating = this.state.creating
+              if (creating.type === 'prompt') {
+                const promptWidth = 40 * 2 + 2*2
+                const promptHeight = 40 + 2*2
+                // 2*2 for borders.
 
-                  let viewPoint = this.doc2view(creating.point)
-                  viewPoint[0] -= promptWidth / 2
-                  viewPoint[1] -= promptHeight / 2
-                  return (
-                    <div className='creationPrompt' ref={f => this.creationPrompt = f} style={{
-                        left: Math.max(0, Math.min(viewPoint[0], this.props.width - promptWidth)) + 'px',
-                        top: Math.max(0, Math.min(viewPoint[1], this.props.height - promptHeight)) + 'px',
-                        width: promptWidth + 'px',
-                        height: promptHeight + 'px'
-                      }}>
-                      <span ref={f => this.creationPromptSketch = f}>
-                        <svg className="icon ii-pencil"><use href="#ii-pencil" xlinkHref="#ii-pencil" /></svg>
-                      </span>
-                      <span>
-                        <svg className="icon ii-textbox"><use href="#ii-textbox" xlinkHref="#ii-textbox" /></svg>
-                      </span>
-                    </div>
-                  )
-                }
-                if (creating.type === 'sketch') {
-                  return (
-                    <div className='sketchCreate' ref={f => this.sketchCreateDoneBtn = f}>
-                      Done
-                    </div>
-                  )
-                }
-                return null
+                let viewPoint = this.doc2view(creating.point)
+                viewPoint[0] -= promptWidth / 2
+                viewPoint[1] -= promptHeight / 2
+                return (
+                  <div className='creationPrompt' ref={f => this.creationPrompt = f} style={{
+                      left: Math.max(0, Math.min(viewPoint[0], this.props.width - promptWidth)) + 'px',
+                      top: Math.max(0, Math.min(viewPoint[1], this.props.height - promptHeight)) + 'px',
+                      width: promptWidth + 'px',
+                      height: promptHeight + 'px'
+                    }}>
+                    <span ref={f => this.creationPromptSketch = f}>
+                      <svg className="icon ii-pencil"><use href="#ii-pencil" xlinkHref="#ii-pencil" /></svg>
+                    </span>
+                    <span>
+                      <svg className="icon ii-textbox"><use href="#ii-textbox" xlinkHref="#ii-textbox" /></svg>
+                    </span>
+                  </div>
+                )
               }
-            )() : null}
+              if (creating.type === 'sketch') {
+                return (
+                  <div className='sketchCreate' ref={f => this.sketchCreateDoneBtn = f}>
+                    Done
+                  </div>
+                )
+              }
+              return null
+            })() : null}
+        {this.state.modifying && !this.state.creating && !this.props.disabled
+          ? (() => {
+              let modifying = this.state.modifying
+              let target = modifying.target
+              if (modifying.state === 'selected') {
+                let bBox = this.annotationBoundingBox(target)
+                if (bBox === null) bBox = [-Infinity, -Infinity, Infinity, Infinity]
+                const menuWidth = 40
+                const menuHeight = 40
+                let point = this.doc2view([(bBox[0] + bBox[2]) / 2, bBox[3]])
+                point[0] = Math.max(0, Math.min(point[0] - menuWidth / 2, this.props.width - menuWidth))
+                point[1] = Math.max(0, Math.min(point[1], this.props.height - menuHeight))
+                return (
+                  <div className='selectionMenu' ref={f => this.modifyingSelectedMenu = f}
+                    style={{
+                      left: point[0] + 'px',
+                      top: point[1] + 'px',
+                      width: menuWidth + 'px',
+                      height: menuHeight + 'px'
+                    }}>
+                    <span ref={f => this.modifyingSelectedDel = f}>
+                      <svg className="icon ii-del"><use href="#ii-del" xlinkHref="#ii-del" /></svg>
+                    </span>
+                  </div>
+                )
+              }
+              return null
+            })() : null}
         {!this.emptyAnnotations()
           ? (
               this.props.annotations.map((ano, i) => {
-                let highlight = this.state.highlightAno === ano
+                let highlight = (this.state.highlightAno === ano && !this.state.creating && !this.state.modifying) || (this.state.modifying && this.state.modifying.target === ano)
                 if (ano.type === 'sketch') {
                   let svgPath = ano.paths.map(path => {
                     if (!Array.isArray(path)) return ''
@@ -131,7 +159,8 @@ class AnnotationLayer extends React.Component {
         downEventPos: null,
         tapValid: false,
         tapIdentifier: null,
-        creating: null
+        creating: null,
+        modifying: null
       })
     }
   }
@@ -248,10 +277,10 @@ class AnnotationLayer extends React.Component {
     }
   }
   handleMouseMove (evt) {
-    if (!this.state.creating) {
+    if (!this.state.creating && !this.state.modifying) {
       let point = this.client2view([evt.clientX, evt.clientY])
       requestAnimationFrame(() => {
-        if (this.state.creating) return
+        if (this.state.creating || this.state.modifying) return
         if (this.state.downEventTimestamp === null) {
           let docPoint = this.view2doc(point)
           let ano = this.rayAnnotations(docPoint)
@@ -289,12 +318,21 @@ class AnnotationLayer extends React.Component {
   }
 
   handleTap (evt) {
-    if (!this.props.disabled && !this.state.creating) {
-      let point = this.view2doc(this.state.downEventPos)
-      this.setState({creating: {
-        type: 'prompt',
-        point
-      }})
+    let point = this.view2doc(this.state.downEventPos)
+    let anoHovered = this.rayAnnotations(point)
+    if (!this.props.disabled && !this.state.creating && !this.state.modifying) {
+      if (!anoHovered) {
+        this.setState({creating: {
+          type: 'prompt',
+          point,
+          modifying: null
+        }})
+      } else {
+        this.setState({modifying: {
+          target: anoHovered,
+          state: 'selected'
+        }})
+      }
     } else if (this.state.creating && this.state.creating.type === 'prompt' && this.creationPrompt) {
       if (!this.creationPrompt.contains(evt.target)) {
         this.setState({creating: null})
@@ -306,6 +344,22 @@ class AnnotationLayer extends React.Component {
       this.setState({
         creating: null
       })
+    } else if (this.state.modifying && this.state.modifying.state === 'selected') {
+      if (anoHovered !== this.state.modifying.target &&
+        (!this.modifyingSelectedMenu ||
+          (this.modifyingSelectedMenu && evt.target !== this.modifyingSelectedMenu && !this.modifyingSelectedMenu.contains(evt.target)))) {
+        this.setState({
+          modifying: null
+        })
+      } else if (this.modifyingSelectedMenu && (evt.target === this.modifyingSelectedMenu || this.modifyingSelectedMenu.contains(evt.target))) {
+        if (this.modifyingSelectedDel === evt.target || this.modifyingSelectedDel.contains(evt.target)) {
+          let ano = this.state.modifying.target
+          this.commitAnnotationObjectModification(null, ano)
+          this.setState({
+            modifying: null
+          })
+        }
+      }
     }
   }
 
@@ -421,7 +475,11 @@ class AnnotationLayer extends React.Component {
     let index = oldAnnotations.indexOf(oldObj)
     if (index < 0) return false
     let modAnnotations = oldAnnotations.slice()
-    modAnnotations[index] = newObj
+    if (newObj !== null) {
+      modAnnotations[index] = newObj
+    } else {
+      modAnnotations.splice(index, 1)
+    }
     this.props.onAnnotationChange(modAnnotations)
     return true
   }
@@ -436,7 +494,8 @@ class AnnotationLayer extends React.Component {
         type: 'sketch',
         target: sketchAnnotation,
         sketching: true
-      }
+      },
+      modifying: null
     })
   }
 
@@ -471,6 +530,26 @@ class AnnotationLayer extends React.Component {
           }
         }
       }
+    }
+    return null
+  }
+
+  annotationBoundingBox (ano) {
+    if (ano.type === 'sketch') {
+      let minX = Infinity
+      let minY = Infinity
+      let maxX = -Infinity
+      let maxY = -Infinity
+      for (let path of ano.paths) {
+        for (let point of path) {
+          minX = Math.min(minX, point[0])
+          minY = Math.min(minY, point[1])
+          maxX = Math.max(maxX, point[0])
+          maxY = Math.max(maxY, point[1])
+        }
+      }
+      if (minX > maxX || minY > maxY) return null
+      return [minX, minY, maxX, maxY]
     }
     return null
   }
