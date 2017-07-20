@@ -975,13 +975,13 @@ $feedback-top-height: 2rem + 1.3rem
               margin-right: auto
               cursor: default
               .menu
-                background-color: lighten($color-primary, 30%)
-                border-top: solid 1px $color-divider
+                background-color: darken(white, 3%)
+                border-bottom: solid 2px $color-primary
                 font-size: 1rem
-                height: 2rem
+                padding-top: 0.25rem
+                padding-bottom: 0.25rem
                 display: flex
                 flex-direction: row
-                align-items: center
                 > span
                   cursor: pointer
                   padding-left: 0.5rem
@@ -993,18 +993,32 @@ $feedback-top-height: 2rem + 1.3rem
                   padding-right: 0.5rem
             .enHider
               background-color: lighten($color-divider, 15%)
+              .menu
+                .show
+                  margin-left: auto
+                  margin-right: auto
+                  padding-left: 1rem
+                  padding-right: 1rem
+                  color: $color-primary
             .enPaperCrop
               .menu
-                font-size: 0.8rem
-                height: 1.5rem
+                flex-wrap: wrap
+                border-bottom: solid 2px $color-filepreview-top
                 > .doc
+                  margin-left: auto
+                  margin-right: auto
                   color: $color-primary
                   cursor: pointer
                   transition: color 200ms
                   &:hover
                     color: $color-link
                     border-bottom: solid 1px #aaa
+                > span:last-child
+                  margin-right: auto
               .prompt
+                text-align: center
+                padding-left: 0.5rem
+                padding-right: 0.5rem
                 span
                   font-size: 1.2rem
                   vertical-align: middle
