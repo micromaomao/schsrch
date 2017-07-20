@@ -435,6 +435,7 @@ class Editor extends React.Component {
     this.handleInput = this.handleInput.bind(this)
     this.currentDOMStructure = null
     this.currentEditorNodes = new Map() // dom node -> component
+    this.inputEventMergeTimeout = null
   }
   componentDidMount () {
     if (this.props.structure && this.editorDOM) {
@@ -443,11 +444,13 @@ class Editor extends React.Component {
     if (this.btnStateInterval === null) this.btnStateInterval = setInterval(() => this.forceUpdate(), 1000)
   }
   componentWillUnmount () {
+    this.cancelDelayedInputEvent()
     if (this.btnStateInterval !== null) {
       clearInterval(this.btnStateInterval)
       this.btnStateInterval = null
     }
     if (this.editorDOM) this.structure2dom({}, this.editorDOM) // Unrender react components.
+    this.currentDOMStructure = null
   }
   componentDidUpdate () {
     if (this.props.structure && this.editorDOM) {
@@ -458,7 +461,18 @@ class Editor extends React.Component {
   nodeIsEditorNode (node) {
     return node.dataset.editornode === 'true'
   }
+
   normalizeHTML (html = '', nestedEditorNodeCallback = null) {
+    if (html.endsWith && html.endsWith('<br>')) {
+      let rest = html.substr(0, html.length - 4)
+      if (!/[<>]/.test(rest)) {
+        return html
+      }
+    }
+    if (!/[<>]/.test(html)) {
+      return html
+    }
+
     let parser = new DOMParser()
     let parsedDOM = parser.parseFromString(html, 'text/html')
     if (!parsedDOM.body) {
@@ -606,7 +620,11 @@ class Editor extends React.Component {
     if (this.currentDOMStructure === structure) {
       return
     }
-    console.log('structure2dom')
+    let timeStart
+    if (process.env.NODE_ENV !== 'production') {
+      timeStart = window.performance.now()
+    }
+
     let touchedEditorNodes = new Set()
     let processEditorNode = (current, currentElement) => {
       // React.render into old node will update the content (and the component's props).
@@ -624,6 +642,7 @@ class Editor extends React.Component {
         structure: current,
         disabled: thisEditor.props.disabled,
         onUpdateStructure: function (newStructure) {
+          thisEditor.runDelayedInputEventNow()
           if (thisEditor.props.structure !== structure) {
             thisEditor.forceUpdate()
             return
@@ -734,16 +753,41 @@ class Editor extends React.Component {
         this.recycleNode(node)
       }
     })
+
+    if (process.env.NODE_ENV !== 'production') {
+      let timeEnd = window.performance.now()
+      console.log(`structure2dom took ${timeEnd - timeStart} ms.`)
+    }
   }
 
   handleInput (evt) {
     if (this.props.onChange) {
       if (!this.editorDOM) return
       if (evt && evt.target !== this.editorDOM) return
-      let structure = this.dom2structure(this.editorDOM)
-      this.props.onChange(structure)
+      if (this.inputEventMergeTimeout !== null) {
+        clearTimeout(this.inputEventMergeTimeout)
+      }
+      this.inputEventMergeTimeout = setTimeout(() => {
+        this.inputEventMergeTimeout = null
+        let structure = this.dom2structure(this.editorDOM)
+        this.props.onChange(structure)
+      }, 200)
     }
   }
+
+  runDelayedInputEventNow () {
+    if (this.inputEventMergeTimeout === null || !this.editorDOM) return
+    this.cancelDelayedInputEvent()
+    let structure = this.dom2structure(this.editorDOM)
+    this.props.onChange(structure)
+  }
+  cancelDelayedInputEvent () {
+    if (this.inputEventMergeTimeout !== null) {
+      clearTimeout(this.inputEventMergeTimeout)
+      this.inputEventMergeTimeout = null
+    }
+  }
+
   execCommandDirect (cmd) {
     let ele = this.editorDOM
     if (this.commandBtnDisabled(cmd)) return

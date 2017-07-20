@@ -151,6 +151,20 @@ class AnnotationLayer extends React.Component {
       </div>
     )
   }
+  shouldComponentUpdate(nextProps, nextState) {
+    if (this.state.creating || this.state.modifying || nextState.creating || nextState.modifying ||
+        this.state.downEventTimestamp !== null || nextState.downEventTimestamp !== null ||
+        this.state.highlightAno !== nextState.highlightAno) return true
+    for (let key in nextProps) {
+      if (!nextProps.hasOwnProperty(key)) continue
+      if (nextProps[key] !== this.props[key]) return true
+    }
+    for (let key in this.props) {
+      if (!this.props.hasOwnProperty(key)) continue
+      if (this.props[key] !== nextProps[key]) return true
+    }
+    return false
+  }
   componentDidMount () {
     this.bindEvents()
   }
