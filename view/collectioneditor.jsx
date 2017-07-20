@@ -65,12 +65,14 @@ class HiderEditorNode extends BaseEditorNodeComponent {
     if (dataset.enType !== 'hider') throw new Error('dataset invalid.')
     return {
       type: 'hider',
-      hidden: dataset.hidden === 'true',
       content: JSON.parse(dataset.content || '[]')
     }
   }
   constructor (props) {
     super(props)
+    this.state = {
+      hidden: true
+    }
     this.handleInputChange = this.handleInputChange.bind(this)
     this.toggleHide = this.toggleHide.bind(this)
   }
@@ -80,13 +82,13 @@ class HiderEditorNode extends BaseEditorNodeComponent {
         <div className='menu'>
           {this.getSorthand()}
           {this.getDeleteBtn()}
-          {!this.props.structure.hidden
+          {!this.state.hidden
             ? (
                 <span className='hide' onClick={this.toggleHide}>
                   <svg className="icon ii-hider"><use href="#ii-hider" xlinkHref="#ii-hider" /></svg>
                 </span>
               ) : null}
-          {this.props.structure.hidden
+          {this.state.hidden
             ? (
                 <span className='show' onClick={this.toggleHide}>
                   Show hidden content
@@ -94,13 +96,20 @@ class HiderEditorNode extends BaseEditorNodeComponent {
               ) : null}
         </div>
         <div className='contentcontain'>
-          {this.props.structure.hidden
+          {!this.state.hidden
             ? (
                 <Editor structure={this.props.structure.content || []} onChange={this.handleInputChange} disabled={this.props.disabled} />
               ) : null}
         </div>
       </div>
     )
+  }
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.structure.content !== this.props.structure.content) {
+      this.setState({
+        hidden: false
+      })
+    }
   }
   handleInputChange (nContent) {
     this.props.onUpdateStructure(Object.assign({}, this.props.structure, {
@@ -110,14 +119,13 @@ class HiderEditorNode extends BaseEditorNodeComponent {
   toDataset () {
     return {
       enType: 'hider',
-      hidden: (this.props.structure.hidden ? 'true' : 'false'),
       content: JSON.stringify(this.props.structure.content || '[]')
     }
   }
   toggleHide () {
-    this.props.onUpdateStructure(Object.assign({}, this.props.structure, {
-      hidden: !this.props.structure.hidden
-    }))
+    this.setState({
+      hidden: !this.state.hidden
+    })
   }
 }
 editorNodeTypeNameTable.hider = HiderEditorNode
