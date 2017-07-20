@@ -19,13 +19,19 @@ class CollectionsView extends React.Component {
         this.uploadContentNow(true)
       } else if (col && col.loading) {
         this.startLoad()
-      } else if (col && !col.loading && (!col.lastSave || !col.lastSave.rand || col.rand === col.lastSave.rand)) {
+      } else if (col && !col.loading && (!col.lastSave || !col.lastSave.contentSaved || col.contentSaved === col.content)) {
         AppState.dispatch({type: 'collection-reload'})
       }
     }
     this.pushUndoStackTimeout = null
   }
   handleInputChange (content) {
+    AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
+      structure: content
+    })})
+    this.perparePushUndoStack()
+  }
+  perparePushUndoStack () {
     if (this.pushUndoStackTimeout !== null) {
       clearTimeout(this.pushUndoStackTimeout)
     }
@@ -33,14 +39,12 @@ class CollectionsView extends React.Component {
       AppState.dispatch({type: 'collection-push-undostack'})
       this.pushUndoStackTimeout = null
     }, 500)
-    AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
-      structure: content
-    })})
   }
   handleTitleChange (evt) {
     AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
       name: evt.target.value
     })})
+    this.perparePushUndoStack()
   }
   render () {
     let col = this.props.collection
@@ -171,16 +175,17 @@ class CollectionsView extends React.Component {
     let col = this.props.collection
     if (!col || !col.content) return
     if (col.lastSave) {
-      if (col.lastSave.rand === col.rand && !force) return
+      if (col.lastSave.contentSaved && col.lastSave.contentSaved === col.content && !force) return
     }
-    AppState.dispatch({type: 'collection-put-start', rand: col.rand})
+    AppState.dispatch({type: 'collection-put-start'})
     let headers = new Headers()
     headers.append('Content-Type', 'application/json')
     if (AppState.getState().authToken)
       headers.append('Authorization', 'Bearer ' + AppState.getState().authToken)
-    fetch(`/collections/${col.id}/cloudstorage/`, {method: 'PUT', body: JSON.stringify(col.content), headers: headers})
+    let content = col.content
+    fetch(`/collections/${col.id}/cloudstorage/`, {method: 'PUT', body: JSON.stringify(content), headers: headers})
       .then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
-        AppState.dispatch({type: 'collection-put-done', rand: col.rand})
+        AppState.dispatch({type: 'collection-put-done', content: content})
       }, err => {
         if (err.message.toString().match(/401/)) {
           this.setState({noEditAccess: true})
@@ -196,17 +201,19 @@ class CollectionsView extends React.Component {
     if (!col.lastSave || (col.lastSave.done && col.lastSave.time <= Date.now() - 1000)) {
       this.uploadContentNow()
     } else {
+      // last saved within 1s, don't try too often.
       if (!this.last1sTimeout) {
         this.last1sTimeout = setTimeout(() => {
           this.last1sTimeout = null
           this.tryUpload()
         }, 1000)
       }
-      let lastSaveRand = col.lastSave.rand
+      let lastSaveObject = col.lastSave
       if (!this.last5sTimeout) {
         this.last5sTimeout = setTimeout(() => {
           this.last5sTimeout = null
-          if (this.props.collection.lastSave && this.props.collection.lastSave.rand === lastSaveRand && !this.props.collection.lastSave.done) {
+          if (this.props.collection.lastSave && this.props.collection.lastSave === lastSaveObject && !this.props.collection.lastSave.done) {
+            // Stalled. Let's retry.
             this.uploadContentNow(true)
           }
         }, 5000)

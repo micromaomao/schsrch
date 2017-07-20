@@ -184,7 +184,6 @@ let AppState = createStore(function (state = {}, action) {
           contentUndoStack: null,
           contentRedoStack: null,
           lastSave: null,
-          rand: Math.random(),
           homeFromCollection: false
         }
       })
@@ -192,7 +191,6 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         collection: Object.assign({}, state.collection, {
           content: action.content,
-          rand: Math.random(),
           homeFromCollection: false,
           contentRedoStack: []
         })
@@ -203,8 +201,7 @@ let AppState = createStore(function (state = {}, action) {
         collection: Object.assign({}, state.collection, {
           error: action.error,
           loading: false,
-          lastSave: null,
-          rand: Math.random()
+          lastSave: null
         })
       })
     case 'collection-load-data':
@@ -214,8 +211,7 @@ let AppState = createStore(function (state = {}, action) {
           error: null,
           content: action.content,
           loading: false,
-          lastSave: null,
-          rand: Math.random()
+          lastSave: null
         })
       })
     case 'collection-reload':
@@ -223,8 +219,7 @@ let AppState = createStore(function (state = {}, action) {
         collection: Object.assign({}, state.collection, {
           error: null,
           loading: true,
-          lastSave: null,
-          rand: Math.random()
+          lastSave: null
         })
       })
     case 'collection-put-done':
@@ -235,7 +230,7 @@ let AppState = createStore(function (state = {}, action) {
             time: Date.now(),
             error: null,
             done: true,
-            rand: action.rand
+            contentSaved: action.content
           }
         })
       })
@@ -246,7 +241,8 @@ let AppState = createStore(function (state = {}, action) {
           lastSave: {
             time: Date.now(),
             error: action.error,
-            done: true
+            done: true,
+            contentSaved: null
           }
         })
       })
@@ -258,7 +254,7 @@ let AppState = createStore(function (state = {}, action) {
             time: Date.now(),
             error: null,
             done: false,
-            rand: action.rand
+            contentSaved: null
           }
         })
       })
