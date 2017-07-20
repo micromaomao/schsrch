@@ -80,24 +80,24 @@ class HiderEditorNode extends BaseEditorNodeComponent {
         <div className='menu'>
           {this.getSorthand()}
           {this.getDeleteBtn()}
-          <span className='hide' onClick={this.toggleHide}>
-            <svg className="icon ii-hider"><use href="#ii-hider" xlinkHref="#ii-hider" /></svg>
-          </span>
+          {!this.props.structure.hidden
+            ? (
+                <span className='hide' onClick={this.toggleHide}>
+                  <svg className="icon ii-hider"><use href="#ii-hider" xlinkHref="#ii-hider" /></svg>
+                </span>
+              ) : null}
+          {this.props.structure.hidden
+            ? (
+                <span className='show' onClick={this.toggleHide}>
+                  Show hidden content
+                </span>
+              ) : null}
         </div>
         <div className='contentcontain'>
           {this.props.structure.hidden
             ? (
-                <div className='hiddenplaceholder'>
-                  Content hidden. Click&nbsp;
-                  <span onClick={this.toggleHide}>
-                    <svg className="icon ii-hider"><use href="#ii-hider" xlinkHref="#ii-hider" /></svg>
-                  </span>
-                  &nbsp;to reveal.
-                </div>
-              )
-            : (
                 <Editor structure={this.props.structure.content || []} onChange={this.handleInputChange} disabled={this.props.disabled} />
-              )}
+              ) : null}
         </div>
       </div>
     )
@@ -226,14 +226,6 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
         <div className='menu'>
           {this.getSorthand()}
           {this.getDeleteBtn()}
-          {this.props.disabled && !this.props.structure.doc
-            ? (
-                <a>Empty clip.</a>
-              ) : null}
-          {!this.state.reCropping && this.props.structure.doc && this.state.docMeta
-            ? (
-                <a className='doc' onClick={evt => this.openDoc()}>{PaperUtils.setToString(this.state.docMeta)} - page {this.props.structure.page + 1}</a>
-              ) : null}
           {!this.props.disabled && !this.state.reCropping && this.props.structure.doc && this.state.docMeta
             ? (
                 <span onClick={evt => this.startReCrop()}>
@@ -263,6 +255,14 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
                 <span onClick={evt => this.finishAnnotating()}>
                   <svg className="icon ii-save"><use href="#ii-save" xlinkHref="#ii-save" /></svg>
                 </span>
+              ) : null}
+          {this.props.disabled && !this.props.structure.doc
+            ? (
+                <a>Empty clip.</a>
+              ) : null}
+          {!this.state.reCropping && this.props.structure.doc && this.state.docMeta
+            ? (
+                <a className='doc' onClick={evt => this.openDoc()}>{PaperUtils.setToString(this.state.docMeta)} - page {this.props.structure.page + 1}</a>
               ) : null}
         </div>
         {!this.props.structure.doc && !AppState.getState().paperCropClipboard && !this.props.disabled
