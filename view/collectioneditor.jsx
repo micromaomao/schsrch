@@ -563,10 +563,6 @@ class Editor extends React.Component {
         structure.push(this.editorNode2Structure(node))
       })
     }
-    let emptyParagraph = st => st.type === 'text' && st.html.replace(/<br>/i, '').trim() === ''
-    while (structure.length >= 2 && emptyParagraph(structure[structure.length - 1]) && emptyParagraph(structure[structure.length - 2])) {
-      structure.splice(structure.length - 1, 1)
-    }
     if (structure.length >= 1 && structure[structure.length - 1].type !== 'text') {
       structure.push({
         type: 'text',
