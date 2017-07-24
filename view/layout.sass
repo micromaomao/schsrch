@@ -81,10 +81,12 @@ body
       flex-wrap: nowrap
       flex-direction: row
       align-items: stretch
+      overflow: hidden
       > .view
         flex-grow: 1
         flex-shrink: 1
         max-width: 100%
+        overflow: hidden // Blame Firefox, IE & Safari for this
         > .prepare-shadow
           transition: box-shadow 200ms
           will-change: box-shadow
@@ -916,6 +918,7 @@ $feedback-top-height: 2rem + 1.3rem
         display: flex
         flex-wrap: nowrap
         flex-direction: column
+        overflow: hidden // Blame Firefox, IE & Safari for this (again)
         > .loading, .error
           flex-grow: 0
           flex-shrink: 0
@@ -939,6 +942,7 @@ $feedback-top-height: 2rem + 1.3rem
           flex-wrap: nowrap
           align-items: stretch
           flex-direction: row
+          overflow: hidden // .
           > .sidebar
             flex-shrink: 0
             flex-grow: 0
@@ -966,6 +970,7 @@ $feedback-top-height: 2rem + 1.3rem
             cursor: text
             outline: none
             padding: 0.5rem 1rem
+            max-height: 100%
             p
               margin-left: auto
               margin-right: auto
