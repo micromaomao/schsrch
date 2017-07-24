@@ -5,6 +5,12 @@ require('fetch-polyfill')
 require('offline-plugin/runtime').install()
 require('fullscreen-api-polyfill')
 
+if (/^https:\/\/beta\.schsrch\.xyz\//.test(window.location.href)) {
+  navigator.serviceWorker.getRegistration('/').then(reg => reg.unregister(), err => Promise.resolve()).then(() => {
+    window.location.replace('https://schsrch.xyz')
+  })
+}
+
 // AppState is like a global variable, where UI components can listen to change of state and response.
 // States include things like current query, current previewing documents, etc.
 // This also make sure that the App won't "reset" once user switch to other Apps and switch back.
