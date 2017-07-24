@@ -21,7 +21,8 @@ class BaseEditorNodeComponent extends React.Component {
     // props.structure: structure for this editor node.
     this.handleDelete = this.handleDelete.bind(this)
     this.handleSorthand = this.handleSorthand.bind(this)
-    if (new.target === BaseEditorNodeComponent) throw new Error('abstract.')
+    // FIXME: this dosen't play well with older browsers an current uglifyjs (3.0.23).
+    // if (new.target === BaseEditorNodeComponent) throw new Error('abstract.')
   }
   render () {
     // assert(this.props.structure.type === ...)
