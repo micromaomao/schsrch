@@ -13,16 +13,6 @@ class CollectionsView extends React.Component {
     this.handleInputChange = this.handleInputChange.bind(this)
     this.handleTitleChange = this.handleTitleChange.bind(this)
     this.handleGlobaleKey = this.handleGlobaleKey.bind(this)
-    let col = this.props.collection
-    if (!AppState.getState().serverrender) {
-      if (col.lastSave && (!col.lastSave.done || col.lastSave.error)) {
-        this.uploadContentNow(true)
-      } else if (col && col.loading) {
-        this.startLoad()
-      } else if (col && !col.loading && (!col.lastSave || !col.lastSave.contentSaved || col.contentSaved === col.content)) {
-        AppState.dispatch({type: 'collection-reload'})
-      }
-    }
     this.pushUndoStackTimeout = null
   }
   handleInputChange (content) {
@@ -262,6 +252,16 @@ class CollectionsView extends React.Component {
     window.document.addEventListener('keydown', this.handleGlobaleKey, AppState.browserSupportsPassiveEvents ? {passive: false} : false)
     if (this.props.collection && this.props.collection.content) {
       AppState.dispatch({type: 'collection-push-undostack'})
+    }
+    let col = this.props.collection
+    if (col.lastSave && (!col.lastSave.done || col.lastSave.error) && col.content && !col.loading) {
+      this.uploadContentNow(true)
+    } else if (col && col.loading) {
+      this.startLoad()
+    } else if (col && !col.loading && (!col.content || !col.lastSave || (!col.lastSave.error && col.lastSave.done) || !col.lastSave.contentSaved || col.contentSaved === col.content)) {
+      AppState.dispatch({type: 'collection-reload'})
+    } else {
+      this.uploadContentNow(true)
     }
   }
   componentWillUnmount () {
