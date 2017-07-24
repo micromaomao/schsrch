@@ -9,7 +9,7 @@
 
 ----
 
-[![BrowserStack logo](https://bstacksupport.zendesk.com/attachments/token/bueUNYiYxIt9MAgcZtTTLFS59/?name=Logo-01.svg)](https://www.browserstack.com/)
+<a href="https://www.browserstack.com/"><img alt="BrowserStack logo" src="https://bstacksupport.zendesk.com/attachments/token/bueUNYiYxIt9MAgcZtTTLFS59/?name=Logo-01.svg" width="270"></a>
 
 BrowserStack supported this project by offering me free access to a varity of real iPhone / Mac devices for testing, which I couldn't have afford otherwise. Big thanks goes to them.
 Their platform allows you to test your website remotely with real devices running Android, iOS, Windows, OS X and even Windows Phone, just in your browser.
