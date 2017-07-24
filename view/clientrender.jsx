@@ -5,6 +5,24 @@ require('fetch-polyfill')
 require('offline-plugin/runtime').install()
 require('fullscreen-api-polyfill')
 
+// Node.remove polyfill for collections.
+// from:https://github.com/jserz/js_piece/blob/master/DOM/ChildNode/remove()/remove().md
+;(function (arr) {
+  arr.forEach(function (item) {
+    if (item.hasOwnProperty('remove')) {
+      return
+    }
+    Object.defineProperty(item, 'remove', {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: function remove() {
+        this.parentNode.removeChild(this)
+      }
+    })
+  })
+})([Element.prototype, CharacterData.prototype, DocumentType.prototype])
+
 // AppState is like a global variable, where UI components can listen to change of state and response.
 // States include things like current query, current previewing documents, etc.
 // This also make sure that the App won't "reset" once user switch to other Apps and switch back.
