@@ -106,7 +106,7 @@ class FilePreview extends React.Component {
       this.measureViewDim()
       if (this.props.shouldUseFixedTop && this.mainDiv && !window.document.fullscreenElement && this.state.measuredViewHeight) {
         let topleft = view2client([0, 0], this.mainDiv)
-        if (topleft[1] < 0.001 && topleft[1] + this.state.measuredViewHeight > -0.001) {
+        if (topleft[1] < 46 && topleft[1] + this.state.measuredViewHeight > -0.001) {
           if (!this.state.topFixed) this.setState({topFixed: true})
         } else {
           if (this.state.topFixed) this.setState({topFixed: false})
