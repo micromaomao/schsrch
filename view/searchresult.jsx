@@ -15,6 +15,9 @@ class SearchResult extends React.Component {
       resultCache: null
     }
     if (props) {
+      if (AppState.getState().serverrender) {
+        this.setState = nState => Object.assign(this.state, nState)
+      }
       this.componentWillReceiveProps(props)
     }
   }
