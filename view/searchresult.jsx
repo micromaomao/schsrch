@@ -9,6 +9,67 @@ const SearchPrompt = require('./searchprompt.jsx')
 const FilePreview = require('./filepreview.jsx')
 
 class SearchResult extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      resultCache: null
+    }
+    if (props) {
+      this.componentWillReceiveProps(props)
+    }
+  }
+  componentDidMount () {
+    if (this.props) {
+      this.componentWillReceiveProps(this.props)
+    }
+  }
+  componentWillReceiveProps (nextProps) {
+    if (!this.state.resultCache || !this.props.querying || !this.props.querying.result || !nextProps.querying ||
+        !nextProps.querying.result || nextProps.querying.result !== this.props.querying.result) {
+      let result = nextProps.querying ? nextProps.querying.result : null
+      if (!result || !result.list || result.list.length === 0) {
+        this.setState({resultCache: null})
+      } else if (result.response === 'overflow' || result.response === 'empty') {
+        this.setState({resultCache: null})
+      } else if (result.response === 'pp') {
+        let bucket = []
+        for (let entity of result.list) {
+          let existing = bucket.find(x => PaperUtils.setEqual(x, entity))
+          if (existing) {
+            existing.types.push(entity)
+          } else {
+            bucket.push({
+              subject: entity.subject,
+              time: entity.time,
+              paper: entity.paper,
+              variant: entity.variant,
+              types: [
+                entity
+              ]
+            })
+          }
+        }
+        bucket.sort(PaperUtils.funcSortSet)
+        this.setState({
+          resultCache: bucket
+        })
+      } else if (result.response === 'text') {
+        let items = result.list.map(set => {
+          let metas = {subject: set.doc.subject, time: set.doc.time, paper: set.doc.paper, variant: set.doc.variant}
+          // paperSet should looks like: { subject: ..., paper: ..., ..., types: [ {_id: <docId>, type: ..., index: { ... }}, {_id: <docId>, type: ...}... ] }
+          // query: the words user searched. Used for highlighting content.
+          return Object.assign({}, metas, {types: [Object.assign({}, set.doc, {index: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})
+        })
+        this.setState({
+          resultCache: items
+        })
+      } else {
+        this.setState({
+          resultCache: null
+        })
+      }
+    }
+  }
   render () {
     let querying = this.props.querying || {query: ''}
     let relatedSubject = querying.query.match(/^(\d{4})(\s|$)/)
@@ -55,82 +116,68 @@ class SearchResult extends React.Component {
           </div>
         ))}
         {querying.result
-          ? this.renderResult(querying.result, querying.query)
+          ? this.renderResult(querying.result)
           : null}
       </div>
     )
   }
-  renderResult (result, query) {
-    if ((!result.list || result.list.length === 0) && result.response.match(/^(pp|text)$/)) {
-      result.response = 'empty'
+  renderResult (result) {
+    let query = this.props.querying && this.props.querying.query ? this.props.querying.query : ''
+    let resultCache = this.state.resultCache
+    if (resultCache === null) {
+      switch (result.response) {
+        case 'overflow':
+          return (
+            <OverflowView query={query} />
+          )
+        case 'empty':
+        default:
+          return (
+            <div className='empty'>Your search returned no results.</div>
+          )
+      }
     }
-    switch (result.response) {
-      case 'overflow':
-        return (
-          <OverflowView query={query} />
-        )
-      case 'empty':
-        return (
-          <div className='empty'>Your search returned no results.</div>
-        )
-      case 'pp':
-        let bucket = []
-        result.list.forEach(entity => {
-          let existing = bucket.find(x => PaperUtils.setEqual(x, entity))
-          if (existing) {
-            existing.types.push(entity)
-          } else {
-            bucket.push({
-              subject: entity.subject,
-              time: entity.time,
-              paper: entity.paper,
-              variant: entity.variant,
-              types: [
-                entity
-              ]
-            })
-          }
-        })
-        return (
-          <div className='pplist'>
-            {(() => {
-              let elements = []
-              bucket.sort(PaperUtils.funcSortSet).forEach(set => {
-                let psKey = PaperUtils.setToString(set)
-                let previewing = this.props.previewing
-                let current = previewing !== null && previewing.psKey === psKey
-                elements.push(<PaperSet
-                    paperSet={set}
-                    key={psKey}
-                    current={current}
-                    onOpenFile={(id, page) => {
-                        AppState.dispatch({type: 'previewFile', fileId: id, page, psKey})
-                      }}
-                    />)
-                if (current && this.props.showSmallPreview) {
-                  elements.push(
-                    <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
-                  )
-                }
-              })
-              return elements
-            })()}
-          </div>
-        )
-      case 'text':
+    if (result.response === 'pp' && Array.isArray(this.state.resultCache)) {
+      let bucket = this.state.resultCache
+      return (
+        <div className='pplist'>
+          {(() => {
+            let elements = []
+            for (let set of bucket) {
+              let psKey = PaperUtils.setToString(set)
+              let previewing = this.props.previewing
+              let current = previewing !== null && previewing.psKey === psKey
+              elements.push(<PaperSet
+                  paperSet={set}
+                  key={psKey}
+                  current={current}
+                  onOpenFile={(id, page) => {
+                      AppState.dispatch({type: 'previewFile', fileId: id, page, psKey})
+                    }}
+                  />)
+              if (current && this.props.showSmallPreview) {
+                elements.push(
+                  <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} shouldUseFixedTop={true} />
+                )
+              }
+            }
+            return elements
+          })()}
+        </div>
+      )
+    }
+    if (result.response === 'text' && Array.isArray(this.state.resultCache)) {
+        let items = this.state.resultCache
         return (
           <div className='fulltextlist'>
             {(() => {
                 let elements = []
-                result.list.forEach(set => {
-                  let metas = {subject: set.doc.subject, time: set.doc.time, paper: set.doc.paper, variant: set.doc.variant}
-                  // paperSet: { subject: ..., paper: ..., ..., types: [ {_id: <docId>, type: ..., index: { ... }}, {_id: <docId>, type: ...}... ] }
-                  // query: the words user searched. Used for highlighting content.
-                  let psKey = '!!index!' + set.index._id
+                for (let item of items) {
+                  let psKey = '!!index!' + item.types[0].index._id
                   let previewing = this.props.previewing
                   let current = previewing !== null && previewing.psKey === psKey
                   elements.push(<PaperSet
-                    paperSet={Object.assign({}, metas, {types: [Object.assign({}, set.doc, {index: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})}
+                    paperSet={item}
                     key={psKey}
                     query={query}
                     current={current}
@@ -140,17 +187,16 @@ class SearchResult extends React.Component {
                     />)
                   if (current && this.props.showSmallPreview) {
                     elements.push(
-                      <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
+                      <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} shouldUseFixedTop={true} />
                     )
                   }
-                })
+                }
                 return elements
             })()}
           </div>
         )
-      default:
-        return null
     }
+    return null
   }
 }
 

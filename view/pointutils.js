@@ -5,16 +5,27 @@ function assertValidPoint (point) {
   return true
 }
 
-function client2view (point, view) {
-  assertValidPoint(point)
+function getClientOffset (view) {
   let rect = view.getBoundingClientRect()
   if (rect.left === 0 && rect.top === 0)
-    console.warn("client2view won't work if the view isn't affecting layout. (e.g. display: none)")
+    console.warn("client2view and view2client won't work if the view isn't affecting layout. (e.g. display: none)")
   var supportPageOffset = window.pageXOffset !== undefined
   var isCSS1Compat = ((document.compatMode || "") === "CSS1Compat")
   var scrollX = supportPageOffset ? window.pageXOffset : isCSS1Compat ? document.documentElement.scrollLeft : document.body.scrollLeft
   var scrollY = supportPageOffset ? window.pageYOffset : isCSS1Compat ? document.documentElement.scrollTop : document.body.scrollTop
-  return [point[0] - (rect.left + scrollX), point[1] - (rect.top + scrollY)]
+  return [rect.left + scrollX, rect.top + scrollY]
+}
+
+function client2view (point, view) {
+  assertValidPoint(point)
+  let cOffset = getClientOffset(view)
+  return [0, 1].map(p => point[p] - cOffset[p])
+}
+
+function view2client (point, view) {
+  assertValidPoint(point)
+  let cOffset = getClientOffset(view)
+  return [0, 1].map(p => point[p] + cOffset[p])
 }
 
 function pointDistance (a, b) {
@@ -23,4 +34,4 @@ function pointDistance (a, b) {
   return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2))
 }
 
-module.exports = {assertValidPoint, client2view, pointDistance}
+module.exports = {assertValidPoint, client2view, pointDistance, view2client}

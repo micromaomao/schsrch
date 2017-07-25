@@ -105,6 +105,14 @@ class PaperSet extends React.Component {
       </div>
     )
   }
+
+  shouldComponentUpdate (nextProps, nextState) {
+    if (nextState.server || this.state.server) return true
+    if (nextProps.current || this.props.current) return true
+    if (nextProps.paperSet !== this.props.paperSet || nextProps.query !== this.props.query) return true
+    return false
+  }
+
   openFile (id, page = 0) {
     if (this.props.onOpenFile) {
       this.props.onOpenFile(id, page)
