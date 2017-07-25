@@ -387,5 +387,6 @@ AppState.browserSupportsPassiveEvents = (() => {
 })()
 
 AppState.shouldResponseKeyboardShortcut = () => !AppState.getState().queryFocusing && !(document.activeElement && document.activeElement.contentEditable === 'true') // TODO: Ugly but quick hack, FIXME!
+AppState.sspdfDecacheVersion = 2
 
 module.exports = AppState

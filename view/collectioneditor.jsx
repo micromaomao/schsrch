@@ -215,7 +215,7 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
     if (!Number.isSafeInteger(page)) return
     if (this.loading) return
     this.setState({loading: null, error: null})
-    fetch(`/doc/${doc}/?page=${page}&as=sspdf`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
+    fetch(`/doc/${doc}/?page=${page}&as=sspdf&decache=${AppState.sspdfDecacheVersion}`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
       if (this.props.structure.doc !== doc || this.props.structure.page !== page) return
       this.setState({loading: false, error: null, docJson: json, docMeta: json.doc})
     }, err => {

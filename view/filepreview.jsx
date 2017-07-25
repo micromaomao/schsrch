@@ -120,7 +120,7 @@ class FilePreview extends React.Component {
     if (this.currentLoading && this.currentLoading.doc === doc && this.currentLoading.page === page) return // Avoid duplicate requests.
     this.currentLoading = {doc, page}
     this.setState({loading: true, error: null})
-    fetch(`/doc/${doc}/?page=${page}&as=sspdf`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
+    fetch(`/doc/${doc}/?page=${page}&as=sspdf&decache=${AppState.sspdfDecacheVersion}`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
       if (this.props.doc !== doc || this.props.page !== page) return
       this.setState({loading: false, error: null, docJson: json, docMeta: json.doc})
       this.currentLoading = null
