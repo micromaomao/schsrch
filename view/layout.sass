@@ -358,13 +358,15 @@ body
     flex-shrink: 0
   .searchcontain
     flex-grow: 1
+    flex-shrink: 1
     overflow-y: auto
   .fbBtn
-    display: block
     color: $color-link
     border-top: solid 2px $color-primary
     padding: 0.5rem 1rem
     display: inline-block
+    flex-grow: 0
+    flex-shrink: 0
     transition: background-color 200ms
     cursor: pointer
     -webkit-tap-highlight-color: transparent
@@ -595,6 +597,12 @@ $feedback-top-height: 2rem + 1.3rem
     justify-content: center
     flex-direction: row
     align-items: center
+    &.fixed
+      position: fixed
+      z-index: 11
+      top: 0
+      left: 0
+      right: 0
     > *
       flex-shrink: 0
       flex-grow: 0
@@ -1117,6 +1125,8 @@ $feedback-top-height: 2rem + 1.3rem
           text-align: center
           padding: 0.5rem
           border-bottom: $color-primary solid 1px
+          flex-shrink: 0
+          flex-grow: 0
           .big
             font-size: 1.2rem
             color: $color-primary

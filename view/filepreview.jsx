@@ -4,6 +4,7 @@ const SsPdfView = require('./sspdfview.jsx')
 const AppState = require('./appstate.js')
 const DocDirList = require('./docdirlist.jsx')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
+const {view2client} = require('./pointutils.js')
 
 // TODO: Highlight
 
@@ -97,11 +98,23 @@ class FilePreview extends React.Component {
     this.load(doc, page)
   }
   componentDidUpdate (prevProps, prevState) {
-    if (prevProps.doc !== this.props.doc || prevProps.page !== this.props.page) {
-      this.sspdfView && this.sspdfView.reCenter()
-      this.setState({pageInputValue: null, showingDir: false})
+    try {
+      if (prevProps.doc !== this.props.doc || prevProps.page !== this.props.page) {
+        this.sspdfView && this.sspdfView.reCenter()
+        this.setState({pageInputValue: null, showingDir: false})
+      }
+      this.measureViewDim()
+      if (this.props.shouldUseFixedTop && this.mainDiv && !window.document.fullscreenElement && this.state.measuredViewHeight) {
+        let topleft = view2client([0, 0], this.mainDiv)
+        if (topleft[1] < 0.001 && topleft[1] + this.state.measuredViewHeight > -0.001) {
+          if (!this.state.topFixed) this.setState({topFixed: true})
+        } else {
+          if (this.state.topFixed) this.setState({topFixed: false})
+        }
+      }
+    } catch (e) {
+      console.error(e)
     }
-    this.measureViewDim()
   }
   load (doc = this.props.doc, page = this.props.page) {
     if (this.currentLoading && this.currentLoading.doc === doc && this.currentLoading.page === page) return // Avoid duplicate requests.
@@ -175,7 +188,7 @@ class FilePreview extends React.Component {
           : null}
         {this.state.docMeta
           ? (
-              <div className='top'>
+              <div className={'top' + (this.state.topFixed ? ' fixed' : '')}>
                 <a className={'prev' + (couldPrev ? '' : ' disabled')} onClick={evt => couldPrev && this.changePage(this.props.page - 1)}>
                   <svg className="icon ii-l"><use href="#ii-l" xlinkHref="#ii-l"></use></svg>
                 </a>

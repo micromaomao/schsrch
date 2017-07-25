@@ -202,7 +202,9 @@ class SchSrch extends React.Component {
     )
   }
   handleSearchContainScroll (evt) {
-    this.setState({viewScrollAtTop: evt.target.scrollTop < 5})
+    let viewScrollAtTop = evt.target.scrollTop < 5
+    // if (this.state.viewScrollAtTop === viewScrollAtTop) return
+    this.setState({viewScrollAtTop})
   }
 
   handleQuery (query) {
