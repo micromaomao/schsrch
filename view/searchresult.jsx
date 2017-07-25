@@ -122,6 +122,7 @@ class SearchResult extends React.Component {
     )
   }
   renderResult (result) {
+    let query = this.props.querying && this.props.querying.query ? this.props.querying.query : ''
     let resultCache = this.state.resultCache
     if (resultCache === null) {
       switch (result.response) {
@@ -167,7 +168,6 @@ class SearchResult extends React.Component {
     }
     if (result.response === 'text' && Array.isArray(this.state.resultCache)) {
         let items = this.state.resultCache
-        let query = this.props.querying && this.props.querying.query ? this.props.querying.query : ''
         return (
           <div className='fulltextlist'>
             {(() => {
