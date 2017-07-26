@@ -44,7 +44,7 @@ module.exports = (schsrch, dbModel) =>
           let testee = new PastPaperCollection(testeeConstruct)
           testee.save().then(() => {
             supertest(schsrch)
-              .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+              .get(`/collection/${testee._id.toString()}/content/`)
               .set('Authorization', `Bearer ${owner.tokenHex}`)
               .expect(200)
               .expect(res => res.body.should.be.an.Object())
@@ -90,7 +90,7 @@ module.exports = (schsrch, dbModel) =>
               if (!_antiTest) {
                 testee.save().then(() => {
                   supertest(schsrch)
-                    .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+                    .get(`/collection/${testee._id.toString()}/content/`)
                     .set('Authorization', `Bearer ${peers[testPeer].tokenHex}`)
                     .expect(200)
                     .expect(res => res.body.should.be.an.Object())
@@ -101,7 +101,7 @@ module.exports = (schsrch, dbModel) =>
               } else {
                 testee.save().then(() => {
                   supertest(schsrch)
-                    .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+                    .get(`/collection/${testee._id.toString()}/content/`)
                     .set('Authorization', `Bearer ${stranger.tokenHex}`)
                     .expect(401)
                     .expect(res => res.text.should.match(/Access denied/i))
@@ -141,7 +141,7 @@ module.exports = (schsrch, dbModel) =>
           })
           testee.save().then(() => {
             supertest(schsrch)
-              .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+              .get(`/collection/${testee._id.toString()}/content/`)
               .set('Authorization', `Bearer ${stranger.tokenHex}`)
               .expect(200)
               .expect(res => res.body.should.be.an.Object())
@@ -170,7 +170,7 @@ module.exports = (schsrch, dbModel) =>
             })
             testee.save().then(() => {
               supertest(schsrch)
-                .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+                .get(`/collection/${testee._id.toString()}/content/`)
                 .set('Authorization', `Bearer ${stranger.tokenHex}`)
                 .expect(200)
                 .expect(res => res.body.should.be.an.Object())
@@ -197,7 +197,7 @@ module.exports = (schsrch, dbModel) =>
         })
         testee.save().then(() => {
           supertest(schsrch)
-            .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+            .get(`/collection/${testee._id.toString()}/content/`)
             .expect(200)
             .expect(res => res.body.should.be.an.Object())
             .expect(res => res.body.name.should.be.a.String())
@@ -269,7 +269,7 @@ module.exports = (schsrch, dbModel) =>
         let testContent = {name: 'test set name'}
         col.save(() => {
           supertest(schsrch)
-            .put(`/collections/${col._id}/cloudstorage/`)
+            .put(`/collection/${col._id}/content/`)
             .set('Authorization', 'Bearer ' + owner.tokenHex)
             .set('Content-Type', 'application/json')
             .send(testContent)
@@ -317,7 +317,7 @@ module.exports = (schsrch, dbModel) =>
               if (!_antiTest) {
                 testee.save().then(() => {
                   supertest(schsrch)
-                    .put(`/collections/${testee._id.toString()}/cloudstorage/`)
+                    .put(`/collection/${testee._id.toString()}/content/`)
                     .set('Authorization', `Bearer ${peers[testPeer].tokenHex}`)
                     .set('Content-Type', 'application/json')
                     .send(testContentEdit)
@@ -342,7 +342,7 @@ module.exports = (schsrch, dbModel) =>
               } else {
                 testee.save().then(() => {
                   supertest(schsrch)
-                    .put(`/collections/${testee._id.toString()}/cloudstorage/`)
+                    .put(`/collection/${testee._id.toString()}/content/`)
                     .set('Authorization', `Bearer ${stranger.tokenHex}`)
                     .set('Content-Type', 'application/json')
                     .send({content: testContentEdit})

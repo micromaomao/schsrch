@@ -67,7 +67,7 @@ if (history.state) {
     }
   } else if (loc === '/disclaim/') {
     AppState.dispatch({type: 'disclaim'})
-  } else if ((queryMatch = loc.match(/^\/collections\/([0-9a-f]+)\/$/))) {
+  } else if ((queryMatch = loc.match(/^\/collection\/([0-9a-f]+)\/view\/$/))) {
     AppState.dispatch({type: 'view-collection', collectionId: queryMatch[1]})
   } else {
     let nsState = readFromLocalStorage()
@@ -89,7 +89,7 @@ AppState.subscribe(() => {
     if (stateView !== 'home') {
       switch (stateView) {
         case 'collection':
-        url = `/collections/${nState.collection.id}/`
+        url = `/collection/${nState.collection.id}/view/`
         break
         default:
         url = '/' + encodeURIComponent(stateView) + '/'

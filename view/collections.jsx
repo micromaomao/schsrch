@@ -148,7 +148,7 @@ class CollectionView extends React.Component {
     let authHeaders = new Headers()
     if (AppState.getState().authToken)
       authHeaders.append('Authorization', 'Bearer ' + AppState.getState().authToken)
-    fetch(`/collections/${col.id}/cloudstorage/`, {headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
+    fetch(`/collection/${col.id}/content/`, {headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
       if (this.props.collection.id !== col.id) return
       if (result.error) {
         AppState.dispatch({type: 'collection-load-error', error: result.error})
@@ -173,7 +173,7 @@ class CollectionView extends React.Component {
     if (AppState.getState().authToken)
       headers.append('Authorization', 'Bearer ' + AppState.getState().authToken)
     let content = col.content
-    fetch(`/collections/${col.id}/cloudstorage/`, {method: 'PUT', body: JSON.stringify(content), headers: headers})
+    fetch(`/collection/${col.id}/content/`, {method: 'PUT', body: JSON.stringify(content), headers: headers})
       .then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
         AppState.dispatch({type: 'collection-put-done', content: content})
       }, err => {

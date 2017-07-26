@@ -261,7 +261,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       })
     })
 
-    rMain.get('/collections/:collectionId', function (req, res, next) {
+    rMain.get('/collection/:collectionId/view', function (req, res, next) {
       let { collectionId } = req.params
       res.type('html')
       let $ = cheerio.load(indexHtml)
@@ -269,7 +269,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       res.send($.html())
     })
 
-    rMain.get('/collections/:collectionId/cloudstorage/', optionalAuthentication, function (req, res, next) {
+    rMain.get('/collection/:collectionId/content/', optionalAuthentication, function (req, res, next) {
       let { collectionId } = req.params
       PastPaperCollection.findOne({_id: collectionId}).then(doc => {
         if (!doc) {
@@ -296,7 +296,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       })
     })
 
-    rMain.put('/collections/:collectionId/cloudstorage/', requireAuthentication, function (req, res, next) {
+    rMain.put('/collection/:collectionId/content/', requireAuthentication, function (req, res, next) {
       let { collectionId } = req.params
       PastPaperCollection.findOne({_id: collectionId}).then(collectionDoc => {
         if (!collectionDoc) {
