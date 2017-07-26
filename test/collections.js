@@ -442,4 +442,11 @@ module.exports = (schsrch, dbModel) =>
         Promise.all([getNewId(), getNewId()]).then(createCollections).then(doTest).catch(done)
       })
     }
+
+    it('/collections/by/non-existing-user/ should return 404', function (done) {
+      supertest(schsrch)
+        .get('/collections/by/000000000000000000000000/')
+        .expect(404)
+        .end(done)
+    })
   })
