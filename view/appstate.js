@@ -176,8 +176,8 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         queryFocusing: false
       })
-    case 'view-collections':
-      if (state.view === 'collections' && state.collection.id === action.collectionId) {
+    case 'view-collection':
+      if (state.view === 'collection' && state.collection.id === action.collectionId) {
         return Object.assign({}, state, {
           collection: Object.assign({}, state.collection, {
             homeFromCollection: false
@@ -185,7 +185,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       }
       return Object.assign({}, state, {
-        view: 'collections',
+        view: 'collection',
         collection: {
           id: action.collectionId,
           loading: true,

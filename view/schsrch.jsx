@@ -7,7 +7,7 @@ const Disclaimer = require('./disclaimer.jsx')
 const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
 const FilePreview = require('./filepreview.jsx')
-const { CollectionsView } = require('./collections.jsx')
+const { CollectionView } = require('./collections.jsx')
 const { LoginView } = require('./auth.jsx')
 const PaperUtils = require('./paperutils.js')
 
@@ -75,8 +75,8 @@ class SchSrch extends React.Component {
           return AppState.getState().querying ? this.renderSearch() : this.renderHome()
         case 'disclaim':
           return this.renderDisclaim()
-        case 'collections':
-          return this.renderViewCollections()
+        case 'collection':
+          return this.renderViewCollection()
         case 'login':
           return this.renderViewLogin()
       }
@@ -128,7 +128,7 @@ class SchSrch extends React.Component {
             ? (
                 <div className='bottom'>
                   No paper crop selected. <a
-                    onClick={evt => AppState.dispatch({type: 'view-collections', collectionId: collection.id})}>
+                    onClick={evt => AppState.dispatch({type: 'view-collection', collectionId: collection.id})}>
                     return to collection</a>
                   &nbsp;
                   <a onClick={evt => AppState.dispatch({type: 'clear-home-from-collection'})}>close</a>
@@ -158,7 +158,7 @@ class SchSrch extends React.Component {
                   &nbsp;
                   {collection && collection.homeFromCollection
                     ? (
-                        <a onClick={evt => AppState.dispatch({type: 'view-collections', collectionId: collection.id})}>
+                        <a onClick={evt => AppState.dispatch({type: 'view-collection', collectionId: collection.id})}>
                           return to collection
                         </a>
                       )
@@ -306,10 +306,10 @@ class SchSrch extends React.Component {
         </div>
       )
   }
-  renderViewCollections () {
+  renderViewCollection () {
     return (
-      <div className='view view-collections'>
-        <CollectionsView collection={AppState.getState().collection} />
+      <div className='view view-collection'>
+        <CollectionView collection={AppState.getState().collection} />
       </div>
     )
   }
