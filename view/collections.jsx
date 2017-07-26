@@ -55,8 +55,8 @@ class CollectionView extends React.Component {
     return (
       <div className='doc'>
         <div className='top'>
-          <div className='close'>
-            <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
+          <div className='sidebarbtn' onClick={evt => AppState.dispatch({type: 'show-sidebar'})}>
+            <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars" /></svg>
           </div>
           {!editDisabled
             ? (
