@@ -17,11 +17,14 @@ class SchSrch extends React.Component {
     this.state = {
       coverHideAnimation: 0,
       view: 'home',
-      viewScrollAtTop: true
+      viewScrollAtTop: true,
+      showFeedback: false,
+      showSidebar: false
     }
     this.handleUpdate = this.handleUpdate.bind(this)
     this.handleQuery = this.handleQuery.bind(this)
     this.handleSearchContainScroll = this.handleSearchContainScroll.bind(this)
+    this.handleBlackCoverDown = this.handleBlackCoverDown.bind(this)
     // UI Components should support server rendering to allow javascript-disabled users to use this App.
     // The DOM produced by server and client javascript could (and should) differ.
     if (AppState.getState().serverrender) {
@@ -31,7 +34,12 @@ class SchSrch extends React.Component {
   }
   handleUpdate () {
     let state = AppState.getState()
-    this.setState({feedbackShowed: state.feedback.show, coverHideAnimation: Date.now()})
+    if (state.feedback.show !== this.state.showFeedback) {
+      this.setState({showFeedback: state.feedback.show, coverHideAnimation: Date.now()})
+    }
+    if (state.showSidebar !== this.state.showSidebar) {
+      this.setState({showSidebar: state.showSidebar, coverHideAnimation: Date.now()})
+    }
     this.setState({view: AppState.getState().view})
 
     if (state.querying && !state.querying.loading && !state.querying.error && !state.querying.result) {
@@ -41,7 +49,7 @@ class SchSrch extends React.Component {
   render () {
     let blackCoverStyle = {}
     let coverAnimationTime = Math.max(0, Date.now() - this.state.coverHideAnimation)
-    let showCover = this.state.feedbackShowed
+    let showCover = this.state.showFeedback || this.state.showSidebar
     if (this.state.server) {
       blackCoverStyle = {opacity: 0, zIndex: 0}
     } else if (showCover) {
@@ -80,7 +88,7 @@ class SchSrch extends React.Component {
     return (
       <div className='schsrch'>
         {this.state.server ? null : (
-          <div className='contentblackcover' style={blackCoverStyle} />
+          <div className='contentblackcover' style={blackCoverStyle} onTouchStart={this.handleBlackCoverDown} onMouseDown={this.handleBlackCoverDown} />
         )}
         <div className='content'>
           {
@@ -159,19 +167,49 @@ class SchSrch extends React.Component {
             : null}
         </div>
         {this.state.server ? null : <Feedback.Frame />}
+        {this.renderSidebar()}
       </div>
     )
   }
   shouldShowBigPreview () {
     return this.state.server ? false : window.innerWidth >= 1100
   }
+  handleBlackCoverDown (evt) {
+    if (this.state.showSidebar) {
+      AppState.dispatch({type: 'hide-sidebar'})
+    }
+  }
   renderHome () {
     return (
       <div className='view view-home'>
+        {!this.state.showSidebar && !this.state.server
+          ? (
+              <div className='sidebarbtn' onClick={evt => AppState.dispatch({type: 'show-sidebar'})}>
+                <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars"></use></svg>
+              </div>
+            ) : null}
         <div className={'searchbarcontain'}>
           <SearchBar key='searchbar' ref={f => this.searchbar = f} big={true} onQuery={this.handleQuery} loading={false} />
         </div>
         <Description />
+      </div>
+    )
+  }
+  renderSidebar () {
+    if (this.state.server) return null
+    let loginInfo = AppState.getState().loginInfo
+    return (
+      <div className={'sidebar ' + (this.state.showSidebar ? 'show' : 'hide')}>
+        <div className='top'>
+          <div className='username'>
+            {loginInfo ? loginInfo.username : 'Login or register\u2026'}
+          </div>
+        </div>
+        <div className='bottom'>
+          <a onClick={evt => Feedback.show()}>Feedback</a>
+          <a onClick={evt => AppState.dispatch({type: 'disclaim'})}>Disclaimer</a>
+          <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
+        </div>
       </div>
     )
   }
