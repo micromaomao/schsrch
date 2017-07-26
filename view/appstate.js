@@ -1,4 +1,4 @@
-const InterfaceVersion = 17
+const InterfaceVersion = 18
 const { createStore } = require('redux')
 
 const init = {
@@ -19,7 +19,8 @@ const init = {
   queryFocusing: false,
   authToken: null,
   loginView: null,
-  paperCropClipboard: null
+  paperCropClipboard: null,
+  loginInfo: null
 }
 
 function setPreviewPages (previewPages, doc, page) {
@@ -44,7 +45,10 @@ let AppState = createStore(function (state = {}, action) {
         console.log(`Not loading from state data of older version - ${action.state.version || '0'} !== ${InterfaceVersion}`)
         return Object.assign({}, init)
       }
-      return Object.assign({}, init, action.state)
+      return Object.assign({}, init, action.state, {
+        queryFocusing: false,
+        loginInfo: null
+      })
     case 'query':
       if (action.query.trim().length === 0) {
         return Object.assign({}, state, {
@@ -333,6 +337,7 @@ let AppState = createStore(function (state = {}, action) {
     case 'finish-login':
       return Object.assign({}, state, {
         authToken: action.token,
+        loginInfo: null,
         loginView: null,
         view: (state.loginView ? state.loginView.from : state.view)
       })
@@ -343,7 +348,8 @@ let AppState = createStore(function (state = {}, action) {
       })
     case 'clear-token':
       return Object.assign({}, state, {
-        authToken: null
+        authToken: null,
+        loginInfo: null
       })
     case 'home-from-collection':
       if (!state.collection) {
@@ -386,6 +392,10 @@ let AppState = createStore(function (state = {}, action) {
     case 'hide-sidebar':
       return Object.assign({}, state, {
         showSidebar: false
+      })
+    case 'login-info':
+      return Object.assign({}, state, {
+        loginInfo: action.info
       })
   }
 })

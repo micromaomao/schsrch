@@ -25,6 +25,7 @@ class SchSrch extends React.Component {
     this.handleQuery = this.handleQuery.bind(this)
     this.handleSearchContainScroll = this.handleSearchContainScroll.bind(this)
     this.handleBlackCoverDown = this.handleBlackCoverDown.bind(this)
+    this.handleSidebarTopClick = this.handleSidebarTopClick.bind(this)
     // UI Components should support server rendering to allow javascript-disabled users to use this App.
     // The DOM produced by server and client javascript could (and should) differ.
     if (AppState.getState().serverrender) {
@@ -198,11 +199,14 @@ class SchSrch extends React.Component {
   renderSidebar () {
     if (this.state.server) return null
     let loginInfo = AppState.getState().loginInfo
+    let authTokenHave = !!AppState.getState().authToken
     return (
       <div className={'sidebar ' + (this.state.showSidebar ? 'show' : 'hide')}>
-        <div className='top'>
+        <div className='top' onClick={this.handleSidebarTopClick}>
           <div className='username'>
-            {loginInfo ? loginInfo.username : 'Login or register\u2026'}
+            {!authTokenHave && !loginInfo ? 'Login or register\u2026' : null}
+            {authTokenHave && !loginInfo ? 'Getting your info\u2026' : null}
+            {loginInfo ? loginInfo.username : null}
           </div>
         </div>
         <div className='bottom'>
@@ -213,6 +217,14 @@ class SchSrch extends React.Component {
       </div>
     )
   }
+
+  handleSidebarTopClick (evt) {
+    let authTokenHave = !!AppState.getState().authToken
+    if (!authTokenHave) {
+      AppState.dispatch({type: 'login-view'})
+    }
+  }
+
   renderSearch () {
     let query = AppState.getState().querying || {}
     query = query.query
