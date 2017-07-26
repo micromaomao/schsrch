@@ -364,6 +364,56 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       })
     })
 
+    rMain.get('/collections/by/:user/', optionalAuthentication, function (req, res, next) {
+      let userId = req.params.user.toString()
+      PastPaperId.findOne({_id: userId}).then(user => {
+        if (!user) {
+          next()
+          return
+        }
+        let selectorOrs = [ {publicRead: true} ]
+        if (req.authId) {
+          selectorOrs.push({
+            allowedRead: {
+              $elemMatch: {$eq: req.authId._id}
+            }
+          })
+          selectorOrs.push({
+            allowedWrite: {
+              $elemMatch: {$eq: req.authId._id}
+            }
+          })
+        }
+        let selector = {
+          $and: [
+            {
+              owner: userId
+            },
+            {
+              $or: selectorOrs
+            }
+          ]
+        }
+        PastPaperCollection.count(selector).then(count => {
+          if (count === 0) {
+            res.send({count: 0, list: []})
+          } else {
+            PastPaperCollection.find(selector, {_id: true, creationTime: true, ownerModifyTime: true, content: true, owner: true, publicRead: true}).sort({ownerModifyTime: -1}).limit(20).then(list => {
+              res.send({count, list: list.map(x => Object.assign(x, { // Only return short content
+                content: (x.content ? {
+                  name: x.content.name || null,
+                  firstP: (x.content.structure && x.content.structure[0] && x.content.structure[0].type === 'text') ? x.content.structure[0].html : ''
+                } : {
+                  name: '',
+                  firstP: ''
+                })
+              }))})
+            }, err => next(err))
+          }
+        }, err => next(err))
+      }, err => next(err))
+    })
+
     function processSSPDF (doc, pn) {
       return new Promise((resolve, reject) => {
         function postCache (stuff) {

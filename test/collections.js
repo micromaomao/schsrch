@@ -383,4 +383,63 @@ module.exports = (schsrch, dbModel) =>
     allowedWriteTest(30, 0)
     for (let i = 0; i < 4; i ++)
       allowedWriteTest(30, Math.floor(Math.random() * 30))
+
+    for (let guest of [true, false]) {
+      it(`/collections/by/... should show user's all collections where the visitor is allowed to read in order of modify time desc, when viewed by ${guest ? 'a guest' : 'another user'}.`, function (done) {
+        let now = Date.now()
+        function createCollections ([owner, otherUser]) {
+          return new Promise((resolve, reject) => {
+            let collectionQueue = []
+            let returns = []
+            for (let allowedReadIncludeOther of [true, false]) {
+              for (let allowedWriteIncludeOther of [true, false]) {
+                for (let publiclyVisiable of [true, false]) {
+                  let col = new PastPaperCollection({
+                    creationTime: now - collectionQueue.length,
+                    ownerModifyTime: now - collectionQueue.length,
+                    content: null,
+                    owner: owner.id,
+                    publicRead: publiclyVisiable,
+                    allowedRead: allowedReadIncludeOther ? [otherUser.id] : [],
+                    allowedWrite: allowedWriteIncludeOther ? [otherUser.id] : []
+                  })
+                  let shouldPresent = false
+                  if (publiclyVisiable) shouldPresent = true
+                  else if (!guest && (allowedReadIncludeOther || allowedWriteIncludeOther)) shouldPresent = true
+                  collectionQueue.push(col)
+                  if (shouldPresent) {
+                    returns.push(col._id.toString())
+                  }
+                }
+              }
+            }
+            Promise.all(collectionQueue.map(x => x.save())).then(() => resolve({
+              collectionsToExpect: returns,
+              owner, otherUser
+            }), reject)
+          })
+        }
+        function doTest ({collectionsToExpect, owner, otherUser}) {
+          let req = supertest(schsrch)
+          req = req.get(`/collections/by/${owner.id.toString()}/`)
+          if (!guest) {
+            req = req.set('Authorization', 'Bearer ' + otherUser.tokenHex)
+          }
+          req = req.expect(200).expect('Content-Type', /application\/json/)
+          req = req.expect(res => res.body.should.be.an.Object())
+                  .expect(res => res.body.list.should.be.an.Array())
+                  .expect(res => {
+                    let list = res.body.list
+                    list.length.should.be.exactly(collectionsToExpect.length)
+                    list.forEach((col, i) => {
+                      col._id.should.be.a.String()
+                      col._id.should.be.exactly(collectionsToExpect[i])
+                    })
+                  })
+                  .expect(res => res.body.count.should.be.exactly(collectionsToExpect.length))
+                  .end(done)
+        }
+        Promise.all([getNewId(), getNewId()]).then(createCollections).then(doTest).catch(done)
+      })
+    }
   })
