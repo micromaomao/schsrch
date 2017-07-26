@@ -200,6 +200,7 @@ class SchSrch extends React.Component {
     if (this.state.server) return null
     let loginInfo = AppState.getState().loginInfo
     let authTokenHave = !!AppState.getState().authToken
+    let aState = AppState.getState()
     return (
       <div className={'sidebar ' + (this.state.showSidebar ? 'show' : 'hide')}>
         <div className='top' onClick={this.handleSidebarTopClick}>
@@ -208,6 +209,17 @@ class SchSrch extends React.Component {
             {authTokenHave && !loginInfo ? 'Getting your info\u2026' : null}
             {loginInfo ? loginInfo.username : null}
           </div>
+          {authTokenHave
+            ? (
+                <div className='logout' ref={f => this.sidebarLogoutBtn = f}>
+                  <svg className="icon ii-logout"><use href="#ii-logout" xlinkHref="#ii-logout"></use></svg>
+                </div>
+              ) : null}
+        </div>
+        <div className='menu'>
+          <div className={aState.view === 'home' ? 'current' : ''} onClick={evt => AppState.dispatch({type: 'home'})}>Home</div>
+          {loginInfo ? 
+            (<div>My collections</div>) : null}
         </div>
         <div className='bottom'>
           <a onClick={evt => Feedback.show()}>Feedback</a>
@@ -222,6 +234,9 @@ class SchSrch extends React.Component {
     let authTokenHave = !!AppState.getState().authToken
     if (!authTokenHave) {
       AppState.dispatch({type: 'login-view'})
+    } else if (this.sidebarLogoutBtn && (evt.target === this.sidebarLogoutBtn || this.sidebarLogoutBtn.contains(evt.target))) {
+      AppState.dispatch({type: 'clear-token'})
+      // FIXME: Not secure. User expect token to be invalidated.
     }
   }
 
