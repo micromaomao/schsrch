@@ -371,28 +371,35 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           next()
           return
         }
-        let selectorOrs = [ {publicRead: true} ]
-        if (req.authId) {
-          selectorOrs.push({
-            allowedRead: {
-              $elemMatch: {$eq: req.authId._id}
-            }
-          })
-          selectorOrs.push({
-            allowedWrite: {
-              $elemMatch: {$eq: req.authId._id}
-            }
-          })
-        }
-        let selector = {
-          $and: [
-            {
-              owner: userId
-            },
-            {
-              $or: selectorOrs
-            }
-          ]
+        let selector
+        if (req.authId && req.authId._id.equals(user._id)) {
+          selector = {
+            owner: user._id
+          }
+        } else {
+          let selectorOrs = [ {publicRead: true} ]
+          if (req.authId) {
+            selectorOrs.push({
+              allowedRead: {
+                $elemMatch: {$eq: req.authId._id}
+              }
+            })
+            selectorOrs.push({
+              allowedWrite: {
+                $elemMatch: {$eq: req.authId._id}
+              }
+            })
+          }
+          selector = {
+            $and: [
+              {
+                owner: user._id
+              },
+              {
+                $or: selectorOrs
+              }
+            ]
+          }
         }
         PastPaperCollection.count(selector).then(count => {
           if (count === 0) {

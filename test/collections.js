@@ -384,8 +384,8 @@ module.exports = (schsrch, dbModel) =>
     for (let i = 0; i < 4; i ++)
       allowedWriteTest(30, Math.floor(Math.random() * 30))
 
-    for (let guest of [true, false]) {
-      it(`/collections/by/... should show user's all collections where the visitor is allowed to read in order of modify time desc, when viewed by ${guest ? 'a guest' : 'another user'}.`, function (done) {
+    for (let visitor of ['guest', 'other', 'owner']) {
+      it(`/collections/by/... should show user's all collections where the visitor is allowed to read in order of modify time desc, when viewed by ${visitor}.`, function (done) {
         let now = Date.now()
         function createCollections ([owner, otherUser]) {
           return new Promise((resolve, reject) => {
@@ -405,7 +405,8 @@ module.exports = (schsrch, dbModel) =>
                   })
                   let shouldPresent = false
                   if (publiclyVisiable) shouldPresent = true
-                  else if (!guest && (allowedReadIncludeOther || allowedWriteIncludeOther)) shouldPresent = true
+                  else if (visitor === 'owner') shouldPresent = true
+                  else if (visitor === 'other' && (allowedReadIncludeOther || allowedWriteIncludeOther)) shouldPresent = true
                   collectionQueue.push(col)
                   if (shouldPresent) {
                     returns.push(col._id.toString())
@@ -422,8 +423,10 @@ module.exports = (schsrch, dbModel) =>
         function doTest ({collectionsToExpect, owner, otherUser}) {
           let req = supertest(schsrch)
           req = req.get(`/collections/by/${owner.id.toString()}/`)
-          if (!guest) {
+          if (visitor === 'other') {
             req = req.set('Authorization', 'Bearer ' + otherUser.tokenHex)
+          } else if (visitor === 'owner') {
+            req = req.set('Authorization', 'Bearer ' + owner.tokenHex)
           }
           req = req.expect(200).expect('Content-Type', /application\/json/)
           req = req.expect(res => res.body.should.be.an.Object())
