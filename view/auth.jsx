@@ -195,17 +195,21 @@ class LoginView extends React.Component {
 
 (function () {
   function fetchLoginInfo () {
+    // At this point, AppState.loginInfo is (already) null, since changing token in AppState will cause loginInfo to be null.
     let token = AppState.getState().authToken
-    let authHeaders = new Headers({
-      'Authorization': 'Bearer ' + token
-    })
-    fetch('/auth/', {headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(res => {
-      if (AppState.getState().authToken === token) {
-        AppState.dispatch({type: 'login-info', info: res})
-      }
-    }, err => {
-      // loginInfo already null. No actions needed.
-    })
+    if (!token) {
+      window.localStorage.removeItem('authToken', token)
+    } else {
+      let authHeaders = new Headers({
+        'Authorization': 'Bearer ' + token
+      })
+      fetch('/auth/', {headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(res => {
+        if (AppState.getState().authToken === token) {
+          AppState.dispatch({type: 'login-info', info: res})
+        }
+        window.localStorage.setItem('authToken', token)
+      }, err => {})
+    }
   }
 
   let lastAuthToken = AppState.getState() ? AppState.getState().authToken : null
