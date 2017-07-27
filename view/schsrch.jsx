@@ -218,7 +218,7 @@ class SchSrch extends React.Component {
         </div>
         <div className='menu'>
           <div className={aState.view === 'home' ? 'current' : ''} onClick={evt => AppState.dispatch({type: 'home'})}>Home</div>
-          {loginInfo ? 
+          {loginInfo ?
             (<div>My collections</div>) : null}
         </div>
         <div className='bottom'>
