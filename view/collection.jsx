@@ -155,6 +155,15 @@ class Collection extends React.Component {
     )
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (this.props.collection && nextProps.collection && this.props.collection.id !== nextProps.collection.id) {
+      this.setState({
+        noEditAccess: null,
+        menuOpen: false
+      })
+    }
+  }
+
   componentDidUpdate (prevProps, prevState) {
     let col = this.props.collection
     if (col && col.loading // New collection not yet loaded
