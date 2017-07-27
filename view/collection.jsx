@@ -3,7 +3,7 @@ const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
 const { Editor } = require('./collectioneditor.jsx')
 
-class CollectionView extends React.Component {
+class Collection extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -275,4 +275,4 @@ class CollectionView extends React.Component {
   }
 }
 
-module.exports = { CollectionView }
+module.exports = Collection

@@ -7,7 +7,7 @@ const Disclaimer = require('./disclaimer.jsx')
 const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
 const FilePreview = require('./filepreview.jsx')
-const { CollectionView } = require('./collections.jsx')
+const Collection = require('./collection.jsx')
 const { LoginView } = require('./auth.jsx')
 const PaperUtils = require('./paperutils.js')
 
@@ -309,7 +309,7 @@ class SchSrch extends React.Component {
   renderViewCollection () {
     return (
       <div className='view view-collection'>
-        <CollectionView collection={AppState.getState().collection} />
+        <Collection collection={AppState.getState().collection} />
       </div>
     )
   }
