@@ -133,8 +133,8 @@ class Collection extends React.Component {
           {!AppState.getState().authToken
             ? (
                 <div className='nologin'>
-                  <div className='big'>You aren't logged in.</div>
-                  <div>Please <a onClick={evt => AppState.dispatch({type: 'login-view'})}>log in</a> in order to edit or fork this collection.</div>
+                  <div className='big'>Sorry. This feature isn't fully completed yet.</div>
+                  <div>You can view this collection, and if you <a onClick={evt => AppState.dispatch({type: 'login-view'})}>log in</a> you will also be able to create collections yourself.</div>
                 </div>
               )
             : null}
