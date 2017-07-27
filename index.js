@@ -6,6 +6,7 @@ const sspdf = require('./lib/sspdf')
 const fs = require('fs')
 const cheerio = require('cheerio')
 const crypto = require('crypto')
+const assert = require('assert')
 require('./dist-server/serverrender')
 const serverRender = global.serverRender
 global.serverRender = null
@@ -346,14 +347,24 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
             allowEdit = true
           }
           if (allowEdit) {
-            collectionDoc.content = parsed
-            collectionDoc.save().then(() => {
-              res.status(200)
-              res.end()
-            }, err => {
-              res.status(403)
-              res.send(err.message)
-            })
+            try {
+              assert.notDeepEqual(collectionDoc.content, parsed)
+              collectionDoc.content = parsed
+              collectionDoc.save().then(() => {
+                res.status(200)
+                res.end()
+              }, err => {
+                res.status(403)
+                res.send(err.message)
+              })
+            } catch (e) {
+              if (e.code === 'ERR_ASSERTION') {
+                res.status(200)
+                res.end()
+              } else {
+                next(e)
+              }
+            }
           } else {
             res.status(401)
             res.send("Access denied.")
