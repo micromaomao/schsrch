@@ -1,4 +1,4 @@
-const InterfaceVersion = 16
+const InterfaceVersion = 18
 const { createStore } = require('redux')
 
 const init = {
@@ -9,6 +9,7 @@ const init = {
     feedbackText: '',
     email: ''
   },
+  showSidebar: false,
   previewing: null,
   serverrender: null,
   collection: null,
@@ -18,7 +19,8 @@ const init = {
   queryFocusing: false,
   authToken: null,
   loginView: null,
-  paperCropClipboard: null
+  paperCropClipboard: null,
+  loginInfo: null
 }
 
 function setPreviewPages (previewPages, doc, page) {
@@ -43,7 +45,10 @@ let AppState = createStore(function (state = {}, action) {
         console.log(`Not loading from state data of older version - ${action.state.version || '0'} !== ${InterfaceVersion}`)
         return Object.assign({}, init)
       }
-      return Object.assign({}, init, action.state)
+      return Object.assign({}, init, action.state, {
+        queryFocusing: false,
+        loginInfo: null
+      })
     case 'query':
       if (action.query.trim().length === 0) {
         return Object.assign({}, state, {
@@ -56,14 +61,16 @@ let AppState = createStore(function (state = {}, action) {
           loading: false,
           result: null,
           error: null
-        })
+        }),
+        showSidebar: false
       })
     case 'query-perpare':
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
           query: action.query,
           loading: true
-        })
+        }),
+        showSidebar: false
       })
     case 'replaceQuerying':
       return Object.assign({}, state, {
@@ -99,7 +106,8 @@ let AppState = createStore(function (state = {}, action) {
         feedback: Object.assign({}, state.feedback, {
           show: true,
           search: action.search
-        })
+        }),
+        showSidebar: false
       })
     case 'hideFeedback':
       return Object.assign({}, state, {
@@ -146,7 +154,8 @@ let AppState = createStore(function (state = {}, action) {
       })
     case 'disclaim':
       return Object.assign({}, state, {
-        view: 'disclaim'
+        view: 'disclaim',
+        showSidebar: false
       })
     case 'home':
       return Object.assign({}, state, {
@@ -156,7 +165,8 @@ let AppState = createStore(function (state = {}, action) {
         }),
         feedback: Object.assign({}, state.feedback || {}, {
           show: false
-        })
+        }),
+        showSidebar: false
       })
     case 'queryFocus':
       return Object.assign({}, state, {
@@ -166,8 +176,8 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         queryFocusing: false
       })
-    case 'view-collections':
-      if (state.view === 'collections' && state.collection.id === action.collectionId) {
+    case 'view-collection':
+      if (state.view === 'collection' && state.collection.id === action.collectionId) {
         return Object.assign({}, state, {
           collection: Object.assign({}, state.collection, {
             homeFromCollection: false
@@ -175,7 +185,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       }
       return Object.assign({}, state, {
-        view: 'collections',
+        view: 'collection',
         collection: {
           id: action.collectionId,
           loading: true,
@@ -185,7 +195,8 @@ let AppState = createStore(function (state = {}, action) {
           contentRedoStack: null,
           lastSave: null,
           homeFromCollection: false
-        }
+        },
+        showSidebar: false
       })
     case 'collection-edit-content':
       return Object.assign({}, state, {
@@ -320,11 +331,13 @@ let AppState = createStore(function (state = {}, action) {
         view: 'login',
         loginView: {
           from: state.view
-        }
+        },
+        showSidebar: false
       })
     case 'finish-login':
       return Object.assign({}, state, {
         authToken: action.token,
+        loginInfo: null,
         loginView: null,
         view: (state.loginView ? state.loginView.from : state.view)
       })
@@ -335,19 +348,22 @@ let AppState = createStore(function (state = {}, action) {
       })
     case 'clear-token':
       return Object.assign({}, state, {
-        authToken: null
+        authToken: null,
+        loginInfo: null
       })
     case 'home-from-collection':
       if (!state.collection) {
         return Object.assign({}, state, {
-          view: 'home'
+          view: 'home',
+          showSidebar: false
         })
       }
       return Object.assign({}, state, {
         view: 'home',
         collection: Object.assign({}, state.collection, {
           homeFromCollection: true
-        })
+        }),
+        showSidebar: false
       })
     case 'set-paper-crop-clipboard':
       if (!action.doc || !Number.isSafeInteger(action.page)) {
@@ -368,6 +384,18 @@ let AppState = createStore(function (state = {}, action) {
         collection: Object.assign({}, state.collection || {}, {
           homeFromCollection: false
         })
+      })
+    case 'show-sidebar':
+      return Object.assign({}, state, {
+        showSidebar: true
+      })
+    case 'hide-sidebar':
+      return Object.assign({}, state, {
+        showSidebar: false
+      })
+    case 'login-info':
+      return Object.assign({}, state, {
+        loginInfo: action.info
       })
   }
 })

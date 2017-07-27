@@ -73,12 +73,17 @@ if (history.state) {
     }
   } else if (loc === '/disclaim/') {
     AppState.dispatch({type: 'disclaim'})
-  } else if ((queryMatch = loc.match(/^\/collections\/([0-9a-f]+)\/$/))) {
-    AppState.dispatch({type: 'view-collections', collectionId: queryMatch[1]})
+  } else if ((queryMatch = loc.match(/^\/collection\/([0-9a-f]+)\/view\/$/))) {
+    AppState.dispatch({type: 'view-collection', collectionId: queryMatch[1]})
   } else {
     let nsState = readFromLocalStorage()
     nsState && AppState.dispatch({type: 'load', state: nsState})
   }
+}
+
+let localStorageAuthToken = window.localStorage.getItem('authToken')
+if (localStorageAuthToken && !AppState.getState().authToken) {
+  AppState.dispatch({type: 'finish-login', token: localStorageAuthToken})
 }
 
 // Make it F12 useable
@@ -94,8 +99,8 @@ AppState.subscribe(() => {
     }
     if (stateView !== 'home') {
       switch (stateView) {
-        case 'collections':
-        url = `/collections/${nState.collection.id}/`
+        case 'collection':
+        url = `/collection/${nState.collection.id}/view/`
         break
         default:
         url = '/' + encodeURIComponent(stateView) + '/'

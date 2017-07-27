@@ -18,6 +18,7 @@ $color-filepreview-top: darken($color-primary, 20%)
   color: white
   cursor: pointer
   transition: background-color 200ms, box-shadow 200ms
+  -webkit-tap-highlight-color: transparent
   &:hover
     background-color: $color-link
     box-shadow: 0 -2px 0 rgba(black, 0.4) inset
@@ -36,6 +37,8 @@ body
     box-sizing: border-box
     overflow-wrap: break-word
     word-wrap: break-word
+
+$sidebar-width: 300px
 
 .schsrch
   min-width: 200px
@@ -59,6 +62,131 @@ body
     width: 100%
     height: 100%
     min-width: 200px
+  > .sidebar
+    position: absolute
+    top: 0
+    width: $sidebar-width
+    bottom: 0
+    background-color: white
+    box-shadow: 2px 0 4px rgba(black, 0.3)
+    z-index: 3
+    will-change: left
+    transition: left 400ms
+    &.hide
+      left: -($sidebar-width)-10px
+    &.show
+      left: 0
+    display: flex
+    flex-direction: column
+    align-items: stretch
+    flex-wrap: nowrap
+    overflow: auto
+    .top
+      flex-shrink: 0
+      flex-grow: 0
+      height: $sidebar-width / 1.333
+      display: flex
+      flex-direction: row
+      align-items: flex-end
+      align-content: flex-end
+      justify-content: space-between
+      flex-wrap: wrap
+      cursor: pointer
+      -webkit-tap-highlight-color: transparent
+      background-color: lighten($color-filepreview-top, 5%)
+      color: white
+      padding: 0.5rem 1rem
+      transition: background-color 100ms
+      &:active
+        background-color: $color-filepreview-top
+      margin-bottom: 0.5rem
+      .username
+        flex-shrink: 0
+        flex-grow: 0
+      .logout
+        cursor: pointer
+        padding: 0.5rem
+        margin: -0.5rem
+        display: flex
+        flex-direction: row
+        align-items: center
+        justify-content: center
+        &, > *
+          flex-shrink: 0
+          flex-grow: 0
+    .menu
+      flex-grow: 0
+      flex-shrink: 1
+      overflow: auto
+      .menuitem
+        padding: 0.5rem 1rem
+        cursor: pointer
+        -webkit-tap-highlight-color: transparent
+        background-color: transparent
+        transition: background-color 100ms
+        &:hover, &.current
+          background-color: rgba(black, 0.1)
+        &:active
+          background-color: rgba(black, 0.2)
+      .menuitem.mycollections
+        display: flex
+        flex-direction: row
+        justify-content: space-between
+        align-items: center
+        flex-wrap: nowrap
+        > *
+          flex-shrink: 0
+          flex-grow: 0
+        > .iconcontain
+          font-size: 110%
+          will-change: transform
+          transform: rotate(0) translate(0, 2.5px)
+          transition: transform 100ms
+          &.expanded
+            transform: rotate(180deg) translate(0, 2.5px)
+      .collectionlist
+        > .loading, > .error, > .empty
+          text-align: center
+          font-size: 0.8rem
+          padding: 0.5rem 1rem
+        > .loading
+          color: black
+        > .error
+          color: red
+        > .empty
+          color: $color-secondary-text
+        .menuitem
+          padding-left: 3rem
+          font-size: 90%
+          .name.unnamed
+            color: lighten(black, 30%)
+          &.add-collection
+            display: flex
+            flex-direction row
+            align-items: middle
+            .iconcontain
+              margin-left: -14.4px - 8px
+              margin-right: 0.5rem
+            > .error
+              color: red
+          &.highlight
+            background-color: rgba(yellow, 0.4)
+    .bottom
+      margin-top: auto
+      text-align: center
+      font-size: 0.9rem
+      a
+        color: $color-link
+        transition: color 100ms
+        text-decoration: none
+        padding: 0.5rem
+        display: inline-block
+        cursor: pointer
+        &:hover
+          color: $color-link
+          text-decoration: underline
+        &:active
+          color: darken($color-link, 15%)
   > .content // This thing is 100%wh absolute positioned and will contain all main content. (i.e. not feedback dialog and it's back cover)
     overflow-x: hidden
     overflow-y: auto
@@ -125,7 +253,32 @@ body
   transition: opacity 600ms
   will-change: opacity
   opacity: 0
-  pointer-events: none
+
+.sidebarbtn
+  font-size: 1.5rem
+  padding: 0.5rem
+  display: flex
+  flex-direction: row
+  align-items: center
+  color: $color-primary
+  background-color: transparent
+  transition: background-color 200ms
+  -webkit-tap-highlight-color: transparent
+  > *
+    flex-shrink: 0
+    flex-grow: 0
+  &:hover
+    background-color: rgba(black, 0.05)
+  &:active
+    background-color: rgba($color-primary, 0.2)
+
+.schsrch .view-home
+  .sidebarbtn
+    position: absolute
+    top: 1rem
+    left: 1rem
+    width: auto
+    height: auto
 
 .searchbar
   .bannerContain
@@ -134,7 +287,7 @@ body
       transition: all 100ms
       color: $color-primary
   .bannerContain.hide
-    margin-left: 0.5rem !important
+    margin: 0 !important
     .banner
       width: 0 !important
   .inputContain
@@ -149,10 +302,6 @@ body
       transition: all 100ms
     .inputPositionWrap
       position: relative
-      display: -webkit-flex
-      -webkit-flex-direction: row
-      -webkit-flex-wrap: nowrap
-      -webkit-align-items: flex-end
       display: flex
       flex-direction: row
       flex-wrap: nowrap
@@ -168,7 +317,6 @@ body
       .querybox .placeholder
         height: 100%
       .querybox
-        -webkit-flex: 1
         flex: 1
       .stroke
         position: absolute
@@ -188,7 +336,6 @@ body
         padding-right: 0.5rem
         background-color: rgba(white, 0.7)
         z-index: 1
-        -webkit-flex: content
         flex: content
         .clearInput
           display: inline-block
@@ -282,8 +429,6 @@ body
       position: absolute
   .inputContain.hidebanner
     margin-left: 0
-    .inputPositionWrap, .subjecthints
-      width: 90%
 
 .schsrch .home-desc
   margin-top: 3rem
@@ -358,6 +503,20 @@ body
   .searchbarcontain
     flex-grow: 0
     flex-shrink: 0
+    display: flex
+    flex-direction: row
+    flex-wrap: nowrap
+    align-items: stretch
+    > .sidebarbtn
+      flex-grow: 0
+      flex-shrink: 0
+      transition: transform 100ms
+    > .searchbar
+      flex-grow: 1
+      flex-shrink: 1
+    &.noshadow
+      > .sidebarbtn
+        transform: translate(0, 0.25rem)
   .searchcontain
     flex-grow: 1
     flex-shrink: 1
@@ -855,7 +1014,7 @@ $feedback-top-height: 2rem + 1.3rem
         color: #aaa
         font-size: 75%
 
-.schsrch .view.view-collections
+.schsrch .view.view-collection
   display: flex
   flex-direction: column
   align-items: stretch
@@ -893,7 +1052,7 @@ $feedback-top-height: 2rem + 1.3rem
         align-items: center
         border-bottom: 1px solid $color-divider
         overflow: hidden
-        > .close, .undo, .redo, .menu
+        > .sidebarbtn, .undo, .redo, .menu
           flex-shrink: 0
           flex-grow: 0
           color: $color-primary
@@ -924,6 +1083,31 @@ $feedback-top-height: 2rem + 1.3rem
               border-bottom: dashed 1px $color-divider
             &:disabled
               background-color: transparent
+      > .menu
+        flex-grow: 0
+        flex-shrink: 0
+        border-bottom: 1px solid $color-divider
+        background-color: lighten($color-primary, 40%)
+        display: flex
+        flex-direction: row
+        flex-wrap: wrap
+        justify-content: flex-end
+        align-items: center
+        padding-right: 0.5rem
+        > span
+          flex-shrink: 0
+          flex-grow: 0
+          padding-top: 0.5rem
+          padding-bottom: 0.5rem
+        > span.menuitem
+          padding-left: 1rem
+          padding-right: 1rem
+          cursor: pointer
+          color: $color-primary
+          &.delete
+            color: red
+        > .error
+          color: red
       > .bottom
         flex-shrink: 0
         flex-grow: 0

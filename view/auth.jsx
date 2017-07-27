@@ -1,5 +1,6 @@
 const React = require('react')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
+const AppState = require('./appstate.js')
 
 class LoginView extends React.Component {
   constructor (props) {
@@ -191,5 +192,34 @@ class LoginView extends React.Component {
     AppState.dispatch({type: 'cancel-login'})
   }
 }
+
+(function () {
+  function fetchLoginInfo () {
+    // At this point, AppState.loginInfo is (already) null, since changing token in AppState will cause loginInfo to be null.
+    let token = AppState.getState().authToken
+    if (!token) {
+      window.localStorage.removeItem('authToken', token)
+    } else {
+      let authHeaders = new Headers({
+        'Authorization': 'Bearer ' + token
+      })
+      fetch('/auth/', {headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(res => {
+        if (AppState.getState().authToken === token) {
+          AppState.dispatch({type: 'login-info', info: res})
+        }
+        window.localStorage.setItem('authToken', token)
+      }, err => {})
+    }
+  }
+
+  let lastAuthToken = AppState.getState() ? AppState.getState().authToken : null
+  AppState.subscribe(() => {
+    let newAuthToken = AppState.getState().authToken
+    if (newAuthToken !== lastAuthToken) {
+      fetchLoginInfo()
+      lastAuthToken = newAuthToken
+    }
+  })
+})()
 
 module.exports = { LoginView }

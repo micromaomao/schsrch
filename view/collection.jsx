@@ -3,16 +3,20 @@ const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
 const { Editor } = require('./collectioneditor.jsx')
 
-class CollectionsView extends React.Component {
+class Collection extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      noEditAccess: false
+      noEditAccess: false,
+      menuOpen: false,
+      menuMode: 'normal',
+      menuError: null
     }
     this.setIntervaled = null
     this.handleInputChange = this.handleInputChange.bind(this)
     this.handleTitleChange = this.handleTitleChange.bind(this)
     this.handleGlobaleKey = this.handleGlobaleKey.bind(this)
+    this.handleDelete = this.handleDelete.bind(this)
     this.pushUndoStackTimeout = null
   }
   handleInputChange (content) {
@@ -29,6 +33,10 @@ class CollectionsView extends React.Component {
       AppState.dispatch({type: 'collection-push-undostack'})
       this.pushUndoStackTimeout = null
     }, 500)
+    this.setState({
+      menuOpen: false,
+      menuMode: 'normal'
+    })
   }
   handleTitleChange (evt) {
     AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
@@ -55,8 +63,8 @@ class CollectionsView extends React.Component {
     return (
       <div className='doc'>
         <div className='top'>
-          <div className='close' onClick={evt => AppState.dispatch({type: 'home'})}>
-            <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
+          <div className='sidebarbtn' onClick={evt => AppState.dispatch({type: 'show-sidebar'})}>
+            <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars" /></svg>
           </div>
           {!editDisabled
             ? (
@@ -78,8 +86,36 @@ class CollectionsView extends React.Component {
                 <input type='text' value='' placeholder='Untitled' className='untitled' onInput={this.handleTitleChange} disabled={editDisabled} />
               )) : null)}
           </h1>
-          <div className='menu'>&hellip;</div>
+          {!this.state.noEditAccess ? <div className='menu' onClick={evt => this.setState({menuOpen: !this.state.menuOpen, menuMode: 'normal'})}>&hellip;</div> : null}
         </div>
+        {this.state.menuOpen ?
+          (
+            <div className='menu'>
+              {this.state.menuMode === 'normal' && !this.state.noEditAccess ?
+                (
+                  <span className='menuitem delete' onClick={evt => this.setState({menuMode: 'delete'})}>Delete</span>
+                ) : null}
+              {this.state.menuMode === 'delete' ?
+                (
+                  [
+                    <span key={0}>Sure delete {col.content && col.content.name ? col.content.name : 'this'}? (<b>no</b> undos, trash can, whatsoever)</span>,
+                    <span key={1} className='menuitem delete' onClick={this.handleDelete}>Yes</span>,
+                    <span key={2} className='menuitem' onClick={evt => this.setState({menuMode: 'normal'})}>No</span>
+                  ]
+                ) : null}
+              {this.state.menuMode === 'deleting' ?
+                (
+                  <span>Your stuff is being deleted&hellip;</span>
+                ) : null}
+              {this.state.menuMode === 'error' ?
+                (
+                  [
+                    <span className='error'>Error: {this.state.menuError}</span>,
+                    <span key={2} className='menuitem' onClick={evt => this.setState({menuMode: 'normal'})}>Back</span>
+                  ]
+                ) : null}
+            </div>
+          ) : null}
         <div className='editorcontain'>
           {col.loading
             ? (
@@ -97,9 +133,8 @@ class CollectionsView extends React.Component {
           {!AppState.getState().authToken
             ? (
                 <div className='nologin'>
-                  <div className='big'>This is a secret feature.</div>
-                  <div>If you want to create collections, please dig in the code and use the API. The editor is functional for collections created by you.</div>
-                  <div>Collections will go public once all features are complete and security audited.</div>
+                  <div className='big'>You aren't logged in.</div>
+                  <div>Please <a onClick={evt => AppState.dispatch({type: 'login-view'})}>log in</a> in order to edit or fork this collection.</div>
                 </div>
               )
             : null}
@@ -120,6 +155,15 @@ class CollectionsView extends React.Component {
     )
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (this.props.collection && nextProps.collection && this.props.collection.id !== nextProps.collection.id) {
+      this.setState({
+        noEditAccess: null,
+        menuOpen: false
+      })
+    }
+  }
+
   componentDidUpdate (prevProps, prevState) {
     let col = this.props.collection
     if (col && col.loading // New collection not yet loaded
@@ -138,8 +182,14 @@ class CollectionsView extends React.Component {
       clearInterval(this.setIntervaled)
       this.setIntervaled = null
     }
-    if (col.content && (!prevProps.collection || !prevProps.collection.content)) {
+    if (col && col.content && (!prevProps.collection || !prevProps.collection.content)) {
       AppState.dispatch({type: 'collection-push-undostack'})
+    }
+    if (col && prevProps.collection && col.content && prevProps.collection.content && col.content !== prevProps.collection.content) {
+      this.setState({
+        menuOpen: false,
+        menuMode: 'normal'
+      })
     }
   }
 
@@ -149,7 +199,7 @@ class CollectionsView extends React.Component {
     let authHeaders = new Headers()
     if (AppState.getState().authToken)
       authHeaders.append('Authorization', 'Bearer ' + AppState.getState().authToken)
-    fetch(`/collections/${col.id}/cloudstorage/`, {headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
+    fetch(`/collection/${col.id}/content/`, {headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
       if (this.props.collection.id !== col.id) return
       if (result.error) {
         AppState.dispatch({type: 'collection-load-error', error: result.error})
@@ -174,7 +224,7 @@ class CollectionsView extends React.Component {
     if (AppState.getState().authToken)
       headers.append('Authorization', 'Bearer ' + AppState.getState().authToken)
     let content = col.content
-    fetch(`/collections/${col.id}/cloudstorage/`, {method: 'PUT', body: JSON.stringify(content), headers: headers})
+    fetch(`/collection/${col.id}/content/`, {method: 'PUT', body: JSON.stringify(content), headers: headers})
       .then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
         AppState.dispatch({type: 'collection-put-done', content: content})
       }, err => {
@@ -248,6 +298,24 @@ class CollectionsView extends React.Component {
     }
   }
 
+  handleDelete () {
+    this.setState({
+      noEditAccess: true,
+      menuMode: 'deleting'
+    })
+    let id = this.props.collection.id
+    let authHeaders = new Headers()
+    authHeaders.append('Authorization', 'Bearer ' + AppState.getState().authToken)
+    fetch(`/collection/${id}/`, {method: 'DELETE', headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
+      AppState.dispatch({type: 'home'})
+    }, err => {
+      this.setState({
+        menuMode: 'error',
+        menuError: err.message
+      })
+    })
+  }
+
   componentDidMount () {
     window.document.addEventListener('keydown', this.handleGlobaleKey, AppState.browserSupportsPassiveEvents ? {passive: false} : false)
     if (this.props.collection && this.props.collection.content) {
@@ -276,4 +344,4 @@ class CollectionsView extends React.Component {
   }
 }
 
-module.exports = { CollectionsView }
+module.exports = Collection

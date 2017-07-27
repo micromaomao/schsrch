@@ -44,7 +44,7 @@ module.exports = (schsrch, dbModel) =>
           let testee = new PastPaperCollection(testeeConstruct)
           testee.save().then(() => {
             supertest(schsrch)
-              .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+              .get(`/collection/${testee._id.toString()}/content/`)
               .set('Authorization', `Bearer ${owner.tokenHex}`)
               .expect(200)
               .expect(res => res.body.should.be.an.Object())
@@ -90,7 +90,7 @@ module.exports = (schsrch, dbModel) =>
               if (!_antiTest) {
                 testee.save().then(() => {
                   supertest(schsrch)
-                    .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+                    .get(`/collection/${testee._id.toString()}/content/`)
                     .set('Authorization', `Bearer ${peers[testPeer].tokenHex}`)
                     .expect(200)
                     .expect(res => res.body.should.be.an.Object())
@@ -101,7 +101,7 @@ module.exports = (schsrch, dbModel) =>
               } else {
                 testee.save().then(() => {
                   supertest(schsrch)
-                    .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+                    .get(`/collection/${testee._id.toString()}/content/`)
                     .set('Authorization', `Bearer ${stranger.tokenHex}`)
                     .expect(401)
                     .expect(res => res.text.should.match(/Access denied/i))
@@ -141,7 +141,7 @@ module.exports = (schsrch, dbModel) =>
           })
           testee.save().then(() => {
             supertest(schsrch)
-              .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+              .get(`/collection/${testee._id.toString()}/content/`)
               .set('Authorization', `Bearer ${stranger.tokenHex}`)
               .expect(200)
               .expect(res => res.body.should.be.an.Object())
@@ -170,7 +170,7 @@ module.exports = (schsrch, dbModel) =>
             })
             testee.save().then(() => {
               supertest(schsrch)
-                .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+                .get(`/collection/${testee._id.toString()}/content/`)
                 .set('Authorization', `Bearer ${stranger.tokenHex}`)
                 .expect(200)
                 .expect(res => res.body.should.be.an.Object())
@@ -197,7 +197,7 @@ module.exports = (schsrch, dbModel) =>
         })
         testee.save().then(() => {
           supertest(schsrch)
-            .get(`/collections/${testee._id.toString()}/cloudstorage/`)
+            .get(`/collection/${testee._id.toString()}/content/`)
             .expect(200)
             .expect(res => res.body.should.be.an.Object())
             .expect(res => res.body.name.should.be.a.String())
@@ -269,7 +269,7 @@ module.exports = (schsrch, dbModel) =>
         let testContent = {name: 'test set name'}
         col.save(() => {
           supertest(schsrch)
-            .put(`/collections/${col._id}/cloudstorage/`)
+            .put(`/collection/${col._id}/content/`)
             .set('Authorization', 'Bearer ' + owner.tokenHex)
             .set('Content-Type', 'application/json')
             .send(testContent)
@@ -317,7 +317,7 @@ module.exports = (schsrch, dbModel) =>
               if (!_antiTest) {
                 testee.save().then(() => {
                   supertest(schsrch)
-                    .put(`/collections/${testee._id.toString()}/cloudstorage/`)
+                    .put(`/collection/${testee._id.toString()}/content/`)
                     .set('Authorization', `Bearer ${peers[testPeer].tokenHex}`)
                     .set('Content-Type', 'application/json')
                     .send(testContentEdit)
@@ -342,7 +342,7 @@ module.exports = (schsrch, dbModel) =>
               } else {
                 testee.save().then(() => {
                   supertest(schsrch)
-                    .put(`/collections/${testee._id.toString()}/cloudstorage/`)
+                    .put(`/collection/${testee._id.toString()}/content/`)
                     .set('Authorization', `Bearer ${stranger.tokenHex}`)
                     .set('Content-Type', 'application/json')
                     .send({content: testContentEdit})
@@ -383,4 +383,123 @@ module.exports = (schsrch, dbModel) =>
     allowedWriteTest(30, 0)
     for (let i = 0; i < 4; i ++)
       allowedWriteTest(30, Math.floor(Math.random() * 30))
+
+    for (let visitor of ['guest', 'other', 'owner']) {
+      it(`/collections/by/... should show user's all collections where the visitor is allowed to read in order of modify time desc, when viewed by ${visitor}.`, function (done) {
+        let now = Date.now()
+        function createCollections ([owner, otherUser]) {
+          return new Promise((resolve, reject) => {
+            let collectionQueue = []
+            let returns = []
+            for (let allowedReadIncludeOther of [true, false]) {
+              for (let allowedWriteIncludeOther of [true, false]) {
+                for (let publiclyVisiable of [true, false]) {
+                  let col = new PastPaperCollection({
+                    creationTime: now - collectionQueue.length,
+                    ownerModifyTime: now - collectionQueue.length,
+                    content: null,
+                    owner: owner.id,
+                    publicRead: publiclyVisiable,
+                    allowedRead: allowedReadIncludeOther ? [otherUser.id] : [],
+                    allowedWrite: allowedWriteIncludeOther ? [otherUser.id] : []
+                  })
+                  let shouldPresent = false
+                  if (publiclyVisiable) shouldPresent = true
+                  else if (visitor === 'owner') shouldPresent = true
+                  else if (visitor === 'other' && (allowedReadIncludeOther || allowedWriteIncludeOther)) shouldPresent = true
+                  collectionQueue.push(col)
+                  if (shouldPresent) {
+                    returns.push(col._id.toString())
+                  }
+                }
+              }
+            }
+            Promise.all(collectionQueue.map(x => x.save())).then(() => resolve({
+              collectionsToExpect: returns,
+              owner, otherUser
+            }), reject)
+          })
+        }
+        function doTest ({collectionsToExpect, owner, otherUser}) {
+          let req = supertest(schsrch)
+          req = req.get(`/collections/by/${owner.id.toString()}/`)
+          if (visitor === 'other') {
+            req = req.set('Authorization', 'Bearer ' + otherUser.tokenHex)
+          } else if (visitor === 'owner') {
+            req = req.set('Authorization', 'Bearer ' + owner.tokenHex)
+          }
+          req = req.expect(200).expect('Content-Type', /application\/json/)
+          req = req.expect(res => res.body.should.be.an.Object())
+                  .expect(res => res.body.list.should.be.an.Array())
+                  .expect(res => {
+                    let list = res.body.list
+                    list.length.should.be.exactly(collectionsToExpect.length)
+                    list.forEach((col, i) => {
+                      col._id.should.be.a.String()
+                      col._id.should.be.exactly(collectionsToExpect[i])
+                    })
+                  })
+                  .expect(res => res.body.count.should.be.exactly(collectionsToExpect.length))
+                  .end(done)
+        }
+        Promise.all([getNewId(), getNewId()]).then(createCollections).then(doTest).catch(done)
+      })
+    }
+
+    it('/collections/by/non-existing-user/ should return 404', function (done) {
+      supertest(schsrch)
+        .get('/collections/by/000000000000000000000000/')
+        .expect(404)
+        .end(done)
+    })
+
+    for (let allowPublicRead of [true, false]) {
+      for (let deleteBy of ['owner', 'other', 'guest']) {
+        it(`${deleteBy} ${deleteBy === 'owner' ? 'can' : "can't"} delete ${deleteBy === 'owner' ? 'their ' : (deleteBy === 'other' ? "other's " : '')}${allowPublicRead ? 'public' : 'private'} collections`, function (done) {
+          Promise.all([getNewId(), getNewId()]).then(([owner, other]) => {
+            let now = Date.now()
+            let col = new PastPaperCollection({
+              creationTime: now,
+              ownerModifyTime: now,
+              owner: owner.id,
+              publicRead: allowPublicRead,
+              allowedRead: [],
+              allowedWrite: []
+            })
+            col.save().then(() => {
+              let req = supertest(schsrch)
+                .delete(`/collection/${col._id}/`)
+              if (deleteBy === 'owner') {
+                req = req.set('Authorization', 'Bearer ' + owner.tokenHex)
+              } else if (deleteBy === 'other') {
+                req = req.set('Authorization', 'Bearer ' + other.tokenHex)
+              }
+              if (deleteBy === 'owner') {
+                req = req.expect(200)
+              } else {
+                req = req.expect(401)
+              }
+              req = req.end(err => {
+                if (err) {
+                  done(err)
+                  return
+                }
+                PastPaperCollection.findOne({_id: col._id}).then(doc => {
+                  try {
+                    if (deleteBy === 'owner') {
+                      should.not.exist(doc)
+                    } else {
+                      should.exist(doc)
+                    }
+                    done()
+                  } catch (e) {
+                    done(e)
+                  }
+                })
+              })
+            }, err => done(err))
+          }, err => done(err))
+        })
+      }
+    }
   })

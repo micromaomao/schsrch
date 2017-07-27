@@ -6,6 +6,7 @@ const sspdf = require('./lib/sspdf')
 const fs = require('fs')
 const cheerio = require('cheerio')
 const crypto = require('crypto')
+const assert = require('assert')
 require('./dist-server/serverrender')
 const serverRender = global.serverRender
 global.serverRender = null
@@ -267,15 +268,15 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       })
     })
 
-    rMain.get('/collections/:collectionId', function (req, res, next) {
+    rMain.get('/collection/:collectionId/view', function (req, res, next) {
       let { collectionId } = req.params
       res.type('html')
       let $ = cheerio.load(indexHtml)
-      $('.react-root').html(serverRender({view: 'collections', collection: {id: collectionId, loading: true}}))
+      $('.react-root').html(serverRender({view: 'collection', collection: {id: collectionId, loading: true}}))
       res.send($.html())
     })
 
-    rMain.get('/collections/:collectionId/cloudstorage/', optionalAuthentication, function (req, res, next) {
+    rMain.get('/collection/:collectionId/content/', optionalAuthentication, function (req, res, next) {
       let { collectionId } = req.params
       PastPaperCollection.findOne({_id: collectionId}).then(doc => {
         if (!doc) {
@@ -302,7 +303,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       })
     })
 
-    rMain.put('/collections/:collectionId/cloudstorage/', requireAuthentication, function (req, res, next) {
+    rMain.put('/collection/:collectionId/content/', requireAuthentication, function (req, res, next) {
       let { collectionId } = req.params
       PastPaperCollection.findOne({_id: collectionId}).then(collectionDoc => {
         if (!collectionDoc) {
@@ -352,14 +353,24 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
             allowEdit = true
           }
           if (allowEdit) {
-            collectionDoc.content = parsed
-            collectionDoc.save().then(() => {
-              res.status(200)
-              res.end()
-            }, err => {
-              res.status(403)
-              res.send(err.message)
-            })
+            try {
+              assert.notDeepEqual(collectionDoc.content, parsed)
+              collectionDoc.content = parsed
+              collectionDoc.save().then(() => {
+                res.status(200)
+                res.end()
+              }, err => {
+                res.status(403)
+                res.send(err.message)
+              })
+            } catch (e) {
+              if (e.code === 'ERR_ASSERTION') {
+                res.status(200)
+                res.end()
+              } else {
+                next(e)
+              }
+            }
           } else {
             res.status(401)
             res.send("Access denied.")
@@ -368,6 +379,86 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       }, err => {
         next(err)
       })
+    })
+
+    rMain.delete('/collection/:id', requireAuthentication, function (req, res, next) {
+      let id = req.params.id
+      PastPaperCollection.findOne({_id: id}, {_id: true, owner: true}).then(col => {
+        if (!col) {
+          next()
+          return
+        }
+        if (col.owner.equals(req.authId._id)) {
+          PastPaperCollection.remove({_id: col._id}).then(() => {
+            res.status(200)
+            res.end()
+          }, err => next(err))
+        } else {
+          res.status(401)
+          res.send("Access denied.")
+        }
+      }, err => next(err))
+    })
+
+    rMain.get('/collections/by/:user/', optionalAuthentication, function (req, res, next) {
+      let userId = req.params.user.toString()
+      let limit = parseInt(req.query.limit)
+      let skip = parseInt(req.query.skip)
+      if (!Number.isSafeInteger(limit)) limit = 20
+      if (!Number.isSafeInteger(skip)) skip = 0
+      PastPaperId.findOne({_id: userId}).then(user => {
+        if (!user) {
+          next()
+          return
+        }
+        let selector
+        if (req.authId && req.authId._id.equals(user._id)) {
+          selector = {
+            owner: user._id
+          }
+        } else {
+          let selectorOrs = [ {publicRead: true} ]
+          if (req.authId) {
+            selectorOrs.push({
+              allowedRead: {
+                $elemMatch: {$eq: req.authId._id}
+              }
+            })
+            selectorOrs.push({
+              allowedWrite: {
+                $elemMatch: {$eq: req.authId._id}
+              }
+            })
+          }
+          selector = {
+            $and: [
+              {
+                owner: user._id
+              },
+              {
+                $or: selectorOrs
+              }
+            ]
+          }
+        }
+        PastPaperCollection.count(selector).then(count => {
+          if (count === 0) {
+            res.send({count: 0, list: []})
+          } else {
+            PastPaperCollection.find(selector, {_id: true, creationTime: true, ownerModifyTime: true, content: true, owner: true, publicRead: true}).sort({ownerModifyTime: -1}).skip(skip).limit(limit).then(list => {
+              res.send({count, list: list.map(x => Object.assign(x, { // Only return short content
+                content: (x.content ? {
+                  name: x.content.name || null,
+                  firstP: (x.content.structure && x.content.structure[0] && x.content.structure[0].type === 'text') ? x.content.structure[0].html : ''
+                } : {
+                  name: '',
+                  firstP: ''
+                })
+              }))})
+            }, err => next(err))
+          }
+        }, err => next(err))
+      }, err => next(err))
     })
 
     function processSSPDF (doc, pn) {

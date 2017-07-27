@@ -7,9 +7,10 @@ const Disclaimer = require('./disclaimer.jsx')
 const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
 const FilePreview = require('./filepreview.jsx')
-const { CollectionsView } = require('./collections.jsx')
+const Collection = require('./collection.jsx')
 const { LoginView } = require('./auth.jsx')
 const PaperUtils = require('./paperutils.js')
+const Sidebar = require('./sidebar.jsx')
 
 class SchSrch extends React.Component {
   constructor (props) {
@@ -17,11 +18,14 @@ class SchSrch extends React.Component {
     this.state = {
       coverHideAnimation: 0,
       view: 'home',
-      viewScrollAtTop: true
+      viewScrollAtTop: true,
+      showFeedback: false,
+      showSidebar: false
     }
     this.handleUpdate = this.handleUpdate.bind(this)
     this.handleQuery = this.handleQuery.bind(this)
     this.handleSearchContainScroll = this.handleSearchContainScroll.bind(this)
+    this.handleBlackCoverDown = this.handleBlackCoverDown.bind(this)
     // UI Components should support server rendering to allow javascript-disabled users to use this App.
     // The DOM produced by server and client javascript could (and should) differ.
     if (AppState.getState().serverrender) {
@@ -31,7 +35,12 @@ class SchSrch extends React.Component {
   }
   handleUpdate () {
     let state = AppState.getState()
-    this.setState({feedbackShowed: state.feedback.show, coverHideAnimation: Date.now()})
+    if (state.feedback.show !== this.state.showFeedback) {
+      this.setState({showFeedback: state.feedback.show, coverHideAnimation: Date.now()})
+    }
+    if (state.showSidebar !== this.state.showSidebar) {
+      this.setState({showSidebar: state.showSidebar, coverHideAnimation: Date.now()})
+    }
     this.setState({view: AppState.getState().view})
 
     if (state.querying && !state.querying.loading && !state.querying.error && !state.querying.result) {
@@ -41,7 +50,7 @@ class SchSrch extends React.Component {
   render () {
     let blackCoverStyle = {}
     let coverAnimationTime = Math.max(0, Date.now() - this.state.coverHideAnimation)
-    let showCover = this.state.feedbackShowed
+    let showCover = this.state.showFeedback || this.state.showSidebar
     if (this.state.server) {
       blackCoverStyle = {opacity: 0, zIndex: 0}
     } else if (showCover) {
@@ -66,8 +75,8 @@ class SchSrch extends React.Component {
           return AppState.getState().querying ? this.renderSearch() : this.renderHome()
         case 'disclaim':
           return this.renderDisclaim()
-        case 'collections':
-          return this.renderViewCollections()
+        case 'collection':
+          return this.renderViewCollection()
         case 'login':
           return this.renderViewLogin()
       }
@@ -80,7 +89,7 @@ class SchSrch extends React.Component {
     return (
       <div className='schsrch'>
         {this.state.server ? null : (
-          <div className='contentblackcover' style={blackCoverStyle} />
+          <div className='contentblackcover' style={blackCoverStyle} onTouchStart={this.handleBlackCoverDown} onMouseDown={this.handleBlackCoverDown} />
         )}
         <div className='content'>
           {
@@ -119,7 +128,7 @@ class SchSrch extends React.Component {
             ? (
                 <div className='bottom'>
                   No paper crop selected. <a
-                    onClick={evt => AppState.dispatch({type: 'view-collections', collectionId: collection.id})}>
+                    onClick={evt => AppState.dispatch({type: 'view-collection', collectionId: collection.id})}>
                     return to collection</a>
                   &nbsp;
                   <a onClick={evt => AppState.dispatch({type: 'clear-home-from-collection'})}>close</a>
@@ -149,7 +158,7 @@ class SchSrch extends React.Component {
                   &nbsp;
                   {collection && collection.homeFromCollection
                     ? (
-                        <a onClick={evt => AppState.dispatch({type: 'view-collections', collectionId: collection.id})}>
+                        <a onClick={evt => AppState.dispatch({type: 'view-collection', collectionId: collection.id})}>
                           return to collection
                         </a>
                       )
@@ -159,15 +168,27 @@ class SchSrch extends React.Component {
             : null}
         </div>
         {this.state.server ? null : <Feedback.Frame />}
+        {this.renderSidebar()}
       </div>
     )
   }
   shouldShowBigPreview () {
     return this.state.server ? false : window.innerWidth >= 1100
   }
+  handleBlackCoverDown (evt) {
+    if (this.state.showSidebar) {
+      AppState.dispatch({type: 'hide-sidebar'})
+    }
+  }
   renderHome () {
     return (
       <div className='view view-home'>
+        {!this.state.showSidebar && !this.state.server
+          ? (
+              <div className='sidebarbtn' onClick={evt => AppState.dispatch({type: 'show-sidebar'})}>
+                <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars"></use></svg>
+              </div>
+            ) : null}
         <div className={'searchbarcontain'}>
           <SearchBar key='searchbar' ref={f => this.searchbar = f} big={true} onQuery={this.handleQuery} loading={false} />
         </div>
@@ -175,6 +196,19 @@ class SchSrch extends React.Component {
       </div>
     )
   }
+  renderSidebar () {
+    if (this.state.server) return null
+    let aState = AppState.getState()
+    return (
+      <Sidebar
+        loginInfo={aState.loginInfo}
+        authToken={aState.authToken}
+        currentView={aState.view}
+        show={this.state.showSidebar}
+        currentCollection={aState.collection ? aState.collection.id : null} />
+    )
+  }
+
   renderSearch () {
     let query = AppState.getState().querying || {}
     query = query.query
@@ -182,7 +216,10 @@ class SchSrch extends React.Component {
     let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
       <div className='view view-search'>
-        <div className={'searchbarcontain prepare-shadow' + (this.state.viewScrollAtTop ? '' : ' shadow')}>
+        <div className={'searchbarcontain prepare-shadow' + (this.state.viewScrollAtTop ? ' noshadow' : ' shadow')}>
+          <div className='sidebarbtn' onClick={evt => AppState.dispatch({type: 'show-sidebar'})}>
+            <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars"></use></svg>
+          </div>
           <SearchBar key='searchbar' ref={f => this.searchbar = f} big={false} onQuery={this.handleQuery}
             loading={AppState.getState().querying.loading || false} />
         </div>
@@ -238,10 +275,10 @@ class SchSrch extends React.Component {
         </div>
       )
   }
-  renderViewCollections () {
+  renderViewCollection () {
     return (
-      <div className='view view-collections'>
-        <CollectionsView collection={AppState.getState().collection} />
+      <div className='view view-collection'>
+        <Collection collection={AppState.getState().collection} />
       </div>
     )
   }
