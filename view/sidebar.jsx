@@ -1,6 +1,7 @@
 const React = require('react')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
 const AppState = require('./appstate.js')
+const Feedback = require('./feedback.jsx')
 
 class Sidebar extends React.Component {
   constructor (props) {
