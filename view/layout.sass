@@ -116,8 +116,9 @@ $sidebar-width: 300px
           flex-grow: 0
     .menu
       flex-grow: 0
-      flex-shrink: 0
-      > div
+      flex-shrink: 1
+      overflow: auto
+      .menuitem
         padding: 0.5rem 1rem
         cursor: pointer
         -webkit-tap-highlight-color: transparent
@@ -127,6 +128,49 @@ $sidebar-width: 300px
           background-color: rgba(black, 0.1)
         &:active
           background-color: rgba(black, 0.2)
+      .menuitem.mycollections
+        display: flex
+        flex-direction: row
+        justify-content: space-between
+        align-items: center
+        flex-wrap: nowrap
+        > *
+          flex-shrink: 0
+          flex-grow: 0
+        > .iconcontain
+          font-size: 110%
+          will-change: transform
+          transform: rotate(0) translate(0, 2.5px)
+          transition: transform 100ms
+          &.expanded
+            transform: rotate(180deg) translate(0, 2.5px)
+      .collectionlist
+        > .loading, > .error, > .empty
+          text-align: center
+          font-size: 0.8rem
+          padding: 0.5rem 1rem
+        > .loading
+          color: black
+        > .error
+          color: red
+        > .empty
+          color: $color-secondary-text
+        .menuitem
+          padding-left: 3rem
+          font-size: 90%
+          .name.unnamed
+            color: lighten(black, 30%)
+          &.add-collection
+            display: flex
+            flex-direction row
+            align-items: middle
+            .iconcontain
+              margin-left: -14.4px - 8px
+              margin-right: 0.5rem
+            > .error
+              color: red
+          &.highlight
+            background-color: rgba(yellow, 0.4)
     .bottom
       margin-top: auto
       text-align: center

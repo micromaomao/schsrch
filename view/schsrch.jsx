@@ -10,6 +10,7 @@ const FilePreview = require('./filepreview.jsx')
 const Collection = require('./collection.jsx')
 const { LoginView } = require('./auth.jsx')
 const PaperUtils = require('./paperutils.js')
+const Sidebar = require('./sidebar.jsx')
 
 class SchSrch extends React.Component {
   constructor (props) {
@@ -25,7 +26,6 @@ class SchSrch extends React.Component {
     this.handleQuery = this.handleQuery.bind(this)
     this.handleSearchContainScroll = this.handleSearchContainScroll.bind(this)
     this.handleBlackCoverDown = this.handleBlackCoverDown.bind(this)
-    this.handleSidebarTopClick = this.handleSidebarTopClick.bind(this)
     // UI Components should support server rendering to allow javascript-disabled users to use this App.
     // The DOM produced by server and client javascript could (and should) differ.
     if (AppState.getState().serverrender) {
@@ -198,46 +198,15 @@ class SchSrch extends React.Component {
   }
   renderSidebar () {
     if (this.state.server) return null
-    let loginInfo = AppState.getState().loginInfo
-    let authTokenHave = !!AppState.getState().authToken
     let aState = AppState.getState()
     return (
-      <div className={'sidebar ' + (this.state.showSidebar ? 'show' : 'hide')}>
-        <div className='top' onClick={this.handleSidebarTopClick}>
-          <div className='username'>
-            {!authTokenHave && !loginInfo ? 'Login or register\u2026' : null}
-            {authTokenHave && !loginInfo ? 'Getting your info\u2026' : null}
-            {loginInfo ? loginInfo.username : null}
-          </div>
-          {authTokenHave
-            ? (
-                <div className='logout' ref={f => this.sidebarLogoutBtn = f}>
-                  <svg className="icon ii-logout"><use href="#ii-logout" xlinkHref="#ii-logout"></use></svg>
-                </div>
-              ) : null}
-        </div>
-        <div className='menu'>
-          <div className={aState.view === 'home' ? 'current' : ''} onClick={evt => AppState.dispatch({type: 'home'})}>Home</div>
-          {loginInfo ?
-            (<div>My collections</div>) : null}
-        </div>
-        <div className='bottom'>
-          <a onClick={evt => Feedback.show()}>Feedback</a>
-          <a onClick={evt => AppState.dispatch({type: 'disclaim'})}>Disclaimer</a>
-          <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
-        </div>
-      </div>
+      <Sidebar
+        loginInfo={aState.loginInfo}
+        authToken={aState.authToken}
+        currentView={aState.view}
+        show={this.state.showSidebar}
+        currentCollection={aState.collection ? aState.collection.id : null} />
     )
-  }
-
-  handleSidebarTopClick (evt) {
-    let authTokenHave = !!AppState.getState().authToken
-    if (!authTokenHave) {
-      AppState.dispatch({type: 'login-view'})
-    } else if (this.sidebarLogoutBtn && (evt.target === this.sidebarLogoutBtn || this.sidebarLogoutBtn.contains(evt.target))) {
-      AppState.dispatch({type: 'clear-token'})
-      // FIXME: Not secure. User expect token to be invalidated.
-    }
   }
 
   renderSearch () {

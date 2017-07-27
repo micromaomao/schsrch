@@ -366,6 +366,10 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
 
     rMain.get('/collections/by/:user/', optionalAuthentication, function (req, res, next) {
       let userId = req.params.user.toString()
+      let limit = parseInt(req.query.limit)
+      let skip = parseInt(req.query.skip)
+      if (!Number.isSafeInteger(limit)) limit = 20
+      if (!Number.isSafeInteger(skip)) skip = 0
       PastPaperId.findOne({_id: userId}).then(user => {
         if (!user) {
           next()
@@ -405,7 +409,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           if (count === 0) {
             res.send({count: 0, list: []})
           } else {
-            PastPaperCollection.find(selector, {_id: true, creationTime: true, ownerModifyTime: true, content: true, owner: true, publicRead: true}).sort({ownerModifyTime: -1}).limit(20).then(list => {
+            PastPaperCollection.find(selector, {_id: true, creationTime: true, ownerModifyTime: true, content: true, owner: true, publicRead: true}).sort({ownerModifyTime: -1}).skip(skip).limit(limit).then(list => {
               res.send({count, list: list.map(x => Object.assign(x, { // Only return short content
                 content: (x.content ? {
                   name: x.content.name || null,
