@@ -375,6 +375,25 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       })
     })
 
+    rMain.delete('/collection/:id', requireAuthentication, function (req, res, next) {
+      let id = req.params.id
+      PastPaperCollection.findOne({_id: id}, {_id: true, owner: true}).then(col => {
+        if (!col) {
+          next()
+          return
+        }
+        if (col.owner.equals(req.authId._id)) {
+          PastPaperCollection.remove({_id: col._id}).then(() => {
+            res.status(200)
+            res.end()
+          }, err => next(err))
+        } else {
+          res.status(401)
+          res.send("Access denied.")
+        }
+      }, err => next(err))
+    })
+
     rMain.get('/collections/by/:user/', optionalAuthentication, function (req, res, next) {
       let userId = req.params.user.toString()
       let limit = parseInt(req.query.limit)

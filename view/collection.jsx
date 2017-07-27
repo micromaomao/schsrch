@@ -7,12 +7,16 @@ class Collection extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      noEditAccess: false
+      noEditAccess: false,
+      menuOpen: false,
+      menuMode: 'normal',
+      menuError: null
     }
     this.setIntervaled = null
     this.handleInputChange = this.handleInputChange.bind(this)
     this.handleTitleChange = this.handleTitleChange.bind(this)
     this.handleGlobaleKey = this.handleGlobaleKey.bind(this)
+    this.handleDelete = this.handleDelete.bind(this)
     this.pushUndoStackTimeout = null
   }
   handleInputChange (content) {
@@ -29,6 +33,10 @@ class Collection extends React.Component {
       AppState.dispatch({type: 'collection-push-undostack'})
       this.pushUndoStackTimeout = null
     }, 500)
+    this.setState({
+      menuOpen: false,
+      menuMode: 'normal'
+    })
   }
   handleTitleChange (evt) {
     AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
@@ -78,8 +86,36 @@ class Collection extends React.Component {
                 <input type='text' value='' placeholder='Untitled' className='untitled' onInput={this.handleTitleChange} disabled={editDisabled} />
               )) : null)}
           </h1>
-          <div className='menu'>&hellip;</div>
+          {!this.state.noEditAccess ? <div className='menu' onClick={evt => this.setState({menuOpen: !this.state.menuOpen, menuMode: 'normal'})}>&hellip;</div> : null}
         </div>
+        {this.state.menuOpen ?
+          (
+            <div className='menu'>
+              {this.state.menuMode === 'normal' && !this.state.noEditAccess ?
+                (
+                  <span className='menuitem delete' onClick={evt => this.setState({menuMode: 'delete'})}>Delete</span>
+                ) : null}
+              {this.state.menuMode === 'delete' ?
+                (
+                  [
+                    <span key={0}>Sure delete {col.content && col.content.name ? col.content.name : 'this'}? (<b>no</b> undos, trash can, whatsoever)</span>,
+                    <span key={1} className='menuitem delete' onClick={this.handleDelete}>Yes</span>,
+                    <span key={2} className='menuitem' onClick={evt => this.setState({menuMode: 'normal'})}>No</span>
+                  ]
+                ) : null}
+              {this.state.menuMode === 'deleting' ?
+                (
+                  <span>Your stuff is being deleted&hellip;</span>
+                ) : null}
+              {this.state.menuMode === 'error' ?
+                (
+                  [
+                    <span className='error'>Error: {this.state.menuError}</span>,
+                    <span key={2} className='menuitem' onClick={evt => this.setState({menuMode: 'normal'})}>Back</span>
+                  ]
+                ) : null}
+            </div>
+          ) : null}
         <div className='editorcontain'>
           {col.loading
             ? (
@@ -137,8 +173,14 @@ class Collection extends React.Component {
       clearInterval(this.setIntervaled)
       this.setIntervaled = null
     }
-    if (col.content && (!prevProps.collection || !prevProps.collection.content)) {
+    if (col && col.content && (!prevProps.collection || !prevProps.collection.content)) {
       AppState.dispatch({type: 'collection-push-undostack'})
+    }
+    if (col && prevProps.collection && col.content && prevProps.collection.content && col.content !== prevProps.collection.content) {
+      this.setState({
+        menuOpen: false,
+        menuMode: 'normal'
+      })
     }
   }
 
@@ -245,6 +287,24 @@ class Collection extends React.Component {
       evt.preventDefault()
       this.redo()
     }
+  }
+
+  handleDelete () {
+    this.setState({
+      noEditAccess: true,
+      menuMode: 'deleting'
+    })
+    let id = this.props.collection.id
+    let authHeaders = new Headers()
+    authHeaders.append('Authorization', 'Bearer ' + AppState.getState().authToken)
+    fetch(`/collection/${id}/`, {method: 'DELETE', headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
+      AppState.dispatch({type: 'home'})
+    }, err => {
+      this.setState({
+        menuMode: 'error',
+        menuError: err.message
+      })
+    })
   }
 
   componentDidMount () {

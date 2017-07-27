@@ -1083,6 +1083,31 @@ $feedback-top-height: 2rem + 1.3rem
               border-bottom: dashed 1px $color-divider
             &:disabled
               background-color: transparent
+      > .menu
+        flex-grow: 0
+        flex-shrink: 0
+        border-bottom: 1px solid $color-divider
+        background-color: lighten($color-primary, 40%)
+        display: flex
+        flex-direction: row
+        flex-wrap: wrap
+        justify-content: flex-end
+        align-items: center
+        padding-right: 0.5rem
+        > span
+          flex-shrink: 0
+          flex-grow: 0
+          padding-top: 0.5rem
+          padding-bottom: 0.5rem
+        > span.menuitem
+          padding-left: 1rem
+          padding-right: 1rem
+          cursor: pointer
+          color: $color-primary
+          &.delete
+            color: red
+        > .error
+          color: red
       > .bottom
         flex-shrink: 0
         flex-grow: 0

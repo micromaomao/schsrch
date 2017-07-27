@@ -452,4 +452,54 @@ module.exports = (schsrch, dbModel) =>
         .expect(404)
         .end(done)
     })
+
+    for (let allowPublicRead of [true, false]) {
+      for (let deleteBy of ['owner', 'other', 'guest']) {
+        it(`${deleteBy} ${deleteBy === 'owner' ? 'can' : "can't"} delete ${deleteBy === 'owner' ? 'their ' : (deleteBy === 'other' ? "other's " : '')}${allowPublicRead ? 'public' : 'private'} collections`, function (done) {
+          Promise.all([getNewId(), getNewId()]).then(([owner, other]) => {
+            let now = Date.now()
+            let col = new PastPaperCollection({
+              creationTime: now,
+              ownerModifyTime: now,
+              owner: owner.id,
+              publicRead: allowPublicRead,
+              allowedRead: [],
+              allowedWrite: []
+            })
+            col.save().then(() => {
+              let req = supertest(schsrch)
+                .delete(`/collection/${col._id}/`)
+              if (deleteBy === 'owner') {
+                req = req.set('Authorization', 'Bearer ' + owner.tokenHex)
+              } else if (deleteBy === 'other') {
+                req = req.set('Authorization', 'Bearer ' + other.tokenHex)
+              }
+              if (deleteBy === 'owner') {
+                req = req.expect(200)
+              } else {
+                req = req.expect(401)
+              }
+              req = req.end(err => {
+                if (err) {
+                  done(err)
+                  return
+                }
+                PastPaperCollection.findOne({_id: col._id}).then(doc => {
+                  try {
+                    if (deleteBy === 'owner') {
+                      should.not.exist(doc)
+                    } else {
+                      should.exist(doc)
+                    }
+                    done()
+                  } catch (e) {
+                    done(e)
+                  }
+                })
+              })
+            }, err => done(err))
+          }, err => done(err))
+        })
+      }
+    }
   })
