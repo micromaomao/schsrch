@@ -42,6 +42,12 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       if (req.hostname.match(/^www\./)) {
         res.redirect('https://schsrch.xyz' + req.path)
       } else {
+        let org
+        if ((org = req.get('Origin'))) {
+          if (/^https:\/\/[a-zA-Z0-9_\-]+\.schsrch\.xyz$/.test(org)) {
+            res.set('Access-Control-Allow-Origin', org)
+          }
+        }
         next()
       }
     })

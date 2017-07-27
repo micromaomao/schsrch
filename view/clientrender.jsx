@@ -5,6 +5,12 @@ require('fetch-polyfill')
 require('offline-plugin/runtime').install()
 require('fullscreen-api-polyfill')
 
+if (/^https:\/\/beta\.schsrch\.xyz\//.test(window.location.href)) {
+  navigator.serviceWorker.getRegistration('/').then(reg => reg.unregister(), err => Promise.resolve()).then(() => {
+    window.location.replace('https://schsrch.xyz')
+  })
+}
+
 // Node.remove polyfill for collections.
 // from:https://github.com/jserz/js_piece/blob/master/DOM/ChildNode/remove()/remove().md
 ;(function (arr) {
