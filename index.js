@@ -306,9 +306,10 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     })
 
     rMain.post('/collections/new', requireAuthentication, function (req, res, next) {
+      let now = Date.now()
       let cl = new PastPaperCollection({
-        creationTime: Date.now(),
-        ownerModifyTime: Date.now(),
+        creationTime: now,
+        ownerModifyTime: now,
         content: {},
         owner: req.authId._id
       })
