@@ -81,12 +81,13 @@ module.exports = (schsrch, dbModel) =>
     })
 
     it('should create user', function (done) {
-      let newUserId
+      let newUserId, newToken
       supertest(schsrch)
         .post('/auth/maowtm')
+        .send({})
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
-        .expect(res => res.body.authToken.should.be.a.String())
+        .expect(res => (newToken = res.body.authToken).should.be.a.String())
         .expect(res => (newUserId = res.body.userId).should.be.a.String())
         .end(err => {
           if (err) {
@@ -97,7 +98,7 @@ module.exports = (schsrch, dbModel) =>
             try {
               newIds.length.should.equal(1)
               newIds[0].username.should.equal('maowtm')
-              done()
+              PastPaperAuthSession.findOne({authToken: newToken}).then(session => done((typeof session === 'object') ? null : new Error('token returned is invalid.')), err => done(err))
             } catch (e) {
               done(err)
             }
@@ -107,6 +108,7 @@ module.exports = (schsrch, dbModel) =>
     it('should not create existing user', function (done) {
       supertest(schsrch)
         .post('/auth/maowtm')
+        .send({})
         .expect(400)
         .expect(res => res.text.should.match(/existed/i))
         .end(err => {
@@ -123,6 +125,26 @@ module.exports = (schsrch, dbModel) =>
             }
           }, err => done(err))
         })
+    })
+    it('should allow client to generate token', function (done) {
+      crypto.randomBytes(16, function (err, token) {
+        if (err) {
+          done(err)
+          return
+        }
+        supertest(schsrch)
+          .post('/auth/maowtm2')
+          .send({authToken: token.toString('hex')})
+          .expect(200)
+          .expect(res => res.body.authToken.should.equal(token.toString('hex'), 'returned token incorrect'))
+          .end(err => {
+            if (err) {
+              done(err)
+              return
+            }
+            PastPaperAuthSession.findOne({authToken: token}).then(session => done((typeof session === 'object') ? null : new Error('token is invalid.')), err => done(err))
+          })
+      })
     })
 
     function testInvalidUsername (username) {

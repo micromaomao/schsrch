@@ -7,6 +7,7 @@ const fs = require('fs')
 const cheerio = require('cheerio')
 const crypto = require('crypto')
 const assert = require('assert')
+const postJsonReceiver = require('./lib/post-json-receiver.js')
 require('./dist-server/serverrender')
 const serverRender = global.serverRender
 global.serverRender = null
@@ -239,13 +240,29 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           res.send(`Username ${username} already existed.`)
           return
         }
-        let newId = new PastPaperId({
-          username,
-          creationTime: Date.now()
+        postJsonReceiver(req, res, next, parsed => {
+          let token = null
+          if (parsed.authToken) {
+            try {
+              let hex = parsed.authToken
+              if (!/^[0-9a-f]{32}$/.test(hex)) {
+                throw new Error('token must be a hex string of 16 bytes')
+              }
+              token = Buffer.from(hex, 'hex')
+            } catch (e) {
+              res.status(400)
+              res.send(e.message)
+              return
+            }
+          }
+          let newId = new PastPaperId({
+            username,
+            creationTime: Date.now()
+          })
+          newId.save().then(() => PastPaperAuthSession.newSession(newId._id, req.ip, token)).then(token => {
+            res.send({authToken: token.toString('hex'), userId: newId._id.toString()})
+          }, err => next(err))
         })
-        newId.save().then(() => PastPaperAuthSession.newSession(newId._id, req.ip)).then(token => {
-          res.send({authToken: token.toString('hex'), userId: newId._id.toString()})
-        }, err => next(err))
       }, err => next(err))
     })
 
@@ -305,41 +322,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           next()
           return
         }
-        let ctype = req.get('Content-Type')
-        let done = false
-        if (ctype !== 'application/json') {
-          res.status(415)
-          res.send('Content type incorrect.')
-          done = true
-          return
-        }
-        let body = ''
-        req.setEncoding('utf8')
-        req.on('data', chunk => {
-          if (done) return
-          body += chunk
-          // TODO length check
-        })
-        req.on('end', () => {
-          if (done) return
-          done = true
-          body = body.trim()
-          if (body.length === 0) {
-            res.status(403)
-            res.send('Content is empty.')
-            return
-          }
-          let parsed = null
-          try {
-            parsed = JSON.parse(body)
-            if (typeof parsed !== 'object') {
-              throw new Error()
-            }
-          } catch (e) {
-            res.status(403)
-            res.send('Content is not valid JSON.')
-            return
-          }
+        postJsonReceiver(req, res, next, parsed => {
           let allowEdit = false
           if (req.authId._id.equals(collectionDoc.owner)) {
             allowEdit = true
