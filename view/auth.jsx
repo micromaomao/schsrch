@@ -178,13 +178,36 @@ class LoginView extends React.Component {
       },
       lastError: null
     })
-    fetch(`/auth/${encodeURIComponent(username)}/`, {method: 'POST'}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(res => {
+    let ctHeaders = new Headers()
+    ctHeaders.append('Content-Type', 'application/json')
+    let tokenHex = null
+    let timeout = null
+    try {
+      if (!window.crypto || !window.crypto.getRandomValues) throw new Error('Browser no getRandomValues support.')
+      let byteArray = new Uint8Array(16)
+      window.crypto.getRandomValues(byteArray)
+      tokenHex = Array.prototype.map.call(byteArray, b => {
+        let str = '00' + b.toString(16)
+        return str.slice(-2)
+      }).join('')
+      timeout = setTimeout(function () {
+        AppState.dispatch({type: 'finish-login', token: tokenHex})
+      }, 2000)
+    } catch (e) {
+      console.error(e)
+      tokenHex = null
+    }
+    fetch(`/auth/${encodeURIComponent(username)}/`, {method: 'POST', headers: ctHeaders, body: JSON.stringify({
+      authToken: tokenHex
+    })}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(res => {
       AppState.dispatch({type: 'finish-login', token: res.authToken})
+      if (timeout) clearTimeout(timeout)
     }, err => {
       this.setState({
         requestState: null,
         lastError: err.message
       })
+      if (timeout) clearTimeout(timeout)
     })
   }
 
