@@ -227,7 +227,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       })
       // TODO: implement GET for this
     })
-    rMain.post('/auth/:username', function (req, res, next) {
+    rMain.post('/auth/:username/', function (req, res, next) {
       let username = req.params.username.trim()
       if (!/^[^\s]{1,}$/.test(username)) {
         res.status(400)
@@ -264,6 +264,45 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           }, err => next(err))
         })
       }, err => next(err))
+    })
+
+    rMain.post('/auth/challenges/replace/', requireAuthentication, function (req, res, next) {
+      postJsonReceiver(req, res, next, parsed => {
+        req.authId.granterReplace(parsed).then(() => {
+          res.status(200)
+          res.end()
+        }, err => {
+          res.status(400)
+          res.send(err.message)
+        })
+      })
+    })
+
+    rMain.post('/auth/:username/newSession/', function (req, res, next) {
+      postJsonReceiver(req, res, next, parsed => {
+        let challenge = parsed
+        let username = req.params.username.toString()
+        if (typeof username !== 'string' || typeof challenge !== 'object') {
+          res.status(400)
+          res.send('Invalid payload.')
+          return
+        }
+        PastPaperId.findOne({username}, {_id: true}).then(user => {
+          if (!user) {
+            res.status(404)
+            res.send('User not find')
+            return
+          }
+          PastPaperSessionGranter.verify(user._id, challenge).then(() => {
+            PastPaperAuthSession.newSession(user._id, req.ip).then(token => {
+              res.send({authToken: token.toString('hex')})
+            }, err => next(err))
+          }, err => {
+            res.status(403)
+            res.send(err.message)
+          })
+        })
+      })
     })
 
     rMain.post('/collections/new', requireAuthentication, function (req, res, next) {
