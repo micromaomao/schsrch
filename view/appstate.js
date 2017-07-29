@@ -334,6 +334,11 @@ let AppState = createStore(function (state = {}, action) {
         },
         showSidebar: false
       })
+    case 'set-token':
+      return Object.assign({}, state, {
+        authToken: action.token,
+        loginInfo: null
+      })
     case 'finish-login':
       return Object.assign({}, state, {
         authToken: action.token,

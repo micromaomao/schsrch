@@ -6,18 +6,20 @@ class LoginView extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      loginRegister: 'select', // 'select', 'login', 'register'
+      stage: 'username', // username, authToken, setPassword
       tokenInput: '',
+      usernameInput: '',
+      passwordInput: '',
+      usernameCheckState: null,
       requestState: null,
       lastError: null,
-      usernameInput: '',
-      usernameCheckState: null
+      regNewToken: null
     }
-    this.handleTokenInput = this.handleTokenInput.bind(this)
     this.handleUsernameInput = this.handleUsernameInput.bind(this)
-  }
-  componentDidUpdate () {
-    this.tryExistingToken()
+    this.handlePasswordInput = this.handlePasswordInput.bind(this)
+    this.handleTryPassword = this.handleTryPassword.bind(this)
+    this.handleRegister = this.handleRegister.bind(this)
+    this.handleSetPassword = this.handleSetPassword.bind(this)
   }
   componentDidMount () {
     this.tryExistingToken()
@@ -25,16 +27,14 @@ class LoginView extends React.Component {
   tryExistingToken () {
     let existingToken = AppState.getState().authToken
     if (existingToken && !this.state.requestState) {
-      AppState.dispatch({type: 'clear-token'})
       this.tryToken(existingToken)
     }
   }
   render () {
     if (!this.props.loginState) return null
-    let existingToken = AppState.getState().authToken
     return (
       <div className='contain'>
-        <h1>Login to SchSrch&hellip;</h1>
+        <h1>Login / Register&hellip;</h1>
         {this.state.lastError
           ? (
               <div className='error'>
@@ -42,49 +42,75 @@ class LoginView extends React.Component {
               </div>
             )
           : null}
-        {!this.state.requestState && !existingToken && this.state.loginRegister === 'select'
+        {!this.state.requestState && this.state.stage === 'username'
           ? (
-              <div className='rlSelect'>
-                <div className='back' onClick={evt => this.cancel()}>Close</div>
-                <p>
-                  If you haven't created a SchSrch authentication token yet, please choose "New
-                  Token". If you did created a token before and you backed it up, please enter
-                  the token below.
-                </p>
-                <p>
-                  If you have a token before and don't have a backup of that token, than
-                  unfortunately you have lost access to it permanently. Please create a new one.
-                </p>
-                <input type='text' className='tokenInput' placeholder='Input token here' value={this.state.tokenInput} onInput={this.handleTokenInput} />
-                <div className='btn'>
-                  <a onClick={evt => this.setState({loginRegister: 'register', lastError: null})}>New Token</a>
-                  &nbsp;
-                  <a onClick={evt => this.tryToken(this.state.tokenInput)}>Login</a>
-                </div>
+              <div className='stage username'>
+                <div className='back bmargin' onClick={evt => this.cancel()}>Close</div>
+                <input type='text' placeholder='Your username' className='usernameInput' value={this.state.usernameInput} onChange={this.handleUsernameInput} />
+                {this.state.usernameCheckState !== 'exist'
+                  ? (
+                      <p>
+                        If you haven't registered before, simply enter the username you want to use.
+                        This name can be changed later but must be unique. Must not contain space.
+                      </p>
+                    ) : null}
+                {this.state.usernameCheckState
+                  ? (() => {
+                      let checkState = this.state.usernameCheckState
+                      if (checkState === 'checking') {
+                        return (
+                          <div className='cstate loading'>
+                            Just a moment&hellip;
+                          </div>
+                        )
+                      } else if (checkState === 'exist') {
+                        return (
+                          <div className='cstate exist'>
+                            <p>
+                              Welcome back, {this.state.usernameInput}.
+                            </p>
+                            <input type='password' placeholder='Password' className='passwordInput' value={this.state.passwordInput} onChange={this.handlePasswordInput}/>
+                            <div className='btn'>
+                              <a onClick={this.handleTryPassword}>Login</a>
+                            </div>
+                            <p>
+                              Sorry, there is no "forget password" yet.
+                            </p>
+                          </div>
+                        )
+                      } else if (checkState === 'notexist') {
+                        return (
+                          <div className='cstate notexist'>
+                            <p>
+                              There is no user with the name "{this.state.usernameInput}".
+                            </p>
+                            <div className='btn'>
+                              <a onClick={this.handleRegister}>Register</a>
+                            </div>
+                          </div>
+                        )
+                      } else return null
+                    })() : null}
+                {!this.state.usernameCheckState
+                  ? (
+                      <div className='btn'>
+                        <a onClick={evt => this.setState({stage: 'authToken'})}>Use session token (for nerd)</a>
+                      </div>
+                    ) : null}
               </div>
             )
           : null}
-        {!this.state.requestState && !existingToken && this.state.loginRegister === 'register'
+        {!this.state.requestState && this.state.stage === 'setPassword'
           ? (
-              <div className='rlRegister'>
-                <div className='back' onClick={evt => this.setState({loginRegister: 'select', lastError: null})}>Back</div>
+              <div className='stage setPassword'>
                 <p>
-                  Please provide a username that will be displayed to others on stuff your
-                  create. This name can be changed later but must be unique.
+                  You have been logged-in, but unless you set a password, you won't be able to access this account again.
                 </p>
-                <input
-                  type='text'
-                  className={'usernameInput ' + (this.state.usernameCheckState || 'normal')}
-                  placeholder='Must not contain space.'
-                  value={this.state.usernameInput}
-                  onInput={this.handleUsernameInput} />
-                {this.state.usernameCheckState !== 'exist'
-                  ? (
-                      <div className='btn'>
-                        <a onClick={evt => this.doRegister(this.state.usernameInput)}>Get me token!</a>
-                      </div>
-                    )
-                  : null}
+                <input type='password' className='passwordInput' placeholder='New Password' value={this.state.passwordInput} onChange={this.handlePasswordInput} />
+                <div className='btn'>
+                  <a onClick={this.handleSetPassword}>Set password</a>
+                  <a onClick={evt => this.cancel()}>Later</a>
+                </div>
               </div>
             )
           : null}
@@ -147,34 +173,32 @@ class LoginView extends React.Component {
   
   handleUsernameInput (evt) {
     let username = evt.target.value.replace(/\s/g, '')
-    this.setState({usernameInput: username, usernameCheckState: null, lastError: null})
+    this.setState({usernameInput: username, usernameCheckState: 'checking', lastError: null})
     if (username.trim().length === 0) {
+      this.setState({usernameCheckState: null})
       return
     }
     fetch(`/auth/${encodeURIComponent(username)}/`, {method: 'HEAD'}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
       if (this.state.usernameInput !== username) return
-      this.setState({usernameCheckState: 'exist', lastError: 'Username already existed.'})
+      this.setState({usernameCheckState: 'exist'})
     }, err => {
       if (this.state.usernameInput !== username) return
       if (/404/.test(err.message)) {
-        this.setState({usernameCheckState: 'ok', lastError: null})
+        this.setState({usernameCheckState: 'notexist'})
       } else {
         this.setState({usernameCheckState: null, lastError: err})
       }
     })
   }
 
-  doRegister (username = this.state.usernameInput) {
+  handleRegister () {
+    let username = this.state.usernameInput
     if (username.length === 0) {
-      this.setState({
-        requestState: null,
-        lastError: 'Username required.'
-      })
       return
     }
     this.setState({
       requestState: {
-        progressText: `Getting new token with username ${username}`
+        progressText: `Registering ${username}`
       },
       lastError: null
     })
@@ -191,7 +215,7 @@ class LoginView extends React.Component {
         return str.slice(-2)
       }).join('')
       timeout = setTimeout(function () {
-        AppState.dispatch({type: 'finish-login', token: tokenHex})
+        AppState.dispatch({type: 'set-token', token: tokenHex})
       }, 2000)
     } catch (e) {
       console.error(e)
@@ -200,7 +224,13 @@ class LoginView extends React.Component {
     fetch(`/auth/${encodeURIComponent(username)}/`, {method: 'POST', headers: ctHeaders, body: JSON.stringify({
       authToken: tokenHex
     })}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(res => {
-      AppState.dispatch({type: 'finish-login', token: res.authToken})
+      AppState.dispatch({type: 'set-token', token: res.authToken})
+      this.setState({
+        stage: 'setPassword',
+        regNewToken: res.authToken,
+        requestState: null,
+        lastError: null
+      })
       if (timeout) clearTimeout(timeout)
     }, err => {
       this.setState({
@@ -208,6 +238,59 @@ class LoginView extends React.Component {
         lastError: err.message
       })
       if (timeout) clearTimeout(timeout)
+    })
+  }
+
+  handlePasswordInput (evt) {
+    let password = evt.target.value
+    this.setState({passwordInput: password, lastError: null})
+  }
+
+  handleTryPassword (evt) {
+    let {usernameInput: username, passwordInput: password} = this.state
+    this.setState({
+      requestState: {
+        progressText: 'Logging in'
+      },
+      lastError: null
+    })
+    let ctHeaders = new Headers()
+    ctHeaders.append('Content-Type', 'application/json')
+    fetch(`/auth/${encodeURIComponent(username)}/newSession/`, {method: 'POST', headers: ctHeaders, body: JSON.stringify({
+      type: 'password',
+      password
+    })}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
+      let token = json.authToken
+      AppState.dispatch({type: 'finish-login', token})
+    }, err => {
+      this.setState({
+        requestState: null,
+        lastError: err.message
+      })
+    })
+  }
+
+  handleSetPassword (evt) {
+    let {passwordInput: password} = this.state
+    this.setState({
+      requestState: {
+        progressText: 'Setting password'
+      },
+      lastError: null
+    })
+    let authHeaders = new Headers()
+    authHeaders.append('Authorization', 'Bearer ' + this.state.regNewToken)
+    authHeaders.append('Content-Type', 'application/json')
+    fetch('/auth/challenges/replace/', {method: 'POST', headers: authHeaders, body: JSON.stringify({
+      type: 'password',
+      password
+    })}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(() => {
+      AppState.dispatch({type: 'finish-login', token: this.state.regNewToken})
+    }, err => {
+      this.setState({
+        requestState: null,
+        lastError: err.message
+      })
     })
   }
 
@@ -236,9 +319,12 @@ class LoginView extends React.Component {
   }
 
   let lastAuthToken = AppState.getState() ? AppState.getState().authToken : null
+  if (lastAuthToken) {
+    fetchLoginInfo()
+  }
   AppState.subscribe(() => {
     let newAuthToken = AppState.getState().authToken
-    if (newAuthToken !== lastAuthToken) {
+    if (newAuthToken !== lastAuthToken || (!AppState.getState().loginInfo && newAuthToken)) {
       fetchLoginInfo()
       lastAuthToken = newAuthToken
     }

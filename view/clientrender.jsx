@@ -83,7 +83,7 @@ if (history.state) {
 
 let localStorageAuthToken = window.localStorage.getItem('authToken')
 if (localStorageAuthToken && !AppState.getState().authToken) {
-  AppState.dispatch({type: 'finish-login', token: localStorageAuthToken})
+  AppState.dispatch({type: 'set-token', token: localStorageAuthToken})
 }
 
 // Make it F12 useable

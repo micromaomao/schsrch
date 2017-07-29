@@ -1338,7 +1338,7 @@ $feedback-top-height: 2rem + 1.3rem
       display: inline-block
       font-size: 1.5rem
       font-weight: normal
-    .tokenInput, .usernameInput
+    .tokenInput, .usernameInput, .passwordInput
       border-top: none
       border-right: none
       border-bottom: solid 2px $color-primary
@@ -1348,13 +1348,6 @@ $feedback-top-height: 2rem + 1.3rem
       text-align: left
       width: 100%
       outline: none
-    .usernameInput
-      &.normal
-        border-bottom: solid 1px #aaa
-      &.exist
-        border-bottom: solid 2px red
-      &.ok
-        border-bottom: solid 1px green
     .error
       color: red
       border-top: solid 1px red
@@ -1369,10 +1362,22 @@ $feedback-top-height: 2rem + 1.3rem
         cursor: pointer
     .progress
       color: $color-primary
-    .rlRegister, .rlSelect
+    .stage
       > .back
         display: inline-block
         padding: 0.5rem 1rem
         color: $color-link
         border-bottom: $color-link solid 1px
         cursor: pointer
+        &.bmargin
+          margin-bottom: 1rem
+      .cstate
+        &.loading
+          color: $color-primary
+          font-size: 1rem
+          padding: 0.5rem
+          border-top: solid 1px $color-primary
+          border-bottom: solid 1px $color-primary
+      &.username
+        .usernameInput, .passwordInput
+          text-align: center

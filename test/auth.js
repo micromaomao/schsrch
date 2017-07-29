@@ -215,8 +215,7 @@ module.exports = (schsrch, dbModel) =>
             if (mode === 'correct') {
               challengeResponse = {
                 type: 'password',
-                password,
-                correct: true
+                password
               }
             } else if (mode === 'incorrect') {
               challengeResponse = {
