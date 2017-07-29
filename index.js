@@ -183,17 +183,19 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
         return
       }
       let token = Buffer.from(tokenMatch[1], 'hex')
-      PastPaperId.findOneAndUpdate({authToken: token}, {$set: {lastSuccessLoginIp: req.ip, lastSuccessLoginTime: Date.now()}}, {
-        'new': false,
-        upsert: false,
-        fields: {authToken: false}
-      }).then(iddoc => {
-        if (!iddoc) {
+      PastPaperAuthSession.findOne({authToken: token, valid: true}, {authToken: false}).then(session => {
+        if (!session) {
           res.status(401)
           res.send('Authorization token invalid.')
         } else {
-          req.authId = iddoc
-          next()
+          PastPaperId.findOne({_id: session.userId}).then(user => {
+            if (!user) {
+              next(new Error('User no longer existed.'))
+              return
+            }
+            req.authId = user
+            next()
+          }, err => next(err))
         }
       }, err => next(err))
     }
@@ -237,20 +239,13 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           res.send(`Username ${username} already existed.`)
           return
         }
-        crypto.randomBytes(16, (err, newToken) => {
-          if (err) {
-            next(err)
-            return
-          }
-          let newId = new PastPaperId({
-            authToken: newToken,
-            creationTime: Date.now(),
-            username
-          })
-          newId.save().then(() => {
-            res.send({authToken: newToken.toString('hex')})
-          }, err => next(err))
+        let newId = new PastPaperId({
+          username,
+          creationTime: Date.now()
         })
+        newId.save().then(() => PastPaperAuthSession.newSession(newId._id, req.ip)).then(token => {
+          res.send({authToken: token.toString('hex'), userId: newId._id.toString()})
+        }, err => next(err))
       }, err => next(err))
     })
 

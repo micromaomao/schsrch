@@ -14,23 +14,14 @@ module.exports = (schsrch, dbModel) =>
     })
 
     function getNewToken () {
-      return new Promise((resolve, reject) => {
-        crypto.randomBytes(16, (err, newToken) => {
-          if (err) {
-            reject(err)
-            return
-          }
-          let tokenHex = newToken.toString('hex')
-          let newId = new PastPaperId({
-            authToken: newToken,
-            creationTime: Date.now(),
-            username: tokenHex
-          })
-          newId.save().then(() => {
-            resolve(tokenHex)
-          }, reject)
-        })
+      let newid = new PastPaperId({
+        creationTime: Date.now(),
+        username: 'test-user-' + Math.floor(Math.random() * 10000000)
       })
+      return newid.save().then(() => {
+        return PastPaperAuthSession.newSession(newid._id, '::1')
+      })
+      .then(token => Promise.resolve(token.toString('hex')))
     }
 
     it('should not accept invalid Authorization header', function (done) {
@@ -71,32 +62,38 @@ module.exports = (schsrch, dbModel) =>
       })
     })
     it('should accept valid token', function (done) {
-      getNewToken().then(tokenHex => {
+      let username = 'test-user-valid-token-' + Math.floor(Math.random() * 1000000)
+      let newId = new PastPaperId({
+        username,
+        creationTime: Date.now()
+      })
+      newId.save().then(() => PastPaperAuthSession.newSession(newId, '::1')).then(token => {
         supertest(schsrch)
           .get('/auth/')
-          .set('Authorization', 'Bearer ' + tokenHex)
+          .set('Authorization', 'Bearer ' + token.toString('hex'))
           .expect(200)
           .expect(res => res.body.should.be.an.Object())
           .expect(res => res.body._id.should.be.a.String())
           .expect(res => res.body.username.should.be.a.String())
-          .expect(res => res.body.username.should.equal(tokenHex))
+          .expect(res => res.body.username.should.equal(username))
           .end(done)
       }, err => done(err))
     })
 
     it('should create user', function (done) {
-      let newTokenHex
+      let newUserId
       supertest(schsrch)
         .post('/auth/maowtm')
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
-        .expect(res => (newTokenHex = res.body.authToken).should.be.a.String())
+        .expect(res => res.body.authToken.should.be.a.String())
+        .expect(res => (newUserId = res.body.userId).should.be.a.String())
         .end(err => {
           if (err) {
             done(err)
             return
           }
-          PastPaperId.find({authToken: Buffer.from(newTokenHex, 'hex')}).then(newIds => {
+          PastPaperId.find({_id: newUserId}).then(newIds => {
             try {
               newIds.length.should.equal(1)
               newIds[0].username.should.equal('maowtm')
@@ -108,7 +105,6 @@ module.exports = (schsrch, dbModel) =>
         })
     })
     it('should not create existing user', function (done) {
-      let newTokenHex
       supertest(schsrch)
         .post('/auth/maowtm')
         .expect(400)

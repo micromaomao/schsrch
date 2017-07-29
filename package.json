@@ -27,6 +27,7 @@
     "cheerio": "^1.0.0-rc.2",
     "nan": "^2.6.2",
     "rbush": "^2.0.1",
+    "scrypt": "^6.0.3",
     "svgo": "^0.7.2"
   },
   "peerDependencies": {

@@ -7,22 +7,15 @@ module.exports = (schsrch, dbModel) =>
     const {PastPaperId, PastPaperCollection} = dbModel
 
     function getNewId () {
-      return new Promise((resolve, reject) => {
-        crypto.randomBytes(16, (err, newToken) => {
-          if (err) {
-            reject(err)
-            return
-          }
-          let tokenHex = newToken.toString('hex')
-          let newId = new PastPaperId({
-            authToken: newToken,
-            creationTime: Date.now(),
-            username: tokenHex
-          })
-          newId.save().then(() => {
-            resolve({tokenHex, id: newId._id})
-          }, reject)
-        })
+      let newId = new PastPaperId({
+        username: 'test-user-collections-' + Math.floor(Math.random() * 10000000),
+        creationTime: Date.now()
+      })
+      return newId.save().then(() => {
+        return PastPaperAuthSession.newSession(newId._id, '::1')
+      })
+      .then(token => {
+        return Promise.resolve({tokenHex: token.toString('hex'), id: newId._id})
       })
     }
 
