@@ -20,18 +20,10 @@ class LoginView extends React.Component {
     this.handleTryPassword = this.handleTryPassword.bind(this)
     this.handleRegister = this.handleRegister.bind(this)
     this.handleSetPassword = this.handleSetPassword.bind(this)
-  }
-  componentDidMount () {
-    this.tryExistingToken()
-  }
-  tryExistingToken () {
-    let existingToken = AppState.getState().authToken
-    if (existingToken && !this.state.requestState) {
-      this.tryToken(existingToken)
-    }
+    this.handleTokenInput = this.handleTokenInput.bind(this)
+    this.handleTryToken = this.handleTryToken.bind(this)
   }
   render () {
-    if (!this.props.loginState) return null
     return (
       <div className='contain'>
         <h1>Login / Register&hellip;</h1>
@@ -114,6 +106,16 @@ class LoginView extends React.Component {
               </div>
             )
           : null}
+        {!this.state.requestState && this.state.stage === 'authToken'
+          ? (
+              <div className='stage authToken'>
+                <div className='back bmargin' onClick={evt => this.setState({stage: 'username', lastError: null})}>Back</div>
+                <input className='tokenInput' value={this.state.tokenInput} onChange={this.handleTokenInput} placeholder='Auth token' />
+                <div className='btn'>
+                  <a onClick={this.handleTryToken}>Login</a>
+                </div>
+              </div>
+            ) : null}
         {this.state.requestState
           ? (
               <div className='progress'>
@@ -144,14 +146,9 @@ class LoginView extends React.Component {
     this.setState({tokenInput: tokenFormatted, lastError: null})
   }
 
-  tryToken (token = this.state.tokenInput) {
+  handleTryToken () {
+    let token = this.state.tokenInput
     let tokenHex = token.replace(/[^0-9a-f]/g, '')
-    if (tokenHex.length <= 0) {
-      this.setState({
-        lastError: 'Please enter your token.'
-      })
-      return
-    }
     this.setState({
       requestState: {
         progressText: 'Checking your token'

@@ -285,7 +285,7 @@ class SchSrch extends React.Component {
   renderViewLogin () {
     return (
       <div className='view view-login'>
-        <LoginView loginState={AppState.getState().loginView} currentAuthToken={AppState.getState().authToken} />
+        <LoginView />
       </div>
     )
   }
