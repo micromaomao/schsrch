@@ -195,6 +195,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
               return
             }
             req.authId = user
+            req.authSession = session
             next()
           }, err => next(err))
         }
@@ -303,6 +304,13 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           })
         })
       })
+    })
+
+    rMain.delete('/auth/session/', requireAuthentication, function (req, res, next) {
+      PastPaperAuthSession.update({_id: req.authSession._id}, {$set: {valid: false}}, {multi: false}).then(() => {
+        res.status(200)
+        res.end()
+      }, err => next(err))
     })
 
     rMain.post('/collections/new', requireAuthentication, function (req, res, next) {

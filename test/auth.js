@@ -300,4 +300,31 @@ module.exports = (schsrch, dbModel) =>
     }
     testInvalidUsername('mao\nwtm')
     testInvalidUsername('mao wtm')
+
+    it('should be able to invalid session', function (done) {
+      getNewToken().then(tokenHex => {
+        supertest(schsrch)
+          .delete('/auth/session/')
+          .set('Authorization', 'Bearer ' + tokenHex)
+          .expect(200)
+          .end(err => {
+            if (err) {
+              done(err)
+              return
+            }
+            PastPaperAuthSession.find({authToken: Buffer.from(tokenHex, 'hex')}).then(ass => {
+              if (ass.length > 1 || (ass.length === 1 && ass[0].valid)) {
+                done(new Error('Session still present.'))
+                return
+              }
+              supertest(schsrch)
+                .get('/auth/')
+                .set('Authorization', 'Bearer ' + tokenHex)
+                .expect(401)
+                .expect(res => res.text.should.match(/token invalid/))
+                .end(done)
+            }, err => done(err))
+          })
+      }, err => done(err))
+    })
   })
