@@ -12,7 +12,9 @@ class Sidebar extends React.Component {
       myCollectionsError: null,
       addingCollection: null,
       newlyAddedCollection: null,
-      collectionCreationError: null
+      collectionCreationError: null,
+      userOperationProgressText: null,
+      userOperationError: null
     }
     this.handleTopClick = this.handleTopClick.bind(this)
     this.handleMyCollectionsClick = this.handleMyCollectionsClick.bind(this)
@@ -24,18 +26,34 @@ class Sidebar extends React.Component {
     return (
       <div className={'sidebar ' + (this.props.show ? 'show' : 'hide')}>
         <div className='top' onClick={this.handleTopClick}>
-          <div className='username'>
-            {!authToken && !loginInfo ? 'Login or register\u2026' : null}
-            {authToken && !loginInfo ? 'Getting your info\u2026' : null}
-            {loginInfo ? loginInfo.username : null}
-          </div>
-          {authToken
-            ? (
-                <div className='logout' ref={f => this.sidebarLogoutBtn = f}>
-                  <svg className="icon ii-logout"><use href="#ii-logout" xlinkHref="#ii-logout"></use></svg>
-                </div>
-              ) : null}
+          {!this.state.userOperationProgressText ?
+            (
+              <div className='username'>
+                {!authToken && !loginInfo ? 'Login or register\u2026' : null}
+                {authToken && !loginInfo ? 'Getting your info\u2026' : null}
+                {loginInfo ? loginInfo.username : null}
+              </div>
+            ) : null}
+          {!this.state.userOperationProgressText && authToken ?
+            (
+              <div className='logout' ref={f => this.sidebarLogoutBtn = f}>
+                <svg className="icon ii-logout"><use href="#ii-logout" xlinkHref="#ii-logout"></use></svg>
+              </div>
+            ) : null}
+          {this.state.userOperationProgressText ?
+            (
+              <div className='username'>
+                {this.state.userOperationProgressText}
+              </div>
+            ) : null}
         </div>
+        {this.state.userOperationError && !this.state.userOperationProgressText ?
+          (
+            <div className='userOperationError'>
+              <div className='error'>{this.state.userOperationError.message}</div>
+              <div className='clear' onClick={evt => this.setState({userOperationError: null})}>Dismiss</div>
+            </div>
+          ) : null}
         <div className='menu'>
           <div className={'menuitem' + (view === 'home' ? ' current' : '')} onClick={evt => AppState.dispatch({type: 'home'})}>Home</div>
           {loginInfo ?
@@ -108,7 +126,14 @@ class Sidebar extends React.Component {
         nextProps.authToken !== this.props.authToken || nextProps.show !== this.props.show) {
       this.setState({
         myCollectionsError: null,
-        newlyAddedCollection: null
+        newlyAddedCollection: null,
+        userOperationError: null
+      })
+    }
+    if (this.props.authToken !== nextProps.authToken) {
+      this.setState({
+        userOperationProgressText: null,
+        userOperationError: null
       })
     }
   }
@@ -168,13 +193,35 @@ class Sidebar extends React.Component {
   }
 
   handleTopClick (evt) {
-    let authTokenHave = !!AppState.getState().authToken
-    if (!authTokenHave) {
+    let authTokenHave = !!this.props.authToken
+    if (!authTokenHave && !this.state.userOperationProgressText) {
       AppState.dispatch({type: 'login-view'})
     } else if (this.sidebarLogoutBtn && (evt.target === this.sidebarLogoutBtn || this.sidebarLogoutBtn.contains(evt.target))) {
-      AppState.dispatch({type: 'clear-token'})
-      // FIXME: Not secure. User expect token to be invalidated.
+      this.logout()
     }
+  }
+
+  logout () {
+    this.setState({
+      userOperationProgressText: 'Logging you out\u2026',
+      userOperationError: null
+    })
+    let authHeaders = new Headers()
+    let authToken = this.props.authToken
+    authHeaders.append('Authorization', 'Bearer ' + authToken)
+    fetch('/auth/session/', {method: 'DELETE', headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
+      if (authToken !== this.props.authToken) return
+      this.setState({
+        userOperationProgressText: null
+      })
+      AppState.dispatch({type: 'clear-token'})
+    }, err => {
+      if (authToken !== this.props.authToken) return
+      this.setState({
+        userOperationError: err,
+        userOperationProgressText: null
+      })
+    })
   }
 
   handleMyCollectionsClick (evt) {
