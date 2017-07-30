@@ -270,8 +270,14 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     rMain.post('/auth/challenges/replace/', requireAuthentication, function (req, res, next) {
       postJsonReceiver(req, res, next, parsed => {
         req.authId.granterReplace(parsed).then(() => {
-          res.status(200)
-          res.end()
+          PastPaperAuthSession.update({userId: req.authId._id, _id: {$ne: req.authSession._id}}, {$set: {valid: false}}, {multi: true}).then(() => {
+            res.status(200)
+            res.end()
+          }, err => {
+            console.error(err)
+            next(err)
+            PastPaperAuthSession.remove({userId: req.authId._id, _id: {$ne: req.authSession._id}}).catch(err => console.error(err))
+          })
         }, err => {
           res.status(400)
           res.send(err.message)

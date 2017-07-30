@@ -327,4 +327,83 @@ module.exports = (schsrch, dbModel) =>
           })
       }, err => done(err))
     })
+
+    it('replacing challenge should invalid all session except the current', function (done) {
+      let user = new PastPaperId({
+        creationTime: Date.now(),
+        username: 'test-rep-challenge-logout'
+      })
+      user.save().then(() => {
+        return Promise.all([PastPaperAuthSession.newSession(user._id, '::1'), PastPaperAuthSession.newSession(user._id, '::1'), PastPaperAuthSession.newSession(user._id, '::1')])
+      })
+      .then(tokens => {
+        return Promise.all(tokens.map(token => {
+          return new Promise((resolve, reject) => {
+            supertest(schsrch)
+              .get('/auth/')
+              .set('Authorization', 'Bearer ' + token.toString('hex'))
+              .expect(200)
+              .end(err => {
+                if (err) {
+                  reject(err)
+                } else {
+                  resolve()
+                }
+              })
+          })
+        })).then(() => Promise.resolve(tokens))
+      })
+      .then(tokens => {
+        return new Promise((resolve, reject) => {
+          supertest(schsrch)
+            .post('/auth/challenges/replace/')
+            .set('Authorization', 'Bearer ' + tokens[0].toString('hex'))
+            .send({
+              type: 'password',
+              password: 'test-password'
+            })
+            .expect(200)
+            .end(err => {
+              if (err) {
+                reject(err)
+              } else {
+                resolve(tokens)
+              }
+            })
+        })
+      })
+      .then(tokens => {
+        return Promise.all(tokens.slice(1).map(token => {
+          return new Promise((resolve, reject) => {
+            supertest(schsrch)
+              .get('/auth/')
+              .set('Authorization', 'Bearer ' + token.toString('hex'))
+              .expect(401)
+              .end(err => {
+                if (err) {
+                  reject(err)
+                } else {
+                  resolve()
+                }
+              })
+          })
+        })).then(() => Promise.resolve(tokens))
+      })
+      .then(tokens => {
+        return new Promise((resolve, reject) => {
+          supertest(schsrch)
+            .get('/auth/')
+            .set('Authorization', 'Bearer ' + tokens[0].toString('hex'))
+            .expect(200)
+            .end(err => {
+              if (err) {
+                reject(err)
+              } else {
+                resolve()
+              }
+            })
+        })
+      })
+      .then(() => done(), err => done(err))
+    })
   })
