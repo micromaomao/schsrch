@@ -48,7 +48,7 @@ class AnnotationLayer extends React.Component {
           ? (() => {
               let creating = this.state.creating
               if (creating.type === 'prompt') {
-                const promptWidth = 40 * 2 + 2*2
+                const promptWidth = 40 + 2*2
                 const promptHeight = 40 + 2*2
                 // 2*2 for borders.
 
@@ -64,9 +64,6 @@ class AnnotationLayer extends React.Component {
                     }}>
                     <span ref={f => this.creationPromptSketch = f}>
                       <svg className="icon ii-pencil"><use href="#ii-pencil" xlinkHref="#ii-pencil" /></svg>
-                    </span>
-                    <span>
-                      <svg className="icon ii-textbox"><use href="#ii-textbox" xlinkHref="#ii-textbox" /></svg>
                     </span>
                   </div>
                 )
