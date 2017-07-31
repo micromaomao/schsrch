@@ -162,7 +162,7 @@ module.exports = (schsrch, dbModel) =>
       .then(token => {
         return new Promise((resolve, reject) => {
           supertest(schsrch)
-            .post('/auth/challenges/replace/')
+            .post('/auths/challenges/replace/')
             .set('Authorization', 'Bearer ' + token.toString('hex'))
             .send({
               type: 'password',
@@ -304,7 +304,7 @@ module.exports = (schsrch, dbModel) =>
     it('should be able to invalid session', function (done) {
       getNewToken().then(tokenHex => {
         supertest(schsrch)
-          .delete('/auth/session/')
+          .delete('/auths/session/')
           .set('Authorization', 'Bearer ' + tokenHex)
           .expect(200)
           .end(err => {
@@ -356,7 +356,7 @@ module.exports = (schsrch, dbModel) =>
       .then(tokens => {
         return new Promise((resolve, reject) => {
           supertest(schsrch)
-            .post('/auth/challenges/replace/')
+            .post('/auths/challenges/replace/')
             .set('Authorization', 'Bearer ' + tokens[0].toString('hex'))
             .send({
               type: 'password',

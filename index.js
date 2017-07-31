@@ -268,7 +268,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       }, err => next(err))
     })
 
-    rMain.post('/auth/challenges/replace/', requireAuthentication, function (req, res, next) {
+    rMain.post('/auths/challenges/replace/', requireAuthentication, function (req, res, next) {
       postJsonReceiver(req, res, next, parsed => {
         req.authId.granterReplace(parsed).then(() => {
           PastPaperAuthSession.update({userId: req.authId._id, _id: {$ne: req.authSession._id}}, {$set: {valid: false}}, {multi: true}).then(() => {
@@ -313,7 +313,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       })
     })
 
-    rMain.delete('/auth/session/', requireAuthentication, function (req, res, next) {
+    rMain.delete('/auths/session/', requireAuthentication, function (req, res, next) {
       PastPaperAuthSession.update({_id: req.authSession._id}, {$set: {valid: false}}, {multi: false}).then(() => {
         res.status(200)
         res.end()

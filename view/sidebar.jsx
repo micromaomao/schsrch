@@ -209,7 +209,7 @@ class Sidebar extends React.Component {
     let authHeaders = new Headers()
     let authToken = this.props.authToken
     authHeaders.append('Authorization', 'Bearer ' + authToken)
-    fetch('/auth/session/', {method: 'DELETE', headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
+    fetch('/auths/session/', {method: 'DELETE', headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
       if (authToken !== this.props.authToken) return
       this.setState({
         userOperationProgressText: null

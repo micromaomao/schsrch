@@ -278,7 +278,7 @@ class LoginView extends React.Component {
     let authHeaders = new Headers()
     authHeaders.append('Authorization', 'Bearer ' + this.state.regNewToken)
     authHeaders.append('Content-Type', 'application/json')
-    fetch('/auth/challenges/replace/', {method: 'POST', headers: authHeaders, body: JSON.stringify({
+    fetch('/auths/challenges/replace/', {method: 'POST', headers: authHeaders, body: JSON.stringify({
       type: 'password',
       password
     })}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(() => {
