@@ -9,6 +9,7 @@ const FetchErrorPromise = require('./fetcherrorpromise.js')
 const FilePreview = require('./filepreview.jsx')
 const Collection = require('./collection.jsx')
 const { LoginView } = require('./auth.jsx')
+const ChallengeReplaceView = require('./challengereplace.jsx')
 const PaperUtils = require('./paperutils.js')
 const Sidebar = require('./sidebar.jsx')
 
@@ -79,6 +80,8 @@ class SchSrch extends React.Component {
           return this.renderViewCollection()
         case 'login':
           return this.renderViewLogin()
+        case 'challenge-replace':
+          return this.renderViewChallengeReplace()
       }
     })()
     let aState = AppState.getState()
@@ -289,6 +292,14 @@ class SchSrch extends React.Component {
       </div>
     )
   }
+  renderViewChallengeReplace () {
+    return (
+      <div className='view view-challenge-replace'>
+        <ChallengeReplaceView authToken={AppState.getState().authToken} />
+      </div>
+    )
+  }
+
   componentDidMount () {
     this.handleUpdate()
     this.unsub = AppState.subscribe(this.handleUpdate)

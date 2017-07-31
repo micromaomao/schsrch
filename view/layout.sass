@@ -89,7 +89,6 @@ $sidebar-width: 300px
       flex-direction: row
       align-items: flex-end
       align-content: flex-end
-      justify-content: space-between
       flex-wrap: wrap
       cursor: pointer
       -webkit-tap-highlight-color: transparent
@@ -103,10 +102,13 @@ $sidebar-width: 300px
       .username
         flex-shrink: 0
         flex-grow: 0
-      .logout
+        margin-right: auto
+      .logout, .password
         cursor: pointer
         padding: 0.5rem
-        margin: -0.5rem
+        margin: -0.5rem 0
+        &:last-child
+          margin-right: -0.5rem
         display: flex
         flex-direction: row
         align-items: center
@@ -1337,7 +1339,8 @@ $feedback-top-height: 2rem + 1.3rem
             color: $color-link
             cursor: pointer
 
-.schsrch .view.view-login
+.schsrch .view.view-login,
+.schsrch .view.view-challenge-replace
   text-align: center
   > .contain
     max-width: 800px
@@ -1351,6 +1354,12 @@ $feedback-top-height: 2rem + 1.3rem
       display: inline-block
       font-size: 1.5rem
       font-weight: normal
+    .btn
+      padding: 1rem 0
+      a
+        color: $color-link
+        padding: 0.5rem
+        cursor: pointer
     .tokenInput, .usernameInput, .passwordInput
       border-top: none
       border-right: none
@@ -1367,33 +1376,35 @@ $feedback-top-height: 2rem + 1.3rem
       border-bottom: solid 1px red
       padding-top: 0.5rem
       padding-bottom: 0.5rem
-    .btn
-      padding: 1rem 0
-      a
-        color: $color-link
-        padding: 0.5rem
-        cursor: pointer
+      &.bmargin
+        margin-bottom: 1rem
     .progress
       color: $color-primary
+  &.view-login > .contain .stage,
+  &.view-challenge-replace > .contain
+    > .back
+      display: inline-block
+      padding: 0.5rem 1rem
+      color: $color-link
+      border-bottom: $color-link solid 1px
+      cursor: pointer
+      &.bmargin
+        margin-bottom: 1rem
+  &.view-login > .contain .stage .cstate.loading,
+  &.view-challenge-replace > .contain > .loading
+    color: $color-primary
+    font-size: 1rem
+    padding: 0.5rem
+    border-top: solid 1px $color-primary
+    border-bottom: solid 1px $color-primary
+.schsrch .view.view-login
+  > .contain
     .stage
-      > .back
-        display: inline-block
-        padding: 0.5rem 1rem
-        color: $color-link
-        border-bottom: $color-link solid 1px
-        cursor: pointer
-        &.bmargin
-          margin-bottom: 1rem
-      .cstate
-        &.loading
-          color: $color-primary
-          font-size: 1rem
-          padding: 0.5rem
-          border-top: solid 1px $color-primary
-          border-bottom: solid 1px $color-primary
-        &.notexist
-          .license
-            font-weight: bold
+      .cstate.notexist .license
+        font-weight: bold
       &.username, &.setPassword
         .usernameInput, .passwordInput
           text-align: center
+.schsrch .view.view-challenge-replace
+  .main
+    margin-top: 1rem

@@ -96,6 +96,8 @@ AppState.subscribe(() => {
     let stateView = nState.view
     if (stateView === 'login') {
       stateView = nState.loginView.from
+    } else if (stateView === 'challenge-replace') {
+      stateView = nState.challengeReplace.from
     }
     if (stateView !== 'home') {
       switch (stateView) {

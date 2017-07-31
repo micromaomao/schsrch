@@ -327,6 +327,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })()
     case 'login-view':
+      if (state.view === 'login') return state
       return Object.assign({}, state, {
         view: 'login',
         loginView: {
@@ -401,6 +402,20 @@ let AppState = createStore(function (state = {}, action) {
     case 'login-info':
       return Object.assign({}, state, {
         loginInfo: action.info
+      })
+    case 'view-challenge-replace':
+      if (!state.authToken || state.view === 'challenge-replace') return state
+      return Object.assign({}, state, {
+        showSidebar: false,
+        view: 'challenge-replace',
+        challengeReplace: {
+          from: state.view
+        }
+      })
+    case 'close-challenge-replace':
+      return Object.assign({}, state, {
+        view: (state.challengeReplace ? state.challengeReplace.from : state.view),
+        challengeReplace: null
       })
   }
 })

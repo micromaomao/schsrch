@@ -36,7 +36,13 @@ class Sidebar extends React.Component {
             ) : null}
           {!this.state.userOperationProgressText && authToken ?
             (
-              <div className='logout' ref={f => this.sidebarLogoutBtn = f}>
+              <div className='password' ref={f => this.sidebarPasswordBtn = f} title='Change password'>
+                <svg className="icon ii-lock"><use href="#ii-lock" xlinkHref="#ii-lock"></use></svg>
+              </div>
+            ) : null}
+          {!this.state.userOperationProgressText && authToken ?
+            (
+              <div className='logout' ref={f => this.sidebarLogoutBtn = f} title='Logout'>
                 <svg className="icon ii-logout"><use href="#ii-logout" xlinkHref="#ii-logout"></use></svg>
               </div>
             ) : null}
@@ -198,6 +204,8 @@ class Sidebar extends React.Component {
       AppState.dispatch({type: 'login-view'})
     } else if (this.sidebarLogoutBtn && (evt.target === this.sidebarLogoutBtn || this.sidebarLogoutBtn.contains(evt.target))) {
       this.logout()
+    } else if (this.sidebarPasswordBtn && (evt.target === this.sidebarPasswordBtn || this.sidebarPasswordBtn.contains(evt.target))) {
+      AppState.dispatch({type: 'view-challenge-replace'})
     }
   }
 
