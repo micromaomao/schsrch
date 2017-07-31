@@ -191,7 +191,8 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
         } else {
           PastPaperId.findOne({_id: session.userId}).then(user => {
             if (!user) {
-              next(new Error('User no longer existed.'))
+              res.status(401)
+              res.send('Authorization token invalid.')
               return
             }
             req.authId = user
