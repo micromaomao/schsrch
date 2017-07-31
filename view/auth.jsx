@@ -79,6 +79,12 @@ class LoginView extends React.Component {
                             <div className='btn'>
                               <a onClick={this.handleRegister}>Register</a>
                             </div>
+                            <p className='license'>
+                              By registering on SchSrch, you allow all your public collections to be
+                              published under any Creative Common license of your choice that do not prohibit
+                              adaptations of your work to be shared. This is the only condition for your
+                              registration.
+                            </p>
                           </div>
                         )
                       } else return null
