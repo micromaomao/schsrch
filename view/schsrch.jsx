@@ -21,7 +21,8 @@ class SchSrch extends React.Component {
       view: 'home',
       viewScrollAtTop: true,
       showFeedback: false,
-      showSidebar: false
+      showSidebar: false,
+      query: ''
     }
     this.handleUpdate = this.handleUpdate.bind(this)
     this.handleQuery = this.handleQuery.bind(this)
@@ -43,15 +44,17 @@ class SchSrch extends React.Component {
       this.setState({showSidebar: state.showSidebar, coverHideAnimation: Date.now()})
     }
 
-    this.setState({view: AppState.getState().view})
+    this.setState({view: state.view, query: state.querying ? state.querying.query : ''})
 
     if (state.querying && !state.querying.loading && !state.querying.error && !state.querying.result) {
       this.handleQuery(state.querying.query)
     }
   }
   componentDidUpdate (prevProps, prevState) {
-    if (prevState.view !== this.state.view && this.searchbar && AppState.getState().querying) {
-      this.searchbar.setQuery(AppState.getState().querying.query)
+    if (prevState.view !== this.state.view && this.searchbar && this.state.query) {
+      this.searchbar.setQuery(this.state.query)
+      this.searchbar.focus()
+    } else if (typeof prevState.query === 'string' && typeof this.state.query === 'string' && (prevState.query.trim() === '') !== (this.state.query.trim() === '')) {
       this.searchbar.focus()
     }
   }
@@ -238,7 +241,7 @@ class SchSrch extends React.Component {
             querying={AppState.getState().querying}
             previewing={previewing}
             showSmallPreview={!this.shouldShowBigPreview()}
-            onRetry={() => this.handleQuery(AppState.getState().querying.query)}
+            onRetry={() => this.handleQuery(this.state.query)}
             onChangeQuery={nQuery => this.handleQuery(nQuery)}
             smallerSetName={this.state.server ? false : window.innerWidth <= 500 || displayingBigPreview} />
         </div>
@@ -260,11 +263,12 @@ class SchSrch extends React.Component {
       AppState.dispatch({type: 'query', query: ''})
       return
     }
-    let oldQuery = AppState.getState().querying ? AppState.getState().querying.query : ''
+    let oldQuery = this.state.query
     AppState.dispatch({type: 'query-perpare', query})
-    if (AppState.getState().querying && (AppState.getState().querying.query.trim() !== oldQuery.trim() || !AppState.getState().querying.result)) {
+    if (AppState.getState().querying && (this.state.query.trim() !== oldQuery.trim() || !AppState.getState().querying.result)) {
       AppState.dispatch({type: 'queryStartRequest'})
       fetch('/search/?query=' + encodeURIComponent(query.trim()) + '&as=json').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
+        // AppState will check if the query has changed since the request started.
         if (result.response === 'error') {
           AppState.dispatch({type: 'queryError', query, error: result.err})
           return
@@ -311,6 +315,7 @@ class SchSrch extends React.Component {
     this.handleUpdate()
     this.unsub = AppState.subscribe(this.handleUpdate)
     if (AppState.getState().previewing === null) this.searchbar.focus()
+    // not using this.state.query since it may not be perpared. (React sort of buffers the state changes)
     this.searchbar.setQuery(AppState.getState().querying ? AppState.getState().querying.query : '')
     AppState.getState().querying && this.handleQuery(AppState.getState().querying.query)
   }
