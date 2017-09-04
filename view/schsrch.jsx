@@ -52,6 +52,7 @@ class SchSrch extends React.Component {
   componentDidUpdate (prevProps, prevState) {
     if (prevState.view !== this.state.view && this.searchbar && AppState.getState().querying) {
       this.searchbar.setQuery(AppState.getState().querying.query)
+      this.searchbar.focus()
     }
   }
   render () {
@@ -309,7 +310,7 @@ class SchSrch extends React.Component {
   componentDidMount () {
     this.handleUpdate()
     this.unsub = AppState.subscribe(this.handleUpdate)
-    if (AppState.getState().previewing === null) this.searchbar.input.focus()
+    if (AppState.getState().previewing === null) this.searchbar.focus()
     this.searchbar.setQuery(AppState.getState().querying ? AppState.getState().querying.query : '')
     AppState.getState().querying && this.handleQuery(AppState.getState().querying.query)
   }

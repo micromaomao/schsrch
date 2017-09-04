@@ -76,6 +76,9 @@ class SearchBar extends React.Component {
       this.setState({loadingStart: nextProps.loading ? Date.now() : null})
     }
   }
+  componentWillUnmount () {
+    this.blur()
+  }
   chooseSubject (id) {
     this.setQuery(id + ' ')
     setTimeout(() => this.input.focus(), 1)
@@ -177,14 +180,8 @@ class SearchBar extends React.Component {
               value={this.state.query}
               placeholder={this.state.server && !this.state.query ? placeholderText : null}
               onChange={this.handleQueryChange}
-              onFocus={evt => {
-                this.setState({focus: true})
-                AppState.dispatch({type: 'queryFocus'})
-              }}
-              onBlur={evt => {
-                this.setState({focus: false, subjectHintSelect: null})
-                AppState.dispatch({type: 'queryUnfocus'})
-              }}
+              onFocus={evt => this.focus(true)}
+              onBlur={evt => this.blur(true)}
               onKeyDown={this.handleKey}
               name='query'
               autoComplete='off' />
@@ -222,6 +219,16 @@ class SearchBar extends React.Component {
       )
     }
     return renderT
+  }
+  focus (dryRun) {
+    if (!dryRun) this.input.focus()
+    this.setState({focus: true})
+    AppState.dispatch({type: 'queryFocus'})
+  }
+  blur (dryRun) {
+    if (!dryRun) this.input.blur()
+    this.setState({focus: false, subjectHintSelect: null})
+    AppState.dispatch({type: 'queryUnfocus'})
   }
 }
 
