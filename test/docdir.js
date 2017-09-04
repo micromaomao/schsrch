@@ -9,7 +9,8 @@ module.exports = (schsrch, dbModel) =>
     const {PastPaperDoc} = dbModel
     let thePaper
     let theMarkScheme
-    let theMCQMarkScheme
+    let MCQms1
+    let MCQms2
     before(function (done) {
       PastPaperDoc.findOne({subject: '0470', type: 'qp'}).then(doc => {
         doc.should.be.an.Object()
@@ -25,9 +26,16 @@ module.exports = (schsrch, dbModel) =>
       }, err => done(err))
     })
     before(function (done) {
-      PastPaperDoc.findOne({subject: '0470', type: 'ms', paper: 1}).then(doc => {
+      PastPaperDoc.findOne({subject: '0470', type: 'ms', paper: 1, variant: 1}).then(doc => {
         doc.should.be.an.Object()
-        theMCQMarkScheme = doc
+        MCQms1 = doc
+        done()
+      })
+    })
+    before(function (done) {
+      PastPaperDoc.findOne({subject: '0470', type: 'ms', paper: 1, variant: 2}).then(doc => {
+        doc.should.be.an.Object()
+        MCQms2 = doc
         done()
       })
     })
@@ -101,13 +109,22 @@ module.exports = (schsrch, dbModel) =>
         }
       }).then(() => done(), err => done(err))
     })
-    it('should work for MCQ Mark Scheme', function (done) {
+    it('should work for MCQ Mark Scheme (type 1)', function (done) {
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + theMCQMarkScheme._id + '/?as=dir')
+          .get('/doc/' + MCQms1._id + '/?as=dir')
           .set('Host', 'schsrch.xyz'), true)
         .expect(res => res.body.mcqMs.should.be.true())
         .expect(res => res.body.dirs.map(x => x.qT).join('').should.equal('DCBCB BCACD BDADD BDCDC BCCDA ABCDB BBACB CDBBC'.replace(/ /g, '')))
+        .end(done)
+    })
+    it('should work for MCQ Mark Scheme (type 2)', function (done) {
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + MCQms2._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz'), true)
+        .expect(res => should.ok(res.body.mcqMs))
+        .expect(res => res.body.dirs.map(x => x.qT).join('').should.equal('DDADC BBCDA ADCAA CCDAD ABBBC BCCAA BACAC BCABC'.replace(/ /g, '')))
         .end(done)
     })
   })
