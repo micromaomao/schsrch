@@ -42,10 +42,16 @@ class SchSrch extends React.Component {
     if (state.showSidebar !== this.state.showSidebar) {
       this.setState({showSidebar: state.showSidebar, coverHideAnimation: Date.now()})
     }
+
     this.setState({view: AppState.getState().view})
 
     if (state.querying && !state.querying.loading && !state.querying.error && !state.querying.result) {
       this.handleQuery(state.querying.query)
+    }
+  }
+  componentDidUpdate (prevProps, prevState) {
+    if (prevState.view !== this.state.view && this.searchbar && AppState.getState().querying) {
+      this.searchbar.setQuery(AppState.getState().querying.query)
     }
   }
   render () {
