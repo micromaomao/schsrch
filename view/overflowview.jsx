@@ -3,6 +3,10 @@ const CIESubjects = require('./CIESubjects.js')
 const PaperUtils = require('./paperutils.js')
 
 class OverflowView extends React.Component {
+  constructor (props) {
+    super(props)
+    this.handleSyClick = this.handleSyClick.bind(this)
+  }
   render () {
     let query = this.props.query.trim()
     if (query.match(/^\d{4}$/)) {
@@ -23,6 +27,11 @@ class OverflowView extends React.Component {
       return (
         <div className='overflow'>
           {subject}
+          {subj ? (
+            <p className='sy'>
+              <a href={'https://cie.org.uk/' + subj.id} onClick={this.handleSyClick}>Syllabus &amp; CIE Page for {subj.level} {subj.name}</a>
+            </p>
+          ) : null}
           <p>If you know the time (season and year) of the paper you want, add it to your search like this:</p>
           <pre>{`${query} ${demoTime}`}</pre>
           <p>In this case, <span className='time'>{demoTime}</span> means the May - June exam in {year}. Other exam seasons can be expressed as:</p>
@@ -48,6 +57,10 @@ class OverflowView extends React.Component {
         </div>
       )
     }
+  }
+  handleSyClick (evt) {
+    evt.preventDefault()
+    window.open(evt.target.href)
   }
 }
 

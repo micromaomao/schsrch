@@ -558,6 +558,14 @@ $sidebar-width: 300px
     .subject
       color: $color-secondary-text
       font-size: 80%
+    .sy
+      a
+        color: $color-link
+        cursor: pointer
+        transition: color 100ms
+        text-decoration: none
+        &:active
+          color: darken($color-link, 10%)
     pre, p
       margin: 0.5rem 0
       padding: 0
@@ -574,7 +582,7 @@ $sidebar-width: 300px
     padding: 0 0 0.5rem 0
     background-color: rgba($color-primary, 0.05)
     .setname
-      padding: 0.5rem 1rem 
+      padding: 0.5rem 1rem
       background-color: rgba($color-primary, 0.1)
       font-size: 1rem
       color: $color-secondary-text
