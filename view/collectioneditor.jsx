@@ -456,7 +456,7 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
     ele.classList.add('paperCropFragment')
     let topbar = sketch.ownerDocument.createElement('div')
     topbar.classList.add('topbar')
-    topbar.textContent = `${PaperUtils.setToString(this.state.docMeta)} p${this.props.structure.page + 1}`
+    topbar.textContent = `${PaperUtils.setToString(this.state.docMeta).replace(/_/g, ' ')} p${this.props.structure.page + 1}`
     ele.appendChild(topbar)
     let svg = this.state.docJson.svg
     let parser = new DOMParser()
