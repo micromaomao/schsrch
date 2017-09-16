@@ -94,8 +94,14 @@ class Collection extends React.Component {
             <div className='menu'>
               {this.state.menuMode === 'normal' ?
                 (
-                  <span className='menuitem print' onClick={this.handlePrint}>Print</span>
+                  <span className='menuitem print' onClick={evt => this.setState({menuMode: 'print'})}>Print</span>
                 ) : null}
+              {this.state.menuMode === 'print' ?
+                [
+                  <span key={0}>While printing / exporting PDF, please set the paper size to A4, otherwise wired things may happen.</span>,
+                  <span key={1} className='menuitem' onClick={this.handlePrint}>Print</span>,
+                  <span key={2} className='menuitem' onClick={evt => this.setState({menuMode: 'normal'})}>Cancel</span>
+                ] : null}
               {this.state.menuMode === 'normal' && !this.state.noEditAccess ?
                 (
                   <span className='menuitem delete' onClick={evt => this.setState({menuMode: 'delete'})}>Delete</span>
@@ -349,6 +355,8 @@ class Collection extends React.Component {
   }
   handlePrint (evt) {
     if (!this.editor) return
+    let col = this.props.collection
+    if (!col) return
     let printSize = [21.0, 29.7] // cm
     let fd = document.createElement('iframe')
     Object.assign(fd.style, {
@@ -364,7 +372,52 @@ class Collection extends React.Component {
     fd.sandbox = 'allow-modals'
     let bdy = fd.contentDocument.body
     let cssText = require('./collectionprint.sass').toString()
-    bdy.innerHTML = '<style>' + cssText + '</style>' + (this.editor.createPrintFragments().join('\n<div class="fragmentDivide">&nbsp;</div>'))
+    bdy.innerHTML = '<style>' + cssText + '</style>'
+    let fragments = this.editor.createPrintFragments(bdy).map(f => {
+      let fragElement = fd.contentDocument.createElement('div')
+      fragElement.classList.add('fragment')
+      fragElement.innerHTML = f
+      return fragElement
+    })
+    let pages = []
+    function pageBreak () {
+      let lastPage = null
+      if (pages.length > 0) {
+        lastPage = pages[pages.length - 1]
+        let footer = fd.contentDocument.createElement('div')
+        footer.classList.add('footer')
+        footer.textContent = 'page ' + (pages.length)
+        lastPage.appendChild(footer)
+        lastPage.style.maxHeight = lastPage.style.height = '297mm'
+      }
+      let page = fd.contentDocument.createElement('div')
+      page.classList.add('page')
+      bdy.appendChild(page)
+      pages.push(page)
+      let header = fd.contentDocument.createElement('div')
+      header.classList.add('header')
+      if (!col.content || !col.content.name) {
+        header.textContent = 'Untitled SchSrch collection'
+      } else {
+        header.textContent = col.content.name || 'Untitled SchSrch collection'
+      }
+      page.appendChild(header)
+      return page
+    }
+    pageBreak()
+    let minPageHeight = parseFloat(window.getComputedStyle(pages[0]).height)
+    for (let frag of fragments) {
+      let lastPage = pages[pages.length - 1]
+      lastPage.appendChild(frag)
+      let nh = parseFloat(window.getComputedStyle(lastPage).height)
+      if (nh > minPageHeight) {
+        lastPage.removeChild(frag)
+        let newPage = pageBreak()
+        newPage.appendChild(frag)
+      }
+    }
+    pageBreak()
+    pages[pages.length - 1].remove()
     fd.contentWindow.print()
     setTimeout(evt => {
       fd.remove()

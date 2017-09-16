@@ -7,6 +7,7 @@ const FetchErrorPromise = require('./fetcherrorpromise.js')
 const SsPdfView = require('./sspdfview.jsx')
 const PaperUtils = require('./paperutils.js')
 const AnnotationLayer = require('./annotationlayer.jsx')
+const nudgeHTMLLines = require('./nudgehtmllines.js')
 
 const AllowedFormattingNodes = /^([bius])$/i // <b>, <i>, <s>, <u>
 let editorNodeTypeNameTable = {}
@@ -100,10 +101,9 @@ class HiderEditorNode extends BaseEditorNodeComponent {
               ) : null}
         </div>
         <div className='contentcontain'>
-          {!this.state.hidden
-            ? (
-                <Editor structure={this.props.structure.content || []} onChange={this.handleInputChange} disabled={this.props.disabled} />
-              ) : null}
+          <div className={this.state.hidden ? 'hiddeneditor' : 'editorcontain'}>
+            <Editor structure={this.props.structure.content || []} onChange={this.handleInputChange} disabled={this.props.disabled} ref={f => this.editor = f} />
+          </div>
         </div>
       </div>
     )
@@ -129,6 +129,18 @@ class HiderEditorNode extends BaseEditorNodeComponent {
   toggleHide () {
     this.setState({
       hidden: !this.state.hidden
+    })
+  }
+  getPrintFragments (sketch) {
+    if (!this.editor) throw new Error('No editor.')
+    return this.editor.createPrintFragments(sketch).map(x => {
+      let shell = sketch.ownerDocument.createElement('div')
+      shell.innerHTML = x
+      let fsc = shell.firstChild
+      if (!fsc) return x
+      if (!fsc.classList.contains('textFragment')) return x
+      fsc.classList.add('enhiderbackground')
+      return fsc.outerHTML
     })
   }
 }
@@ -875,7 +887,20 @@ class Editor extends React.Component {
     for (let current of structure) {
       switch (current.type) {
         case 'text':
-        fragments.push('<p>' + this.normalizeHTML(current.html) + '</p>') // TODO
+        let nudgeElement = sketch.ownerDocument.createElement('div')
+        nudgeElement.classList.add('textFragment')
+        nudgeElement.classList.add('nudge')
+        sketch.appendChild(nudgeElement)
+        let lines = nudgeHTMLLines(this.normalizeHTML(current.html), nudgeElement)
+        nudgeElement.remove()
+        if (lines.length > 0) {
+          fragments.push('<div class="beginParagraph"></div>')
+          for (let line of lines) {
+            fragments.push('<div class="textFragment">' + line + '</div>')
+          }
+        } else {
+          fragments.push('<div class="emptyParagraph"></div>')
+        }
         break
         default:
         let editorNodeComponent = this.currentEditorNodesFromStructure.get(current)

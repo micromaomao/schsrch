@@ -8,8 +8,49 @@ body
   color: #222222
   background-color: white
   font-size: 16px
+  font-family: sans-serif
+  width: 210mm
+  *
+    box-sizing: border-box
+    overflow-wrap: break-word
+    word-wrap: break-word
 
-.fragmentDivide
-  height: 1px
-  font-size: 0
-  border-bottom: dashed 2px $color-primary
+.page
+  margin: 0
+  padding: 0
+  min-height: 297mm - 20mm
+  height: auto
+  page-break-after: always
+  page-break-inside: avoid
+  position: relative
+
+.fragment
+  margin: 0
+  padding: 0
+  > *
+    margin: 0
+
+.textFragment
+  padding: 0 1rem 0 3rem
+.beginParagraph
+  height: 1rem
+.emptyParagraph
+  height: 0.8rem
+
+.header, .footer
+  color: $color-primary
+  margin: 0
+.header
+  padding: 1rem 0.5rem 0.5rem 0.5rem
+  text-align: left
+  border-bottom: solid 1px $color-primary
+.footer
+  padding: 0.5rem 0.5rem 1rem 0.5rem
+  text-align: right
+  position: absolute
+  bottom: 0
+  left: 0
+  right: 0
+
+.textFragment.enhiderbackground
+  background-color: lighten($color-secondary-text, 45%)
