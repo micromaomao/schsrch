@@ -13,11 +13,12 @@ class Collection extends React.Component {
       menuError: null
     }
     this.setIntervaled = null
+    this.pushUndoStackTimeout = null
     this.handleInputChange = this.handleInputChange.bind(this)
     this.handleTitleChange = this.handleTitleChange.bind(this)
     this.handleGlobaleKey = this.handleGlobaleKey.bind(this)
     this.handleDelete = this.handleDelete.bind(this)
-    this.pushUndoStackTimeout = null
+    this.handlePrint = this.handlePrint.bind(this)
   }
   handleInputChange (content) {
     AppState.dispatch({type: 'collection-edit-content', content: Object.assign({}, this.props.collection.content, {
@@ -91,6 +92,10 @@ class Collection extends React.Component {
         {this.state.menuOpen ?
           (
             <div className='menu'>
+              {this.state.menuMode === 'normal' ?
+                (
+                  <span className='menuitem print' onClick={this.handlePrint}>Print</span>
+                ) : null}
               {this.state.menuMode === 'normal' && !this.state.noEditAccess ?
                 (
                   <span className='menuitem delete' onClick={evt => this.setState({menuMode: 'delete'})}>Delete</span>
@@ -140,7 +145,7 @@ class Collection extends React.Component {
             : null}
           {col.content !== null && !col.loading
             ? (
-                <Editor structure={col.content.structure || []} onChange={this.handleInputChange} disabled={editDisabled} />
+                <Editor structure={col.content.structure || []} onChange={this.handleInputChange} disabled={editDisabled} ref={f => this.editor = f} />
               )
             : null}
         </div>
@@ -341,6 +346,29 @@ class Collection extends React.Component {
       clearTimeout(this.pushUndoStackTimeout)
       this.pushUndoStackTimeout = null
     }
+  }
+  handlePrint (evt) {
+    if (!this.editor) return
+    let printSize = [21.0, 29.7] // cm
+    let fd = document.createElement('iframe')
+    Object.assign(fd.style, {
+      opacity: 0,
+      width: '1px',
+      height: '1px',
+      display: 'block',
+      position: 'absolute',
+      top: '0',
+      left: '0'
+    })
+    document.body.appendChild(fd)
+    fd.sandbox = 'allow-modals'
+    let bdy = fd.contentDocument.body
+    let cssText = require('./collectionprint.sass').toString()
+    bdy.innerHTML = '<style>' + cssText + '</style>' + (this.editor.createPrintFragments().join('\n<div class="fragmentDivide">&nbsp;</div>'))
+    fd.contentWindow.print()
+    setTimeout(evt => {
+      fd.remove()
+    }, 100)
   }
 }
 

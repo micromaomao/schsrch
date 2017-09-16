@@ -59,6 +59,9 @@ class BaseEditorNodeComponent extends React.Component {
     }
     this.props.onUpdateStructure(null)
   }
+  getPrintFragments (sketch) {
+    return ['<div class="unknowEditorNode">Unknown editor node</div>']
+  }
 }
 
 class HiderEditorNode extends BaseEditorNodeComponent {
@@ -444,6 +447,7 @@ class Editor extends React.Component {
     this.handleInput = this.handleInput.bind(this)
     this.currentDOMStructure = null
     this.currentEditorNodes = new Map() // dom node -> component
+    this.currentEditorNodesFromStructure = new Map() // structure item -> component
     this.inputEventMergeTimeout = null
   }
   componentDidMount () {
@@ -631,6 +635,7 @@ class Editor extends React.Component {
     }
 
     let touchedEditorNodes = new Set()
+    this.currentEditorNodesFromStructure.clear()
     let processEditorNode = (current, currentElement) => {
       // React.render into old node will update the content (and the component's props).
       let componentClass = editorNodeTypeNameTable[current.type]
@@ -667,6 +672,7 @@ class Editor extends React.Component {
         }
       })
       let nodeSet = this.currentEditorNodes
+      let nodeSetFromStructure = this.currentEditorNodesFromStructure
       if (currentElement && this.nodeIsEditorNode(currentElement)) {
         currentElement.dataset.editornode = 'true'
         currentElement.dataset.enType = current.type
@@ -674,6 +680,7 @@ class Editor extends React.Component {
         ReactDOM.render(reactElement, currentElement, function () {
           // `this` is the component.
           nodeSet.set(currentElement, this)
+          nodeSetFromStructure.set(current, this)
           Object.assign(currentElement.dataset, this.toDataset())
         })
         touchedEditorNodes.add(currentElement)
@@ -692,6 +699,7 @@ class Editor extends React.Component {
         }
         ReactDOM.render(reactElement, newNode, function () {
           nodeSet.set(newNode, this)
+          nodeSetFromStructure.set(current, this)
           Object.assign(newNode.dataset, this.toDataset())
         })
         touchedEditorNodes.add(newNode)
@@ -859,6 +867,26 @@ class Editor extends React.Component {
           onInput={this.handleInput} />
       </div>
     )
+  }
+  createPrintFragments (sketch) {
+    let structure = this.props.structure
+    this.structure2dom(structure, this.editorDOM)
+    let fragments = []
+    for (let current of structure) {
+      switch (current.type) {
+        case 'text':
+        fragments.push('<p>' + this.normalizeHTML(current.html) + '</p>') // TODO
+        break
+        default:
+        let editorNodeComponent = this.currentEditorNodesFromStructure.get(current)
+        if (!editorNodeComponent) {
+          throw new Error("Can't find the corrosponding editorNodeComponent of structure " + JSON.stringify(current) + '.')
+        }
+        Array.prototype.push.apply(fragments, editorNodeComponent.getPrintFragments(sketch))
+        break
+      }
+    }
+    return fragments
   }
 }
 
