@@ -18,11 +18,12 @@ body
 .page
   margin: 0
   padding: 0
-  min-height: 297mm - 20mm
   height: auto
+  width: 200mm
   page-break-after: always
   page-break-inside: avoid
   position: relative
+  overflow: hidden
 
 .fragment
   margin: 0
@@ -54,3 +55,18 @@ body
 
 .textFragment.enhiderbackground
   background-color: lighten($color-secondary-text, 45%)
+
+.paperCropFragment
+  padding: 0 0.5rem
+  img
+    max-width: 100%
+    display: block
+    margin: 0.5rem auto 0.5rem auto
+  .topbar
+    margin: 0 -0.5rem
+    padding: 0 0.5rem
+    color: $color-primary
+    background-color: lighten($color-secondary-text, 50%)
+    text-align: center
+    font-size: 0.8rem
+    border-bottom: $color-primary solid 2px

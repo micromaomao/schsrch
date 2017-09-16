@@ -10,7 +10,8 @@ class Collection extends React.Component {
       noEditAccess: false,
       menuOpen: false,
       menuMode: 'normal',
-      menuError: null
+      menuError: null,
+      printingProgress: 0
     }
     this.setIntervaled = null
     this.pushUndoStackTimeout = null
@@ -102,6 +103,11 @@ class Collection extends React.Component {
                   <span key={1} className='menuitem' onClick={this.handlePrint}>Print</span>,
                   <span key={2} className='menuitem' onClick={evt => this.setState({menuMode: 'normal'})}>Cancel</span>
                 ] : null}
+              {this.state.menuMode === 'printing' ?  (
+                <div className='printingProgress'>
+                  <div className='fill' style={{width: (this.state.printingProgress * 100) + '%'}} />
+                </div>
+              ) : null}
               {this.state.menuMode === 'normal' && !this.state.noEditAccess ?
                 (
                   <span className='menuitem delete' onClick={evt => this.setState({menuMode: 'delete'})}>Delete</span>
@@ -370,6 +376,7 @@ class Collection extends React.Component {
     })
     document.body.appendChild(fd)
     fd.sandbox = 'allow-modals'
+    this.setState({menuMode: 'printing', printingProgress: 0})
     let bdy = fd.contentDocument.body
     let cssText = require('./collectionprint.sass').toString()
     bdy.innerHTML = '<style>' + cssText + '</style>'
@@ -405,23 +412,35 @@ class Collection extends React.Component {
       return page
     }
     pageBreak()
+    pages[0].style.height = '277mm'
     let minPageHeight = parseFloat(window.getComputedStyle(pages[0]).height)
-    for (let frag of fragments) {
+    pages[0].style.height = ''
+    let doFrag = i => {
+      if (i >= fragments.length) {
+        pageBreak()
+        pages[pages.length - 1].remove()
+        fd.contentWindow.print()
+        this.setState({menuMode: 'normal'})
+        setTimeout(evt => {
+          fd.remove()
+        }, 100)
+        return
+      }
+      this.setState({printingProgress: i / fragments.length})
+      let frag = fragments[i]
       let lastPage = pages[pages.length - 1]
       lastPage.appendChild(frag)
-      let nh = parseFloat(window.getComputedStyle(lastPage).height)
-      if (nh > minPageHeight) {
-        lastPage.removeChild(frag)
-        let newPage = pageBreak()
-        newPage.appendChild(frag)
-      }
+      requestAnimationFrame(() => {
+        let nh = parseFloat(window.getComputedStyle(lastPage).height)
+        if (nh > minPageHeight) {
+          lastPage.removeChild(frag)
+          let newPage = pageBreak()
+          newPage.appendChild(frag)
+        }
+        doFrag(i + 1)
+      })
     }
-    pageBreak()
-    pages[pages.length - 1].remove()
-    fd.contentWindow.print()
-    setTimeout(evt => {
-      fd.remove()
-    }, 100)
+    doFrag(0)
   }
 }
 

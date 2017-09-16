@@ -449,6 +449,27 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
   handleSspdfViewboxChange (vbox) {
     this.setState({contentViewBox: vbox})
   }
+
+  getPrintFragments (sketch) {
+    if (this.state.loading || this.state.error || !this.state.docJson || !this.state.docMeta || !this.props.structure.doc || !PaperCropEditorNode.isValidBoundary(this.props.structure.boundary)) return [] // TODO
+    let ele = sketch.ownerDocument.createElement('div')
+    ele.classList.add('paperCropFragment')
+    let topbar = sketch.ownerDocument.createElement('div')
+    topbar.classList.add('topbar')
+    topbar.textContent = `${PaperUtils.setToString(this.state.docMeta)} p${this.props.structure.page + 1}`
+    ele.appendChild(topbar)
+    let svg = this.state.docJson.svg
+    let parser = new DOMParser()
+    let svgDoc = parser.parseFromString(svg, 'image/svg+xml').firstChild
+    let bdy = this.props.structure.boundary
+    svgDoc.setAttribute('viewBox', `${bdy[0]} ${bdy[1]} ${bdy[2] - bdy[0]} ${bdy[3] - bdy[1]}`)
+    svgDoc.setAttribute('width', (bdy[2] - bdy[0]) * 1.5)
+    svgDoc.setAttribute('height', (bdy[3] - bdy[1]) * 1.5)
+    let image = sketch.ownerDocument.createElement('img')
+    image.src = 'data:image/svg+xml,' + svgDoc.outerHTML
+    ele.appendChild(image)
+    return [ele.outerHTML]
+  }
 }
 editorNodeTypeNameTable.paperCrop = PaperCropEditorNode
 
