@@ -101,6 +101,11 @@ module.exports = [
     }
   },
   {
+    id: '9231',
+    level: 'A/s',
+    name: 'Mathematics - Further'
+  },
+  {
     id: '9239',
     level: 'A/s',
     name: 'Global Perspectives and Research'
