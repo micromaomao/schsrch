@@ -1,0 +1,53 @@
+\documentclass[a4paper,oneside]{book}
+% Font stuff
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{lmodern}
+
+% Remove page numbers in empty pages
+\usepackage{emptypage}
+
+% Less margin
+\usepackage[a4paper,margin=0.5in]{geometry}
+
+% \includegraphics
+\usepackage{graphicx}
+\graphicspath{
+    {extract/}
+}
+
+% Links from ToC
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{color}
+
+\author{Mao Wtm <m@maowtm.org> (AS-2 Lynn)}
+\title{Physics - All MCQ questions}
+\date{}
+
+\begin{document}
+\frontmatter
+\maketitle
+\tableofcontents
+\mainmatter
+\newcounter{question}
+
+\newcommand\paper[1]{
+  \chapter{#1}
+  % \newpage
+  % \noindent\rule{\textwidth}{1pt}
+  % \centerline{#1}
+}
+\newcommand\duplicateskipped[3]{
+  \vspace{0.5em} \centerline{Question #1 \textit{( #2 )} skipped since it has \hyperref[#3]{appeared before} on page \pageref{#3}.} \vspace{0.5em}
+}
+\newcommand\labelq[1]{
+  \refstepcounter{question}
+  \label{#1}
+}
+
+\input{struct.tex}
+
+\backmatter
+\end{document}
