@@ -5,3 +5,4 @@ build
 coverage
 bootstrapPapers.dbdump.*
 package-lock.json
+extract
