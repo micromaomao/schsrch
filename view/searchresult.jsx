@@ -20,6 +20,7 @@ class SearchResult extends React.Component {
       }
       this.componentWillReceiveProps(props)
     }
+    this.handleOverflowChangeQuery = this.handleOverflowChangeQuery.bind(this)
   }
   componentDidMount () {
     if (this.props) {
@@ -131,7 +132,7 @@ class SearchResult extends React.Component {
       switch (result.response) {
         case 'overflow':
           return (
-            <OverflowView query={query} />
+            <OverflowView query={query} response={result} onChangeQuery={this.handleOverflowChangeQuery} />
           )
         case 'empty':
         default:
@@ -200,6 +201,10 @@ class SearchResult extends React.Component {
         )
     }
     return null
+  }
+
+  handleOverflowChangeQuery (nQuery) {
+    AppState.dispatch({type: 'query', query: nQuery})
   }
 }
 

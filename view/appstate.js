@@ -49,7 +49,7 @@ let AppState = createStore(function (state = {}, action) {
         queryFocusing: false,
         loginInfo: null
       })
-    case 'query':
+    case 'query': // Will trigger load.
       if (action.query.trim().length === 0) {
         return Object.assign({}, state, {
           querying: null
@@ -64,7 +64,7 @@ let AppState = createStore(function (state = {}, action) {
         }),
         showSidebar: false
       })
-    case 'query-perpare':
+    case 'query-perpare': // Used internally, will not trigger load.
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
           query: action.query,

@@ -571,6 +571,34 @@ $sidebar-width: 300px
       padding: 0
     .time, pre
       color: $color-primary
+    ul
+      li.noinstance
+        opacity: 0.8
+    ul.timeslist
+      list-style-type: none
+      display: flex
+      flex-direction: row
+      flex-wrap: wrap
+      justify-content: flex-start
+      align-items: baseline
+      max-width: 3 * 8rem + 1rem
+      padding: 0
+      margin-left: 1rem
+      li
+        cursor: pointer
+        padding: 0.25rem 0
+        margin: 0
+        color: $color-primary
+        flex-grow: 1
+        flex-shrink: 1
+        width: 100%
+        max-width: 8rem
+        .count
+          color: $color-secondary-text
+          font-size: 75%
+        a
+          color: inherit
+          text-decoration: inherit
   .empty
     padding: 3rem 5rem
   .error
