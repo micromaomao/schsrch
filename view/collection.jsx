@@ -377,70 +377,72 @@ class Collection extends React.Component {
     document.body.appendChild(fd)
     fd.sandbox = 'allow-modals'
     this.setState({menuMode: 'printing', printingProgress: 0})
-    let bdy = fd.contentDocument.body
-    let cssText = require('./collectionprint.sass').toString()
-    bdy.innerHTML = '<style>' + cssText + '</style>'
-    let fragments = this.editor.createPrintFragments(bdy).map(f => {
-      let fragElement = fd.contentDocument.createElement('div')
-      fragElement.classList.add('fragment')
-      fragElement.innerHTML = f
-      return fragElement
-    })
-    let pages = []
-    function pageBreak () {
-      let lastPage = null
-      if (pages.length > 0) {
-        lastPage = pages[pages.length - 1]
-        let footer = fd.contentDocument.createElement('div')
-        footer.classList.add('footer')
-        footer.textContent = 'page ' + (pages.length)
-        lastPage.appendChild(footer)
-        lastPage.style.maxHeight = lastPage.style.height = '297mm'
-      }
-      let page = fd.contentDocument.createElement('div')
-      page.classList.add('page')
-      bdy.appendChild(page)
-      pages.push(page)
-      let header = fd.contentDocument.createElement('div')
-      header.classList.add('header')
-      if (!col.content || !col.content.name) {
-        header.textContent = 'Untitled SchSrch collection'
-      } else {
-        header.textContent = col.content.name || 'Untitled SchSrch collection'
-      }
-      page.appendChild(header)
-      return page
-    }
-    pageBreak()
-    pages[0].style.height = '277mm'
-    let minPageHeight = parseFloat(window.getComputedStyle(pages[0]).height)
-    pages[0].style.height = ''
-    let doFrag = i => {
-      if (i >= fragments.length) {
-        pageBreak()
-        pages[pages.length - 1].remove()
-        fd.contentWindow.print()
-        this.setState({menuMode: 'normal'})
-        setTimeout(evt => {
-          fd.remove()
-        }, 100)
-        return
-      }
-      this.setState({printingProgress: i / fragments.length})
-      let frag = fragments[i]
-      let lastPage = pages[pages.length - 1]
-      lastPage.appendChild(frag)
-      requestAnimationFrame(() => {
-        let nh = parseFloat(window.getComputedStyle(lastPage).height)
-        if (nh > minPageHeight) {
-          lastPage.removeChild(frag)
-          let newPage = pageBreak()
-          newPage.appendChild(frag)
-        }
-        doFrag(i + 1)
+    fd.addEventListener('load', evt => {
+      let bdy = fd.contentDocument.body
+      let cssText = require('./collectionprint.sass').toString()
+      bdy.innerHTML = '<style>' + cssText + '</style>'
+      let fragments = this.editor.createPrintFragments(bdy).map(f => {
+        let fragElement = fd.contentDocument.createElement('div')
+        fragElement.classList.add('fragment')
+        fragElement.innerHTML = f
+        return fragElement
       })
-    }
-    doFrag(0)
+      let pages = []
+      function pageBreak () {
+        let lastPage = null
+        if (pages.length > 0) {
+          lastPage = pages[pages.length - 1]
+          let footer = fd.contentDocument.createElement('div')
+          footer.classList.add('footer')
+          footer.textContent = 'page ' + (pages.length)
+          lastPage.appendChild(footer)
+          lastPage.style.maxHeight = lastPage.style.height = '297mm'
+        }
+        let page = fd.contentDocument.createElement('div')
+        page.classList.add('page')
+        bdy.appendChild(page)
+        pages.push(page)
+        let header = fd.contentDocument.createElement('div')
+        header.classList.add('header')
+        if (!col.content || !col.content.name) {
+          header.textContent = 'Untitled SchSrch collection'
+        } else {
+          header.textContent = col.content.name || 'Untitled SchSrch collection'
+        }
+        page.appendChild(header)
+        return page
+      }
+      pageBreak()
+      pages[0].style.height = '277mm'
+      let minPageHeight = parseFloat(window.getComputedStyle(pages[0]).height)
+      pages[0].style.height = ''
+      let doFrag = i => {
+        if (i >= fragments.length) {
+          pageBreak()
+          pages[pages.length - 1].remove()
+          fd.contentWindow.print()
+          this.setState({menuMode: 'normal'})
+          setTimeout(evt => {
+            // fd.remove()
+          }, 100)
+          return
+        }
+        this.setState({printingProgress: i / fragments.length})
+        let frag = fragments[i]
+        let lastPage = pages[pages.length - 1]
+        lastPage.appendChild(frag)
+        requestAnimationFrame(() => {
+          let nh = parseFloat(window.getComputedStyle(lastPage).height)
+          if (nh > minPageHeight) {
+            lastPage.removeChild(frag)
+            let newPage = pageBreak()
+            newPage.appendChild(frag)
+          }
+          doFrag(i + 1)
+        })
+      }
+      doFrag(0)
+    })
   }
 }
 
