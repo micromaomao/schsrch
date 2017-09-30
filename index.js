@@ -12,6 +12,7 @@ require('./dist-server/serverrender')
 const serverRender = global.serverRender
 global.serverRender = null
 const mongoose = require.main.require('mongoose')
+const state2meta = require('./view/state2meta.js')
 
 let indexPath = path.join(__dirname, 'dist/index.html')
 let indexHtml = fs.readFileSync(indexPath)
@@ -55,11 +56,50 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     function saveRecord (rec) {
       return rec.save().then(() => {}, err => console.log('Error saving record: ' + err))
     }
-    rMain.get('/', function (req, res) {
+
+    function renderView (state, res, postProcess) {
       res.type('html')
       let $ = cheerio.load(indexHtml)
-      $('.react-root').html(serverRender({})) // We want this to be static so that service worker don't end up caching old data, and that's why no status.
+      // We want this to be static so that service worker don't end up caching old data, and that's why no status.
+      $('.react-root').html(serverRender(state))
+      if (postProcess) {
+        postProcess($, $('.react-root'))
+      }
+      let metas = state2meta(state)
+      if (metas) {
+        let headStyle = $('head style:last-child')
+        if (metas.url) {
+          let mt = $('<meta property="og:url">')
+          mt.attr('content', metas.url)
+          headStyle.before(mt)
+        }
+        if (metas.title) {
+          let tit = $('<title></title>')
+          tit.text(metas.title)
+          headStyle.before(tit)
+
+          let mt = $('<meta property="og:title">')
+          mt.attr('content', metas.title)
+          headStyle.before(mt)
+        }
+        if (metas.description) {
+          let mt = $('<meta property="og:description">')
+          mt.attr('content', metas.description)
+          headStyle.before(mt)
+
+          let mt2 = $('<meta name="description">')
+          mt2.attr('content', metas.description)
+          headStyle.before(mt2)
+        }
+        if (metas.noindex) {
+          headStyle.before($('<meta name="robots" content="noindex">'))
+        }
+      }
       res.send($.html())
+    }
+
+    rMain.get('/', function (req, res) {
+      renderView({}, res)
       let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/'})
       saveRecord(rec)
     })
@@ -96,11 +136,8 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
         if (format === 'json') {
           res.send(rst)
         } else if (format === 'page') {
-          res.type('html')
-          let $ = cheerio.load(indexHtml)
           let querying = {query, error: null, result: JSON.parse(JSON.stringify(rst))}
-          $('.react-root').html(serverRender({querying})).attr('data-querying', JSON.stringify(querying))
-          res.send($.html())
+          renderView({querying}, res, ($, reactRoot) => { reactRoot.attr('data-querying', JSON.stringify(querying)) })
         } else {
           res.status(404)
           res.send('Format unknow.')
@@ -113,10 +150,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       saveRecord(rec)
     })
     rMain.get('/disclaim/', function (req, res, next) {
-      res.type('html')
-      let $ = cheerio.load(indexHtml)
-      $('.react-root').html(serverRender({view: 'disclaim'}))
-      res.send($.html())
+      renderView({view: 'disclaim'}, res)
     })
 
     rMain.get('/doc/:id', function (req, res, next) {
@@ -335,12 +369,9 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       })
     })
 
-    rMain.get('/collection/:collectionId/view', function (req, res, next) {
+    rMain.get('/collection/:collectionId/view/', function (req, res, next) {
       let { collectionId } = req.params
-      res.type('html')
-      let $ = cheerio.load(indexHtml)
-      $('.react-root').html(serverRender({view: 'collection', collection: {id: collectionId, loading: true}}))
-      res.send($.html())
+      renderView({view: 'collection', collection: {id: collectionId, loading: true}}, res)
     })
 
     rMain.get('/collection/:collectionId/content/', optionalAuthentication, function (req, res, next) {

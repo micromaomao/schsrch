@@ -235,9 +235,11 @@ class SchSrch extends React.Component {
     return (
       <div className='view view-search'>
         <div className={'searchbarcontain prepare-shadow' + (this.state.viewScrollAtTop ? ' noshadow' : ' shadow')}>
-          <div className='sidebarbtn' onClick={evt => AppState.dispatch({type: 'show-sidebar'})}>
-            <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars"></use></svg>
-          </div>
+          {!this.state.server ? (
+            <div className='sidebarbtn' onClick={evt => AppState.dispatch({type: 'show-sidebar'})}>
+              <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars"></use></svg>
+            </div>
+          ) : null}
           <SearchBar key='searchbar' ref={f => this.searchbar = f} big={false} onQuery={this.handleQuery}
             loading={AppState.getState().querying.loading || false} />
         </div>

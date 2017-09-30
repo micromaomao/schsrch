@@ -8,15 +8,10 @@ html
     link(rel="manifest", href=mf.manifest)
     each icon in mf.icons
       link(rel='icon', size=icon.sizes, type=icon.type, href=icon.src)
-    link(rel="apple-touch-icon", href=require('./icon-apple.png'))
+    link(rel="apple-touch-icon", href=require('./icon-apple.png').default)
     link(rel="search", type="application/opensearchdescription+xml", title="schsrch", href="/opensearch.xml")
     meta(name="apple-mobile-web-app-title", content="SchSrch")
     meta(name="apple-mobile-web-app-capable", content="yes")
-    -const description = "Trying to be the most simple and intuitive CIE search engine, made by pupils."
-    meta(name="description", content=description)
-    meta(property="og:url", content="https://schsrch.xyz")
-    meta(property="og:title", content="SchSrch")
-    meta(property="og:description", content=description)
     meta(property="og:image", content=(`https://schsrch.xyz${mf.icons[0].src}`))
     meta(property="og:image:type", content=mf.icons[0].type)
     -let ogSz = mf.icons[0].sizes.split('x')
@@ -25,7 +20,6 @@ html
     meta(property="og:type", content="website")
     meta(property="og:locale", content="en_GB")
     meta(property="fb:app_id", content="384579331936515")
-    title SchSrch
     style!= require('./layout.sass').toString()
   body
     .react-root

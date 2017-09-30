@@ -37,6 +37,7 @@ const AppState = require('./appstate.js')
 const React = require('react')
 const ReactDOM = require('react-dom')
 const SchSrch = require('./schsrch.jsx')
+const state2meta = require('./state2meta.js')
 
 // Polyfill
 window.requestIdleCallback = window.requestIdleCallback || (func => setTimeout(func, 1000))
@@ -112,7 +113,13 @@ AppState.subscribe(() => {
     } else if (nState.querying && nState.querying.query.length > 0) {
       url = '/search/?as=page&query=' + encodeURIComponent(nState.querying.query)
     }
-    history.replaceState(nState, 'SchSrch', url)
+    let metas = state2meta(nState)
+    let title = 'SchSrch'
+    if (metas) {
+      if (metas.title) title = metas.title
+    }
+    document.title = title
+    history.replaceState(nState, title, url)
     window.localStorage.setItem('state', JSON.stringify(nState))
   })
 })

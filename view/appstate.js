@@ -2,27 +2,8 @@ const InterfaceVersion = 18
 const { createStore } = require('redux')
 const bowser = require('bowser')
 
-const init = {
-  querying: null,
-  feedback: {
-    show: false,
-    search: null,
-    feedbackText: '',
-    email: ''
-  },
-  showSidebar: false,
-  previewing: null,
-  serverrender: null,
-  collection: null,
-  view: 'home',
-  previewPages: {},
-  version: InterfaceVersion,
-  queryFocusing: false,
-  authToken: null,
-  loginView: null,
-  paperCropClipboard: null,
-  loginInfo: null
-}
+const init = require('./appstateinit.js')
+init.version = InterfaceVersion
 
 function setPreviewPages (previewPages, doc, page) {
   let newPages = Object.assign({}, previewPages)
