@@ -681,8 +681,19 @@ class Editor extends React.Component {
       }
       let thisEditor = this
       let enDOM = null
+      let nodeSet = this.currentEditorNodes
+      let nodeSetFromStructure = this.currentEditorNodesFromStructure
+      let renderedDOMNode = null
       let reactElement = React.createElement(componentClass, {
         structure: current,
+        ref: f => {
+          if (!renderedDOMNode) {
+            throw new Error('renderedDOMNode is falsy.')
+          }
+          nodeSet.set(renderedDOMNode, f)
+          nodeSetFromStructure.set(current, f)
+          Object.assign(renderedDOMNode.dataset, f.toDataset())
+        },
         disabled: thisEditor.props.disabled,
         onUpdateStructure: function (newStructure) {
           thisEditor.runDelayedInputEventNow()
@@ -704,18 +715,12 @@ class Editor extends React.Component {
           }
         }
       })
-      let nodeSet = this.currentEditorNodes
-      let nodeSetFromStructure = this.currentEditorNodesFromStructure
       if (currentElement && this.nodeIsEditorNode(currentElement)) {
         currentElement.dataset.editornode = 'true'
         currentElement.dataset.enType = current.type
         currentElement.contentEditable = 'false'
-        ReactDOM.render(reactElement, currentElement, function () {
-          // `this` is the component.
-          nodeSet.set(currentElement, this)
-          nodeSetFromStructure.set(current, this)
-          Object.assign(currentElement.dataset, this.toDataset())
-        })
+        renderedDOMNode = currentElement
+        ReactDOM.render(reactElement, currentElement)
         touchedEditorNodes.add(currentElement)
         enDOM = currentElement
         return null
@@ -730,11 +735,8 @@ class Editor extends React.Component {
           this.recycleNode(currentElement)
           domElement.replaceChild(newNode, currentElement)
         }
-        ReactDOM.render(reactElement, newNode, function () {
-          nodeSet.set(newNode, this)
-          nodeSetFromStructure.set(current, this)
-          Object.assign(newNode.dataset, this.toDataset())
-        })
+        renderedDOMNode = newNode
+        ReactDOM.render(reactElement, newNode)
         touchedEditorNodes.add(newNode)
         enDOM = newNode
         return newNode
