@@ -1,8 +1,8 @@
 const React = require('react')
 const CIESubjects = require('./CIESubjects.js')
 const AppState = require('./appstate.js')
-const URL_BANNER = require('./banner.png')
-const URL_BANNER_SMALL = require('./banner-small.png')
+import URL_BANNER from './banner.png'
+import URL_BANNER_SMALL from './banner-small.png'
 
 class SearchBar extends React.Component {
   constructor (props) {
