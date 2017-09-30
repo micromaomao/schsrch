@@ -86,6 +86,13 @@ module.exports = function (state) {
         }
       }
     }
+    if (state.view === 'disclaim') {
+      return {
+        url: origin + '/disclaim/',
+        title: 'Disclaimer - SchSrch',
+        description: 'Some non-professional legal text.'
+      }
+    }
     return {
       noindex: true
     }
