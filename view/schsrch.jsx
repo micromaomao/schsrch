@@ -52,11 +52,13 @@ class SchSrch extends React.Component {
     }
   }
   componentDidUpdate (prevProps, prevState) {
-    if (prevState.view !== this.state.view && this.searchbar && this.state.query) {
-      this.searchbar.setQuery(this.state.query)
-      this.searchbar.focus()
-    } else if (typeof prevState.query === 'string' && typeof this.state.query === 'string' && (prevState.query.trim() === '') !== (this.state.query.trim() === '')) {
-      this.searchbar.focus()
+    if (this.searchbar) {
+      if (prevState.view !== this.state.view && this.state.query) {
+        this.searchbar.setQuery(this.state.query)
+        this.searchbar.focus()
+      } else if (typeof prevState.query === 'string' && typeof this.state.query === 'string' && (prevState.query.trim() === '') !== (this.state.query.trim() === '')) {
+        this.searchbar.focus()
+      }
     }
   }
   render () {
