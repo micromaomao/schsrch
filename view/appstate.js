@@ -17,7 +17,7 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, init)
     case 'init-server':
       AppState.supportOverall = AppState.supportSspdfView = AppState.browserSupportsPassiveEvents = true
-      return Object.assign({}, init, {
+      return Object.assign({}, init, action.serverrender, {
         serverrender: action.serverrender || true,
         view: action.serverrender.view || 'home',
         querying: action.serverrender.querying || null,
@@ -423,6 +423,15 @@ let AppState = createStore(function (state = {}, action) {
           error: null,
           result: action.data
         })
+      })
+    case 'subjects-stst-load-and-show':
+      return Object.assign({}, state, {
+        view: 'subjects',
+        subjectStatistics: {
+          loading: false,
+          error: null,
+          result: action.data
+        }
       })
     case 'subjects-stst-error':
       return Object.assign({}, state, {

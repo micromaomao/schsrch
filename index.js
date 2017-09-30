@@ -622,12 +622,27 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       })
     })
 
-    rMain.get('/subjects/', function (req, res) {
-      if (!req.query.as || req.query.as === 'page') {
-        renderView({view: 'subjects', subjectStatistics: null}, res)
-      } else if (req.query.as === 'json') {
-        res.send({})
+    rMain.get('/subjects/', function (req, res, next) {
+      function response (agg) {
+        if (!req.query.as || req.query.as === 'page') {
+          renderView({view: 'subjects', subjectStatistics: {loading: false, error: null, result: agg}}, res, ($, reactRoot) => {reactRoot.attr('data-subject-stats', JSON.stringify(agg))})
+        } else if (req.query.as === 'json') {
+          res.send(agg)
+        }
       }
+      PastPaperDoc.aggregate([{$group: {_id: '$subject', totalPaper: {$sum: 1}}}]).then(agg => {
+        Promise.all(agg.map(g => PastPaperDoc.aggregate([{$match: {subject: g._id}}, {$group: {_id: '$time'}}]))).then(aggr => {
+          let nagg = agg.map((g, i) => {
+            let r = aggr[i]
+            if (!r) return g
+            r = r.map(x => ({subject: g._id, time: x._id, paper: 0, variant: 0})).sort(PaperUtils.funcSortSet).map(x => x.time)
+            return Object.assign({}, g, {times: r})
+          })
+          response(nagg)
+        }, err => {
+          response(agg)
+        })
+      }, err => next(err))
     })
 
     rMain.get('/robots.txt', function (req, res) {

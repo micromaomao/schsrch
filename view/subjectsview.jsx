@@ -2,6 +2,7 @@ const React = require('react')
 const AppState = require('./appstate.js')
 const SubjectData = require('./CIESubjects.data.js')
 const Feedback = require('./feedback.jsx')
+const FetchErrorPromise = require('./fetcherrorpromise.js')
 
 class SubjectsView extends React.Component {
   constructor (props) {
@@ -9,15 +10,51 @@ class SubjectsView extends React.Component {
     this.state = {}
     this.handleHome = this.handleHome.bind(this)
   }
+  componentDidMount () {
+    if (!this.props.statistics) {
+      this.startLoad()
+    }
+  }
+  startLoad () {
+    AppState.dispatch({type: 'subjects-stst-perpare'})
+    fetch('/subjects/?as=json').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(agg => {
+      AppState.dispatch({type: 'subjects-stst-load', data: agg})
+    }, err => {
+      AppState.dispatch({type: 'subjects-stst-error', error: err})
+    })
+  }
   render () {
+    let agg = null
+    let err = null
+    if (this.props.statistics && this.props.statistics.result) {
+      agg = this.props.statistics.result
+    } else if (this.props.statistics && this.props.statistics.error) {
+      err = this.props.statistics.error
+    }
     let subjFunc = subj => {
+      let aggItem = agg ? agg.find(g => g._id === subj.id) : null
       return (
         <li key={subj.id}>
           <a
-            href={`https://schsrch.xyz/search/?as=page&query=${subj.id}`}
-            onClick={this.handleSubjectSelect.bind(this, subj.id)}>
+            href={`/search/?as=page&query=${subj.id}`}
+            onClick={this.handleQuery.bind(this, subj.id)}>
               {subj.level} {subj.name} ({subj.id})
           </a>
+          {aggItem ? (
+            <span className='count'>
+              &nbsp;({aggItem.totalPaper})
+            </span>
+          ) : null}
+          {aggItem && aggItem.times && aggItem.times.length > 0 ? (
+            <div className='times'>
+              {aggItem.times.map(t => {
+                return (
+                  <a key={t} href={`/search/?as=page&query=${encodeURIComponent(`${subj.id} ${t}`)}`}
+                    onClick={this.handleQuery.bind(this, `${subj.id} ${t}`)}>&nbsp;{t}&nbsp;</a>
+                )
+              })}
+            </div>
+          ) : null}
         </li>
       )
     }
@@ -47,9 +84,9 @@ class SubjectsView extends React.Component {
     )
   }
 
-  handleSubjectSelect (sid, evt) {
+  handleQuery (query, evt) {
     evt.preventDefault()
-    AppState.dispatch({type: 'query', query: sid})
+    AppState.dispatch({type: 'query', query})
     AppState.dispatch({type: 'home'})
   }
   handleHome (evt) {

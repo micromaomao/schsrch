@@ -57,8 +57,9 @@ function readFromLocalStorage () {
   }
 }
 
+let reactRootElement = document.getElementsByClassName('react-root')[0]
+
 if (history.state) {
-  console.log(history.state)
   AppState.dispatch({type: 'load', state: history.state})
 } else {
   AppState.dispatch({type: 'init'})
@@ -67,7 +68,7 @@ if (history.state) {
   let loc = location.toString().replace(/#.+$/, '').replace(hostname, '') // location.pathname no query string.
   if ((queryMatch = loc.match(/^\/search\/\?/))) {
     try {
-      let o = JSON.parse(document.getElementsByClassName('react-root')[0].dataset.querying)
+      let o = JSON.parse(reactRootElement.dataset.querying)
       if (typeof o !== 'object') throw new Error()
       AppState.dispatch({type: 'replaceQuerying', querying: o})
     } catch (e) {
@@ -78,7 +79,14 @@ if (history.state) {
   } else if ((queryMatch = loc.match(/^\/collection\/([0-9a-f]+)\/view\/$/))) {
     AppState.dispatch({type: 'view-collection', collectionId: queryMatch[1]})
   } else if (loc === '/subjects/') {
-    AppState.dispatch({type: 'subjects'})
+    try {
+      let o = JSON.parse(reactRootElement.dataset.subjectStats)
+      if (!Array.isArray(o)) throw new Error()
+      AppState.dispatch({type: 'subjects-stst-load-and-show', data: o})
+    } catch (e) {
+      console.error(e)
+      AppState.dispatch({type: 'subjects'})
+    }
   } else {
     let nsState = readFromLocalStorage()
     nsState && AppState.dispatch({type: 'load', state: nsState})
@@ -140,7 +148,6 @@ window.addEventListener('popstate', evt => {
 })
 
 let ui = null
-let reactRootElement = document.getElementsByClassName('react-root')[0]
 reactRootElement.innerHTML = '' // Otherwise it produces element with wrong class - try it yourself with React 16.0.0.
 ReactDOM.render(
   <SchSrch ref={f => ui = f} />,
