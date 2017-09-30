@@ -275,7 +275,8 @@ class SchSrch extends React.Component {
     }
     let oldQuery = this.state.query
     AppState.dispatch({type: 'query-perpare', query})
-    if (AppState.getState().querying && (this.state.query.trim() !== oldQuery.trim() || !AppState.getState().querying.result)) {
+    let querying = AppState.getState().querying
+    if (querying && (query.trim() !== oldQuery.trim() || !querying.result || querying.loading)) {
       AppState.dispatch({type: 'queryStartRequest'})
       fetch('/search/?query=' + encodeURIComponent(query.trim()) + '&as=json').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
         // AppState will check if the query has changed since the request started.
@@ -288,7 +289,7 @@ class SchSrch extends React.Component {
         AppState.dispatch({type: 'queryError', query, error: err})
       })
     } else {
-      AppState.dispatch({type: 'queryResult', query, result: AppState.getState().querying.result})
+      AppState.dispatch({type: 'queryResult', query, result: querying.result})
     }
     this.setState({viewScrollAtTop: true})
   }

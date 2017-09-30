@@ -12,6 +12,7 @@ function setPreviewPages (previewPages, doc, page) {
 }
 
 let AppState = createStore(function (state = {}, action) {
+  // console.log(action, state)
   switch (action.type) {
     case 'init':
       return Object.assign({}, init)
