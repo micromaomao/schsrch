@@ -630,8 +630,8 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           res.send(agg)
         }
       }
-      PastPaperDoc.aggregate([{$group: {_id: '$subject', totalPaper: {$sum: 1}}}]).then(agg => {
-        Promise.all(agg.map(g => PastPaperDoc.aggregate([{$match: {subject: g._id}}, {$group: {_id: '$time'}}]))).then(aggr => {
+      PastPaperDoc.aggregate([{$sort: {subject: 1}}, {$group: {_id: '$subject', totalPaper: {$sum: 1}}}]).then(agg => {
+        Promise.all(agg.map(g => PastPaperDoc.aggregate([{$match: {subject: g._id}}, {$sort: {time: 1}}, {$group: {_id: '$time'}}]))).then(aggr => {
           let nagg = agg.map((g, i) => {
             let r = aggr[i]
             if (!r) return g
