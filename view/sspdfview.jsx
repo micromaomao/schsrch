@@ -3,6 +3,7 @@ const rbush = require('rbush')
 const copyStuff = require('./copystuff.js')
 const { client2view, pointDistance } = require('./pointutils.js')
 const bowser = require('bowser')
+const AppState = require('./appstate.js')
 
 const noCacheCanvas = bowser.safari && !bowser.check({safari: '10'})
 
@@ -81,6 +82,15 @@ class SsPdfView extends React.Component {
   }
   render () {
     if (this.state.server) return null
+    if (!AppState.supportSspdfView) {
+      return (
+        <div className='sspdfview'>
+          <div className='unsupported'>
+            Sorry, but your browser - {bowser.name} {bowser.version} is too old and paper preview won't work.
+          </div>
+        </div>
+      )
+    }
     if (!this.props.width || !this.props.height) return null
     let docJson = this.props.docJson
     if (!docJson) {

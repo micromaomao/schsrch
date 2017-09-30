@@ -1,5 +1,6 @@
 const InterfaceVersion = 18
 const { createStore } = require('redux')
+const bowser = require('bowser')
 
 const init = {
   querying: null,
@@ -34,6 +35,7 @@ let AppState = createStore(function (state = {}, action) {
     case 'init':
       return Object.assign({}, init)
     case 'init-server':
+      AppState.supportOverall = AppState.supportSspdfView = AppState.browserSupportsPassiveEvents = true
       return Object.assign({}, init, {
         serverrender: action.serverrender || true,
         view: action.serverrender.view || 'home',
@@ -131,6 +133,10 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'previewFile':
+      if (!AppState.supportSspdfView) {
+        window.open('/doc/' + encodeURIComponent(action.fileId))
+        return state
+      }
       return Object.assign({}, state, {
         previewing: {
           id: action.fileId,
@@ -436,5 +442,17 @@ AppState.browserSupportsPassiveEvents = (() => {
 
 AppState.shouldResponseKeyboardShortcut = () => !AppState.getState().queryFocusing && !(document.activeElement && document.activeElement.contentEditable === 'true') // TODO: Ugly but quick hack, FIXME!
 AppState.sspdfDecacheVersion = 2
+AppState.supportSspdfView = bowser.check({
+  msie: '11',
+  chrome: '35',
+  firefox: '50',
+  safari: '9'
+})
+AppState.supportOverall = bowser.check({
+  msie: '11',
+  chrome: '29',
+  firefox: '23',
+  safari: '9'
+})
 
 module.exports = AppState

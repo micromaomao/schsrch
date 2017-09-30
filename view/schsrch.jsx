@@ -12,6 +12,7 @@ const { LoginView } = require('./auth.jsx')
 const ChallengeReplaceView = require('./challengereplace.jsx')
 const PaperUtils = require('./paperutils.js')
 const Sidebar = require('./sidebar.jsx')
+const bowser = require('bowser')
 
 class SchSrch extends React.Component {
   constructor (props) {
@@ -105,29 +106,31 @@ class SchSrch extends React.Component {
           <div className='contentblackcover' style={blackCoverStyle} onTouchStart={this.handleBlackCoverDown} onMouseDown={this.handleBlackCoverDown} />
         )}
         <div className='content'>
-          {
-            this.state.server
-            ? (
-                aState.serverrender.query
-                ? (
-                    <noscript className='small'>
-                      {noScriptFirstP}
-                    </noscript>
-                )
-                : (
-                    <noscript className='big'>
-                      {noScriptFirstP}
-                      <p>
-                        We won't use javascript to collect any user information or harm your computer. Please add SchSrch to NoScript whitelist.
-                      </p>
-                      <p>
-                        Here is a very simple version of SchSrch, made by using only HTML and CSS. Feedbacks are not dealt for this version of SchSrch.
-                      </p>
-                    </noscript>
-                )
-              )
-            : null
-          }
+          {this.state.server ? (
+            aState.serverrender.query ? (
+              <noscript className='small'>
+                {noScriptFirstP}
+              </noscript>
+            ) : (
+              <noscript className='big'>
+                {noScriptFirstP}
+                <p>
+                  We won't use javascript to collect any user information or harm your computer. Please add SchSrch to NoScript whitelist.
+                </p>
+                <p>
+                  Here is a very simple version of SchSrch, made by using only HTML and CSS. Feedbacks are not dealt for this version of SchSrch.
+                </p>
+              </noscript>
+            )
+          ) : null}
+          {!this.state.server && !AppState.supportSspdfView && AppState.supportOverall ? (
+            <div className='unsupported'>
+              Sorry, but your browser - {bowser.name} {bowser.version} is too old and paper preview won't work. You will get a PDF once you click on a paper.
+              <div className='considerupgrade'>
+                You should really consider upgrading your browser.
+              </div>
+            </div>
+          ) : null}
           <div className={'viewcontain' + (displayingBigPreview ? ' sidepane' : '')}>
             {view}
             {this.shouldShowBigPreview() && previewing
