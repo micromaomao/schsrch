@@ -122,11 +122,15 @@ window.addEventListener('popstate', evt => {
   AppState.dispatch({type: 'load', state})
 })
 
-let ui = ReactDOM.render(
-  <SchSrch />,
-  document.getElementsByClassName('react-root')[0]
+let ui = null
+let reactRootElement = document.getElementsByClassName('react-root')[0]
+reactRootElement.innerHTML = '' // Otherwise it produces element with wrong class - try it yourself with React 16.0.0.
+ReactDOM.render(
+  <SchSrch ref={f => ui = f} />,
+  reactRootElement
 )
 
 window.addEventListener('resize', evt => {
+  if (ui === null) return
   setTimeout(() => ui.forceUpdate(), 1)
 })
