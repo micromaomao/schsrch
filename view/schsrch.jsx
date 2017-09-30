@@ -13,6 +13,7 @@ const ChallengeReplaceView = require('./challengereplace.jsx')
 const PaperUtils = require('./paperutils.js')
 const Sidebar = require('./sidebar.jsx')
 const bowser = require('bowser')
+const SubjectsView = require('./subjectsview.jsx')
 
 class SchSrch extends React.Component {
   constructor (props) {
@@ -95,6 +96,8 @@ class SchSrch extends React.Component {
           return this.renderViewLogin()
         case 'challenge-replace':
           return this.renderViewChallengeReplace()
+        case 'subjects':
+          return this.renderViewSubjects()
       }
     })()
     let aState = AppState.getState()
@@ -314,6 +317,13 @@ class SchSrch extends React.Component {
     return (
       <div className='view view-challenge-replace'>
         <ChallengeReplaceView authToken={AppState.getState().authToken} />
+      </div>
+    )
+  }
+  renderViewSubjects () {
+    return (
+      <div className='view view-subjects'>
+        <SubjectsView statistics={AppState.getState().subjectStatistics} />
       </div>
     )
   }

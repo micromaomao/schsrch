@@ -621,6 +621,15 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
         })
       })
     })
+
+    rMain.get('/subjects/', function (req, res) {
+      if (!req.query.as || req.query.as === 'page') {
+        renderView({view: 'subjects', subjectStatistics: null}, res)
+      } else if (req.query.as === 'json') {
+        res.send({})
+      }
+    })
+
     rMain.get('/robots.txt', function (req, res) {
       if (req.hostname.match(/^beta\./)) {
         res.sendFile(path.join(__dirname, 'view/betaRobots.txt'))

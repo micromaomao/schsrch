@@ -93,6 +93,13 @@ module.exports = function (state) {
         description: 'Some non-professional legal text.'
       }
     }
+    if (state.view === 'subjects') {
+      return {
+        url: origin + '/subjects/',
+        title: 'List of supported subjects by SchSrch',
+        description: `We have papers for these ${CIESubjects.length} subjects.`
+      }
+    }
     return {
       noindex: true
     }

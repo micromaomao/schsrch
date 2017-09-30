@@ -495,13 +495,11 @@ $sidebar-width: 300px
       font-size: 0.75rem
     div
       margin-bottom: 0.6rem
-    span
-      display: inline-block
     a
       color: $color-link
-      border-bottom: solid 1px $color-link
       transition: color 200ms
       text-decoration: none
+      cursor: pointer
       &:hover
         color: darken($color-link, 20%)
   .status.loading
@@ -1475,3 +1473,41 @@ $feedback-top-height: 2rem + 1.3rem
 .schsrch .view.view-challenge-replace
   .main
     margin-top: 1rem
+
+.schsrch .view.view-subjects
+  padding: 1rem 2rem
+  a
+    color: $color-link
+    text-decoration: none
+    cursor: pointer
+    transition: color 200ms
+    &:hover
+      color: darken($color-link, 20%)
+  .return
+    a
+      color: $color-link
+      text-decoration: none
+      padding: 0.5rem
+      margin-left: -0.5rem
+      margin-right: -0.5rem
+      display: inline
+      cursor: pointer
+      &:hover
+        color: darken($color-link, 10%)
+  h2
+    color: $color-primary
+    margin: 0
+    padding: 1rem 0
+    font-size: 1.5rem
+    font-weight: normal
+  ul
+    list-style-type: none
+    padding: 0
+    margin: 0.5rem 0
+    li
+      padding: 0 0.5rem
+      margin: 0
+      a
+        color: inherit
+        &:hover
+          color: darken($color-link, 20%)

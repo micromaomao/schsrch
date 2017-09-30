@@ -77,6 +77,8 @@ if (history.state) {
     AppState.dispatch({type: 'disclaim'})
   } else if ((queryMatch = loc.match(/^\/collection\/([0-9a-f]+)\/view\/$/))) {
     AppState.dispatch({type: 'view-collection', collectionId: queryMatch[1]})
+  } else if (loc === '/subjects/') {
+    AppState.dispatch({type: 'subjects'})
   } else {
     let nsState = readFromLocalStorage()
     nsState && AppState.dispatch({type: 'load', state: nsState})

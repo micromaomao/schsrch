@@ -76,7 +76,12 @@ class Description extends React.Component {
       </div>
     )
     if (this.state.server) {
-      statusInfo = null
+      statusInfo = (
+        <div className='status'>
+          Currently supporting&nbsp;
+          <a href='/subjects/'>{CIESubjects.length} subjects</a>.
+        </div>
+      )
     } else if (this.state.status && !this.state.error) {
       let stat = this.state.status
       statusInfo = (
@@ -86,7 +91,10 @@ class Description extends React.Component {
           </div>
           <div className='hr' />
           <div>
-            Currently supporting <span>{CIESubjects.length} subjects:</span> <span>storing {stat.docCount} paper</span> <span>({stat.indexCount} pages).</span>
+            Currently supporting&nbsp;
+            <a onClick={evt => AppState.dispatch({type: 'subjects'})}>
+              {CIESubjects.length} subjects
+            </a>: <span>storing {stat.docCount} paper</span> <span>({stat.indexCount} pages).</span>
           </div>
           <div>
             Mystery number: {stat.requestCount}

@@ -404,6 +404,33 @@ let AppState = createStore(function (state = {}, action) {
         view: (state.challengeReplace ? state.challengeReplace.from : state.view),
         challengeReplace: null
       })
+    case 'subjects':
+      return Object.assign({}, state, {
+        view: 'subjects',
+        subjectStatistics: null
+      })
+    case 'subjects-stst-perpare':
+      return Object.assign({}, state, {
+        subjectStatistics: Object.assign({}, state.subjectStatistics || {}, {
+          loading: true,
+          error: null
+        })
+      })
+    case 'subjects-stst-load':
+      return Object.assign({}, state, {
+        subjectStatistics: Object.assign({}, state.subjectStatistics || {}, {
+          loading: false,
+          error: null,
+          result: action.data
+        })
+      })
+    case 'subjects-stst-error':
+      return Object.assign({}, state, {
+        subjectStatistics: Object.assign({}, state.subjectStatistics || {}, {
+          loading: false,
+          error: action.error
+        })
+      })
   }
 })
 
