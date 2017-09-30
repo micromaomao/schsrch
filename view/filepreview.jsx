@@ -264,7 +264,7 @@ class FilePreview extends React.Component {
                   }}
                 width={this.state.measuredViewWidth}
                 height={this.state.measuredViewHeight}
-                noCacheImage={true}
+                skipProcessDoc={true}
                 cropBoundary={null} />
             </div>
           )

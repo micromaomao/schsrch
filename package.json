@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/micromaomao/schsrch#readme",
   "dependencies": {
+    "bowser": "^1.7.3",
     "cheerio": "^1.0.0-rc.2",
     "nan": "^2.7.0",
     "rbush": "^2.0.1",

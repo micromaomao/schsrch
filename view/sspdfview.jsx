@@ -2,6 +2,9 @@ const React = require('react')
 const rbush = require('rbush')
 const copyStuff = require('./copystuff.js')
 const { client2view, pointDistance } = require('./pointutils.js')
+const bowser = require('bowser')
+
+const noCacheCanvas = bowser.safari && !bowser.check({safari: '10'})
 
 const delayEvent = function (handler, prevent = true) {
   return evt => {
@@ -867,22 +870,26 @@ class SsPdfView extends React.Component {
       URL.revokeObjectURL(oldUrl)
     }
 
-    // Create cached image ("screenshot") of the document.
-    if (this.props.noCacheImage) {
-      this.setState({cacheCanvas: null})
+    this.setState({cacheCanvas: null})
+
+    if (this.props.skipProcessDoc) {
       return
     }
-    const sf = 3
-    let canvas = document.createElement('canvas')
-    canvas.width = width * sf
-    canvas.height = height * sf
-    let ctx = canvas.getContext('2d')
-    let img = document.createElement('img')
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, width * sf, height * sf)
-      this.setState({cacheCanvas: canvas})
+
+    // Create cached image ("screenshot") of the document.
+    if (!noCacheCanvas) {
+      let canvas = document.createElement('canvas')
+      const sf = 3
+      canvas.width = width * sf
+      canvas.height = height * sf
+      let ctx = canvas.getContext('2d')
+      let img = document.createElement('img')
+      img.addEventListener('load', evt => {
+        ctx.drawImage(img, 0, 0, width * sf, height * sf)
+        this.setState({cacheCanvas: canvas})
+      })
+      img.src = blobUrl
     }
-    img.src = blobUrl
 
     if (this.props.cropBoundary) this.props.onCropBoundaryChange(null)
 
