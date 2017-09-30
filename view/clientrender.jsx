@@ -91,6 +91,8 @@ if (localStorageAuthToken && !AppState.getState().authToken) {
 // Make it F12 useable
 window.AppState = AppState
 
+let lastTitle = 'SchSrch'
+
 AppState.subscribe(() => {
   requestIdleCallback(() => {
     let nState = AppState.getState()
@@ -117,9 +119,15 @@ AppState.subscribe(() => {
     let title = 'SchSrch'
     if (metas) {
       if (metas.title) title = metas.title
+      if (metas.url) url = metas.url
     }
     document.title = title
-    history.replaceState(nState, title, url)
+    if (title === lastTitle) {
+      history.replaceState(nState, title, url)
+    } else {
+      history.pushState(nState, title, url)
+      lastTitle = title
+    }
     window.localStorage.setItem('state', JSON.stringify(nState))
   })
 })

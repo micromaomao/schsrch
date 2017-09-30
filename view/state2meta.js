@@ -6,6 +6,11 @@ const AppStateInit = require('./appstateinit.js')
 module.exports = function (state) {
   state = Object.assign({}, AppStateInit, state)
   try {
+    if (state.feedback && state.feedback.show) {
+      return {
+        title: 'Provide feedback'
+      }
+    }
     if (state.view === 'home') {
       if (state.querying === null || state.querying.query.trim() === '') {
         return {
