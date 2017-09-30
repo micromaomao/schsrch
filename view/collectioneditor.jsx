@@ -687,12 +687,19 @@ class Editor extends React.Component {
       let reactElement = React.createElement(componentClass, {
         structure: current,
         ref: f => {
-          if (!renderedDOMNode) {
+          if (!renderedDOMNode && f) {
             throw new Error('renderedDOMNode is falsy.')
           }
-          nodeSet.set(renderedDOMNode, f)
-          nodeSetFromStructure.set(current, f)
-          Object.assign(renderedDOMNode.dataset, f.toDataset())
+          if (f) {
+            nodeSet.set(renderedDOMNode, f)
+            nodeSetFromStructure.set(current, f)
+          } else {
+            nodeSet.delete(renderedDOMNode)
+            nodeSetFromStructure.delete(current)
+          }
+          if (f) {
+            Object.assign(renderedDOMNode.dataset, f.toDataset())
+          }
         },
         disabled: thisEditor.props.disabled,
         onUpdateStructure: function (newStructure) {
