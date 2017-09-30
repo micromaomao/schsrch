@@ -30,6 +30,7 @@ class OverflowView extends React.Component {
       if (times.length > 0) {
         demoTime = times[times.length - 1].time
         sYear = parseInt(demoTime.substr(1))
+        year = '20' + sYear
       }
       let hasMonth = mstr => {
         if (times.length === 0) return true
