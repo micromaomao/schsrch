@@ -1,4 +1,4 @@
-const shortTypes = ['qp', 'ms', 'in', 'sin', 'er', 'gt', 'ci', 'sp', 'sm', 'sci', 'rb', 'srb', 'srbi', 'un', 'dc', 'tc', 'tn', 'stc', 'stn', 'ts', 'sts', 'sb', 'ab', 'gn', 'su']
+const shortTypes = ['qp', 'ms', 'in', 'sin', 'er', 'gt', 'ci', 'sp', 'sm', 'sci', 'rb', 'srb', 'srbi', 'un', 'dc', 'tc', 'tn', 'stc', 'stn', 'ts', 'sts', 'sb', 'ab', 'gn', 'su', 'pl', 'rlg', 'rls', 'ecr', 'lg']
 const longTypes = [
   'question paper',
   'mark scheme',
@@ -24,7 +24,12 @@ const longTypes = [
   'standards booklet',
   'answer booklet',
   "teachers’ guide to prescribed works",
-  'map'
+  'map',
+  'sample research planning sheet',
+  'research log guidance',
+  'sample research log',
+  'example candidate responses',
+  'learner guide'
 ]
 
 if (shortTypes.length !== longTypes.length) throw new Error('Check the two array.')
