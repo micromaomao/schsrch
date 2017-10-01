@@ -24,7 +24,8 @@ class FilePreview extends React.Component {
       relatedDocId: null,
       measuredViewWidth: 0,
       measuredViewHeight: 0,
-      cropBoundary: null
+      cropBoundary: null,
+      fullscreen: false
     }
     this.currentLoading = null
     this.measureViewDimAF = null
@@ -80,11 +81,14 @@ class FilePreview extends React.Component {
   toggleFullScreen () {
     if (window.document.fullscreenElement) {
       window.document.exitFullscreen()
+      this.setState({fullscreen: false})
       return
     }
     if (this.mainDiv) {
-      if (this.mainDiv.requestFullscreen)
+      if (this.mainDiv.requestFullscreen) {
         this.mainDiv.requestFullscreen()
+        this.setState({fullscreen: true})
+      }
     }
   }
   componentWillReceiveProps (nextProps) {
@@ -180,7 +184,7 @@ class FilePreview extends React.Component {
       couldNext = this.props.page + 1 < this.state.docMeta.numPages
     }
     return (
-      <div className='filepreview' ref={f => this.mainDiv = f}>
+      <div className={'filepreview' + (this.state.fullscreen ? ' fullscreen' : '')} ref={f => this.mainDiv = f}>
         {!this.state.docMeta && this.state.loading && !this.state.error
           ? <div className='loading'>
               Loading document...
