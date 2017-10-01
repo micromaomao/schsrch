@@ -535,6 +535,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           let result = stuff
           result.doc = doc
           result.doc.fileBlob = null
+          result.doc.dir = null
           return result
         }
 

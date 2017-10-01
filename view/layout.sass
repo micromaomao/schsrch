@@ -690,22 +690,34 @@ $sidebar-width: 300px
       &:hover
         color: darken($color-link, 20%)
         border-bottom: solid 1px rgba($color-secondary-text, 0.2)
-.searchresult.smallsetname
-  .set
-    .setname
+.searchresult.smallsetname .set, .set.small, .set.mini
+  .setname
+    font-size: 0.9rem
+    .time, .paper, .variant
+      color: $color-primary
       font-size: 0.9rem
-      .time, .paper, .variant
-        color: $color-primary
-        font-size: 0.9rem
-        display: inline-block
+      display: inline-block
+  .typename
+    font-size: 1rem
+  &.mini
+    background-color: transparent
+    margin: 0
+    .setname, .files, .files > .file:first-child
+      display: inline-block
+      margin-top: 0
+      margin-bottom: 0
+    .files
+      padding: 0
     .typename
-      font-size: 1rem
-    .related
-      padding-top: 0.5rem
-      padding-left: 1rem
       font-size: 0.9rem
-      .file
-        padding: 0.1rem 0.5rem
+    .subject
+      display: none
+  .related
+    padding-top: 0.5rem
+    padding-left: 1rem
+    font-size: 0.9rem
+    .file
+      padding: 0.1rem 0.5rem
 
 .searchprompt
   color: $color-primary

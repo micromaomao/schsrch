@@ -2,6 +2,8 @@ const React = require('react')
 const CIESubjects = require('./CIESubjects.js')
 const PaperUtils = require('./paperutils.js')
 const AppState = require('./appstate.js')
+const PaperSet = require('./paperset.jsx')
+const FilePreview = require('./filepreview.jsx')
 
 class OverflowView extends React.Component {
   constructor (props) {
@@ -12,6 +14,7 @@ class OverflowView extends React.Component {
     let query = this.props.query.trim()
     let res = this.props.response || {}
     let times = res.times || []
+    let metaDocs = res.metaDocs || []
     if (query.match(/^\d{4}$/)) {
       let subj = CIESubjects.findExactById(query)
       let subject
@@ -36,12 +39,14 @@ class OverflowView extends React.Component {
         if (times.length === 0) return true
         return times.filter(tm => tm.time[0] === mstr).length > 0
       }
+      let thisSubject = subj ? `${subj.level} ${subj.name}` : 'this subject'
+      let previewing = this.props.previewing
       return (
         <div className='overflow'>
           {subject}
           {subj ? (
             <p className='sy'>
-              <a href={'https://cie.org.uk/' + subj.id} onClick={this.handleSyClick}>Syllabus &amp; CIE Page for {subj.level} {subj.name}</a>
+              <a href={'https://cie.org.uk/' + subj.id} onClick={this.handleSyClick}>Syllabus &amp; CIE Page for {thisSubject}</a>
             </p>
           ) : null}
           <p>If you know the time (season and year) of the paper you want, add it to your search like this:</p>
@@ -73,9 +78,40 @@ class OverflowView extends React.Component {
               }
             })}
           </ul>
+          {metaDocs.length > 0 ? (
+            <div>
+              <p>Additional resources for {thisSubject}:</p>
+              <div>
+                {metaDocs.map(doc => {
+                  return [
+                    <PaperSet
+                      key={doc._id}
+                      paperSet={Object.assign({}, doc, {
+                        types: [doc]
+                      })}
+                      current={false}
+                      onOpenFile={(id, page) => {
+                        AppState.dispatch({type: 'previewFile', fileId: id, page, psKey: doc._id})
+                      }}
+                      mini={true} />,
+                      (
+                        (previewing !== null && previewing.psKey === doc._id && this.props.showSmallPreview) ? (
+                          <FilePreview
+                            key={doc._id + '_preview'}
+                            doc={previewing.id}
+                            page={previewing.page}
+                            highlightingQ={previewing.highlightingQ}
+                            shouldUseFixedTop={true} />
+                        ) : null
+                      )
+                  ]
+                })}
+              </div>
+            </div>
+          ) : null}
           {times.length > 0 ? (
             <div>
-              <p>Or choose from this list:</p>
+              <p>List of available exam season for {thisSubject}:</p>
               <ul className='timeslist'>
                 {times.map(ss => {
                   if (AppState.getState().serverrender) {
@@ -101,7 +137,7 @@ class OverflowView extends React.Component {
     } else {
       return (
         <div className='overflow'>
-          Your search returned too many results. Try to be more specific…
+          Your search returned too many results. Try to be more specific by adding the paper number you want, for example.
         </div>
       )
     }

@@ -132,7 +132,7 @@ class SearchResult extends React.Component {
       switch (result.response) {
         case 'overflow':
           return (
-            <OverflowView query={query} response={result} onChangeQuery={this.handleOverflowChangeQuery} />
+            <OverflowView query={query} response={result} onChangeQuery={this.handleOverflowChangeQuery} showSmallPreview={this.props.showSmallPreview} previewing={this.props.previewing} />
           )
         case 'empty':
         default:

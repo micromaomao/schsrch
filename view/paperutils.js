@@ -1,4 +1,5 @@
 const shortTypes = ['qp', 'ms', 'in', 'sin', 'er', 'gt', 'ci', 'sp', 'sm', 'sci', 'rb', 'srb', 'srbi', 'un', 'dc', 'tc', 'tn', 'stc', 'stn', 'ts', 'sts', 'sb', 'ab', 'gn', 'su', 'pl', 'rlg', 'rls', 'ecr', 'lg']
+const subjectMetaTypes = ['pl', 'rlg', 'rls', 'ecr', 'lg']
 const longTypes = [
   'question paper',
   'mark scheme',
@@ -39,7 +40,7 @@ const longMonths = ['Feb/March', 'May/June', 'Oct/Nov', 'For examination from']
 const odashMonths = ['F/M', 'M/J', 'O/N', 'SP']
 
 module.exports = {
-  shortTypes, longTypes,
+  shortTypes, subjectMetaTypes, longTypes,
   shortMonths, longMonths, odashMonths,
   setToString: entity => `${entity.subject}_${entity.time}_${entity.paper}_${entity.variant}`,
   setEqual: (a, b) => a.subject === b.subject && a.time === b.time && a.paper === b.paper && a.variant === b.variant,
