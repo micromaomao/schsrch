@@ -25,7 +25,7 @@ let es = new elasticsearch.Client({
   host: ES
 })
 db.on('open', () => {
-  require('./lib/dbModel.js')(db, es).then(({PastPaperIndex, PastPaperDoc}) => {
+  require('./lib/dbModel.js')(db, es).then(({PastPaperIndex, PastPaperDoc, PastPaperPaperBlob}) => {
     const indexPdf = path => new Promise((resolve, reject) => {
       const fname = path.split('/').slice(-1)[0]
       if (debug) {
@@ -38,10 +38,27 @@ db.on('open', () => {
         }
 
         let doc = new PastPaperDoc({
-          fileBlob: data,
+          // New format with PaperBlob.
+          fileBlob: null,
           // Will add numPages later.
           fileType: 'pdf'
         })
+        let storeData = () => {
+          let chunks = []
+          let chunkLength = 10 * 1024 * 1024 // 10 MiB
+          for (let cOffset = 0; cOffset < data.length; cOffset += chunkLength) {
+            let slice = data.slice(cOffset, Math.min(data.length, cOffset + chunkLength))
+            chunks.push(new PastPaperPaperBlob({
+              docId: doc._id,
+              offset: cOffset,
+              data: slice
+            }))
+          }
+          if (chunks.length > 1) {
+            process.stderr.write(`${chunks.length} chunks for ${path} (${Math.round(data.length / 1024 / 1024 * 10) / 10} MiB)        \n`)
+          }
+          return Promise.all(chunks.map(c => c.save()))
+        }
         let loadPage = (pIndex, returnNumPages = false) => new Promise((resolve, reject) => {
           new Promise((resolve, reject) => {
             sspdfLock(function (done) {
@@ -86,7 +103,7 @@ db.on('open', () => {
         if (debug) {
           process.stderr.write(`Loading cover page in ${path}\n`)
         }
-        loadPage(0, true).then(([idx0, numPages]) => {
+        storeData().then(() => loadPage(0, true)).then(([idx0, numPages]) => {
           if (debug) {
             process.stderr.write(`Load cover page in ${path}, numPages = ${numPages}\n`)
           }

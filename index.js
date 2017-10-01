@@ -171,9 +171,13 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
             return
           }
           let fname = `${PaperUtils.setToString(doc)}_${doc.type}.${doc.fileType}`
-          res.set('Content-Disposition', `inline; filename=${JSON.stringify(fname)}`)
-          res.type(doc.fileType)
-          res.send(doc.fileBlob)
+          doc.getFileBlob().then(blob => {
+            res.set('Content-Disposition', `inline; filename=${JSON.stringify(fname)}`)
+            res.type(doc.fileType)
+            res.send(blob)
+          }, err => {
+            next(err)
+          })
         } else if (format === 'sspdf') {
           if (page === null) {
             next()
@@ -545,22 +549,23 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
             resolve(postCache(ppIdx.sspdfCache))
           } else {
             console.log(`Building sspdf for ${doc._id}::${pn} (idx//${ppIdx._id})`)
-            let buff = doc.fileBlob
-            sspdf.getPage(buff, pn, function (err, result) {
-              if (err) {
-                reject(err)
-              } else {
-                sspdf.preCache(result, nResult => {
-                  ppIdx.sspdfCache = nResult
-                  result = null
-                  ppIdx.save(err => {
-                    if (err) {
-                      console.error('Unable to save sspdfCache: ' + err)
-                    }
-                    resolve(postCache(nResult))
+            doc.getFileBlob().then(buff => {
+              sspdf.getPage(buff, pn, function (err, result) {
+                if (err) {
+                  reject(err)
+                } else {
+                  sspdf.preCache(result, nResult => {
+                    ppIdx.sspdfCache = nResult
+                    result = null
+                    ppIdx.save(err => {
+                      if (err) {
+                        console.error('Unable to save sspdfCache: ' + err)
+                      }
+                      resolve(postCache(nResult))
+                    })
                   })
-                })
-              }
+                }
+              })
             })
           }
         }).catch(reject)

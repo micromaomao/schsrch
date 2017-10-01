@@ -40,77 +40,88 @@ db.on('open', () => {
         }
         let setName = PaperUtils.setToString(doc)
         let fname = `${setName}_${doc.type}.pdf`
-        fs.writeFileSync(path.join(outputDir, fname), doc.fileBlob, {encoding: null})
-        process.stdout.write(`Extracted ${i + 1} out of ${docs.length} total. (${Math.round(((i + 1) / docs.length) * 1000) / 10}%)   \r`)
-        if (doc.type !== 'qp' && doc.type !== 'sp') {
-          doDoc(i + 1)
-          return
-        }
-        let texBk = texStr
-        texStr += `\\paper{${setName.replace(/_/g, ' ')}}\n`
-        doc.ensureDir().then(dir => {
-          if (!dir.dirs || dir.dirs.length === 0) {
-            texStr += `\\error{${setName}}{Empty dir}\n`
-            doDoc(i + 1)
-            return
-          }
-          let qs = dir.dirs
-          let qAdded = 0
-          function doQi (qi) {
-            if (qi >= qs.length) {
-              if (qAdded === 0) {
-                texStr = texBk
-              }
+        doc.getFileBlob().then(blob => {
+          fs.writeFile(path.join(outputDir, fname), blob, {encoding: null}, (err) => {
+            if (err) {
+              console.error(err)
+              process.exit(1)
+              return
+            }
+            process.stdout.write(`Extracted ${i + 1} out of ${docs.length} total. (${Math.round(((i + 1) / docs.length) * 1000) / 10}%)   \r`)
+            if (doc.type !== 'qp' && doc.type !== 'sp') {
               doDoc(i + 1)
               return
             }
-            let q = qs[qi]
-            if (q.qN > 20) return doQi(qi + 1)
-            let seenBeforeQ = seenQuestions.get(q.qT.trim())
-            if (seenBeforeQ) {
-              texStr += `\\duplicateskipped{${q.qN}}{${q.qT.replace(/[^A-Za-z0-9\-\s]/g, '').split(/\s+/).slice(0, 5).join(' ')}\\ldots}{${seenBeforeQ}}\n`
-              doQi(qi + 1)
-              return
-            }
-            seenQuestions.set(q.qT, 'q' + totalQNumber)
-            new Promise((resolve, reject) => {
-              if (qi < qs.length - 1) {
-                let nextQ = qs[qi + 1]
-                if (nextQ.page === q.page) {
-                  resolve(nextQ.qNRect.y1 - 16.56)
-                } else {
-                  findSfw()
-                }
-              } else {
-                findSfw()
+            let texBk = texStr
+            texStr += `\\paper{${setName.replace(/_/g, ' ')}}\n`
+            doc.ensureDir().then(dir => {
+              if (!dir.dirs || dir.dirs.length === 0) {
+                texStr += `\\error{${setName}}{Empty dir}\n`
+                doDoc(i + 1)
+                return
               }
-              function findSfw () {
-                sspdf.getPage(doc.fileBlob, q.page, function(err, ssResult) {
-                  if (err) {
-                    process.stderr.write(err.toString())
-                    resolve(782.24)
-                    return
+              let qs = dir.dirs
+              let qAdded = 0
+              function doQi (qi) {
+                if (qi >= qs.length) {
+                  if (qAdded === 0) {
+                    texStr = texBk
                   }
-                  let sfw = ssResult.text.lastIndexOf('Space for working')
-                  if (sfw >= 0) {
-                    resolve(ssResult.rects[sfw].y1 - 5)
+                  doDoc(i + 1)
+                  return
+                }
+                let q = qs[qi]
+                if (q.qN > 20) return doQi(qi + 1)
+                let seenBeforeQ = seenQuestions.get(q.qT.trim())
+                if (seenBeforeQ) {
+                  texStr += `\\duplicateskipped{${q.qN}}{${q.qT.replace(/[^A-Za-z0-9\-\s]/g, '').split(/\s+/).slice(0, 5).join(' ')}\\ldots}{${seenBeforeQ}}\n`
+                  doQi(qi + 1)
+                  return
+                }
+                seenQuestions.set(q.qT, 'q' + totalQNumber)
+                new Promise((resolve, reject) => {
+                  if (qi < qs.length - 1) {
+                    let nextQ = qs[qi + 1]
+                    if (nextQ.page === q.page) {
+                      resolve(nextQ.qNRect.y1 - 16.56)
+                    } else {
+                      findSfw()
+                    }
                   } else {
-                    process.stderr.write(`\nResorting to page bottom for ${fname}...\n`)
-                    resolve(782.24)
+                    findSfw()
                   }
+                  function findSfw () {
+                    sspdf.getPage(blob, q.page, function(err, ssResult) {
+                      if (err) {
+                        process.stderr.write(err.toString())
+                        resolve(782.24)
+                        return
+                      }
+                      let sfw = ssResult.text.lastIndexOf('Space for working')
+                      if (sfw >= 0) {
+                        resolve(ssResult.rects[sfw].y1 - 5)
+                      } else {
+                        process.stderr.write(`\nResorting to page bottom for ${fname}...\n`)
+                        resolve(782.24)
+                      }
+                    })
+                  }
+                }).then(nextY1 => {
+                  texStr += `\\labelq{q${totalQNumber}}\\includegraphics[page=${q.page + 1},trim=1cm ${(pageHeightInternal - nextY1) * scale}cm 1cm ${q.qNRect.y1 * scale}cm,clip,width=\\textwidth]{${fname}}\n`
+                  totalQNumber ++
+                  qAdded ++
+                  doQi(qi + 1)
                 })
               }
-            }).then(nextY1 => {
-              texStr += `\\labelq{q${totalQNumber}}\\includegraphics[page=${q.page + 1},trim=1cm ${(pageHeightInternal - nextY1) * scale}cm 1cm ${q.qNRect.y1 * scale}cm,clip,width=\\textwidth]{${fname}}\n`
-              totalQNumber ++
-              qAdded ++
-              doQi(qi + 1)
+              doQi(0)
+            }, err => {
+              texStr += `\\error{${setName}}{Can not generate dir}\n`
+              doDoc(i + 1)
             })
-          }
-          doQi(0)
+          })
         }, err => {
-          texStr += `\\error{${setName}}{Can not generate dir}\n`
-          doDoc(i + 1)
+          console.error(err)
+          process.exit(1)
         })
       }
       doDoc(0)
