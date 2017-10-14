@@ -451,21 +451,23 @@ AppState.browserSupportsPassiveEvents = (() => {
 
 let focusingInput = null
 
-document.addEventListener('focusin', evt => {
-  let { target } = evt
-  let tagName = target.tagName.toLowerCase()
-  if (tagName === 'input' || tagName === 'textarea') {
-    focusingInput = target
-  }
-})
+if (document) {
+  document.addEventListener('focusin', evt => {
+    let { target } = evt
+    let tagName = target.tagName.toLowerCase()
+    if (tagName === 'input' || tagName === 'textarea') {
+      focusingInput = target
+    }
+  })
 
-document.addEventListener('focusout', evt => {
-  let { target } = evt
-  let tagName = target.tagName.toLowerCase()
-  if (tagName === 'input' || tagName === 'textarea' && target === focusingInput) {
-    focusingInput = null
-  }
-})
+  document.addEventListener('focusout', evt => {
+    let { target } = evt
+    let tagName = target.tagName.toLowerCase()
+    if (tagName === 'input' || tagName === 'textarea' && target === focusingInput) {
+      focusingInput = null
+    }
+  })
+}
 
 AppState.shouldResponseKeyboardShortcut = () => {
   return !focusingInput && !(document.activeElement && document.activeElement.contentEditable === 'true')
