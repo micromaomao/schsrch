@@ -12,7 +12,6 @@ module.exports = {
   collection: null,
   view: 'home',
   previewPages: {},
-  queryFocusing: false,
   authToken: null,
   loginView: null,
   paperCropClipboard: null,

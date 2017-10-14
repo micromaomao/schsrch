@@ -30,7 +30,6 @@ let AppState = createStore(function (state = {}, action) {
         return Object.assign({}, init)
       }
       return Object.assign({}, init, action.state, {
-        queryFocusing: false,
         loginInfo: null
       })
     case 'query': // Will trigger load.
@@ -155,14 +154,6 @@ let AppState = createStore(function (state = {}, action) {
           show: false
         }),
         showSidebar: false
-      })
-    case 'queryFocus':
-      return Object.assign({}, state, {
-        queryFocusing: true
-      })
-    case 'queryUnfocus':
-      return Object.assign({}, state, {
-        queryFocusing: false
       })
     case 'view-collection':
       if (state.view === 'collection' && state.collection.id === action.collectionId) {
@@ -458,7 +449,27 @@ AppState.browserSupportsPassiveEvents = (() => {
   return supportsPassive
 })()
 
-AppState.shouldResponseKeyboardShortcut = () => !AppState.getState().queryFocusing && !(document.activeElement && document.activeElement.contentEditable === 'true') // TODO: Ugly but quick hack, FIXME!
+let focusingInput = null
+
+document.addEventListener('focusin', evt => {
+  let { target } = evt
+  let tagName = target.tagName.toLowerCase()
+  if (tagName === 'input' || tagName === 'textarea') {
+    focusingInput = target
+  }
+})
+
+document.addEventListener('focusout', evt => {
+  let { target } = evt
+  let tagName = target.tagName.toLowerCase()
+  if (tagName === 'input' || tagName === 'textarea' && target === focusingInput) {
+    focusingInput = null
+  }
+})
+
+AppState.shouldResponseKeyboardShortcut = () => {
+  return !focusingInput && !(document.activeElement && document.activeElement.contentEditable === 'true')
+}
 AppState.sspdfDecacheVersion = 2
 AppState.supportSspdfView = bowser.check({
   msie: '11',

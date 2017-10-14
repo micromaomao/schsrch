@@ -223,12 +223,10 @@ class SearchBar extends React.Component {
   focus (dryRun) {
     if (!dryRun) this.input.focus()
     this.setState({focus: true})
-    AppState.dispatch({type: 'queryFocus'})
   }
   blur (dryRun) {
     if (!dryRun) this.input.blur()
     this.setState({focus: false, subjectHintSelect: null})
-    AppState.dispatch({type: 'queryUnfocus'})
   }
 }
 
