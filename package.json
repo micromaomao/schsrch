@@ -9,9 +9,9 @@
     "prepare": "npm run webpack",
     "webpack-dev": "webpack --progress --colors --watch",
     "webpack": "NODE_ENV=production webpack --progress --optimize-minimize --define process.env.NODE_ENV='\"production\"'; if [ $? -eq 0 ]; then echo OK.; else echo Failed.; fi",
-    "test": "mocha --delay",
-    "coverage": "node_modules/.bin/istanbul cover -x \"**/dist-server/**\" --report lcovonly node_modules/.bin/_mocha -- --delay -R spec",
-    "coverage-html": "node_modules/.bin/istanbul cover -x \"**/dist-server/**\" node_modules/.bin/_mocha -- --delay"
+    "test": "mocha --delay --exit",
+    "coverage": "node_modules/.bin/istanbul cover -x \"**/dist-server/**\" --report lcovonly node_modules/.bin/_mocha -- --delay --exit -R spec",
+    "coverage-html": "node_modules/.bin/istanbul cover -x \"**/dist-server/**\" node_modules/.bin/_mocha -- --delay --exit"
   },
   "repository": {
     "type": "git",
