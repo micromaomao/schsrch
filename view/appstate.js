@@ -449,27 +449,10 @@ AppState.browserSupportsPassiveEvents = (() => {
   return supportsPassive
 })()
 
-let focusingInput = null
-
-if (document) {
-  document.addEventListener('focusin', evt => {
-    let { target } = evt
-    let tagName = target.tagName.toLowerCase()
-    if (tagName === 'input' || tagName === 'textarea') {
-      focusingInput = target
-    }
-  })
-
-  document.addEventListener('focusout', evt => {
-    let { target } = evt
-    let tagName = target.tagName.toLowerCase()
-    if (tagName === 'input' || tagName === 'textarea' && target === focusingInput) {
-      focusingInput = null
-    }
-  })
-}
+AppState.focusingInput = null
 
 AppState.shouldResponseKeyboardShortcut = () => {
+  let { focusingInput } = AppState
   return !focusingInput && !(document.activeElement && document.activeElement.contentEditable === 'true')
 }
 AppState.sspdfDecacheVersion = 2

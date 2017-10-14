@@ -147,6 +147,22 @@ window.addEventListener('popstate', evt => {
   AppState.dispatch({type: 'load', state})
 })
 
+document.addEventListener('focusin', evt => {
+  let { target } = evt
+  let tagName = target.tagName.toLowerCase()
+  if (tagName === 'input' || tagName === 'textarea') {
+    AppState.focusingInput = target
+  }
+})
+
+document.addEventListener('focusout', evt => {
+  let { target } = evt
+  let tagName = target.tagName.toLowerCase()
+  if (tagName === 'input' || tagName === 'textarea' && target === AppState.focusingInput) {
+    AppState.focusingInput = null
+  }
+})
+
 let ui = null
 reactRootElement.innerHTML = '' // Otherwise it produces element with wrong class - try it yourself with React 16.0.0.
 ReactDOM.render(
