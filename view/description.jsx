@@ -87,7 +87,7 @@ class Description extends React.Component {
       statusInfo = (
         <div className={'status' + (this.state.loading ? ' loading' : '')}>
           <div className='large'>
-            Trying to be the most simple and intuitive CIE search engine, made by pupils.
+            Studying — student dying
           </div>
           <div className='hr' />
           <div>
