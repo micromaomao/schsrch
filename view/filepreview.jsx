@@ -102,22 +102,25 @@ class FilePreview extends React.Component {
     this.load(doc, page)
   }
   componentDidUpdate (prevProps, prevState) {
-    try {
-      if (prevProps.doc !== this.props.doc || prevProps.page !== this.props.page) {
-        this.sspdfView && this.sspdfView.reCenter()
-        this.setState({pageInputValue: null, showingDir: false})
+    if (prevProps.doc !== this.props.doc || prevProps.page !== this.props.page) {
+      this.sspdfView && this.sspdfView.reCenter()
+      this.setState({pageInputValue: null, showingDir: false})
+    }
+    this.measureViewDim()
+    if (this.props.shouldUseFixedTop && this.mainDiv && !window.document.fullscreenElement && this.state.measuredViewHeight) {
+      let topleft = view2client([0, 0], this.mainDiv)
+      if (topleft[1] < 46 && topleft[1] + this.state.measuredViewHeight > -0.001) {
+        if (!this.state.topFixed) this.setState({topFixed: true})
+      } else {
+        if (this.state.topFixed) this.setState({topFixed: false})
       }
-      this.measureViewDim()
-      if (this.props.shouldUseFixedTop && this.mainDiv && !window.document.fullscreenElement && this.state.measuredViewHeight) {
-        let topleft = view2client([0, 0], this.mainDiv)
-        if (topleft[1] < 46 && topleft[1] + this.state.measuredViewHeight > -0.001) {
-          if (!this.state.topFixed) this.setState({topFixed: true})
-        } else {
-          if (this.state.topFixed) this.setState({topFixed: false})
-        }
+    }
+    if (this.mainDiv) {
+      if (window.document.fullscreenElement === this.mainDiv && !this.state.fullscreen) {
+        this.setState({fullscreen: true})
+      } else if (!window.document.fullscreenElement && this.state.fullscreen) {
+        this.setState({fullscreen: false})
       }
-    } catch (e) {
-      console.error(e)
     }
   }
   load (doc = this.props.doc, page = this.props.page) {
@@ -214,6 +217,9 @@ class FilePreview extends React.Component {
                 </a>
                 <a className='download' onClick={evt => this.download()}>
                   <svg className="icon ii-dl"><use href="#ii-dl" xlinkHref="#ii-dl" /></svg>
+                </a>
+                <a className='fullscreen' onClick={evt => this.toggleFullScreen()}>
+                  <svg className="icon ii-fullscreen"><use href="#ii-fullscreen" xlinkHref="#ii-fullscreen" /></svg>
                 </a>
                 <a className='close' onClick={evt => AppState.dispatch({type: 'closePreview'})}>
                   <svg className="icon ii-c"><use href="#ii-c" xlinkHref="#ii-c" /></svg>
