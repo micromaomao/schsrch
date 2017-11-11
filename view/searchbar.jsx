@@ -165,7 +165,7 @@ class SearchBar extends React.Component {
         </div>
       )
     }
-    const placeholderText = '... Type here ...'
+    const placeholderText = '... Start by eg. typing 9709 or math ...'
     let renderT = (
       <div className={this.props.big ? 'searchbar big' : 'searchbar small'}>
         <div className={'bannerContain' + (hideBanner ? ' hide' : '')}>

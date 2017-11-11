@@ -1,5 +1,4 @@
 const React = require('react')
-const Feedback = require('./feedback.jsx')
 const { createStore } = require('redux')
 const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.js')
@@ -86,10 +85,6 @@ class Description extends React.Component {
       let stat = this.state.status
       statusInfo = (
         <div className={'status' + (this.state.loading ? ' loading' : '')}>
-          <div className='large'>
-            Mentally Abusive Torture for Human
-          </div>
-          <div className='hr' />
           <div>
             Currently supporting&nbsp;
             <a onClick={evt => AppState.dispatch({type: 'subjects'})}>
@@ -118,23 +113,13 @@ class Description extends React.Component {
     }
     return (
       <div className='home-desc'>
-        {!this.state.server
-          ? (
-            <div className='links'>
-              <a onClick={evt => Feedback.show()}>Feedback</a>
-              &nbsp;
-              <a onClick={evt => AppState.dispatch({type: 'disclaim'})}>Disclaimer</a>
-              &nbsp;
-              <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
-            </div>
-          )
-          : (
-            <div className='links'>
-              <a href='/disclaim/'>Disclaimer</a>
-              &nbsp;
-              <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
-            </div>
-          )}
+        {this.state.server ? (
+          <div className='links'>
+            <a href='/disclaim/'>Disclaimer</a>
+            &nbsp;
+            <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
+          </div>
+        ) : null}
         {statusInfo}
       </div>
     )
