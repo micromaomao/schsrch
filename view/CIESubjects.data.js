@@ -52,6 +52,11 @@ module.exports = [
     name: 'English - First Language'
   },
   {
+    id: '0509',
+    level: 'IGCSE',
+    name: 'Chinese - First Language'
+  },
+  {
     id: '0511',
     level: 'IGCSE',
     name: 'English as a Second Language'
@@ -90,6 +95,11 @@ module.exports = [
     id: '0625',
     level: 'IGCSE',
     name: 'Physics'
+  },
+  {
+    id: '8681',
+    level: 'AS',
+    name: 'Chinese - Language (AS Level only)'
   },
   {
     id: '8987',
@@ -167,5 +177,10 @@ module.exports = [
     id: '9709',
     level: 'A/s',
     name: 'Mathematics'
+  },
+  {
+    id: '9715',
+    level: 'AL',
+    name: 'Chinese (A Level only)'
   }
 ]

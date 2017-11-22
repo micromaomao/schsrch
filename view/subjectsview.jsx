@@ -80,6 +80,10 @@ class SubjectsView extends React.Component {
         <ul>
           {SubjectData.filter(x => x.level === 'A/s').map(subjFunc)}
         </ul>
+        <h2>Misc</h2>
+        <ul>
+          {SubjectData.filter(x => x.level !== 'A/s' && x.level !== 'IGCSE').map(subjFunc)}
+        </ul>
       </div>
     )
   }
