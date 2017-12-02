@@ -38,11 +38,18 @@ let AppState = createStore(function (state = {}, action) {
           querying: null
         })
       }
+      if (state.querying && state.querying.query.trim() === action.query.trim()) {
+        return Object.assign({}, state, {
+          querying: Object.assign({}, state.querying || {}, {
+            query: action.query,
+          }),
+          showSidebar: false
+        })
+      }
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
           query: action.query,
           loading: true,
-          result: null,
           error: null
         }),
         showSidebar: false

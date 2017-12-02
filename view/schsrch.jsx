@@ -47,7 +47,7 @@ class SchSrch extends React.Component {
 
     if (state.view !== this.state.lastView) {
       let lastView = this.state.lastView
-      this.setState({lastView: state.view})
+      this.setState({lastView: state.view, viewScrollAtTop: true})
 
       if (this.searchbar) {
         this.searchbar.focus()
@@ -58,6 +58,8 @@ class SchSrch extends React.Component {
       if (state.querying.loading && state.querying.query !== this.state.lastQueryLoad) {
         this.loadQuery()
       }
+    } else {
+      this.setState({lastQueryLoad: null})
     }
 
     this.forceUpdate()
@@ -265,7 +267,7 @@ class SchSrch extends React.Component {
     let querying = AppState.getState().querying
     if (!querying) return
     let query = querying.query.trim()
-    this.setState({lastQueryLoad: query})
+    this.setState({lastQueryLoad: query, viewScrollAtTop: true})
     fetch('/search/?query=' + encodeURIComponent(query.trim()) + '&as=json').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
       // AppState will check if the query has changed since the request started.
       if (result.response === 'error') {
