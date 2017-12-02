@@ -20,21 +20,20 @@ class SchSrch extends React.Component {
     super(props)
     this.state = {
       coverHideAnimation: 0,
-      view: 'home',
       viewScrollAtTop: true,
       showFeedback: false,
       showSidebar: false,
-      query: ''
+      lastQueryLoad: null,
+      lastView: null
     }
     this.handleUpdate = this.handleUpdate.bind(this)
-    this.handleQuery = this.handleQuery.bind(this)
+    this.handleSearchBarQuery = this.handleSearchBarQuery.bind(this)
     this.handleSearchContainScroll = this.handleSearchContainScroll.bind(this)
     this.handleBlackCoverDown = this.handleBlackCoverDown.bind(this)
     // UI Components should support server rendering to allow javascript-disabled users to use this App.
     // The DOM produced by server and client javascript could (and should) differ.
     if (AppState.getState().serverrender) {
       this.state.server = true
-      this.state.view = AppState.getState().view
     }
   }
   handleUpdate () {
@@ -46,22 +45,24 @@ class SchSrch extends React.Component {
       this.setState({showSidebar: state.showSidebar, coverHideAnimation: Date.now()})
     }
 
-    this.setState({view: state.view, query: state.querying ? state.querying.query : ''})
+    if (state.view !== this.state.lastView) {
+      let lastView = this.state.lastView
+      this.setState({lastView: state.view})
 
-    if (state.querying && !state.querying.loading && !state.querying.error && !state.querying.result) {
-      this.handleQuery(state.querying.query)
-    }
-  }
-  componentDidUpdate (prevProps, prevState) {
-    if (this.searchbar) {
-      if (prevState.view !== this.state.view && this.state.query) {
-        this.searchbar.setQuery(this.state.query)
-        this.searchbar.focus()
-      } else if (typeof prevState.query === 'string' && typeof this.state.query === 'string' && (prevState.query.trim() === '') !== (this.state.query.trim() === '')) {
+      if (this.searchbar) {
         this.searchbar.focus()
       }
     }
+
+    if (state.querying) {
+      if (state.querying.loading && state.querying.query !== this.state.lastQueryLoad) {
+        this.loadQuery()
+      }
+    }
+
+    this.forceUpdate()
   }
+
   render () {
     let blackCoverStyle = {}
     let coverAnimationTime = Math.max(0, Date.now() - this.state.coverHideAnimation)
@@ -83,11 +84,12 @@ class SchSrch extends React.Component {
         past paper websites but SchSrch.
       </p>
     )
+    let aState = AppState.getState()
     let view = (() => {
-      switch (this.state.view) {
+      switch (aState.view) {
         case 'home':
         default:
-          return AppState.getState().querying ? this.renderSearch() : this.renderHome()
+          return aState.querying ? this.renderSearch() : this.renderHome()
         case 'disclaim':
           return this.renderDisclaim()
         case 'collection':
@@ -100,10 +102,7 @@ class SchSrch extends React.Component {
           return this.renderViewSubjects()
       }
     })()
-    let aState = AppState.getState()
-    let previewing = aState.previewing
-    let collection = aState.collection
-    let paperCropClipboard = aState.paperCropClipboard
+    let { previewing, collection, paperCropClipboard } = aState
     let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
       <div className='schsrch'>
@@ -138,14 +137,11 @@ class SchSrch extends React.Component {
           ) : null}
           <div className={'viewcontain' + (displayingBigPreview ? ' sidepane' : '')}>
             {view}
-            {this.shouldShowBigPreview() && previewing
-              ? (
-                  <FilePreview doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
-                )
-              : null
-            }
+            {displayingBigPreview ? (
+              <FilePreview doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
+            ) : null }
           </div>
-          {!aState.paperCropClipboard && collection && collection.homeFromCollection
+          {!paperCropClipboard && collection && collection.homeFromCollection
             ? (
                 <div className='bottom'>
                   No paper crop selected. <a
@@ -164,7 +160,7 @@ class SchSrch extends React.Component {
                     {paperCropClipboard.docMeta
                       ? (
                           <a onClick={evt => {
-                              this.handleQuery(PaperUtils.setToString(paperCropClipboard.docMeta))
+                              AppState.dispatch({type: 'query', query: PaperUtils.setToString(paperCropClipboard.docMeta)})
                               AppState.dispatch({type: 'home'})
                             }}>
                             {PaperUtils.setToString(paperCropClipboard.docMeta)}_{paperCropClipboard.docMeta.type}
@@ -210,8 +206,8 @@ class SchSrch extends React.Component {
                 <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars"></use></svg>
               </div>
             ) : null}
-        <div className={'searchbarcontain'}>
-          <SearchBar key='searchbar' ref={f => this.searchbar = f} big={true} onQuery={this.handleQuery} loading={false} />
+        <div className='searchbarcontain' key='searchbarcontain'>
+          <SearchBar key='searchbar' ref={f => this.searchbar = f} big={true} onQuery={this.handleSearchBarQuery} />
         </div>
         <Description />
       </div>
@@ -237,27 +233,25 @@ class SchSrch extends React.Component {
     let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
       <div className='view view-search'>
-        <div className={'searchbarcontain prepare-shadow' + (this.state.viewScrollAtTop ? ' noshadow' : ' shadow')}>
+        <div key='searchbarcontain' className={'searchbarcontain prepare-shadow' + (this.state.viewScrollAtTop ? ' noshadow' : ' shadow')}>
           {!this.state.server ? (
             <div className='sidebarbtn' onClick={evt => AppState.dispatch({type: 'show-sidebar'})}>
               <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars"></use></svg>
             </div>
           ) : null}
-          <SearchBar key='searchbar' ref={f => this.searchbar = f} big={false} onQuery={this.handleQuery}
-            loading={AppState.getState().querying.loading || false} />
+          <SearchBar key='searchbar' ref={f => this.searchbar = f} big={false} onQuery={this.handleSearchBarQuery} />
         </div>
         <div className='searchcontain' onScroll={this.handleSearchContainScroll}>
           <SearchResult
             querying={AppState.getState().querying}
             previewing={previewing}
             showSmallPreview={!this.shouldShowBigPreview()}
-            onRetry={() => this.handleQuery(this.state.query)}
-            onChangeQuery={nQuery => this.handleQuery(nQuery)}
+            onRetry={this.loadQuery}
             smallerSetName={this.state.server ? false : window.innerWidth <= 500 || displayingBigPreview} />
         </div>
         {AppState.getState().serverrender ? null : (
-            <a className='fbBtn' onClick={evt => Feedback.show((AppState.getState().querying || {}).query)}>Report issues/missing/errors with this search...</a>
-          )}
+          <a className='fbBtn' onClick={evt => Feedback.show(query)}>Report issues/missing/errors with this search...</a>
+        )}
       </div>
     )
   }
@@ -267,32 +261,27 @@ class SchSrch extends React.Component {
     this.setState({viewScrollAtTop})
   }
 
-  handleQuery (query) {
-    this.searchbar && this.searchbar.setQuery(query)
-    if (query.trim().length === 0) {
-      AppState.dispatch({type: 'query', query: ''})
-      return
-    }
-    let oldQuery = this.state.query
-    AppState.dispatch({type: 'query-perpare', query})
+  loadQuery () {
     let querying = AppState.getState().querying
-    if (querying && (query.trim() !== oldQuery.trim() || !querying.result || querying.loading)) {
-      AppState.dispatch({type: 'queryStartRequest'})
-      fetch('/search/?query=' + encodeURIComponent(query.trim()) + '&as=json').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
-        // AppState will check if the query has changed since the request started.
-        if (result.response === 'error') {
-          AppState.dispatch({type: 'queryError', query, error: result.err})
-          return
-        }
-        AppState.dispatch({type: 'queryResult', query, result})
-      }, err => {
-        AppState.dispatch({type: 'queryError', query, error: err})
-      })
-    } else {
-      AppState.dispatch({type: 'queryResult', query, result: querying.result})
-    }
-    this.setState({viewScrollAtTop: true})
+    if (!querying) return
+    let query = querying.query.trim()
+    this.setState({lastQueryLoad: query})
+    fetch('/search/?query=' + encodeURIComponent(query.trim()) + '&as=json').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
+      // AppState will check if the query has changed since the request started.
+      if (result.response === 'error') {
+        AppState.dispatch({type: 'query-error', query, error: result.err})
+        return
+      }
+      AppState.dispatch({type: 'query-load', query, result})
+    }, err => {
+      AppState.dispatch({type: 'query-error', query, error: err})
+    })
   }
+
+  handleSearchBarQuery (query) {
+    AppState.dispatch({type: 'query', query})
+  }
+
   renderDisclaim () {
     return (
         <div className='view'>
@@ -333,9 +322,6 @@ class SchSrch extends React.Component {
     this.handleUpdate()
     this.unsub = AppState.subscribe(this.handleUpdate)
     if (AppState.getState().previewing === null) this.searchbar.focus()
-    // not using this.state.query since it may not be perpared. (React sort of buffers the state changes)
-    this.searchbar.setQuery(AppState.getState().querying ? AppState.getState().querying.query : '')
-    AppState.getState().querying && this.handleQuery(AppState.getState().querying.query)
   }
   componentWillUnmount () {
     this.unsub()

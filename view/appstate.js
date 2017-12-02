@@ -32,7 +32,7 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, init, action.state, {
         loginInfo: null
       })
-    case 'query': // Will trigger load.
+    case 'query':
       if (action.query.trim().length === 0) {
         return Object.assign({}, state, {
           querying: null
@@ -41,17 +41,9 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
           query: action.query,
-          loading: false,
+          loading: true,
           result: null,
           error: null
-        }),
-        showSidebar: false
-      })
-    case 'query-perpare': // Used internally, will not trigger load.
-      return Object.assign({}, state, {
-        querying: Object.assign({}, state.querying || {}, {
-          query: action.query,
-          loading: true
         }),
         showSidebar: false
       })
@@ -59,14 +51,7 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         querying: action.querying
       })
-    case 'queryStartRequest':
-      return Object.assign({}, state, {
-        querying: Object.assign({}, state.querying || {}, {
-          loading: true,
-          error: null
-        })
-      })
-    case 'queryError':
+    case 'query-error':
       if (!(state.querying && state.querying.query.trim() === action.query.trim())) return state
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
@@ -75,7 +60,7 @@ let AppState = createStore(function (state = {}, action) {
           result: null
         })
       })
-    case 'queryResult':
+    case 'query-load':
       if (!(state.querying && state.querying.query.trim() === action.query.trim())) return state
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {

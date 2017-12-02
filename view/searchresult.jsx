@@ -96,7 +96,7 @@ class SearchResult extends React.Component {
             {(() => {
               let newQuery = `${dst.of}${querying.query.substr(4)}`
               let href = AppState.getState().serverrender ? `/search/?as=page&query=${encodeURIComponent(newQuery)}` : null
-              let handleClick = evt => this.props.onChangeQuery && this.props.onChangeQuery(newQuery)
+              let handleClick = evt => AppState.dispatch({type: 'query', query: newQuery})
               if (dst.type === 'former') {
                 return (
                     <div className='msg'>

@@ -8,10 +8,10 @@ class SearchBar extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      query: '',
-      lastQueryChange: 0,
-      loadingStart: null,
-      lastTimeout: null,
+      query: '', // The string in the input box
+      lastQueryChange: 0, // timestamp
+      loadingStart: null, // timestamp
+      lastTimeout: null, // return of setTimeout
       lastQuerySubmited: '',
       focus: true,
       subjectHintSelect: null
@@ -26,26 +26,52 @@ class SearchBar extends React.Component {
     this.handlePlaceholderClick = this.handlePlaceholderClick.bind(this)
     this.handleQueryChange = this.handleQueryChange.bind(this)
     this.handleKey = this.handleKey.bind(this)
+    this.handleAppStateUpdate = this.handleAppStateUpdate.bind(this)
+  }
+  shouldShowLoading () {
+    let querying = AppState.getState().querying
+    return querying && querying.loading
   }
   componentDidMount () {
+    if (AppState.getState().querying) {
+      let q = AppState.getState().querying.query
+      if (!q) return
+      this.setState({
+        query: q,
+        lastQuerySubmited: q,
+        lastQueryChange: Date.now()
+      })
+    }
+    this.setState({loadingStart: this.shouldShowLoading() ? Date.now() : null})
+    this.unsub = AppState.subscribe(this.handleAppStateUpdate)
+  }
+  handleAppStateUpdate () {
+    let showLoading = this.shouldShowLoading()
+    if (showLoading && this.state.loadingStart === null) {
+      this.setState({loadingStart: Date.now()})
+    } else if (!showLoading && this.state.loadingStart !== null) {
+      this.setState({loadingStart: null})
+    }
   }
   handlePlaceholderClick (evt) {
     evt.preventDefault()
     this.input.focus()
   }
-  handleQueryChange (evt, immediate = false) {
+  handleQueryChange (evt, immediate = false) { // called by onChange
     let val = evt.target.value
     if (this.state.lastTimeout) {
       clearTimeout(this.state.lastTimeout)
     }
     this.setState({query: val, lastQueryChange: Date.now(), lastTimeout: setTimeout(() => {
-      if (val !== this.state.lastQuerySubmited)
+      let lastQuerySubmited = this.state.lastQuerySubmited
+      if (val !== lastQuerySubmited)
         this.props.onQuery && this.props.onQuery(val)
       this.setState({lastTimeout: null, lastQuerySubmited: val})
     }, immediate ? 1 : this.inputDelay), subjectHintSelect: null})
   }
   clear () {
-    this.setQuery('')
+    this.setQueryImmediate('')
+    this.focus()
   }
   handleKey (evt) {
     if (evt.key === 'ArrowDown' || evt.keyCode === 40) {
@@ -71,19 +97,17 @@ class SearchBar extends React.Component {
     if (!sr) return
     this.chooseSubject(sr.id)
   }
-  componentWillReceiveProps (nextProps) {
-    if (nextProps.loading !== this.props.loading) {
-      this.setState({loadingStart: nextProps.loading ? Date.now() : null})
-    }
-  }
   componentWillUnmount () {
     this.blur()
+    if (this.state.lastTimeout) {
+      clearTimeout(this.state.lastTimeout)
+    }
   }
   chooseSubject (id) {
-    this.setQuery(id + ' ')
+    this.setQueryImmediate(id + ' ')
     setTimeout(() => this.input.focus(), 1)
   }
-  setQuery (query) {
+  setQueryImmediate (query) {
     this.handleQueryChange({
       target: {
         value: query
@@ -93,7 +117,7 @@ class SearchBar extends React.Component {
   searchSubject (query) {
     return CIESubjects.search(query.replace(/^\s+/, ''))
   }
-  calculateSubjectHintSelect(select, length) {
+  calculateSubjectHintSelect (select, length) {
     select = select % length
     if (select < 0) {
       select = length + select
