@@ -52,10 +52,15 @@ class SearchBar extends React.Component {
     } else if (!showLoading && this.state.loadingStart !== null) {
       this.setState({loadingStart: null})
     }
+
+    let { querying } = AppState.getState()
+    if (querying && querying.query !== this.state.lastQuerySubmited && !this.state.focus) {
+      this.setQueryImmediate(querying.query)
+    }
   }
   handlePlaceholderClick (evt) {
     evt.preventDefault()
-    this.input.focus()
+    this.focus()
   }
   handleQueryChange (evt, immediate = false) { // called by onChange
     let val = evt.target.value
@@ -86,7 +91,7 @@ class SearchBar extends React.Component {
       evt.preventDefault()
       this.selectThisSubject()
     }
-    this.input.focus()
+    this.focus()
   }
   selectThisSubject () {
     if (this.state.subjectHintSelect === null || !this.state.focus) {
@@ -102,6 +107,8 @@ class SearchBar extends React.Component {
     if (this.state.lastTimeout) {
       clearTimeout(this.state.lastTimeout)
     }
+    this.unsub()
+    this.unsub = null
   }
   chooseSubject (id) {
     this.setQueryImmediate(id + ' ')
