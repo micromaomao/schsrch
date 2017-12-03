@@ -323,7 +323,8 @@ class SchSrch extends React.Component {
   componentDidMount () {
     this.handleUpdate()
     this.unsub = AppState.subscribe(this.handleUpdate)
-    if (AppState.getState().previewing === null) this.searchbar.focus()
+    let aState = AppState.getState()
+    if (aState.view === 'home' && aState.previewing === null && this.searchbar) this.searchbar.focus()
   }
   componentWillUnmount () {
     this.unsub()
