@@ -79,6 +79,7 @@ class SsPdfView extends React.Component {
       this.state.server = true
     }
     this.rbush = rbush(14)
+    this.dirtyLayerState = null // {ctPos: ..., ctSize: ...}
   }
   render () {
     if (this.state.server) return null
@@ -262,29 +263,29 @@ class SsPdfView extends React.Component {
       let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
       document.addEventListener('mousemove', this.handleMove, noPassiveEventsArgument)
       document.addEventListener('mouseup', this.handleUp, noPassiveEventsArgument)
-      let [ncx, ncy] = this.client2view([evt.clientX, evt.clientY])
       this.setState({dragOrig: {
-        touch: null, x: ncx, y: ncy
+        touch: null,
+        origin: this.client2view([evt.clientX, evt.clientY]),
+        initCtPos: this.state.ctPos
       }, clickValid: true, pressTime: Date.now(), longPressDetectionTimeout: setTimeout(this.longPressDetect, 500)})
       return
     }
     if (evt.touches.length > 1) {
-      this.setState({touchClickValidIdentifier: null, pressTime: null})
-      if (this.state.longPressDetectionTimeout) {
-        clearTimeout(this.state.longPressDetectionTimeout)
-        this.setState({longPressDetectionTimeout: null})
-      }
+      this.markNotClickNorPress()
+      this.markNotDoubleTap()
       let t0 = evt.touches[0]
       let t1 = evt.touches[1]
-      this.setState({lastTapTime: 0, dragOrig: {
+      this.setState({dragOrig: {
         resize: true,
+        initCtPos: this.state.ctPos,
+        initCtSize: this.state.ctSize,
         pointA: {
           identifier: t0.identifier,
-          point: this.client2view([t0.clientX, t0.clientY])
+          origin: this.client2view([t0.clientX, t0.clientY])
         },
         pointB: {
           identifier: t1.identifier,
-          point: this.client2view([t1.clientX, t1.clientY])
+          origin: this.client2view([t1.clientX, t1.clientY])
         }
       }})
       return
@@ -294,19 +295,17 @@ class SsPdfView extends React.Component {
       this.setState({touchClickValidIdentifier: evt.touches[0].identifier})
       this.setState({longPressDetectionTimeout: setTimeout(this.longPressDetect, 500)})
     } else {
-      this.setState({touchClickValidIdentifier: null})
-      if (this.state.longPressDetectionTimeout) {
-        clearTimeout(this.state.longPressDetectionTimeout)
-        this.setState({longPressDetectionTimeout: null})
-      }
+      this.markNotClickNorPress()
     }
     let touch = evt.changedTouches[0]
-    let [ncx, ncy] = this.client2view([touch.clientX, touch.clientY])
     this.setState({dragOrig: {
-      touch: touch.identifier, x: ncx, y: ncy
+      touch: touch.identifier,
+      origin: this.client2view([touch.clientX, touch.clientY]),
+      initCtPos: this.state.ctPos
     }})
   }
   longPressDetect () {
+    this.setState({longPressDetectionTimeout: null})
     if (!this.state.clickValid && this.state.touchClickValidIdentifier === null || !this.state.dragOrig || this.state.pressTime === null) return
     if (this.state.pressTime > 500) {
       this.handleLongPress()
@@ -314,13 +313,30 @@ class SsPdfView extends React.Component {
       this.setState({longPressDetectionTimeout: setTimeout(this.longPressDetect, 500 - this.state.pressTime)})
     }
   }
+  resetUserInput () {
+    this.setState({dragOrig: null})
+    this.markNotClickNorPress()
+    this.markNotDoubleTap()
+  }
+  markNotClickNorPress () {
+    if (this.state.clickValid || this.state.pressTime !== null || this.state.touchClickValidIdentifier !== null) {
+      this.setState({touchClickValidIdentifier: null, pressTime: null, clickValid: false})
+    }
+    this.markNotPress()
+  }
+  markNotPress () {
+    if (this.state.longPressDetectionTimeout) {
+      clearTimeout(this.state.longPressDetectionTimeout)
+      this.setState({longPressDetectionTimeout: null})
+    }
+  }
+  markNotDoubleTap () {
+    if (this.state.lastTapTime === 0) return
+    this.setState({lastTapTime: 0})
+  }
   handleMove (evt, prevent = true) {
     if (!this.svgLayer) {
-      this.setState({clickValid: false, touchClickValidIdentifier: null, pressTime: null})
-      if (this.state.longPressDetectionTimeout) {
-        clearTimeout(this.state.longPressDetectionTimeout)
-        this.setState({longPressDetectionTimeout: null})
-      }
+      this.resetUserInput()
       return
     }
     let dragOrig = this.state.dragOrig
@@ -330,11 +346,8 @@ class SsPdfView extends React.Component {
     }
     if (prevent) evt.preventDefault()
     if (dragOrig.resize) {
-      this.setState({touchClickValidIdentifier: null, pressTime: null})
-      if (this.state.longPressDetectionTimeout) {
-        clearTimeout(this.state.longPressDetectionTimeout)
-        this.setState({longPressDetectionTimeout: null})
-      }
+      this.markNotClickNorPress()
+      this.markNotDoubleTap()
       if (evt.touches.length !== 2) {
         this.setState({dragOrig: null})
         return
@@ -348,71 +361,45 @@ class SsPdfView extends React.Component {
         return
       }
 
-      // Points on last handleMove
-      let [opA, opB] = [dragOrig.pointA.point, dragOrig.pointB.point]
-      // New points
-      let [npA, npB] = [tA, tB].map(t => this.client2view([t.clientX, t.clientY]))
+      let [oA, oB] = [dragOrig.pointA.origin, dragOrig.pointB.origin]
+      let [nA, nB] = [tA, tB].map(t => this.client2view([t.clientX, t.clientY]))
+      let initPos = dragOrig.initCtPos
+      let initSize = dragOrig.initCtSize
 
-      this.ctAnimationStopToState(this.calcPointsResize(opA, opB, npA, npB))
-      this.setState({lastTapTime: 0, dragOrig: {
-        resize: true,
-        pointA: {
-          identifier: tA.identifier,
-          point: this.client2view([tA.clientX, tA.clientY])
-        },
-        pointB: {
-          identifier: tB.identifier,
-          point: this.client2view([tB.clientX, tB.clientY])
-        }
-      }})
+      this.ctAnimationStopToState(this.calcPointsResize({ctPos: initPos, ctSize: initSize}, oA, oB, nA, nB))
       return
     }
+    let origin = dragOrig.origin
     if (!evt.touches && !evt.changedTouches) {
       let [ncx, ncy] = this.client2view([evt.clientX, evt.clientY])
-      let [dx, dy] = [ncx - dragOrig.x, ncy - dragOrig.y]
+      let [dx, dy] = [ncx - origin[0], ncy - origin[1]]
+      let [ictx, icty] = dragOrig.initCtPos
       if (Math.pow(dx, 2) + Math.pow(dy, 2) > 4) {
-        this.setState({clickValid: false})
-        if (this.state.longPressDetectionTimeout) {
-          clearTimeout(this.state.longPressDetectionTimeout)
-          this.setState({longPressDetectionTimeout: null})
-        }
+        this.markNotClickNorPress()
+        this.markNotDoubleTap()
       }
-      let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
-      this.setState({dragOrig: Object.assign({}, dragOrig, {x: ncx, y: ncy, touch: null})})
-      this.ctAnimationStopToState({ctPos: [odocX + dx, odocY + dy]})
+      this.ctAnimationStopToState({ctPos: [ictx + dx, icty + dy]})
       return
     }
-    if ((evt.touches.length !== 1 && !(evt.changedTouches.length === 1 && evt.touches.length === 0)) || !dragOrig) {
-      this.setState({dragOrig: null})
-      this.setState({touchClickValidIdentifier: null, pressTime: null})
-      if (this.state.longPressDetectionTimeout) {
-        clearTimeout(this.state.longPressDetectionTimeout)
-        this.setState({longPressDetectionTimeout: null})
-      }
+    if ((evt.touches.length !== 1 && // Not one point touch
+          !(evt.changedTouches.length === 1 && evt.touches.length === 0) // Just released
+        ) || !dragOrig) { // Or… not dragging
+      this.resetUserInput()
       return
     }
     let touch = evt.changedTouches[0]
     if (touch.identifier !== dragOrig.touch) {
-      this.setState({dragOrig: null})
-      this.setState({touchClickValidIdentifier: null, pressTime: null})
-      if (this.state.longPressDetectionTimeout) {
-        clearTimeout(this.state.longPressDetectionTimeout)
-        this.setState({longPressDetectionTimeout: null})
-      }
+      this.resetUserInput()
       return
     }
     let [ncx, ncy] = this.client2view([touch.clientX, touch.clientY])
-    let [dx, dy] = [ncx - dragOrig.x, ncy - dragOrig.y]
+    let [ictx, icty] = dragOrig.initCtPos
+    let [dx, dy] = [ncx - origin[0], ncy - origin[1]]
     if (Math.pow(dx, 2) + Math.pow(dy, 2) > 4) {
-      this.setState({touchClickValidIdentifier: null, pressTime: null})
-      if (this.state.longPressDetectionTimeout) {
-        clearTimeout(this.state.longPressDetectionTimeout)
-        this.setState({longPressDetectionTimeout: null})
-      }
+      this.markNotClickNorPress()
+      this.markNotDoubleTap()
     }
-    let [odocX, odocY] = this.ctAnimationGetFinalState().ctPos
-    this.setState({dragOrig: Object.assign({}, dragOrig, {x: ncx, y: ncy})})
-    this.ctAnimationStopToState({ctPos: [odocX + dx, odocY + dy]})
+    this.ctAnimationStopToState({ctPos: [ictx + dx, icty + dy]})
   }
   handleMove2 (evt, prevent = true) {
     if (this.state.textSelection === null || !this.state.textSelectionPressing) return
@@ -437,10 +424,7 @@ class SsPdfView extends React.Component {
     }
   }
   handleUp (evt) {
-    if (this.state.longPressDetectionTimeout) {
-      clearTimeout(this.state.longPressDetectionTimeout)
-      this.setState({longPressDetectionTimeout: null})
-    }
+    this.markNotPress()
     if (!this.svgLayer) return
     this.setState({
       textSelectionTouchId: null,
@@ -465,11 +449,11 @@ class SsPdfView extends React.Component {
     }
     let touch = evt.changedTouches[0] || evt.touches[0]
     if (!this.isClickOrTap(evt)) {
-      this.setState({lastTapTime: 0})
+      this.markNotDoubleTap()
     } else {
       let notResize = !this.state.dragOrig || !this.state.dragOrig.resize
       if (!notResize || isDoubleTap) {
-        this.setState({lastTapTime: 0})
+        this.markNotDoubleTap()
       } else {
         this.setState({lastTapTime: Date.now()})
       }
@@ -521,7 +505,7 @@ class SsPdfView extends React.Component {
       let nStat = this.ctAnimationGetFinalState()
       let abAverage = null
       if (this.state.dragOrig.resize) {
-        abAverage = [0, 1].map(p => (this.state.dragOrig.pointA.point[p] + this.state.dragOrig.pointB.point[p]) / 2)
+        abAverage = [0, 1].map(p => (this.state.dragOrig.pointA.origin[p] + this.state.dragOrig.pointB.origin[p]) / 2)
       }
       let resizeCenter = abAverage ? abAverage : ['x', 'y'].map(p => this.state.dragOrig[p])
       if (nStat.ctSize[0] > this.props.width * 5) {
@@ -548,7 +532,7 @@ class SsPdfView extends React.Component {
   }
   handleLongPress () {
     if (!this.rbush) return
-    let { x: cx, y: cy } = this.state.dragOrig
+    let [cx, cy] = this.state.dragOrig.origin
     let [docX, docY] = this.view2doc([cx, cy])
     if (this.props.onCropBoundaryChange) {
       this.props.onCropBoundaryChange(null)
@@ -736,21 +720,20 @@ class SsPdfView extends React.Component {
     let [ctWid, ctHig] = viewState.ctSize
     return viWid - ctWid >= -2 && viHig - ctHig >= -2
   }
-  calcResizeOnPoint (point, factor) {
-    let finalState = this.ctAnimationGetFinalState()
-    let [ctX, ctY] = finalState.ctPos
+  calcResizeOnPoint (point, factor, initState = this.ctAnimationGetFinalState()) {
+    let [ctX, ctY] = initState.ctPos
     let [npX, npY] = [(-ctX + point[0]) * factor + ctX, (-ctY + point[1]) * factor + ctY]
     ctX = ctX - (npX - point[0])
     ctY = ctY - (npY - point[1])
-    return {ctPos: [ctX, ctY], ctSize: finalState.ctSize.map(x => x * factor)}
+    return {ctPos: [ctX, ctY], ctSize: initState.ctSize.map(x => x * factor)}
   }
-  calcPointsResize (op0, op1, np0, np1) {
+  calcPointsResize (initState, op0, op1, np0, np1) {
     let [sr0, sr1] = [pointDistance(np0, np1), pointDistance(op0, op1)]
     if (sr0 < 0.00001 || sr1 < 0.00001) {
       throw new Error('Messy points.')
     }
     let fact = sr0 / sr1
-    return this.calcResizeOnPoint([0, 1].map(p => (np0[p] + np1[p]) / 2), fact)
+    return this.calcResizeOnPoint([0, 1].map(p => (np0[p] + np1[p]) / 2), fact, initState)
   }
   calcFactorDoc (state = this.ctAnimationGetFinalState()) {
     if (!this.props || !this.props.docJson) return 1
@@ -764,38 +747,39 @@ class SsPdfView extends React.Component {
     if (this.props.onViewboxChange) this.props.onViewboxChange({ctPos: this.state.ctPos, ctSize: this.state.ctSize})
     this.componentDidUpdate({}, {})
   }
-  componentDidUpdate (prevProps, prevState) {
-    if (!this.mounted) return
+  viewBoxChanged (prevProps) {
     if (this.lastViewWidth !== this.props.width || this.lastViewHeight !== this.props.height) {
       this.lastViewWidth = this.props.width
       this.lastViewHeight = this.props.height
-      this.reCenter()
-    } else if (!!prevProps.cropBoundary !== !!this.props.cropBoundary) {
-      this.reCenter()
-    } else if (prevProps.fixedBoundary !== this.props.fixedBoundary) {
-      this.reCenter()
+      return true
     }
-
-    if (prevState.ctPos !== this.state.ctPos || prevState.ctSize !== this.state.ctSize) {
-      if (this.props.onViewboxChange) {
-        this.props.onViewboxChange({ctPos: this.state.ctPos, ctSize: this.state.ctSize})
-      }
-    }
-
-    // Paint dirtyLayer when user drag/resize.
+    if (!!prevProps.cropBoundary !== !!this.props.cropBoundary) return true
+    if (prevProps.fixedBoundary !== this.props.fixedBoundary) return true
+    return false
+  }
+  checkAndPaintDirtyLayer () {
     if (!this.dirtyLayer) return
     let ctx = this.dirtyLayer.getContext('2d')
     if (this.needPaintDirtyLayer) {
       this.needPaintDirtyLayer = false
       let [dx, dy] = this.state.ctPos
       let [dw, dh] = this.state.ctSize
-      ctx.clearRect(0, 0, this.dirtyLayer.width, this.dirtyLayer.height)
-      ctx.drawImage(this.state.cacheCanvas, dx, dy, dw, dh)
+      if (!this.dirtyLayerState || !this.stateSimillar(this.dirtyLayerState, this.state)) {
+        ctx.clearRect(0, 0, this.dirtyLayer.width, this.dirtyLayer.height)
+        ctx.drawImage(this.state.cacheCanvas, dx, dy, dw, dh)
+        this.dirtyLayerState = {ctPos: this.state.ctPos, ctSize: this.state.ctSize}
+      }
     } else if (this.needClearDirtyLayer) {
       this.needClearDirtyLayer = false
-      ctx.clearRect(0, 0, this.dirtyLayer.width, this.dirtyLayer.height)
+      if (this.dirtyLayerState !== null) {
+        ctx.clearRect(0, 0, this.dirtyLayer.width, this.dirtyLayer.height)
+        this.dirtyLayerState = null
+      }
     }
+  }
+  checkAndSetEventHandlers () {
     let et = this.eventTarget
+    if (!et) return
     if (et.getAttribute(etAttr) !== 'true') {
       et.setAttribute(etAttr, 'true')
       let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
@@ -830,6 +814,7 @@ class SsPdfView extends React.Component {
         this._removeEtListener = null
       }
     }
+
     let co = this.cropOverlay
     if (co && co.getAttribute(etAttr) !== 'true') {
       co.setAttribute(etAttr, 'true')
@@ -855,6 +840,19 @@ class SsPdfView extends React.Component {
         co.removeEventListener('touchend', upHandler)
         co.removeEventListener('touchcancel', upHandler)
         this._removeCoListener = null
+      }
+    }
+  }
+  componentDidUpdate (prevProps, prevState) {
+    console.log('update!')
+    if (!this.mounted) return
+    if (this.viewBoxChanged(prevProps)) this.reCenter()
+    this.checkAndPaintDirtyLayer()
+    this.checkAndSetEventHandlers()
+
+    if (prevState.ctPos !== this.state.ctPos || prevState.ctSize !== this.state.ctSize) {
+      if (this.props.onViewboxChange) {
+        this.props.onViewboxChange({ctPos: this.state.ctPos, ctSize: this.state.ctSize})
       }
     }
   }
@@ -1025,7 +1023,15 @@ class SsPdfView extends React.Component {
       cancelAnimationFrame(this.ctAnimation.frameId)
       this.ctAnimation = null
     }
-    this.setState({ctPos: nctPos, ctSize: nctSize})
+    // this.setState({ctPos: nctPos, ctSize: nctSize}) Cause lagging on Firefox. Do this instead:
+    let aid = this.ctAnimationId++
+    this.ctAnimation = {
+      frameId: requestAnimationFrame(() => {
+        if (!this.ctAnimation || this.ctAnimation.aid !== aid) return
+        this.ctAnimation = null
+        this.setState({ctPos: nctPos, ctSize: nctSize})
+      }), nctPos, nctSize, aid
+    }
   }
   componentWillUnmount () {
     try {
