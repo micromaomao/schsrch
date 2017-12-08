@@ -844,7 +844,6 @@ class SsPdfView extends React.Component {
     }
   }
   componentDidUpdate (prevProps, prevState) {
-    console.log('update!')
     if (!this.mounted) return
     if (this.viewBoxChanged(prevProps)) this.reCenter()
     this.checkAndPaintDirtyLayer()
