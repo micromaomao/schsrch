@@ -12,7 +12,7 @@ baseConfig = {
         test: /\.jsx$/,
         loader: 'babel-loader',
         query: {
-          presets: ['es2015'],
+          presets: ['env'],
           plugins: ['transform-react-jsx']
         }
       },
@@ -20,7 +20,7 @@ baseConfig = {
         test: /\.js$/,
         loader: 'babel-loader',
         query: {
-          presets: ['es2015'],
+          presets: ['env'],
         }
       },
       {
