@@ -14,6 +14,7 @@ const PaperUtils = require('./paperutils.js')
 const Sidebar = require('./sidebar.jsx')
 const bowser = require('bowser')
 const SubjectsView = require('./subjectsview.jsx')
+const Help = require('./help.jsx')
 
 class SchSrch extends React.Component {
   constructor (props) {
@@ -200,6 +201,7 @@ class SchSrch extends React.Component {
     }
   }
   renderHome () {
+    let showHelp = AppState.getState().showHelp
     return (
       <div className='view view-home'>
         {!this.state.showSidebar && !this.state.server
@@ -208,10 +210,14 @@ class SchSrch extends React.Component {
                 <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars"></use></svg>
               </div>
             ) : null}
-        <div className='searchbarcontain' key='searchbarcontain'>
-          <SearchBar key='searchbar' ref={f => this.searchbar = f} big={true} onQuery={this.handleSearchBarQuery} />
+        {showHelp ? (
+          <h1 className='helph1'>SchSrch help manual</h1>
+        ) : null}
+        <div className={'searchbarcontain' + (showHelp ? ' helping' : '')} key='searchbarcontain'>
+          <SearchBar key='searchbar' ref={f => this.searchbar = f} big={!showHelp} onQuery={this.handleSearchBarQuery} alwaysShowIcon={showHelp}/>
         </div>
-        <Description />
+        <Description showHelp={showHelp} />
+        {showHelp ? <Help /> : null}
       </div>
     )
   }

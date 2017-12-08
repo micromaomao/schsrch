@@ -127,7 +127,7 @@ class SearchBar extends AnimatorReactComponent {
     return select
   }
   render () {
-    let hideBanner = !this.state.server && !this.props.big && window.innerWidth <= 800
+    let hideBanner = !this.state.server && !this.props.big && !this.props.alwaysShowIcon && window.innerWidth <= 800
     let strokeFillStyle = {}
     let lastChangedDur = Date.now() - this.state.lastQueryChange
     let loadingDur = Date.now() - this.state.loadingStart

@@ -1,4 +1,4 @@
-const InterfaceVersion = 18
+const InterfaceVersion = 19
 const { createStore } = require('redux')
 const bowser = require('bowser')
 
@@ -75,6 +75,14 @@ let AppState = createStore(function (state = {}, action) {
           error: null,
           result: action.result
         })
+      })
+    case 'show-help':
+      return Object.assign({}, state, {
+        showHelp: true
+      })
+    case 'hide-help':
+      return Object.assign({}, state, {
+        showHelp: false
       })
     case 'showFeedback':
       return Object.assign({}, state, {

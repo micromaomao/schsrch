@@ -46,6 +46,8 @@ class Description extends React.Component {
       this.state.status = AppState.getState().serverrender.status
     }
     this.updateStat = this.updateStat.bind(this)
+    this.handleShowHelp = this.handleShowHelp.bind(this)
+    this.handleHideHelp = this.handleHideHelp.bind(this)
   }
   componentDidMount () {
     this.updateStat()
@@ -113,16 +115,32 @@ class Description extends React.Component {
     }
     return (
       <div className='home-desc'>
-        {this.state.server ? (
+        {this.state.server && !this.props.showHelp ? (
           <div className='links'>
             <a href='/disclaim/'>Disclaimer</a>
             &nbsp;
             <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
           </div>
         ) : null}
-        {statusInfo}
+        {!this.state.server ? (
+          <div className='help'>
+            {!this.props.showHelp ? (
+              <div className='helpbtn' onClick={this.handleShowHelp}>Show help&hellip;</div>
+            ) : (
+              <div className='helpbtn' onClick={this.handleHideHelp}>Close help</div>
+            )}
+          </div>
+        ) : null}
+        {!this.props.showHelp ? statusInfo : null}
       </div>
     )
+  }
+
+  handleShowHelp (evt) {
+    AppState.dispatch({type: 'show-help'})
+  }
+  handleHideHelp (evt) {
+    AppState.dispatch({type: 'hide-help'})
   }
 }
 

@@ -301,12 +301,27 @@ $sidebar-width: 300px
     background-color: rgba($color-primary, 0.2)
 
 .schsrch .view-home
+  overflow-y: auto !important
   .sidebarbtn
     position: absolute
     top: 1rem
     left: 1rem
     width: auto
     height: auto
+  .helph1
+    margin-top: 14px
+    font-size: 1.7rem
+    line-height: 40px
+    color: $color-primary
+    text-align: center
+    font-family: 'Lato', sans-serif
+    font-weight: 300
+  .searchbarcontain.helping
+    margin-top: 0.5rem
+    margin-bottom: 0.5rem
+    max-width: 90vw
+    margin-left: auto
+    margin-right: auto
 
 .searchbar
   .bannerContain
@@ -322,6 +337,7 @@ $sidebar-width: 300px
       transition: width 200ms, height 200ms
     .logoText
       font-family: 'Lato', sans-serif
+      font-weight: 300
       transition: font-size 200ms
   .bannerContain.hide
     display: none
@@ -499,6 +515,14 @@ $sidebar-width: 300px
         color: darken($color-link, 20%)
   .status.loading
     opacity: 0.5
+  .help
+    margin-bottom: 1rem
+    .helpbtn
+      display: block
+      color: $color-link
+      cursor: pointer
+      padding: 1rem
+      margin: -1rem
 
 .errorbox
   padding: 1rem 2rem
@@ -1531,3 +1555,37 @@ $feedback-top-height: 2rem + 1.3rem
           color: $color-primary
           &:hover
             color: darken($color-primary, 15%)
+
+.schsrch-help
+  cursor: auto !important
+  padding: 0 2rem
+  a
+    color: $color-link
+    text-decoration: none
+  p
+    margin: 0.5rem 0
+    padding: 0
+    line-height: 1.5
+  h2
+    color: $color-primary
+    margin: 1rem 0
+    padding: 0
+    font-weight: normal
+  h3
+    margin: 0.5rem 0
+    font: 120%
+    font-weight: normal
+    padding: 0
+  .searchlink
+    display: block
+    color: $color-primary
+    margin: 0.3rem 0.7rem
+    .q
+      display: block
+      border-bottom: solid 2px $color-primary
+      font-size: 1rem
+      cursor: pointer
+    .e
+      font-size: 0.7rem
+      line-height: 1.2
+      display: block
