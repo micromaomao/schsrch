@@ -2,8 +2,7 @@ const React = require('react')
 const CIESubjects = require('./CIESubjects.js')
 const AppState = require('./appstate.js')
 const AnimatorReactComponent = require('./animatorReactComponent.jsx')
-import URL_BANNER from './banner.png'
-import URL_BANNER_SMALL from './banner-small.png'
+import IconData from 'raw-loader!./icon.svg'
 
 class SearchBar extends AnimatorReactComponent {
   constructor (props) {
@@ -194,8 +193,9 @@ class SearchBar extends AnimatorReactComponent {
     }
     let renderT = (
       <div className={this.props.big ? 'searchbar big' : 'searchbar small'}>
-        <div className={'bannerContain' + (hideBanner ? ' hide' : '')}>
-          <img className='banner' src={this.props.big ? URL_BANNER : URL_BANNER_SMALL} alt='SchSrch' />
+        <div className={'bannerContain' + (hideBanner ? ' hide' : '')} key='bannerContain'>
+          <img className='icon' src={'data:image/svg+xml,' + encodeURIComponent(IconData)} />
+          <div className='logoText' key='logoText'>SchSrch</div>
         </div>
         <div className={'inputContain' + (hideBanner ? ' hidebanner' : '')}>
           <div className='inputPositionWrap'>
