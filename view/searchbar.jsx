@@ -1,10 +1,11 @@
 const React = require('react')
 const CIESubjects = require('./CIESubjects.js')
 const AppState = require('./appstate.js')
+const AnimatorReactComponent = require('./animatorReactComponent.jsx')
 import URL_BANNER from './banner.png'
 import URL_BANNER_SMALL from './banner-small.png'
 
-class SearchBar extends React.Component {
+class SearchBar extends AnimatorReactComponent {
   constructor (props) {
     super(props)
     this.state = {
@@ -147,7 +148,7 @@ class SearchBar extends React.Component {
         strokeFillStyle.transform = `translateX(${Math.round((ani / 0.5 - 1) * 1000) / 10}%)`
       }
       strokeFillStyle.willChange = 'transform'
-      requestAnimationFrame(() => {this.forceUpdate()})
+      this.nextFrameForceUpdate()
     } else if (this.state.lastTimeout !== null && lastChangedDur <= this.inputDelay) {
       let prog = Math.pow(lastChangedDur / this.inputDelay, 5)
       if (this.props.big) {
@@ -158,7 +159,7 @@ class SearchBar extends React.Component {
         strokeFillStyle.transform = `translateX(-${Math.round((1 - prog) * 1000) / 10}%)`
       }
       strokeFillStyle.willChange = 'transform'
-      requestAnimationFrame(() => {this.forceUpdate()})
+      this.nextFrameForceUpdate()
     } else {
       strokeFillStyle.transform = `translateX(0)`
     }

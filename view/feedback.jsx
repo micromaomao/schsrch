@@ -1,7 +1,8 @@
 const React = require('react')
 const AppState = require('./appstate.js')
+const AnimatorReactComponent = require('./animatorReactComponent.jsx')
 
-class FeedbackFrame extends React.Component {
+class FeedbackFrame extends AnimatorReactComponent {
   constructor (props) {
     super(props)
     this.state = {
@@ -46,7 +47,7 @@ class FeedbackFrame extends React.Component {
       } else {
         topPs = 1 - topAnimationProgress
       }
-      requestAnimationFrame(() => this.forceUpdate())
+      this.nextFrameForceUpdate()
     }
     let content = this.getContent()
     return (
