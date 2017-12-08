@@ -24,7 +24,6 @@ class SearchBar extends AnimatorReactComponent {
         this.state.query = querying.query
     }
     this.inputDelay = 1000
-    this.handlePlaceholderClick = this.handlePlaceholderClick.bind(this)
     this.handleQueryChange = this.handleQueryChange.bind(this)
     this.handleKey = this.handleKey.bind(this)
     this.handleAppStateUpdate = this.handleAppStateUpdate.bind(this)
@@ -58,10 +57,6 @@ class SearchBar extends AnimatorReactComponent {
     if (querying && querying.query !== this.state.lastQuerySubmited && !this.state.focus) {
       this.setQueryImmediate(querying.query)
     }
-  }
-  handlePlaceholderClick (evt) {
-    evt.preventDefault()
-    this.focus()
   }
   handleQueryChange (evt, immediate = false) { // called by onChange
     let val = evt.target.value
@@ -197,7 +192,6 @@ class SearchBar extends AnimatorReactComponent {
         </div>
       )
     }
-    const placeholderText = '... Start by eg. typing 9709 or math ...'
     let renderT = (
       <div className={this.props.big ? 'searchbar big' : 'searchbar small'}>
         <div className={'bannerContain' + (hideBanner ? ' hide' : '')}>
@@ -210,16 +204,12 @@ class SearchBar extends AnimatorReactComponent {
               type='text'
               ref={f => this.input = f}
               value={this.state.query}
-              placeholder={this.state.server && !this.state.query ? placeholderText : null}
               onChange={this.handleQueryChange}
               onFocus={evt => this.focus(true)}
               onBlur={evt => this.blur(true)}
               onKeyDown={this.handleKey}
               name='query'
               autoComplete='off' />
-            {this.props.big && !this.state.server
-              ? <div className={'placeholder' + (this.state.query !== '' ? ' hide' : '')} onMouseDown={this.handlePlaceholderClick} onTouchStart={this.handlePlaceholderClick}>{placeholderText}</div>
-              : null}
             {this.state.server ? null : (
               <div className='stroke'>
                 <div className='fill' style={strokeFillStyle} />

@@ -335,13 +335,6 @@ $sidebar-width: 300px
       margin-left: auto
       margin-right: auto
       height: $inputFontSize * $inputLineHeight
-      .placeholder
-        position: absolute
-        top: 0
-        left: 0
-        width: 100%
-      .querybox .placeholder
-        height: 100%
       .querybox
         flex: 1
       .stroke
@@ -377,7 +370,7 @@ $sidebar-width: 300px
             vertical-align: middle
             line-height: 0
             color: $color-primary
-    .querybox, .placeholder
+    .querybox
       color: $color-primary
       display: inline-block
       font-size: $inputFontSize
@@ -416,18 +409,12 @@ $sidebar-width: 300px
     display: block
     text-align: center
     margin-top: 1rem
+    background-color: rgba($color-primary, 0.05)
     .inputPositionWrap, .subjecthints
       width: 90%
-    .querybox, .placeholder
+    .querybox
       text-align: center
-    .placeholder
-      color: lighten($color-primary, 30%)
-      cursor: text
-      pointer-events: none
-      opacity: 1
-      transition: opacity 200ms
-    .placeholder.hide
-      opacity: 0
+      background-color: transparent
     .subjecthints
       margin-left: auto
       margin-right: auto
