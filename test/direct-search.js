@@ -187,6 +187,17 @@ module.exports = schsrch =>
         .expect(res => should.not.exist(res.body.list))
         .end(done)
     })
+    it('Overflow when empty query', function (done) {
+      supertest(schsrch)
+        .get('/search/?query=&as=json')
+        .set('Host', 'schsrch.xyz')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .expect(res => res.body.should.be.an.Object())
+        .expect(res => res.body.response.should.equal('overflow', 'Response should be "overflow" type'))
+        .expect(res => should.not.exist(res.body.list))
+        .end(done)
+    })
     it('Unknow format', function (done) {
       supertest(schsrch)
         .get('/search/?query=0610 s17 ms 1&as=lol')
