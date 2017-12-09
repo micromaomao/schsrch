@@ -170,19 +170,6 @@ module.exports = (schsrch, dbModel) =>
           .expect(res => res.body.list.length.should.equal(0, `Response should have no results returned.`)))
         .end(done)
     })
-    it('Case: (space)', function (done) {
-      ftExpectBasic(
-        supertest(schsrch)
-          .get('/search/?query=' + encodeURIComponent(' '))
-          .set('Host', 'schsrch.xyz')
-          .expect('Content-Type', /json/)
-          .expect(200)
-          .expect(res => res.body.should.be.an.Object())
-          .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
-          .expect(res => res.body.list.should.be.an.Array())
-          .expect(res => res.body.list.length.should.equal(0, `Response should have no results returned.`)))
-        .end(done)
-    })
     it('Case: !!index!...', function (done) {
       indexToSearch.should.be.a.String()
       keywordsTest(done, '!!index!' + indexToSearch)
