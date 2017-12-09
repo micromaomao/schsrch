@@ -13,10 +13,18 @@ module.exports = function (state) {
     }
     if (state.view === 'home') {
       if (state.querying === null || state.querying.query.trim() === '') {
-        return {
-          url: origin,
-          title: 'SchSrch',
-          description: `A past paper storage & search engine for CIE papers - IGCSE, AS and A Level, now offering ${CIESubjects.length} subjects.`
+        if (!state.showHelp) {
+          return {
+            url: origin,
+            title: 'SchSrch',
+            description: `A past paper storage & search engine for CIE papers - IGCSE, AS and A Level, now offering ${CIESubjects.length} subjects.`
+          }
+        } else {
+          return {
+            url: origin + '/help/',
+            title: 'SchSrch help manual',
+            description: `Tl;dr: type anything you want—keywords, question, subject, etc. Read this if you want to know more detail.`
+          }
         }
       } else if (state.querying) {
         let query = state.querying.query.trim()

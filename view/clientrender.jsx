@@ -87,6 +87,9 @@ if (history.state) {
       console.error(e)
       AppState.dispatch({type: 'subjects'})
     }
+  } else if (loc === '/help/') {
+    AppState.dispatch({type: 'home'})
+    AppState.dispatch({type: 'show-help'})
   } else {
     let nsState = readFromLocalStorage()
     nsState && AppState.dispatch({type: 'load', state: nsState})

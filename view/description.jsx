@@ -122,24 +122,24 @@ class Description extends React.Component {
             <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
           </div>
         ) : null}
-        {!this.state.server ? (
-          <div className='help'>
-            {!this.props.showHelp ? (
-              <div className='helpbtn' onClick={this.handleShowHelp}>Show help&hellip;</div>
-            ) : (
-              <div className='helpbtn' onClick={this.handleHideHelp}>Close help</div>
-            )}
-          </div>
-        ) : null}
+        <div className='help'>
+          {!this.props.showHelp ? (
+            <a className='helpbtn' onClick={this.handleShowHelp} href='/help/'>Show help&hellip;</a>
+          ) : (
+            <a className='helpbtn' onClick={this.handleHideHelp} href='/'>{this.state.server ? 'Back' : 'Close help'}</a>
+          )}
+        </div>
         {!this.props.showHelp ? statusInfo : null}
       </div>
     )
   }
 
   handleShowHelp (evt) {
+    evt.preventDefault()
     AppState.dispatch({type: 'show-help'})
   }
   handleHideHelp (evt) {
+    evt.preventDefault()
     AppState.dispatch({type: 'hide-help'})
   }
 }

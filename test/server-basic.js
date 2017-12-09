@@ -91,6 +91,15 @@ module.exports = schsrch =>
         .expect(res => res.text.length.should.be.above(0))
         .end(done)
     })
+    it('/help/', function (done) {
+      supertest(schsrch)
+        .get('/help/')
+        .set('Host', 'schsrch.xyz')
+        .expect(200)
+        .expect('Content-Type', /html/)
+        .expect(res => res.text.length.should.be.above(0))
+        .end(done)
+    })
     it('/search/?as=page', function (done) {
       const tQuery = `whateverqueryhere${Math.random()}`
       supertest(schsrch)

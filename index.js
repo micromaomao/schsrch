@@ -152,6 +152,9 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     rMain.get('/disclaim/', function (req, res, next) {
       renderView({view: 'disclaim'}, res)
     })
+    rMain.get('/help/', function (req, res, next) {
+      renderView({view: 'home', showHelp: true}, res)
+    })
 
     rMain.get('/doc/:id', function (req, res, next) {
       let docId = req.params.id
