@@ -10,9 +10,9 @@ class SearchLink extends React.Component {
   render () {
     return (
       <span className='searchlink'>
-        <span className='q' onClick={this.handleSearch}>
+        <a className='q' onClick={this.handleSearch} href={`/search/?as=page&query=${encodeURIComponent(this.props.q)}`}>
           {this.props.q}
-        </span>
+        </a>
         {this.props.e ? (
           <span className='e'>{this.props.e}</span>
         ) : null}
@@ -20,7 +20,8 @@ class SearchLink extends React.Component {
     )
   }
 
-  handleSearch () {
+  handleSearch (evt) {
+    evt.preventDefault()
     AppState.dispatch({type: 'query', query: this.props.q})
   }
 }
@@ -74,6 +75,28 @@ class Help extends React.Component {
         <p>
           You may simply enter the code in the footer of a paper to search for that paper. Example:
           <SearchLink q='0470/13/M/J/17' e='History May/June 2017 paper 13' />
+        </p>
+        <h2>Search syntax for text search</h2>
+        <h3>Without filter</h3>
+        <p>
+          Performs a simple text search. Examples:
+          <SearchLink q='What was decided at the Yalta Conference of February 1945?' />
+          <SearchLink q='Who was more to blame for starting the Cold War, the USA or the USSR?' />
+        </p>
+        <p>
+          It is also useful to search for keywords to quickly review something. Example:
+          <SearchLink q='Great Depression' />
+        </p>
+        <h3>Filters</h3>
+        <p>
+          Sometimes (especially when searching for keywords) it is useful to limit the result to a single
+          subject. This can be done by adding the syllabus number before all search terms. Example:
+          <SearchLink q='0470 Great Depression' e='Questions about the Great Depression in IG history' />
+        </p>
+        <p>
+          You can also further limit your search to a specific paper number by adding pX after the syllabus
+          code. Example:
+          <SearchLink q='0470 p2 Great Depression' e='Questions about the Great Depression in paper 2 of IG history' />
         </p>
       </div>
     )
