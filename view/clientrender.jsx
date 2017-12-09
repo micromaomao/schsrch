@@ -166,14 +166,65 @@ document.addEventListener('focusout', evt => {
   }
 })
 
-let ui = null
 reactRootElement.innerHTML = '' // Otherwise it produces element with wrong class - try it yourself with React 16.0.0.
+class AppMain extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      error: null,
+      errorInfo: null
+    }
+    this.handleWindowResize = this.handleWindowResize.bind(this)
+    this.handleReload = this.handleReload.bind(this)
+    this.animationFrame = null
+  }
+
+  componentDidMount () {
+    window.addEventListener('resize', this.handleWindowResize)
+  }
+  handleWindowResize (evt) {
+    if (this.animationFrame === null) {
+      this.animationFrame = requestAnimationFrame(() => {
+        this.animationFrame = null
+        if (this.ss === null) return
+        this.ss.forceUpdate()
+      })
+    }
+  }
+  componentWillUnmount () {
+    window.removeEventListener('resize', this.handleWindowResize)
+  }
+
+  render () {
+    if (this.state.error) {
+      return (
+        <div className='schsrch-main-crash'>
+          <h1>:(</h1>
+          <h2>Something went terribly wrong&hellip;</h2>
+          <p>SchSrch has run into an error and must be reloaded before it can work again.</p>
+          <div className='reload-btn-contain'>
+            <a className='reload-btn' onClick={this.handleReload}>Reload</a>
+          </div>
+          <p>Sorry for this&hellip;</p>
+          <pre>{this.state.error.message + '\n' + this.state.error.stack}</pre>
+          <pre>{this.state.errorInfo.componentStack.toString()}</pre>
+        </div>
+      )
+    }
+    return <SchSrch ref={f => this.ss = f} />
+  }
+
+  componentDidCatch (error, info) {
+    this.setState({error, errorInfo: info})
+    console.error(error)
+    console.error(info)
+  }
+
+  handleReload (evt) {
+    window.location.reload(false)
+  }
+}
 ReactDOM.render(
-  <SchSrch ref={f => ui = f} />,
+  <AppMain />,
   reactRootElement
 )
-
-window.addEventListener('resize', evt => {
-  if (ui === null) return
-  setTimeout(() => ui.forceUpdate(), 1)
-})

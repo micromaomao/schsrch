@@ -146,9 +146,19 @@ class Sidebar extends React.Component {
 
   componentDidMount () {
     this.fetchMyCollections()
+    window.sidebarTriggerCrash = this.triggerCrash.bind(this)
+  }
+  componentWillUnmount () {
+    window.sidebarTriggerCrash = null
+  }
+  triggerCrash () {
+    this.setState({triggerCrash: true})
   }
 
   componentDidUpdate (prevProps, prevState) {
+    if (this.state.triggerCrash) {
+      throw new Error('Crash triggered.')
+    }
     if ((this.state.myCollectionsExpanded && (!prevState.myCollectionsExpanded || !this.state.myCollectionsResult)) ||
         prevProps.authToken !== this.props.authToken || prevProps.loginInfo !== this.props.loginInfo || this.props.show !== prevProps.show) {
       if (!this.props.loginInfo) {

@@ -1592,3 +1592,38 @@ $feedback-top-height: 2rem + 1.3rem
       font-size: 0.7rem
       line-height: 1.2
       display: block
+
+.schsrch-main-crash
+  margin: 0
+  padding: 0 1rem
+  border-top: red solid 2px
+  $max-width: 50rem
+  h1, h2
+    font-weight: normal
+    margin: 0
+  h1
+    font-size: 4rem
+    text-align: center
+    color: $color-secondary-text
+    padding: 1rem
+  h2
+    text-align: center
+    font-size: 1.2rem
+    padding: 0.5rem
+    color: red
+    border-top: $color-primary solid 1px
+    border-bottom: $color-primary solid 1px
+  h2, p, pre, .reload-btn-contain
+    max-width: $max-width
+    margin-left: auto
+    margin-right: auto
+  p, pre
+    padding-left: 0
+    padding-right: 0
+  pre
+    overflow-x: auto
+    font-size: 0.7rem
+  .reload-btn-contain
+    text-align: center
+    .reload-btn
+      @extend .material_button
