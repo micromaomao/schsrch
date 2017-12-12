@@ -335,10 +335,6 @@ $sidebar-width: 300px
     flex-direction: row
     .icon
       transition: width 200ms, height 200ms
-    .logoText
-      font-family: 'Lato', sans-serif
-      font-weight: 300
-      transition: font-size 200ms
   .bannerContain.hide
     display: none
   .inputContain
@@ -427,10 +423,9 @@ $sidebar-width: 300px
     margin-top: 20vh
     height: 160px
     .icon
-      width: 135px
+      display: none
+    .banner
       height: 135px
-    .logoText
-      font-size: 4rem
   .inputContain
     display: block
     text-align: center
@@ -458,8 +453,8 @@ $sidebar-width: 300px
     .icon
       width: 2rem
       height: 2rem
-    .logoText
-      display: none
+    .banner
+      width: 0
   .inputContain
     flex-grow: 1
     margin-left: 0.5rem
