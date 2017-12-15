@@ -34,6 +34,7 @@ class FilePreview extends React.Component {
     this.handleGlobaleKey = this.handleGlobaleKey.bind(this)
     this.handleSelect = this.handleSelect.bind(this)
     this.handleResetCrop = this.handleResetCrop.bind(this)
+    this.handleDownload = this.handleDownload.bind(this)
   }
   measureViewDim () {
     if (!this.sspdfContainer) return (this.measureViewDimAF = requestAnimationFrame(this.measureViewDim))
@@ -215,7 +216,7 @@ class FilePreview extends React.Component {
                 <a className='crop' onClick={evt => this.crop()}>
                   <svg className="icon ii-crop"><use href="#ii-crop" xlinkHref="#ii-crop" /></svg>
                 </a>
-                <a className='download' onClick={evt => this.download()}>
+                <a className='download' onClick={this.handleDownload} href={this.getDownloadUrl()}>
                   <svg className="icon ii-dl"><use href="#ii-dl" xlinkHref="#ii-dl" /></svg>
                 </a>
                 <a className='fullscreen' onClick={evt => this.toggleFullScreen()}>
@@ -329,8 +330,12 @@ class FilePreview extends React.Component {
   toggleDir () {
     this.setState({showingDir: !this.state.showingDir})
   }
-  download () {
-    window.open(`/doc/${this.state.docMeta ? this.state.docMeta._id : this.props.doc}/`)
+  getDownloadUrl () {
+    return `/doc/${this.state.docMeta ? this.state.docMeta._id : this.props.doc}/`
+  }
+  handleDownload (evt) {
+    evt.preventDefault()
+    window.open(this.getDownloadUrl())
   }
   changePage (page, highlightingQ) {
     if (page < 0 || page >= this.state.docMeta.numPages) return
