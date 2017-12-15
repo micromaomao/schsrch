@@ -26,7 +26,7 @@ module.exports = (schsrch, dbModel) =>
     function keywordsTest(done, itx) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/?query=' + encodeURIComponent(itx ? itx : 'decrease delivery demand desk'))
+          .get('/search/?query=' + encodeURIComponent(itx ? itx : 'servant set since soil'))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -187,7 +187,7 @@ module.exports = (schsrch, dbModel) =>
       PastPaperDoc.remove({_id: tDocId}).then(() => {
         ftExpectEmpty(
           supertest(schsrch)
-            .get('/search/?query=' + encodeURIComponent('decrease delivery demand desk'))
+            .get('/search/?query=' + encodeURIComponent('servant set since soil'))
             .set('Host', 'schsrch.xyz')
             .expect('Content-Type', /json/)
             .expect(200)
