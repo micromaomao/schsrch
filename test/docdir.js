@@ -2,42 +2,59 @@ const supertest = require('supertest')
 const should = require('should')
 const crypto = require('crypto')
 
-const expectedDirs = require('./data/expecteddirs-0470.json')
+const expectedDirs1 = require('./data/expecteddirs-0470.json')
+const expectedDirs2 = require('./data/expecteddirs-9699.json')
 
 module.exports = (schsrch, dbModel) =>
   describe('Getting the dir of the document', function () {
     const {PastPaperDoc} = dbModel
-    let thePaper
-    let theMarkScheme
+    let paper1
+    let ms1
     let MCQms1
     let MCQms2
+    let paper2
+    let ms2
     before(function (done) {
       PastPaperDoc.findOne({subject: '0470', type: 'qp'}).then(doc => {
         doc.should.be.an.Object()
-        thePaper = doc
+        paper1 = doc
         done()
-      }, err => done(err))
+      }).catch(err => done(err))
     })
     before(function (done) {
       PastPaperDoc.findOne({subject: '0470', type: 'ms', paper: 3}).then(doc => {
         doc.should.be.an.Object()
-        theMarkScheme = doc
+        ms1 = doc
         done()
-      }, err => done(err))
+      }).catch(err => done(err))
     })
     before(function (done) {
       PastPaperDoc.findOne({subject: '0470', type: 'ms', paper: 1, variant: 1}).then(doc => {
         doc.should.be.an.Object()
         MCQms1 = doc
         done()
-      })
+      }).catch(err => done(err))
     })
     before(function (done) {
       PastPaperDoc.findOne({subject: '0470', type: 'ms', paper: 1, variant: 2}).then(doc => {
         doc.should.be.an.Object()
         MCQms2 = doc
         done()
-      })
+      }).catch(err => done(err))
+    })
+    before(function (done) {
+      PastPaperDoc.findOne({subject: '9699', type: 'qp', paper: 1, variant: 3}).then(doc => {
+        doc.should.be.an.Object()
+        paper2 = doc
+        done()
+      }).catch(err => done(err))
+    })
+    before(function (done) {
+      PastPaperDoc.findOne({subject: '9699', type: 'ms', paper: 1, variant: 3}).then(doc => {
+        doc.should.be.an.Object()
+        ms2 = doc
+        done()
+      }).catch(err => done(err))
     })
     function expectBasicDir (st, mcq = false) {
       return st
@@ -57,8 +74,8 @@ module.exports = (schsrch, dbModel) =>
               } else {
                 lastPage = dirs[i].page
               }
-              dirs[i].qNRect.x1.should.be.below(70)
-              dirs[i].qNRect.x2.should.be.below(70)
+              dirs[i].qNRect.x1.should.be.below(90)
+              dirs[i].qNRect.x2.should.be.below(110)
               lastY = dirs[i].qNRect.y2
             }
           }
@@ -68,42 +85,60 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + thePaper._id + '/?as=dir')
+          .get('/doc/' + paper1._id + '/?as=dir')
           .set('Host', 'schsrch.xyz'))
-        .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs))
+        .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs1))
         .end(done)
     })
     it('/doc/?as=dir&page=1', function (done) {
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + thePaper._id + '/?as=dir&page=1')
+          .get('/doc/' + paper1._id + '/?as=dir&page=1')
           .set('Host', 'schsrch.xyz'))
-        .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs.filter(x => x.p === 1)))
+        .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs1.filter(x => x.p === 1)))
         .end(done)
     })
     it('/doc/?as=dir&page=2', function (done) {
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + thePaper._id + '/?as=dir&page=2')
+          .get('/doc/' + paper1._id + '/?as=dir&page=2')
           .set('Host', 'schsrch.xyz'))
-        .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs.filter(x => x.p === 2)))
+        .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs1.filter(x => x.p === 2)))
         .end(done)
     })
     it('/doc/?as=dir for ms', function (done) {
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + theMarkScheme._id + '/?as=dir')
+          .get('/doc/' + ms1._id + '/?as=dir')
           .set('Host', 'schsrch.xyz'))
-        .expect(res => res.body.dirs.length.should.equal(expectedDirs.length))
+        .expect(res => res.body.dirs.length.should.equal(expectedDirs1.length))
+        .end(done)
+    })
+    it('/doc/?as=dir (2017 layout)', function (done) {
+      this.timeout(5000)
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + paper2._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz'))
+        .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs2))
+        .end(done)
+    })
+    it('/doc/?as=dir for ms (2017 layout)', function (done) {
+      this.timeout(5000)
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + ms2._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz'))
+        .expect(res => res.body.dirs.length.should.equal(expectedDirs2.length))
         .end(done)
     })
     it('should cache dir result', function (done) {
-      PastPaperDoc.findOne({_id: thePaper}, {fileBlob: false}).then(doc => {
+      PastPaperDoc.findOne({_id: paper1}, {fileBlob: false}).then(doc => {
         if (!doc) return Promise.reject(new Error('No doc found in database.'))
         try {
           doc.dir.should.be.an.Object()
-          doc.dir.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs)
+          doc.dir.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs1)
         } catch (e) {
           return Promise.reject(e)
         }
