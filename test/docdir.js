@@ -4,6 +4,7 @@ const crypto = require('crypto')
 
 const expectedDirs1 = require('./data/expecteddirs-0470.json')
 const expectedDirs2 = require('./data/expecteddirs-9699.json')
+const expectedDirs3 = require('./data/expecteddirs-0450.json')
 
 module.exports = (schsrch, dbModel) =>
   describe('Getting the dir of the document', function () {
@@ -14,6 +15,7 @@ module.exports = (schsrch, dbModel) =>
     let MCQms2
     let paper2
     let ms2
+    let paper3
     before(function (done) {
       PastPaperDoc.findOne({subject: '0470', type: 'qp'}).then(doc => {
         doc.should.be.an.Object()
@@ -43,16 +45,23 @@ module.exports = (schsrch, dbModel) =>
       }).catch(err => done(err))
     })
     before(function (done) {
-      PastPaperDoc.findOne({subject: '9699', type: 'qp', paper: 1, variant: 3}).then(doc => {
+      PastPaperDoc.findOne({subject: '9699', type: 'qp', time: 's17', paper: 1, variant: 3}).then(doc => {
         doc.should.be.an.Object()
         paper2 = doc
         done()
       }).catch(err => done(err))
     })
     before(function (done) {
-      PastPaperDoc.findOne({subject: '9699', type: 'ms', paper: 1, variant: 3}).then(doc => {
+      PastPaperDoc.findOne({subject: '9699', type: 'ms', time: 's17', paper: 1, variant: 3}).then(doc => {
         doc.should.be.an.Object()
         ms2 = doc
+        done()
+      }).catch(err => done(err))
+    })
+    before(function (done) {
+      PastPaperDoc.findOne({subject: '0450', type: 'qp', time: 'w15', paper: 1, variant: 2}).then(doc => {
+        doc.should.be.an.Object()
+        paper3 = doc
         done()
       }).catch(err => done(err))
     })
@@ -131,6 +140,15 @@ module.exports = (schsrch, dbModel) =>
           .get('/doc/' + ms2._id + '/?as=dir')
           .set('Host', 'schsrch.xyz'))
         .expect(res => res.body.dirs.length.should.equal(expectedDirs2.length))
+        .end(done)
+    })
+    it('/doc/?as=dir (0450 w15 12)', function (done) {
+      this.timeout(5000)
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + paper3._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz'))
+        .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs3))
         .end(done)
     })
     it('should cache dir result', function (done) {
