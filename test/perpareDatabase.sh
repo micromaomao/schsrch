@@ -10,7 +10,7 @@ echo # last command don't have \n
 
 # Extract papers
 tmpdir=$(mktemp -d)
-openssl aes-256-cbc -d -in $paperbin -pass pass:$password -out $tmpdir/decrypt
+openssl aes-256-cbc -d -in $paperbin -pass pass:$password -md sha256 -out $tmpdir/decrypt
 if [ $? -ne 0 ]; then
   echo "Unable to decrypt $paperbin"
   rm -rv $tmpdir
