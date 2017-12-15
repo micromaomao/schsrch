@@ -6,6 +6,7 @@ password=schsrch
 # Drop database and elasticsearch index.
 mongo --host $MONGODB --eval "db.getSiblingDB('test').dropDatabase()"
 curl -X DELETE 'http://'$ES'/pastpaper'
+echo # last command don't have \n
 
 # Extract papers
 tmpdir=$(mktemp -d)
