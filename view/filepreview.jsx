@@ -35,6 +35,7 @@ class FilePreview extends React.Component {
     this.handleSelect = this.handleSelect.bind(this)
     this.handleResetCrop = this.handleResetCrop.bind(this)
     this.handleDownload = this.handleDownload.bind(this)
+    this.handleSearchSet = this.handleSearchSet.bind(this)
   }
   measureViewDim () {
     if (!this.sspdfContainer) return (this.measureViewDimAF = requestAnimationFrame(this.measureViewDim))
@@ -200,9 +201,9 @@ class FilePreview extends React.Component {
                 <a className={'prev' + (couldPrev ? '' : ' disabled')} onClick={evt => couldPrev && this.changePage(this.props.page - 1)}>
                   <svg className="icon ii-l"><use href="#ii-l" xlinkHref="#ii-l"></use></svg>
                 </a>
-                <span className='doc'>
+                <a className='doc' href={`/search/?as=page&query=${encodeURIComponent(this.getSetName())}`} onClick={this.handleSearchSet}>
                   {this.state.docMeta.type.toUpperCase()}
-                </span>
+                </a>
                 &nbsp;-&nbsp;
                 <span className='page'>
                   <svg className="icon ii-pg"><use href="#ii-pg" xlinkHref="#ii-pg"></use></svg>
@@ -364,6 +365,16 @@ class FilePreview extends React.Component {
     this.setState({
       cropBoundary: [0, 0, this.state.docJson.width, this.state.docJson.height]
     })
+  }
+  getSetName () {
+    if (!this.state.docMeta) throw new Error('this.state.docMeta not loaded.')
+    return PaperUtils.setToString(this.state.docMeta)
+  }
+  handleSearchSet (evt) {
+    evt.preventDefault()
+    let setName = this.getSetName()
+    AppState.dispatch({type: 'query', query: setName})
+    AppState.dispatch({type: 'previewFile', fileId: this.props.doc, page: this.props.page, psKey: setName})
   }
 }
 
