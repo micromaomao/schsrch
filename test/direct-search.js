@@ -32,7 +32,7 @@ module.exports = schsrch =>
     dsTest('0609s16', [])
     ;['0610 ', '0610'].forEach(s => {
       let isShortSubject = /^\d{4}$/.test(s)
-      dsTest(s, ['s08_1_0_qp', 's16_1_0_ms', 's16_1_0_qp', 's16_2_0_ms', 's16_2_0_qp', 's17_1_1_ms', 's17_1_1_qp', 's17_1_2_ms', 's17_1_2_qp', 'w16_1_1_qp', 'w16_1_1_ms'])
+      dsTest(s, ['s08_1_0_qp', 's12_0_0_gt', 's12_2_3_ms', 's12_2_3_qp', 's16_1_0_ms', 's16_1_0_qp', 's16_2_0_ms', 's16_2_0_qp', 's17_1_1_ms', 's17_1_1_qp', 's17_1_2_ms', 's17_1_2_qp', 'w16_1_1_qp', 'w16_1_1_ms'])
 
       dsTest(s + 's16', ['s16_1_0_ms', 's16_1_0_qp', 's16_2_0_ms', 's16_2_0_qp'])
       dsTest(s + 's17', ['s17_1_1_ms', 's17_1_1_qp', 's17_1_2_ms', 's17_1_2_qp'])
@@ -69,11 +69,11 @@ module.exports = schsrch =>
       dsTest(s + 'p11', ['s17_1_1_ms', 's17_1_1_qp', 'w16_1_1_qp', 'w16_1_1_ms'])
       dsTest(s + 'paper 11', ['s17_1_1_ms', 's17_1_1_qp', 'w16_1_1_qp', 'w16_1_1_ms'])
       dsTest(s + 'paper 11', ['s17_1_1_ms', 's17_1_1_qp', 'w16_1_1_qp', 'w16_1_1_ms'])
-      isShortSubject || dsTest(s + '0', [])
-      dsTest(s + 'p0', [])
-      dsTest(s + 'paper 0', [])
+      isShortSubject || dsTest(s + '0', ['s12_0_0_gt'])
+      dsTest(s + 'p0', ['s12_0_0_gt'])
+      dsTest(s + 'paper 0', ['s12_0_0_gt'])
 
-      dsTest(s + 'ms', ['s16_1_0_ms', 's16_2_0_ms', 's17_1_1_ms', 's17_1_2_ms', 'w16_1_1_ms'])
+      dsTest(s + 'ms', ['s12_2_3_ms', 's16_1_0_ms', 's16_2_0_ms', 's17_1_1_ms', 's17_1_2_ms', 'w16_1_1_ms'])
 
       dsTest(s + 'y17 paper 11', [])
       dsTest(s + 's16 paper 13', ['s16_1_0_ms', 's16_1_0_qp'])
@@ -166,6 +166,11 @@ module.exports = schsrch =>
       dsTest(s + 's8 10 qp', ['s08_1_0_qp'])
       dsTest(s + 's8 12', ['s08_1_0_qp'])
       dsTest(s + 's8 12 qp', ['s08_1_0_qp'])
+
+      dsTest(s + 's12', ['s12_0_0_gt', 's12_2_3_ms', 's12_2_3_qp'])
+      dsTest(s + 's12 2', ['s12_0_0_gt', 's12_2_3_ms', 's12_2_3_qp'])
+      dsTest(s + 's12 22', ['s12_0_0_gt'])
+      dsTest(s + 's12 23', ['s12_0_0_gt', 's12_2_3_ms', 's12_2_3_qp'])
     })
 
     ;[true, false].forEach(withExtraSlash => {

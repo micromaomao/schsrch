@@ -23,10 +23,11 @@ module.exports = (schsrch, dbModel) =>
     }
     let indexToSearch = null
     let tDocId = null
+    let s16qp1Keyword = 'almond weft logotype metre yodel parsnip'
     function keywordsTest(done, itx) {
       ftExpectBasic(
         supertest(schsrch)
-          .get('/search/?query=' + encodeURIComponent(itx ? itx : 'servant set since soil'))
+          .get('/search/?query=' + encodeURIComponent(itx ? itx : s16qp1Keyword))
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -49,7 +50,7 @@ module.exports = (schsrch, dbModel) =>
         .expect(res => tDocId = res.body.list[0].doc._id)
         .end(done)
     }
-    it('Case: decrease delivery bla bla bla...', function (done) {
+    it('Case: ' + s16qp1Keyword, function (done) {
       keywordsTest(done)
     })
     it('Case: Lorem ipsum dolor sit amet', function (done) {
@@ -187,7 +188,7 @@ module.exports = (schsrch, dbModel) =>
       PastPaperDoc.remove({_id: tDocId}).then(() => {
         ftExpectEmpty(
           supertest(schsrch)
-            .get('/search/?query=' + encodeURIComponent('servant set since soil'))
+            .get('/search/?query=' + encodeURIComponent(s16qp1Keyword))
             .set('Host', 'schsrch.xyz')
             .expect('Content-Type', /json/)
             .expect(200)

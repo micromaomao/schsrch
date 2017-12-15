@@ -22,7 +22,7 @@ if [ $? -ne 0 ]; then
   rm -rv $tmpdir
   exit 1
 fi
-if [ ! -f $tmpdir/pastpapers/9699_s17_1_3_qp.pdf ]; then
+if [ ! -f $tmpdir/pastpapers/0611_s16_qp_74.pdf ]; then
   echo "Expected extracted paper to exist in $tmpdir."
   rm -rv $tmpdir
   exit 1
