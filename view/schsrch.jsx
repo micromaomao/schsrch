@@ -82,9 +82,8 @@ class SchSrch extends React.Component {
     }
     let noScriptFirstP = (
       <p>
-        <a href='http://www.enable-javascript.com/'>Enabling javascript</a>
-        &nbsp;is required to use SchSrch to it's greatest potential, otherwise there is no point in not using other
-        past paper websites but SchSrch.
+        <a href='http://www.enable-javascript.com/'>Enable javascript</a> to enjoy a better and faster experience, and to use features like jumping from question paper
+        to mark scheme or editing collections. Javascript is required also to submit feedback.
       </p>
     )
     let aState = AppState.getState()
@@ -114,7 +113,7 @@ class SchSrch extends React.Component {
         )}
         <div className='content'>
           {this.state.server ? (
-            aState.serverrender.query ? (
+            aState.view !==  'home' || aState.querying || aState.showHelp ? (
               <noscript className='small'>
                 {noScriptFirstP}
               </noscript>
@@ -122,10 +121,7 @@ class SchSrch extends React.Component {
               <noscript className='big'>
                 {noScriptFirstP}
                 <p>
-                  We won't use javascript to collect any user information or harm your computer. Please add SchSrch to NoScript whitelist.
-                </p>
-                <p>
-                  Here is a very simple version of SchSrch, made by using only HTML and CSS. Feedbacks are not dealt for this version of SchSrch.
+                  Here is a very simple version of SchSrch, made by using only HTML and CSS.
                 </p>
               </noscript>
             )
