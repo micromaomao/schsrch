@@ -217,4 +217,21 @@ module.exports = schsrch =>
         .expect(res => res.text.should.match(/format unknow/i))
         .end(done)
     })
+
+    it('should have typeFilter value when there is a type filter', function (done) {
+      supertest(schsrch)
+        .get('/search/?query=' + encodeURIComponent('0610_s17_qp_1'))
+        .set('Host', 'schsrch.xyz')
+        .expect(200)
+        .expect(res => should.equal(res.body.typeFilter, 'qp'))
+        .end(done)
+    })
+    it('should return null for typeFilter when there is no type filter', function (done) {
+      supertest(schsrch)
+        .get('/search/?query=' + encodeURIComponent('0610 s17 1'))
+        .set('Host', 'schsrch.xyz')
+        .expect(200)
+        .expect(res => should.equal(res.body.typeFilter, null))
+        .end(done)
+    })
   })

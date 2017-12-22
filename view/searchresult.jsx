@@ -119,6 +119,14 @@ class SearchResult extends React.Component {
             })()}
           </div>
         ))}
+        {querying.result && querying.result.typeFilter
+          ? (
+            <div className='warning'>Only showing {PaperUtils.getTypeString(querying.result.typeFilter)} because it is provided as part of the search filter.</div>
+          ) : null}
+        {querying.result && querying.result.typeFilter && PaperUtils.getTypeString(querying.result.typeFilter) === querying.result.typeFilter
+          ? (
+            <div className='warning'>There is no such thing called {querying.result.typeFilter}.</div>
+          ) : null}
         {querying.result
           ? this.renderResult(querying.result)
           : null}
