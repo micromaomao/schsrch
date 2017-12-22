@@ -157,6 +157,9 @@ module.exports = schsrch =>
       dsTest(s + 's17qp1', ['s17_1_1_qp', 's17_1_2_qp'])
       dsTest(s + 's17qpp1', ['s17_1_1_qp', 's17_1_2_qp'])
 
+      dsTest(s + '_s16_ms_1.pdf', ['s16_1_0_ms'])
+      dsTest(s + '_s17_ms_11.pdf', ['s17_1_1_ms'])
+
       dsTest(s + 's08', ['s08_1_0_qp'])
       dsTest(s + 's8', ['s08_1_0_qp'])
       dsTest(s + 's8p1', ['s08_1_0_qp'])
@@ -220,7 +223,15 @@ module.exports = schsrch =>
 
     it('should have typeFilter value when there is a type filter', function (done) {
       supertest(schsrch)
-        .get('/search/?query=' + encodeURIComponent('0610_s17_qp_1'))
+        .get('/search/?query=' + encodeURIComponent('0610 s16 ms'))
+        .set('Host', 'schsrch.xyz')
+        .expect(200)
+        .expect(res => should.equal(res.body.typeFilter, 'ms'))
+        .end(done)
+    })
+    it('should have typeFilter value when there is a type filter', function (done) {
+      supertest(schsrch)
+        .get('/search/?query=' + encodeURIComponent('0610_s17_qp_1.pdf'))
         .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => should.equal(res.body.typeFilter, 'qp'))
