@@ -17,6 +17,7 @@ module.exports = (schsrch, dbModel) =>
     let ms2
     let paper3
     let ms4
+    let ms5
     before(function (done) {
       PastPaperDoc.findOne({subject: '0470', type: 'qp'}).then(doc => {
         doc.should.be.an.Object()
@@ -70,6 +71,13 @@ module.exports = (schsrch, dbModel) =>
       PastPaperDoc.findOne({subject: '9701', type: 'ms', time: 's17', paper: 4, variant: 2}).then(doc => {
         doc.should.be.an.Object()
         ms4 = doc
+        done()
+      }).catch(err => done(err))
+    })
+    before(function (done) {
+      PastPaperDoc.findOne({subject: '9709', type: 'ms', time: 's10', paper: 3, variant: 1}).then(doc => {
+        doc.should.be.an.Object()
+        ms5 = doc
         done()
       }).catch(err => done(err))
     })
@@ -167,6 +175,17 @@ module.exports = (schsrch, dbModel) =>
           .set('Host', 'schsrch.xyz'))
         .expect(res => res.body.dirs.length.should.equal(8))
         .end(done)
+    })
+    it('/doc/?as=dir for ms (9709_s10_3_1_ms)', function (done) {
+      this.timeout(5000)
+      debugger
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + ms5._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz')
+        .expect(res => res.body.dirs.length.should.equal(10))
+        .end(done)
+      )
     })
     it('should cache dir result', function (done) {
       PastPaperDoc.findOne({_id: paper1}, {fileBlob: false}).then(doc => {
