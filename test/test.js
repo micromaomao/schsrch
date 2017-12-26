@@ -35,7 +35,7 @@ db.on('error', function (err) {
 db.on('open', function () {
   schsrch = express()
   schsrch.use(function (req, res, next) {
-    console.log(`    ${req.method.toUpperCase()} ${req.path}`)
+    console.log(`\x1b[2;37m    ${req.method.toUpperCase()} ${req.path}\x1b[0m`)
     next()
   })
   schsrch.use(_schsrch({mongodb: db, elasticsearch: es}))
