@@ -18,11 +18,12 @@ module.exports = (schsrch, dbModel) =>
     let paper3
     let ms4
     let ms5
+    let er1
     function getDocBeforeHook (query, cb) {
       before(function (done) {
         PastPaperDoc.find(query).then(docs => {
           docs.should.be.an.Array()
-          docs.length.should.equal(1)
+          docs.length.should.equal(1, `Should find one ${JSON.stringify(query)}`)
           let doc = docs[0]
           doc.should.be.an.Object()
           cb(doc)
@@ -39,6 +40,7 @@ module.exports = (schsrch, dbModel) =>
     getDocBeforeHook({subject: '0450', type: 'qp', time: 'w15', paper: 1, variant: 2}, d => paper3 = d)
     getDocBeforeHook({subject: '9701', type: 'ms', time: 's17', paper: 4, variant: 2}, d => ms4 = d)
     getDocBeforeHook({subject: '9709', type: 'ms', time: 's10', paper: 3, variant: 1}, d => ms5 = d)
+    getDocBeforeHook({subject: '9709', type: 'er', time: 'w11'}, d => er1 = d)
     function expectBasicDir (st, mcq = false) {
       return st
         .expect(200)
@@ -136,7 +138,6 @@ module.exports = (schsrch, dbModel) =>
     })
     it('/doc/?as=dir for ms (9709_s10_3_1_ms)', function (done) {
       this.timeout(5000)
-      debugger
       expectBasicDir(
         supertest(schsrch)
           .get('/doc/' + ms5._id + '/?as=dir')
@@ -172,6 +173,18 @@ module.exports = (schsrch, dbModel) =>
           .set('Host', 'schsrch.xyz'), true)
         .expect(res => should.ok(res.body.mcqMs))
         .expect(res => res.body.dirs.map(x => x.qT).join('').should.equal('DDADC BBCDA ADCAA CCDAD ABBBC BCCAA BACAC BCABC'.replace(/ /g, '')))
+        .end(done)
+    })
+    it('should work for Examiner Report', function (done) {
+      this.timeout(5000)
+      supertest(schsrch)
+        .get('/doc/' + er1._id + '/?as=dir')
+        .set('Host', 'schsrch.xyz')
+        .expect(200)
+        .expect(res => res.body.should.be.an.Object())
+        .expect(res => should.equal(res.body.er, true))
+        .expect(res => res.body.papers.should.be.an.Array())
+        .expect(res => res.body.papers.length.should.equal(3*7))
         .end(done)
     })
   })
