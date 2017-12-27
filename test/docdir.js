@@ -18,69 +18,27 @@ module.exports = (schsrch, dbModel) =>
     let paper3
     let ms4
     let ms5
-    before(function (done) {
-      PastPaperDoc.findOne({subject: '0470', type: 'qp'}).then(doc => {
-        doc.should.be.an.Object()
-        paper1 = doc
-        done()
-      }).catch(err => done(err))
-    })
-    before(function (done) {
-      PastPaperDoc.findOne({subject: '0470', type: 'ms', paper: 3}).then(doc => {
-        doc.should.be.an.Object()
-        ms1 = doc
-        done()
-      }).catch(err => done(err))
-    })
-    before(function (done) {
-      PastPaperDoc.findOne({subject: '0470', type: 'ms', paper: 1, variant: 1}).then(doc => {
-        doc.should.be.an.Object()
-        MCQms1 = doc
-        done()
-      }).catch(err => done(err))
-    })
-    before(function (done) {
-      PastPaperDoc.findOne({subject: '0470', type: 'ms', paper: 1, variant: 2}).then(doc => {
-        doc.should.be.an.Object()
-        MCQms2 = doc
-        done()
-      }).catch(err => done(err))
-    })
-    before(function (done) {
-      PastPaperDoc.findOne({subject: '9699', type: 'qp', time: 's17', paper: 1, variant: 3}).then(doc => {
-        doc.should.be.an.Object()
-        paper2 = doc
-        done()
-      }).catch(err => done(err))
-    })
-    before(function (done) {
-      PastPaperDoc.findOne({subject: '9699', type: 'ms', time: 's17', paper: 1, variant: 3}).then(doc => {
-        doc.should.be.an.Object()
-        ms2 = doc
-        done()
-      }).catch(err => done(err))
-    })
-    before(function (done) {
-      PastPaperDoc.findOne({subject: '0450', type: 'qp', time: 'w15', paper: 1, variant: 2}).then(doc => {
-        doc.should.be.an.Object()
-        paper3 = doc
-        done()
-      }).catch(err => done(err))
-    })
-    before(function (done) {
-      PastPaperDoc.findOne({subject: '9701', type: 'ms', time: 's17', paper: 4, variant: 2}).then(doc => {
-        doc.should.be.an.Object()
-        ms4 = doc
-        done()
-      }).catch(err => done(err))
-    })
-    before(function (done) {
-      PastPaperDoc.findOne({subject: '9709', type: 'ms', time: 's10', paper: 3, variant: 1}).then(doc => {
-        doc.should.be.an.Object()
-        ms5 = doc
-        done()
-      }).catch(err => done(err))
-    })
+    function getDocBeforeHook (query, cb) {
+      before(function (done) {
+        PastPaperDoc.find(query).then(docs => {
+          docs.should.be.an.Array()
+          docs.length.should.equal(1)
+          let doc = docs[0]
+          doc.should.be.an.Object()
+          cb(doc)
+          done()
+        }).catch(err => done(err))
+      })
+    }
+    getDocBeforeHook({subject: '0470', type: 'qp'}, d => paper1 = d)
+    getDocBeforeHook({subject: '0470', type: 'ms', paper: 3}, d => ms1 = d)
+    getDocBeforeHook({subject: '0470', type: 'ms', paper: 1, variant: 1}, d => MCQms1 = d)
+    getDocBeforeHook({subject: '0470', type: 'ms', paper: 1, variant: 2}, d => MCQms2 = d)
+    getDocBeforeHook({subject: '9699', type: 'qp', time: 's17', paper: 1, variant: 3}, d => paper2 = d)
+    getDocBeforeHook({subject: '9699', type: 'ms', time: 's17', paper: 1, variant: 3}, d => ms2 = d)
+    getDocBeforeHook({subject: '0450', type: 'qp', time: 'w15', paper: 1, variant: 2}, d => paper3 = d)
+    getDocBeforeHook({subject: '9701', type: 'ms', time: 's17', paper: 4, variant: 2}, d => ms4 = d)
+    getDocBeforeHook({subject: '9709', type: 'ms', time: 's10', paper: 3, variant: 1}, d => ms5 = d)
     function expectBasicDir (st, mcq = false) {
       return st
         .expect(200)
