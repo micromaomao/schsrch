@@ -17,11 +17,9 @@ class FilePreview extends React.Component {
       docJson: null,
       docMeta: null,
       pageInputValue: null,
-      dirJson: null,
-      dirError: null,
+      batchDirs: null,
+      dirsError: null,
       showingDir: false,
-      relatedDirJson: null,
-      relatedDocId: null,
       measuredViewWidth: 0,
       measuredViewHeight: 0,
       cropBoundary: null,
@@ -96,7 +94,7 @@ class FilePreview extends React.Component {
   }
   componentWillReceiveProps (nextProps) {
     if (!this.props || nextProps.doc !== this.props.doc || nextProps.page !== this.props.page) {
-      if (!this.props || nextProps.doc !== this.props.doc) this.setState({docMeta: null, dirJson: null, relatedDirJson: null, relatedDocId: null})
+      if (!this.props || nextProps.doc !== this.props.doc) this.setState({docMeta: null, batchDirs: null})
       this.loadFromProps(nextProps)
     }
   }
@@ -134,9 +132,9 @@ class FilePreview extends React.Component {
       if (this.props.doc !== doc || this.props.page !== page) return
       this.setState({loading: false, error: null, docJson: json, docMeta: json.doc})
       this.currentLoading = null
-      if (this.state.dirJson === null || this.props.doc !== doc) {
-        this.setState({dirJson: null, relatedDirJson: null, relatedDocId: null})
-        this.loadDirs(doc, json.related ? json.related._id : null)
+      if (this.state.batchDirs === null) {
+        this.setState({dirsError: null})
+        this.loadDirs(doc)
       }
     }, err => {
       if (this.props.doc !== doc || this.props.page !== page) return
@@ -144,27 +142,14 @@ class FilePreview extends React.Component {
       this.currentLoading = null
     })
   }
-  loadDirs (doc = this.props.doc, relatedDocId) {
-    if (this.state.dirJson !== null && this.state.relatedDirJson !== null && this.props.doc === doc) return
-    // Load dir of this document
-    fetch(`/doc/${doc}/?as=dir`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
+  loadDirs (doc = this.props.doc) {
+    fetch(`/dirs/batch/?docid=${encodeURIComponent(doc)}`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
       if (this.props.doc !== doc) return // Check if the user has changed to another document, just in case.
-      this.setState({dirJson: json, dirError: null, relatedDirJson: null, relatedDocId: null})
-      // Load dir of corresponding ms or qp.
-      if (relatedDocId) {
-        fetch(`/doc/${relatedDocId}/?as=dir`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
-          if (this.props.doc !== doc) return
-          this.setState({relatedDirJson: json, relatedDocId})
-        }, err => {
-          if (this.props.doc !== doc) return
-          this.setState({relatedDirJson: null})
-          setTimeout(() => this.loadDirs(doc, relatedDocId), 500)
-        })
-      }
+      this.setState({batchDirs: json, dirsError: null})
     }, err => {
       if (this.props.doc !== doc) return
-      this.setState({dirJson: null, dirError: err})
-      setTimeout(() => this.loadDirs(doc, relatedDocId), 500)
+      this.setState({batchDirs: null, dirsError: err})
+      setTimeout(() => this.loadDirs(doc), 1000)
     })
   }
   handlePageInputChange (evt) {
@@ -249,8 +234,8 @@ class FilePreview extends React.Component {
         {!this.state.error && this.state.docJson
           ? (
             <div className={this.state.loading ? 'pdfview dirty' : 'pdfview'} ref={f => this.sspdfContainer = f}>
-              {this.state.showingDir ? <div className='dircontain'><DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={this.handleDirSelect} /></div> : null}
-              <div className={!this.state.dirJson || !this.state.showingDir ? 'show' : 'hide'}>
+              {this.state.showingDir && this.state.batchDirs ? <div className='dircontain'><DocDirList dirJson={this.getDirForCurrentDoc()} dirError={this.state.dirsError} onSelect={this.handleDirSelect} /></div> : null}
+              <div className={!this.state.batchDirs || !this.state.showingDir ? 'show' : 'hide'}>
                 <SsPdfView
                   ref={f => this.sspdfView = f}
                   docJson={this.state.docJson}
@@ -298,33 +283,36 @@ class FilePreview extends React.Component {
   }
   renderOverlay () {
     let doc = this.props.doc
-    if (!this.state.loading && this.state.docJson && this.state.dirJson && this.state.relatedDirJson // Fully loaded
-      && this.state.dirJson.type === 'questions' && this.state.relatedDirJson.type === 'questions' // Data valid
-    ) {
-      let inPageDirs = this.state.dirJson.dirs
-        .map((a, i) => Object.assign({}, a, {i})) // Used for tracking which dir is the user clicking, for example.
-        .filter(dir => dir.page === this.props.page && dir.qNRect) // We only need those that can be displayed (i.e. has qNRect).
-      let isMcqMs = this.state.dirJson.mcqMs // MCQ mark scheme displays differently.
-      if (inPageDirs.length > 0) {
-        return inPageDirs.map(dir => {
-          if (dir.i >= this.state.relatedDirJson.dirs.length) return null
-          return {
-            boundX: true,
-            lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
-            rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [this.state.docJson.width, dir.qNRect.y2 + 4],
-            className: 'questionln' + (this.props.highlightingDirIndex === dir.i ? ' highlight' : ''),
-            stuff: null,
-            onClick: evt => {
-              if (!this.state.relatedDirJson || this.props.doc !== doc) {
-                return
-              }
-              let dirMs = this.state.relatedDirJson.dirs[dir.i]
-              if (dirMs.qN === dir.qN) {
-                AppState.dispatch({type: 'previewFile', fileId: this.state.relatedDocId, page: dirMs.page, highlightingDirIndex: dir.i})
+    if (!this.state.loading && this.state.docMeta && this.state.docJson && this.state.batchDirs) {
+      let currentType = this.state.docMeta.type
+      let currentDir = this.state.batchDirs[currentType]
+      let relatedDir = null
+      if (currentType === 'qp') relatedDir = this.state.batchDirs.ms
+      if (currentType === 'ms') relatedDir = this.state.batchDirs.qp
+      if (currentType === 'sp') relatedDir = this.state.batchDirs.sm
+      if (currentType === 'sm') relatedDir = this.state.batchDirs.sp
+      if ((currentDir.type === 'questions' || currentDir.type === 'mcqMs') && relatedDir) {
+        let inPageDirs = currentDir.dirs
+          .map((a, i) => Object.assign({}, a, {i})) // Used for tracking which dir is the user clicking, for example.
+          .filter(dir => dir.page === this.props.page && dir.qNRect) // We only need those that can be displayed (i.e. has qNRect).
+        let isMcqMs = currentDir.type === 'mcqMs'
+        if (inPageDirs.length > 0) {
+          return inPageDirs.map(dir => {
+            if (dir.i >= relatedDir.dirs.length) return null
+            return {
+              boundX: true,
+              lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
+              rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [this.state.docJson.width, dir.qNRect.y2 + 4],
+              className: 'questionln' + (this.props.highlightingDirIndex === dir.i ? ' highlight' : ''),
+              stuff: null,
+              onClick: evt => {
+                let dirMs = relatedDir.dirs[dir.i]
+                if (this.props.doc !== doc || !dirMs || dirMs.qN !== dir.qN) return
+                AppState.dispatch({type: 'previewFile', fileId: relatedDir.docid, page: dirMs.page, highlightingDirIndex: dir.i})
               }
             }
-          }
-        }).filter(x => x !== null)
+          }).filter(x => x !== null)
+        }
       }
     }
     return []
@@ -376,6 +364,13 @@ class FilePreview extends React.Component {
     let setName = this.getSetName()
     AppState.dispatch({type: 'query', query: setName})
     AppState.dispatch({type: 'previewFile', fileId: this.props.doc, page: this.props.page, psKey: setName})
+  }
+
+  getDirForCurrentDoc () {
+    if (!this.state.docMeta) return null
+    let { type } = this.state.docMeta
+    if (!this.state.batchDirs) return null
+    return this.state.batchDirs[type]
   }
 }
 

@@ -87,9 +87,6 @@ module.exports = (schsrch, dbModel) =>
           .expect(res => should.not.exist(res.body.doc.doc))
           .expect(res => should.not.exist(res.body.doc.fileBlob))
           .expect(res => res.body.svg.should.be.a.String().and.match(/^<svg/))
-          .expect(res => res.body.related.should.be.an.Object())
-          .expect(res => res.body.related.type.should.equal('ms'))
-          .expect(res => res.body.related._id.should.equal(tMsDoc._id.toString()))
           .end(testForMs)
         function testForMs (err) {
           if (err) {
@@ -110,9 +107,6 @@ module.exports = (schsrch, dbModel) =>
             .expect(res => should.not.exist(res.body.doc.doc))
             .expect(res => should.not.exist(res.body.doc.fileBlob))
             .expect(res => res.body.svg.should.be.a.String().and.match(/^<svg/))
-            .expect(res => res.body.related.should.be.an.Object())
-            .expect(res => res.body.related.type.should.equal('qp'))
-            .expect(res => res.body.related._id.should.equal(tDoc._id.toString()))
             .end(done)
         }
       })

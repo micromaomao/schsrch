@@ -188,10 +188,6 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
             return
           }
           processSSPDF(doc, page).then(sspdf => {
-            return PastPaperDoc.findOne(Object.assign(PaperUtils.extractSet(doc), {type: (doc.type === 'ms' ? 'qp' : 'ms')}), {_id: true, type: true}).then(related => {
-              return Promise.resolve(Object.assign(sspdf, {related}))
-            })
-          }).then(sspdf => {
             res.set('Cache-Control', 'max-age=' + (10 * 24 * 60 * 60 - 1).toString())
             res.send(sspdf)
           }, err => next(err))
@@ -208,6 +204,44 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           res.send('Format unknow.')
         }
       }).catch(err => next(err))
+    })
+
+    rMain.get('/dirs/batch/', function (req, res, next) {
+      if (!req.query.docid) return next()
+      let docid = req.query.docid.trim()
+      PastPaperDoc.findOne({_id: docid}).then(initDoc => {
+        if (!initDoc) {
+          next()
+          return
+        }
+        if (!initDoc.paper || !initDoc.variant) {
+          let obj = {}
+          initDoc.ensureDir().then(dir => {
+            obj[initDoc.type] = dir
+            obj[initDoc.type].docid = initDoc._id.toString()
+            res.send(obj)
+          }, err => next(err))
+        } else {
+          PastPaperDoc.find({$or: [
+            PaperUtils.extractSet(initDoc),
+            {
+              subject: initDoc.subject,
+              time: initDoc.time,
+              paper: 0,
+              variant: 0
+            }
+          ]}).then(docs => Promise.all(docs.map(doc => {
+            return doc.ensureDir().then(dir => Promise.resolve({type: doc.type, dir, docid: doc._id.toString()}))
+          }))).then(tds => {
+            let obj = {}
+            for (let td of tds) {
+              obj[td.type] = td.dir
+              obj[td.type].docid = td.docid
+            }
+            res.send(obj)
+          }).catch(err => next(err))
+        }
+      }, err => next(err))
     })
 
     // TODO: record these requests.

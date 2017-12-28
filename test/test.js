@@ -78,5 +78,6 @@ function doTests () {
   require('./paperutils.js')()
   require('./auth.js')(schsrch, dbModel)
   require('./collections.js')(schsrch, dbModel)
+  require('./dirsbatch.js')(schsrch, dbModel)
   run()
 }
