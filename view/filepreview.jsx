@@ -299,7 +299,10 @@ class FilePreview extends React.Component {
       let currentDir = this.state.batchDirs[currentType]
       let relatedDir = null
       let thisPv = this.state.docMeta.paper.toString() + this.state.docMeta.variant.toString()
-      let erDir = this.state.batchDirs.er.papers.filter(p => p.pv === thisPv)
+      let erDir = []
+      if (this.state.batchDirs.er) {
+        erDir = this.state.batchDirs.er.papers.filter(p => p.pv === thisPv)
+      }
       if (erDir.length === 0) erDir = null
       else erDir = erDir[0]
       if (currentType === 'qp') relatedDir = this.state.batchDirs.ms
@@ -327,13 +330,16 @@ class FilePreview extends React.Component {
         let pgWidth = this.state.docJson.width
         if (inPageDirs.length > 0) {
           let erBtnWidth = 40
+          let highlightDirIdx = this.props.highlightingDirIndex
           return inPageDirs.map(dir => {
             if (relatedDir && dir.i >= relatedDir.dirs.length) return null
             return {
               boundX: true,
               lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
               rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [pgWidth - erBtnWidth, dir.qNRect.y2 + 4],
-              className: 'questionln' + ((currentDir.type === 'questions' && this.props.highlightingDirIndex === dir.i) || (currentDir.type === 'er' && this.props.highlightingDirIndex.pv === dir.pv && this.props.highlightingDirIndex.qN === dir.qN) ? ' highlight' : ''),
+              className: 'questionln' + 
+                ((currentDir.type === 'questions' && highlightDirIdx === dir.i)
+                  || (currentDir.type === 'er' && (typeof highlightDirIdx === 'object') && highlightDirIdx.pv === dir.pv && highlightDirIdx.qN === dir.qN) ? ' highlight' : ''),
               stuff: null,
               onClick: evt => {
                 if (this.props.doc !== doc) return
