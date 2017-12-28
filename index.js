@@ -214,7 +214,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           next()
           return
         }
-        if (!initDoc.paper || !initDoc.variant) {
+        if (!initDoc.paper && !initDoc.variant) {
           let obj = {}
           initDoc.ensureDir().then(dir => {
             obj[initDoc.type] = dir
