@@ -23,7 +23,7 @@ module.exports = (schsrch, dbModel) =>
     }
     let indexToSearch = null
     let tDocId = null
-    let s16qp1Keyword = 'almond weft logotype metre yodel parsnip'
+    let s16qp1Keyword = 'almond weft logotype yodel parsnip'
     function keywordsTest(done, itx) {
       ftExpectBasic(
         supertest(schsrch)
