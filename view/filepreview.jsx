@@ -338,7 +338,7 @@ class FilePreview extends React.Component {
               lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
               rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [pgWidth - erBtnWidth, dir.qNRect.y2 + 4],
               className: 'questionln' + 
-                ((currentDir.type === 'questions' && highlightDirIdx === dir.i)
+                (((currentDir.type === 'questions' || currentDir.type === 'mcqMs') && highlightDirIdx === dir.i)
                   || (currentDir.type === 'er' && (typeof highlightDirIdx === 'object') && highlightDirIdx.pv === dir.pv && highlightDirIdx.qN === dir.qN) ? ' highlight' : ''),
               stuff: null,
               onClick: evt => {
