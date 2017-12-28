@@ -43,7 +43,7 @@ module.exports = (schsrch, dbModel) =>
     getDocBeforeHook({subject: '9701', type: 'ms', time: 's17', paper: 4, variant: 2}, d => ms4 = d)
     getDocBeforeHook({subject: '9709', type: 'ms', time: 's10', paper: 3, variant: 1}, d => ms5 = d)
     getDocBeforeHook({subject: '9709', type: 'er', time: 'w11'}, d => er1 = d)
-    function expectBasicDir (st, mcq = false) {
+    function expectBasicDir (st, mcq = false, xLimit = 90) {
       return st
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
@@ -62,8 +62,8 @@ module.exports = (schsrch, dbModel) =>
               } else {
                 lastPage = dirs[i].page
               }
-              dirs[i].qNRect.x1.should.be.below(90)
-              dirs[i].qNRect.x2.should.be.below(110)
+              dirs[i].qNRect.x1.should.be.below(xLimit)
+              dirs[i].qNRect.x2.should.be.below(xLimit + 20)
               lastY = dirs[i].qNRect.y2
             }
           }
@@ -117,7 +117,7 @@ module.exports = (schsrch, dbModel) =>
       expectBasicDir(
         supertest(schsrch)
           .get('/doc/' + ms2._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'))
+          .set('Host', 'schsrch.xyz'), false, 100)
         .expect(res => {
           let dirs = res.body.dirs
           dirs.length.should.equal(3)
@@ -140,7 +140,6 @@ module.exports = (schsrch, dbModel) =>
     })
     it('/doc/?as=dir (9701_s17_4_2_qp)', function (done) {
       this.timeout(5000)
-      debugger
       expectBasicDir(
         supertest(schsrch)
           .get('/doc/' + paper4._id + '/?as=dir')
