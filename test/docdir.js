@@ -185,6 +185,39 @@ module.exports = (schsrch, dbModel) =>
         .expect(res => should.equal(res.body.er, true))
         .expect(res => res.body.papers.should.be.an.Array())
         .expect(res => res.body.papers.length.should.equal(3*7))
+        .expect(res => {
+          let paper11 = res.body.papers[0]
+          paper11.should.be.an.Object()
+          paper11.pv.should.equal('11')
+          paper11.dirs.should.be.an.Array()
+          paper11.dirs.map(d => ({p: d.page, n: d.qN.toString()})).should.deepEqual([
+            {p: 0, n: 'GC'},
+            {p: 0, n: '1'},
+            {p: 0, n: '2'},
+            {p: 0, n: '3'},
+            {p: 0, n: '4'},
+            {p: 1, n: '5'},
+            {p: 1, n: '6'},
+            {p: 1, n: '7'},
+            {p: 1, n: '8'},
+            {p: 1, n: '9'},
+            {p: 2, n: '10'},
+            {p: 2, n: '11'}
+          ])
+          let lastY = 0
+          let lastPage = paper11.dirs[0].page
+          for (let d of paper11.dirs) {
+            let tRect = d.qNRect
+            if (lastPage === d.page) {
+              tRect.y1.should.be.above(lastY)
+              lastY = tRect.y2
+            } else {
+              lastPage = d.page
+              lastY = tRect.y2
+            }
+            tRect.x1.should.be.below(90)
+          }
+        })
         .end(done)
     })
   })
