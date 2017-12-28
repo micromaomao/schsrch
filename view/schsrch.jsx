@@ -137,7 +137,7 @@ class SchSrch extends React.Component {
           <div className={'viewcontain' + (displayingBigPreview ? ' sidepane' : '')}>
             {view}
             {displayingBigPreview ? (
-              <FilePreview doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} />
+              <FilePreview doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} />
             ) : null }
           </div>
           {!paperCropClipboard && collection && collection.homeFromCollection

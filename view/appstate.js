@@ -123,7 +123,7 @@ let AppState = createStore(function (state = {}, action) {
           id: action.fileId,
           page: action.page,
           psKey: action.psKey || (state.previewing ? state.previewing.psKey : null),
-          highlightingQ: action.highlightingQ
+          highlightingDirIndex: action.highlightingDirIndex
         },
         previewPages: setPreviewPages(state.previewPages, action.fileId, action.page)
       })
@@ -131,7 +131,7 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         previewing: Object.assign({}, state.previewing, {
           page: action.page,
-          highlightingQ: Number.isSafeInteger(action.highlightingQ) ? action.highlightingQ : state.previewing.highlightingQ
+          highlightingDirIndex: Number.isSafeInteger(action.highlightingDirIndex) ? action.highlightingDirIndex : state.previewing.highlightingDirIndex
         }),
         previewPages: setPreviewPages(state.previewPages, state.previewing.id, action.page)
       })

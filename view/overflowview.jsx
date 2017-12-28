@@ -100,7 +100,7 @@ class OverflowView extends React.Component {
                             key={doc._id + '_preview'}
                             doc={previewing.id}
                             page={previewing.page}
-                            highlightingQ={previewing.highlightingQ}
+                            highlightingDirIndex={previewing.highlightingDirIndex}
                             shouldUseFixedTop={true} />
                         ) : null
                       )

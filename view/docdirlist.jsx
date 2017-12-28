@@ -20,7 +20,7 @@ class DocDirList extends React.Component {
             <div>
               <ul>
                 {dir.type === 'questions' || dir.type === 'mcqMs' ? dir.dirs.map((question, ii) =>
-                  <li key={ii} onClick={evt => this.props.onSelect && this.props.onSelect(question, ii)}>
+                  <li key={ii} onClick={evt => this.props.onSelect && this.props.onSelect(question.page, ii)}>
                     <span className='qn'><span>#</span>{question.qN}</span>
                     <span className='qt'>{question.qT}</span>
                     &nbsp;
@@ -29,10 +29,10 @@ class DocDirList extends React.Component {
                 ) : null}
                 {dir.type === 'er' ? dir.papers.map((paperDir, ii) => (
                   <li key={ii} className='erdir-paper'>
-                    <a className='paper'>Paper {paperDir.pv}</a>
+                    Paper {paperDir.pv}
                     <ul>
-                      {paperDir.dirs.map(d => (
-                        <li>{d.qN}</li>
+                      {paperDir.dirs.map((d, di) => (
+                        <li key={di} onClick={evt => this.props.onSelect && this.props.onSelect(d.page)}>{d.qN}</li>
                       ))}
                     </ul>
                   </li>

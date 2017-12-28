@@ -36,6 +36,7 @@ class FilePreview extends React.Component {
     this.handleResetCrop = this.handleResetCrop.bind(this)
     this.handleDownload = this.handleDownload.bind(this)
     this.handleSearchSet = this.handleSearchSet.bind(this)
+    this.handleDirSelect = this.handleDirSelect.bind(this)
   }
   measureViewDim () {
     if (!this.sspdfContainer) return (this.measureViewDimAF = requestAnimationFrame(this.measureViewDim))
@@ -248,7 +249,7 @@ class FilePreview extends React.Component {
         {!this.state.error && this.state.docJson
           ? (
             <div className={this.state.loading ? 'pdfview dirty' : 'pdfview'} ref={f => this.sspdfContainer = f}>
-              {this.state.showingDir ? <div className='dircontain'><DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={(question, i) => this.selectQuestion(question, i)} /></div> : null}
+              {this.state.showingDir ? <div className='dircontain'><DocDirList dirJson={this.state.dirJson} dirError={this.state.dirError} onSelect={this.handleDirSelect} /></div> : null}
               <div className={!this.state.dirJson || !this.state.showingDir ? 'show' : 'hide'}>
                 <SsPdfView
                   ref={f => this.sspdfView = f}
@@ -311,7 +312,7 @@ class FilePreview extends React.Component {
             boundX: true,
             lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
             rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [this.state.docJson.width, dir.qNRect.y2 + 4],
-            className: 'questionln' + (this.props.highlightingQ === dir.i ? ' highlight' : ''),
+            className: 'questionln' + (this.props.highlightingDirIndex === dir.i ? ' highlight' : ''),
             stuff: null,
             onClick: evt => {
               if (!this.state.relatedDirJson || this.props.doc !== doc) {
@@ -319,7 +320,7 @@ class FilePreview extends React.Component {
               }
               let dirMs = this.state.relatedDirJson.dirs[dir.i]
               if (dirMs.qN === dir.qN) {
-                AppState.dispatch({type: 'previewFile', fileId: this.state.relatedDocId, page: dirMs.page, highlightingQ: dir.i})
+                AppState.dispatch({type: 'previewFile', fileId: this.state.relatedDocId, page: dirMs.page, highlightingDirIndex: dir.i})
               }
             }
           }
@@ -338,13 +339,13 @@ class FilePreview extends React.Component {
     evt.preventDefault()
     window.open(this.getDownloadUrl())
   }
-  changePage (page, highlightingQ) {
+  changePage (page, highlightingDirIndex) {
     if (page < 0 || page >= this.state.docMeta.numPages) return
-    AppState.dispatch({type: 'previewChangePage', page, highlightingQ})
+    AppState.dispatch({type: 'previewChangePage', page, highlightingDirIndex})
   }
-  selectQuestion (question, i) {
+  handleDirSelect (page, dirIndex) {
     this.setState({showingDir: false})
-    this.changePage(question.page, i)
+    this.changePage(page, dirIndex)
   }
   crop () {
     if (!this.state.docJson || !this.state.docMeta || this.state.cropBoundary || !this.sspdfView) return

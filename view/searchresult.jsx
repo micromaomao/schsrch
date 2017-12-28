@@ -169,7 +169,7 @@ class SearchResult extends React.Component {
                   />)
               if (current && this.props.showSmallPreview) {
                 elements.push(
-                  <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} shouldUseFixedTop={true} />
+                  <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
                 )
               }
             }
@@ -199,7 +199,7 @@ class SearchResult extends React.Component {
                     />)
                   if (current && this.props.showSmallPreview) {
                     elements.push(
-                      <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingQ={previewing.highlightingQ} shouldUseFixedTop={true} />
+                      <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
                     )
                   }
                 }
