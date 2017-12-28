@@ -222,6 +222,37 @@ module.exports = (schsrch, dbModel) =>
             {p: 2, n: '10'},
             {p: 2, n: '11'}
           ])
+          let paper13 = res.body.papers[2]
+          paper13.should.be.an.Object()
+          paper13.pv.should.equal('13')
+          paper13.dirs.should.be.an.Array()
+          paper13.dirs.map(d => ({p: d.page, n: d.qN.toString()})).should.deepEqual([
+            {p: 6, n: 'GC'},
+            {p: 6, n: '1'},
+            {p: 6, n: '2'},
+            {p: 6, n: '3'},
+            {p: 7, n: '4'},
+            {p: 7, n: '5'},
+            {p: 7, n: '6'},
+            {p: 7, n: '7'},
+            {p: 8, n: '8'},
+            {p: 8, n: '9'},
+            {p: 8, n: '10'}
+          ])
+          let paper41 = res.body.papers[9]
+          paper41.should.be.an.Object()
+          paper41.pv.should.equal('41')
+          paper41.dirs.should.be.an.Array()
+          paper41.dirs.map(d => ({p: d.page, n: d.qN.toString()})).should.deepEqual([
+            {p: 27, n: 'GC'},
+            {p: 27, n: '1'},
+            {p: 27, n: '2'},
+            {p: 27, n: '3'},
+            {p: 27, n: '4'},
+            {p: 27, n: '5'},
+            {p: 28, n: '6'},
+            {p: 28, n: '7'}
+          ])
           let lastY = 0
           let lastPage = paper11.dirs[0].page
           for (let d of paper11.dirs) {
