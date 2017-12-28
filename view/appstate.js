@@ -123,15 +123,26 @@ let AppState = createStore(function (state = {}, action) {
           id: action.fileId,
           page: action.page,
           psKey: action.psKey || (state.previewing ? state.previewing.psKey : null),
-          highlightingDirIndex: action.highlightingDirIndex
+          highlightingDirIndex: action.highlightingDirIndex,
+          jumpToHighlight: action.jumpToHighlight || false
         },
         previewPages: setPreviewPages(state.previewPages, action.fileId, action.page)
+      })
+    case 'doJumpToHighlight':
+      if (!state.previewing) return state
+      return Object.assign({}, state, {
+        previewing: Object.assign({}, state.previewing, {
+          page: action.page,
+          jumpToHighlight: false
+        }),
+        previewPages: setPreviewPages(state.previewPages, state.previewing.id, action.page)
       })
     case 'previewChangePage':
       return Object.assign({}, state, {
         previewing: Object.assign({}, state.previewing, {
           page: action.page,
-          highlightingDirIndex: Number.isSafeInteger(action.highlightingDirIndex) ? action.highlightingDirIndex : state.previewing.highlightingDirIndex
+          highlightingDirIndex: action.highlightingDirIndex !== null && typeof action.highlightingDirIndex !== 'undefined' ? action.highlightingDirIndex : state.previewing.highlightingDirIndex,
+          jumpToHighlight: false
         }),
         previewPages: setPreviewPages(state.previewPages, state.previewing.id, action.page)
       })

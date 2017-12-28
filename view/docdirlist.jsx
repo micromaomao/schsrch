@@ -32,7 +32,7 @@ class DocDirList extends React.Component {
                     Paper {paperDir.pv}
                     <ul>
                       {paperDir.dirs.map((d, di) => (
-                        <li key={di} onClick={evt => this.props.onSelect && this.props.onSelect(d.page)}>{d.qN}</li>
+                        <li key={di} onClick={evt => this.props.onSelect && this.props.onSelect(d.page, {pv: paperDir.pv, qN: d.qN})}>{d.qN}</li>
                       ))}
                     </ul>
                   </li>

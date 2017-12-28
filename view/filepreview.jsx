@@ -146,6 +146,17 @@ class FilePreview extends React.Component {
     fetch(`/dirs/batch/?docid=${encodeURIComponent(doc)}`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
       if (this.props.doc !== doc) return // Check if the user has changed to another document, just in case.
       this.setState({batchDirs: json, dirsError: null})
+      if (AppState.getState().previewing.jumpToHighlight && this.state.docMeta) {
+        let cDir = json[this.state.docMeta.type]
+        if (cDir && cDir.type === 'questions') {
+          let hlI = AppState.getState().previewing.highlightingDirIndex
+          if (!Number.isSafeInteger(hlI)) return
+          let hlDir = cDir.dirs[hlI]
+          if (hlDir) {
+            AppState.dispatch({type: 'doJumpToHighlight', page: hlDir.page})
+          }
+        }
+      }
     }, err => {
       if (this.props.doc !== doc) return
       this.setState({batchDirs: null, dirsError: err})
@@ -287,31 +298,74 @@ class FilePreview extends React.Component {
       let currentType = this.state.docMeta.type
       let currentDir = this.state.batchDirs[currentType]
       let relatedDir = null
+      let thisPv = this.state.docMeta.paper.toString() + this.state.docMeta.variant.toString()
+      let erDir = this.state.batchDirs.er.papers.filter(p => p.pv === thisPv)
+      if (erDir.length === 0) erDir = null
+      else erDir = erDir[0]
       if (currentType === 'qp') relatedDir = this.state.batchDirs.ms
       if (currentType === 'ms') relatedDir = this.state.batchDirs.qp
       if (currentType === 'sp') relatedDir = this.state.batchDirs.sm
       if (currentType === 'sm') relatedDir = this.state.batchDirs.sp
-      if ((currentDir.type === 'questions' || currentDir.type === 'mcqMs') && relatedDir) {
-        let inPageDirs = currentDir.dirs
-          .map((a, i) => Object.assign({}, a, {i})) // Used for tracking which dir is the user clicking, for example.
-          .filter(dir => dir.page === this.props.page && dir.qNRect) // We only need those that can be displayed (i.e. has qNRect).
+      if (relatedDir || currentDir.type === 'er') {
+        let inPageDirs = null
+        if (currentDir.type === 'questions' || currentDir.type === 'mcqMs') {
+          inPageDirs = currentDir.dirs
+            .map((a, i) => Object.assign({}, a, {i})) // Used for tracking which dir is the user clicking, for example.
+            .filter(dir => dir.page === this.props.page && dir.qNRect) // We only need those that can be displayed (i.e. has qNRect).
+        } else if (currentDir.type === 'er') {
+          inPageDirs = []
+          for (let erDir of currentDir.papers) {
+            if (!erDir.docid) continue
+            Array.prototype.push.apply(inPageDirs,
+              erDir.dirs.map((a, i) => Object.assign({}, a, {i, docid: erDir.docid, pv: erDir.pv}))
+                .filter(dir => dir.page === this.props.page && dir.qNRect)
+            )
+          }
+        }
+        if (!inPageDirs) return []
         let isMcqMs = currentDir.type === 'mcqMs'
+        let pgWidth = this.state.docJson.width
         if (inPageDirs.length > 0) {
+          let erBtnWidth = 40
           return inPageDirs.map(dir => {
-            if (dir.i >= relatedDir.dirs.length) return null
+            if (relatedDir && dir.i >= relatedDir.dirs.length) return null
             return {
               boundX: true,
               lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
-              rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [this.state.docJson.width, dir.qNRect.y2 + 4],
-              className: 'questionln' + (this.props.highlightingDirIndex === dir.i ? ' highlight' : ''),
+              rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [pgWidth - erBtnWidth, dir.qNRect.y2 + 4],
+              className: 'questionln' + ((currentDir.type === 'questions' && this.props.highlightingDirIndex === dir.i) || (currentDir.type === 'er' && this.props.highlightingDirIndex.pv === dir.pv && this.props.highlightingDirIndex.qN === dir.qN) ? ' highlight' : ''),
               stuff: null,
               onClick: evt => {
-                let dirMs = relatedDir.dirs[dir.i]
-                if (this.props.doc !== doc || !dirMs || dirMs.qN !== dir.qN) return
-                AppState.dispatch({type: 'previewFile', fileId: relatedDir.docid, page: dirMs.page, highlightingDirIndex: dir.i})
+                if (this.props.doc !== doc) return
+                if (relatedDir) {
+                  let dirRl = relatedDir.dirs[dir.i]
+                  if (!dirRl || dirRl.qN !== dir.qN) return
+                  AppState.dispatch({type: 'previewFile', fileId: relatedDir.docid, page: dirRl.page, highlightingDirIndex: dir.i})
+                } else {
+                  if (dir.docid) {
+                    AppState.dispatch({type: 'previewFile', fileId: dir.docid, page: 0, highlightingDirIndex: dir.qN - 1, jumpToHighlight: true})
+                  }
+                }
               }
             }
-          }).filter(x => x !== null)
+          }).concat(inPageDirs.map(dir => {
+            if (!relatedDir) return null
+            if (isMcqMs || !erDir) return null
+            if (dir.i + 1 >= erDir.dirs.length) return null
+            let erD = erDir.dirs[dir.i + 1] // the first is GC
+            if (erD.qN !== dir.qN) return null
+            return {
+              boundX: false,
+              lt: [pgWidth - erBtnWidth, dir.qNRect.y1 - 4],
+              rb: [pgWidth, dir.qNRect.y2 + 4],
+              className: 'erbtn',
+              stuff: null,
+              onClick: evt => {
+                if (this.props.doc !== doc) return
+                AppState.dispatch({type: 'previewFile', fileId: this.state.batchDirs.er.docid, page: erD.page, highlightingDirIndex: {pv: thisPv, qN: dir.qN}})
+              }
+            }
+          })).filter(x => x !== null)
         }
       }
     }
