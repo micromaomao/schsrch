@@ -198,7 +198,7 @@ module.exports = (schsrch, dbModel) =>
         .end(done)
     })
     it('should work for Examiner Report', function (done) {
-      this.timeout(5000)
+      this.timeout(10000)
       supertest(schsrch)
         .get('/doc/' + er1._id + '/?as=dir')
         .set('Host', 'schsrch.xyz')
@@ -283,7 +283,7 @@ module.exports = (schsrch, dbModel) =>
         .end(done)
     })
     it('should work for Examiner Report (9702_s16)', function (done) {
-      this.timeout(5000)
+      this.timeout(10000)
       supertest(schsrch)
         .get('/doc/' + er2._id + '/?as=dir')
         .set('Host', 'schsrch.xyz')
