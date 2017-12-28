@@ -16,6 +16,7 @@ module.exports = (schsrch, dbModel) =>
     let paper2
     let ms2
     let paper3
+    let paper4
     let ms4
     let ms5
     let er1
@@ -38,6 +39,7 @@ module.exports = (schsrch, dbModel) =>
     getDocBeforeHook({subject: '9699', type: 'qp', time: 's17', paper: 1, variant: 3}, d => paper2 = d)
     getDocBeforeHook({subject: '9699', type: 'ms', time: 's17', paper: 1, variant: 3}, d => ms2 = d)
     getDocBeforeHook({subject: '0450', type: 'qp', time: 'w15', paper: 1, variant: 2}, d => paper3 = d)
+    getDocBeforeHook({subject: '9701', type: 'qp', time: 's17', paper: 4, variant: 2}, d => paper4 = d)
     getDocBeforeHook({subject: '9701', type: 'ms', time: 's17', paper: 4, variant: 2}, d => ms4 = d)
     getDocBeforeHook({subject: '9709', type: 'ms', time: 's10', paper: 3, variant: 1}, d => ms5 = d)
     getDocBeforeHook({subject: '9709', type: 'er', time: 'w11'}, d => er1 = d)
@@ -116,7 +118,15 @@ module.exports = (schsrch, dbModel) =>
         supertest(schsrch)
           .get('/doc/' + ms2._id + '/?as=dir')
           .set('Host', 'schsrch.xyz'))
-        .expect(res => res.body.dirs.length.should.equal(expectedDirs2.length))
+        .expect(res => {
+          let dirs = res.body.dirs
+          dirs.length.should.equal(3)
+          dirs.map(d => ({n: d.qN.toString(), p: d.page})).should.deepEqual([
+            {n: '1', p: 1},
+            {n: '2', p: 6},
+            {n: '3', p: 8}
+          ])
+        })
         .end(done)
     })
     it('/doc/?as=dir (0450 w15 12)', function (done) {
@@ -126,6 +136,16 @@ module.exports = (schsrch, dbModel) =>
           .get('/doc/' + paper3._id + '/?as=dir')
           .set('Host', 'schsrch.xyz'))
         .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs3))
+        .end(done)
+    })
+    it('/doc/?as=dir (9701_s17_4_2_qp)', function (done) {
+      this.timeout(5000)
+      debugger
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + paper4._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz'))
+        .expect(res => res.body.dirs.length.should.equal(8))
         .end(done)
     })
     it('/doc/?as=dir for ms (9701_s17_4_2_ms)', function (done) {
