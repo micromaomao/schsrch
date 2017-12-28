@@ -20,6 +20,7 @@ module.exports = (schsrch, dbModel) =>
     let ms4
     let ms5
     let er1
+    let paper6
     function getDocBeforeHook (query, cb) {
       before(function (done) {
         PastPaperDoc.find(query).then(docs => {
@@ -43,6 +44,7 @@ module.exports = (schsrch, dbModel) =>
     getDocBeforeHook({subject: '9701', type: 'ms', time: 's17', paper: 4, variant: 2}, d => ms4 = d)
     getDocBeforeHook({subject: '9709', type: 'ms', time: 's10', paper: 3, variant: 1}, d => ms5 = d)
     getDocBeforeHook({subject: '9709', type: 'er', time: 'w11'}, d => er1 = d)
+    getDocBeforeHook({subject: '9702', type: 'qp', time: 's16', paper: 2, variant: 2}, d => paper6 = d)
     function expectBasicDir (st, mcq = false, xLimit = 90) {
       return st
         .expect(200)
@@ -267,6 +269,15 @@ module.exports = (schsrch, dbModel) =>
             tRect.x1.should.be.below(90)
           }
         })
+        .end(done)
+    })
+    it('/doc/?as=dir (9702_s16_qp_22)', function (done) {
+      this.timeout(5000)
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + paper6._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz'))
+        .expect(res => res.body.dirs.map(d => d.page).should.deepEqual([3, 5, 7, 8, 10, 12, 13, 15]))
         .end(done)
     })
   })
