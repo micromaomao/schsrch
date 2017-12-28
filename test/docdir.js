@@ -21,6 +21,7 @@ module.exports = (schsrch, dbModel) =>
     let ms5
     let er1
     let paper6
+    let er2
     function getDocBeforeHook (query, cb) {
       before(function (done) {
         PastPaperDoc.find(query).then(docs => {
@@ -45,6 +46,7 @@ module.exports = (schsrch, dbModel) =>
     getDocBeforeHook({subject: '9709', type: 'ms', time: 's10', paper: 3, variant: 1}, d => ms5 = d)
     getDocBeforeHook({subject: '9709', type: 'er', time: 'w11'}, d => er1 = d)
     getDocBeforeHook({subject: '9702', type: 'qp', time: 's16', paper: 2, variant: 2}, d => paper6 = d)
+    getDocBeforeHook({subject: '9702', type: 'er', time: 's16'}, d => er2 = d)
     function expectBasicDir (st, mcq = false, xLimit = 90) {
       return st
         .expect(200)
@@ -278,6 +280,35 @@ module.exports = (schsrch, dbModel) =>
           .get('/doc/' + paper6._id + '/?as=dir')
           .set('Host', 'schsrch.xyz'))
         .expect(res => res.body.dirs.map(d => d.page).should.deepEqual([3, 5, 7, 8, 10, 12, 13, 15]))
+        .end(done)
+    })
+    it('should work for Examiner Report (9702_s16)', function (done) {
+      this.timeout(5000)
+      supertest(schsrch)
+        .get('/doc/' + er2._id + '/?as=dir')
+        .set('Host', 'schsrch.xyz')
+        .expect(200)
+        .expect(res => res.body.should.be.an.Object())
+        .expect(res => res.body.type.should.equal('er'))
+        .expect(res => res.body.papers.should.be.an.Array())
+        .expect(res => res.body.papers.length.should.equal(17))
+        .expect(res => {
+          let paper22 = res.body.papers[4]
+          paper22.should.be.an.Object()
+          paper22.pv.should.equal('22')
+          paper22.dirs.should.be.an.Array()
+          paper22.dirs.map(d => ({p: d.page, n: d.qN.toString()})).should.deepEqual([
+            {p: 10, n: 'GC'},
+            {p: 10, n: '1'},
+            {p: 11, n: '2'},
+            {p: 11, n: '3'},
+            {p: 11, n: '4'},
+            {p: 12, n: '5'},
+            {p: 12, n: '6'},
+            {p: 12, n: '7'},
+            {p: 12, n: '8'}
+          ])
+        })
         .end(done)
     })
   })
