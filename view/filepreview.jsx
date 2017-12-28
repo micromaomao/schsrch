@@ -298,7 +298,7 @@ class FilePreview extends React.Component {
   renderOverlay () {
     let doc = this.props.doc
     if (!this.state.loading && this.state.docJson && this.state.dirJson && this.state.relatedDirJson // Fully loaded
-      && this.state.dirJson.dirs && this.state.relatedDirJson.dirs // Data valid
+      && this.state.dirJson.type === 'questions' && this.state.relatedDirJson.type === 'questions' // Data valid
     ) {
       let inPageDirs = this.state.dirJson.dirs
         .map((a, i) => Object.assign({}, a, {i})) // Used for tracking which dir is the user clicking, for example.

@@ -13,6 +13,7 @@ const serverRender = global.serverRender
 global.serverRender = null
 const mongoose = require.main.require('mongoose')
 const state2meta = require('./view/state2meta.js')
+const Recognizer = require('./lib/recognizer.js')
 
 let indexPath = path.join(__dirname, 'dist/index.html')
 let indexHtml = fs.readFileSync(indexPath)
@@ -199,7 +200,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
             if (page === null) {
               res.send(dir)
             } else {
-              res.send(Object.assign(dir, {dirs: dir.dirs.filter(d => d.page === page)}))
+              res.send(Recognizer.dirFilterPage(dir, page))
             }
           }, err => next(err))
         } else {

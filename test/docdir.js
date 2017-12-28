@@ -46,6 +46,7 @@ module.exports = (schsrch, dbModel) =>
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => {
+          res.body.type.should.equal(mcq ? 'mcqMs' : 'questions')
           let dirs = res.body.dirs
           dirs.should.be.an.Array()
           if (!mcq) {
@@ -162,7 +163,6 @@ module.exports = (schsrch, dbModel) =>
         supertest(schsrch)
           .get('/doc/' + MCQms1._id + '/?as=dir')
           .set('Host', 'schsrch.xyz'), true)
-        .expect(res => res.body.mcqMs.should.be.true())
         .expect(res => res.body.dirs.map(x => x.qT).join('').should.equal('DCBCB BCACD BDADD BDCDC BCCDA ABCDB BBACB CDBBC'.replace(/ /g, '')))
         .end(done)
     })
@@ -171,7 +171,6 @@ module.exports = (schsrch, dbModel) =>
         supertest(schsrch)
           .get('/doc/' + MCQms2._id + '/?as=dir')
           .set('Host', 'schsrch.xyz'), true)
-        .expect(res => should.ok(res.body.mcqMs))
         .expect(res => res.body.dirs.map(x => x.qT).join('').should.equal('DDADC BBCDA ADCAA CCDAD ABBBC BCCAA BACAC BCABC'.replace(/ /g, '')))
         .end(done)
     })
@@ -182,7 +181,7 @@ module.exports = (schsrch, dbModel) =>
         .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
-        .expect(res => should.equal(res.body.er, true))
+        .expect(res => res.body.type.should.equal('er'))
         .expect(res => res.body.papers.should.be.an.Array())
         .expect(res => res.body.papers.length.should.equal(3*7))
         .expect(res => {

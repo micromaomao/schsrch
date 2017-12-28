@@ -2,9 +2,10 @@ const React = require('react')
 
 class DocDirList extends React.Component {
   render () {
+    let dir = this.props.dirJson
     return (
       <div className='docdirlist'>
-        {!this.props.dirJson && !this.props.dirError
+        {!dir && !this.props.dirError
           ? (
             <div className='msg'>Loading</div>
           )
@@ -14,11 +15,11 @@ class DocDirList extends React.Component {
             <div className='msg'>Error: {this.props.dirError.toString()}, reloading&hellip;</div>
           )
           : null}
-        {this.props.dirJson
+        {dir
           ? (
             <div>
               <ul>
-                {Array.isArray(this.props.dirJson.dirs) && !this.props.dirJson.er ? this.props.dirJson.dirs.map((question, ii) =>
+                {dir.type === 'questions' || dir.type === 'mcqMs' ? dir.dirs.map((question, ii) =>
                   <li key={ii} onClick={evt => this.props.onSelect && this.props.onSelect(question, ii)}>
                     <span className='qn'><span>#</span>{question.qN}</span>
                     <span className='qt'>{question.qT}</span>
@@ -26,7 +27,7 @@ class DocDirList extends React.Component {
                     <span className='page'>( p{question.page + 1} )</span>
                   </li>
                 ) : null}
-                {this.props.dirJson.er ? this.props.dirJson.papers.map((paperDir, ii) => (
+                {dir.type === 'er' ? dir.papers.map((paperDir, ii) => (
                   <li key={ii} className='erdir-paper'>
                     <a className='paper'>Paper {paperDir.pv}</a>
                     <ul>
@@ -37,7 +38,7 @@ class DocDirList extends React.Component {
                   </li>
                 )) : null}
               </ul>
-              {Array.isArray(this.props.dirJson.dirs) && this.props.dirJson.dirs.length === 0
+              {!dir.type || (dir.type === 'questions' && dir.dirs.length === 0)
                 ? (
                   <div className='msg'>No question directory available.</div>
                 ) : null}
