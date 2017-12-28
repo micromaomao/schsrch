@@ -300,7 +300,7 @@ class FilePreview extends React.Component {
       let relatedDir = null
       let thisPv = this.state.docMeta.paper.toString() + this.state.docMeta.variant.toString()
       let erDir = []
-      if (this.state.batchDirs.er) {
+      if (this.state.batchDirs.er && this.state.batchDirs.er.type === 'er') {
         erDir = this.state.batchDirs.er.papers.filter(p => p.pv === thisPv)
       }
       if (erDir.length === 0) erDir = null
