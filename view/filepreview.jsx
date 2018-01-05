@@ -293,89 +293,121 @@ class FilePreview extends React.Component {
     )
   }
   renderOverlay () {
+    // This function returns the overlay array used by sspdf to display, for example, links to ms/qp/er on top of the document.
     let doc = this.props.doc
-    if (!this.state.loading && this.state.docMeta && this.state.docJson && this.state.batchDirs) {
+    if (this.state.loading || !this.state.docMeta || !this.state.docJson) return []
+    let pgWidth = this.state.docJson.width
+    try {
       let currentType = this.state.docMeta.type
-      let currentDir = this.state.batchDirs[currentType]
-      let relatedDir = null
+      let bDirs = this.state.batchDirs
+      if (!bDirs) return []
+      let currentDir = bDirs[currentType]
+      if (!currentDir) return []
       let thisPv = this.state.docMeta.paper.toString() + this.state.docMeta.variant.toString()
-      let erDir = []
-      if (this.state.batchDirs.er && this.state.batchDirs.er.type === 'er') {
-        erDir = this.state.batchDirs.er.papers.filter(p => p.pv === thisPv)
+
+      let erDir = null // the array of {qN: ...}-like objects for the er of this qp/ms. Null if currentType === 'er'.
+      if (bDirs.er && bDirs.er.type === 'er' && currentType !== 'er') {
+        let erDirs = bDirs.er.papers.filter(p => p.pv === thisPv) // Find the corrosponding paper
+        if (erDirs.length > 0) {
+          erDir = erDirs[0]
+        }
       }
-      if (erDir.length === 0) erDir = null
-      else erDir = erDir[0]
-      if (currentType === 'qp') relatedDir = this.state.batchDirs.ms
-      if (currentType === 'ms') relatedDir = this.state.batchDirs.qp
-      if (currentType === 'sp') relatedDir = this.state.batchDirs.sm
-      if (currentType === 'sm') relatedDir = this.state.batchDirs.sp
-      if (relatedDir || currentDir.type === 'er') {
-        let inPageDirs = null
-        if (currentDir.type === 'questions' || currentDir.type === 'mcqMs') {
-          inPageDirs = currentDir.dirs
-            .map((a, i) => Object.assign({}, a, {i})) // Used for tracking which dir is the user clicking, for example.
-            .filter(dir => dir.page === this.props.page && dir.qNRect) // We only need those that can be displayed (i.e. has qNRect).
-        } else if (currentDir.type === 'er') {
-          inPageDirs = []
-          for (let erDir of currentDir.papers) {
-            if (!erDir.docid) continue
-            Array.prototype.push.apply(inPageDirs,
-              erDir.dirs.map((a, i) => Object.assign({}, a, {i, docid: erDir.docid, pv: erDir.pv}))
-                .filter(dir => dir.page === this.props.page && dir.qNRect)
-            )
+
+      let relatedDir = null // for qp, this is the ms dir, and for ms, this is the qp dir. Same for sp and sm.
+      let theOtherType = (() => {
+        switch (currentType) {
+          case 'qp': return 'ms'
+          case 'ms': return 'qp'
+          case 'sp': return 'sm'
+          case 'sm': return 'sp'
+          case 'er': return 'qp'
+          default: return null
+        }
+      })()
+      if (theOtherType) relatedDir = bDirs[theOtherType]
+      if (!relatedDir && currentType !== 'er') return []
+
+      let inPageDirs = null // {qN: ...}-like objects in current page.
+        // For erdirs, this is an array of {qN: ...}-like objects, except
+        // the objects also has i, docid and pv properties assigned.
+      if (currentDir.type === 'questions' || currentDir.type === 'mcqMs') {
+        inPageDirs = currentDir.dirs
+          .map((a, i) => Object.assign({}, a, {i})) // Used for tracking which dir is the user clicking, for example.
+          .filter(dir => dir.page === this.props.page && dir.qNRect) // We only need those that can be displayed (i.e. has qNRect).
+      } else if (currentDir.type === 'er') {
+        inPageDirs = []
+        for (let erDir of currentDir.papers) {
+          // erDir.docid is the doc._id of the destination question paper.
+          if (!erDir.docid) continue
+          Array.prototype.push.apply(inPageDirs,
+            erDir.dirs.filter(dir => dir.page === this.props.page && dir.qNRect)
+              .map((a, i) => Object.assign({}, a, {i, docid: erDir.docid, pv: erDir.pv}))
+          )
+        }
+      }
+      if (!inPageDirs || inPageDirs.length === 0) return []
+
+      let isMcqMs = currentDir.type === 'mcqMs'
+      let erBtnWidth = currentType !== 'er' ? 40 : 0
+      let highlightDirIdx = this.props.highlightingDirIndex
+      let linksToRelated = (relatedDir || currentType === 'er') ? inPageDirs.map(dir => {
+        if (currentType !== 'er' && dir.i >= relatedDir.dirs.length) return null
+        if (dir.qN === 'GC') return null
+        return {
+          boundX: true,
+          lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
+          rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [pgWidth - erBtnWidth, dir.qNRect.y2 + 4],
+          className: 'questionln' +
+            (((currentDir.type === 'questions' || currentDir.type === 'mcqMs') && highlightDirIdx === dir.i)
+              || (currentDir.type === 'er' && (typeof highlightDirIdx === 'object') && highlightDirIdx.pv === dir.pv && highlightDirIdx.qN === dir.qN) ? ' highlight' : ''),
+          stuff: null,
+          onClick: evt => {
+            if (this.props.doc !== doc) return
+            if (relatedDir && currentType !== 'er') {
+              let dirRl = relatedDir.dirs[dir.i]
+              if (!dirRl || dirRl.qN !== dir.qN) return
+              AppState.dispatch({type: 'previewFile', fileId: relatedDir.docid, page: dirRl.page, highlightingDirIndex: dir.i})
+            } else if (currentType === 'er') {
+              if (dir.docid) {
+                AppState.dispatch({type: 'previewFile', fileId: dir.docid, page: 0, highlightingDirIndex: dir.qN - 1, jumpToHighlight: true})
+              }
+            }
           }
         }
-        if (!inPageDirs) return []
-        let isMcqMs = currentDir.type === 'mcqMs'
-        let pgWidth = this.state.docJson.width
-        if (inPageDirs.length > 0) {
-          let erBtnWidth = 40
-          let highlightDirIdx = this.props.highlightingDirIndex
-          return inPageDirs.map(dir => {
-            if (relatedDir && dir.i >= relatedDir.dirs.length) return null
-            return {
-              boundX: true,
-              lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
-              rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [pgWidth - erBtnWidth, dir.qNRect.y2 + 4],
-              className: 'questionln' + 
-                (((currentDir.type === 'questions' || currentDir.type === 'mcqMs') && highlightDirIdx === dir.i)
-                  || (currentDir.type === 'er' && (typeof highlightDirIdx === 'object') && highlightDirIdx.pv === dir.pv && highlightDirIdx.qN === dir.qN) ? ' highlight' : ''),
-              stuff: null,
-              onClick: evt => {
-                if (this.props.doc !== doc) return
-                if (relatedDir) {
-                  let dirRl = relatedDir.dirs[dir.i]
-                  if (!dirRl || dirRl.qN !== dir.qN) return
-                  AppState.dispatch({type: 'previewFile', fileId: relatedDir.docid, page: dirRl.page, highlightingDirIndex: dir.i})
-                } else {
-                  if (dir.docid) {
-                    AppState.dispatch({type: 'previewFile', fileId: dir.docid, page: 0, highlightingDirIndex: dir.qN - 1, jumpToHighlight: true})
-                  }
-                }
-              }
-            }
-          }).concat(inPageDirs.map(dir => {
-            if (!relatedDir) return null
-            if (isMcqMs || !erDir) return null
-            if (dir.i + 1 >= erDir.dirs.length) return null
-            let erD = erDir.dirs[dir.i + 1] // the first is GC
-            if (erD.qN !== dir.qN) return null
-            return {
-              boundX: false,
-              lt: [pgWidth - erBtnWidth, dir.qNRect.y1 - 4],
-              rb: [pgWidth, dir.qNRect.y2 + 4],
-              className: 'erbtn',
-              stuff: null,
-              onClick: evt => {
-                if (this.props.doc !== doc) return
-                AppState.dispatch({type: 'previewFile', fileId: this.state.batchDirs.er.docid, page: erD.page, highlightingDirIndex: {pv: thisPv, qN: dir.qN}})
-              }
-            }
-          })).filter(x => x !== null)
+      }) : []
+      let linksToEr = (currentType !== 'er' && erDir && !isMcqMs) ? inPageDirs.map(dir => {
+        if (dir.i + 1 >= erDir.dirs.length) return null
+        let erD = erDir.dirs[dir.i + 1] // the first is GC
+        if (erD.qN !== dir.qN) return null
+        return {
+          boundX: false,
+          lt: [pgWidth - erBtnWidth, dir.qNRect.y1 - 4],
+          rb: [pgWidth, dir.qNRect.y2 + 4],
+          className: 'erbtn',
+          stuff: null,
+          onClick: evt => {
+            if (this.props.doc !== doc) return
+            AppState.dispatch({type: 'previewFile', fileId: this.state.batchDirs.er.docid, page: erD.page, highlightingDirIndex: {pv: thisPv, qN: dir.qN}})
+          }
         }
-      }
+      }) : []
+      return linksToRelated.concat(linksToEr).filter(x => x !== null)
+    } catch (e) {
+      console.error('Unable to renderOverlay.')
+      console.error(e)
+      return [{
+        boundX: true,
+        boundY: true,
+        lt: [-Infinity, -Infinity],
+        rb: [Infinity, 50],
+        className: 'diroverlayerror',
+        stuff: (
+          <div>
+            Something went wrong when trying to display dir links. Sorry for that.
+          </div>
+        )
+      }]
     }
-    return []
   }
   toggleDir () {
     this.setState({showingDir: !this.state.showingDir})
