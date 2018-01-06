@@ -134,4 +134,26 @@ module.exports = schsrch =>
         .expect('Location', 'https://static.maowtm.org/redbook.pdf')
         .end(done)
     })
+    it('/subjects/', function (done) {
+      supertest(schsrch)
+        .get('/subjects/?as=json')
+        .set('Host', 'schsrch.xyz')
+        .expect(200)
+        .expect(res => {
+          res.body.should.be.an.Array()
+          res.body.length.should.equal(9)
+          res.body.map(x => x._id).sort().should.deepEqual(['0450', '0470', '0610', '0611', '0612', '9699', '9701', '9702', '9709'])
+          let deepTested = false
+          res.body.forEach(s => {
+            s.times.should.be.an.Array()
+            if (s._id === '9709') {
+              s.times.slice().sort().should.deepEqual(['s10', 'w11'])
+              s.totalPaper.should.equal(2)
+              deepTested = true
+            }
+          })
+          deepTested.should.be.true()
+        })
+        .end(done)
+    })
   })
