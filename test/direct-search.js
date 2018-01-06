@@ -260,4 +260,12 @@ module.exports = schsrch =>
         .expect(res => should.equal(res.body.typeFilter, null))
         .end(done)
     })
+    it('should not do raw formatted search output for non-direct search', function (done) {
+      supertest(schsrch)
+        .get('/search/?query=test&as=raw')
+        .set('Host', 'schsrch.xyz')
+        .expect(400)
+        .expect(res => res.text.should.match(/text/i))
+        .end(done)
+    })
   })

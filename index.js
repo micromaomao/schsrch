@@ -137,12 +137,13 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/search/', search: query, format})
       saveRecord(rec)
       if (format === 'raw') {
-        let {finder: mongoFinder} = ParseQuery(query)
-        if (typeof mongoFinder !== 'object') {
+        let queryParse = ParseQuery(query)
+        if (!queryParse) {
           res.status(400)
           res.send("Can't perform text search with raw format.")
           return
         }
+        let mongoFinder = queryParse.finder
         let wLinks = req.query.wlinks === '1' || req.query.wlinks === 'true'
         let wLinksOnly = req.query.wlinks === 'only'
         let dataStream = PastPaperDoc.find(mongoFinder, {subject: true, time: true, paper: true, variant: true, type: true}).cursor({
