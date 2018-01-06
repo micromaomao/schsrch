@@ -22,6 +22,7 @@ module.exports = (schsrch, dbModel) =>
     let er1
     let paper6
     let er2
+    let er3
     function getDocBeforeHook (query, cb) {
       before(function (done) {
         PastPaperDoc.find(query).then(docs => {
@@ -34,8 +35,8 @@ module.exports = (schsrch, dbModel) =>
         }).catch(err => done(err))
       })
     }
-    getDocBeforeHook({subject: '0470', type: 'qp'}, d => paper1 = d)
-    getDocBeforeHook({subject: '0470', type: 'ms', paper: 3}, d => ms1 = d)
+    getDocBeforeHook({subject: '0470', time: 's16', type: 'qp', paper: 3}, d => paper1 = d)
+    getDocBeforeHook({subject: '0470', time: 's16', type: 'ms', paper: 3}, d => ms1 = d)
     getDocBeforeHook({subject: '0470', type: 'ms', paper: 1, variant: 1}, d => MCQms1 = d)
     getDocBeforeHook({subject: '0470', type: 'ms', paper: 1, variant: 2}, d => MCQms2 = d)
     getDocBeforeHook({subject: '9699', type: 'qp', time: 's17', paper: 1, variant: 3}, d => paper2 = d)
@@ -47,6 +48,7 @@ module.exports = (schsrch, dbModel) =>
     getDocBeforeHook({subject: '9709', type: 'er', time: 'w11'}, d => er1 = d)
     getDocBeforeHook({subject: '9702', type: 'qp', time: 's16', paper: 2, variant: 2}, d => paper6 = d)
     getDocBeforeHook({subject: '9702', type: 'er', time: 's16'}, d => er2 = d)
+    getDocBeforeHook({subject: '0470', type: 'er', time: 's08'}, d => er3 = d)
     function expectBasicDir (st, mcq = false, xLimit = 90) {
       return st
         .expect(200)
@@ -212,50 +214,47 @@ module.exports = (schsrch, dbModel) =>
           paper11.should.be.an.Object()
           paper11.pv.should.equal('11')
           paper11.dirs.should.be.an.Array()
-          paper11.dirs.map(d => ({p: d.page, n: d.qN.toString()})).should.deepEqual([
-            {p: 0, n: 'GC'},
-            {p: 0, n: '1'},
-            {p: 0, n: '2'},
-            {p: 0, n: '3'},
-            {p: 0, n: '4'},
-            {p: 1, n: '5'},
-            {p: 1, n: '6'},
-            {p: 1, n: '7'},
-            {p: 1, n: '8'},
-            {p: 1, n: '9'},
-            {p: 2, n: '10'},
-            {p: 2, n: '11'}
+          paper11.dirs.map(d => ({p: d.page, n: d.qNs})).should.deepEqual([
+            {p: 0, n: [1]},
+            {p: 0, n: [2]},
+            {p: 0, n: [3]},
+            {p: 0, n: [4]},
+            {p: 1, n: [5]},
+            {p: 1, n: [6]},
+            {p: 1, n: [7]},
+            {p: 1, n: [8]},
+            {p: 1, n: [9]},
+            {p: 2, n: [10]},
+            {p: 2, n: [11]}
           ])
           let paper13 = res.body.papers[2]
           paper13.should.be.an.Object()
           paper13.pv.should.equal('13')
           paper13.dirs.should.be.an.Array()
-          paper13.dirs.map(d => ({p: d.page, n: d.qN.toString()})).should.deepEqual([
-            {p: 6, n: 'GC'},
-            {p: 6, n: '1'},
-            {p: 6, n: '2'},
-            {p: 6, n: '3'},
-            {p: 7, n: '4'},
-            {p: 7, n: '5'},
-            {p: 7, n: '6'},
-            {p: 7, n: '7'},
-            {p: 8, n: '8'},
-            {p: 8, n: '9'},
-            {p: 8, n: '10'}
+          paper13.dirs.map(d => ({p: d.page, n: d.qNs})).should.deepEqual([
+            {p: 6, n: [1]},
+            {p: 6, n: [2]},
+            {p: 6, n: [3]},
+            {p: 7, n: [4]},
+            {p: 7, n: [5]},
+            {p: 7, n: [6]},
+            {p: 7, n: [7]},
+            {p: 8, n: [8]},
+            {p: 8, n: [9]},
+            {p: 8, n: [10]}
           ])
           let paper41 = res.body.papers[9]
           paper41.should.be.an.Object()
           paper41.pv.should.equal('41')
           paper41.dirs.should.be.an.Array()
-          paper41.dirs.map(d => ({p: d.page, n: d.qN.toString()})).should.deepEqual([
-            {p: 27, n: 'GC'},
-            {p: 27, n: '1'},
-            {p: 27, n: '2'},
-            {p: 27, n: '3'},
-            {p: 27, n: '4'},
-            {p: 27, n: '5'},
-            {p: 28, n: '6'},
-            {p: 28, n: '7'}
+          paper41.dirs.map(d => ({p: d.page, n: d.qNs})).should.deepEqual([
+            {p: 27, n: [1]},
+            {p: 27, n: [2]},
+            {p: 27, n: [3]},
+            {p: 27, n: [4]},
+            {p: 27, n: [5]},
+            {p: 28, n: [6]},
+            {p: 28, n: [7]}
           ])
           let lastY = 0
           let lastPage = paper11.dirs[0].page
@@ -297,16 +296,46 @@ module.exports = (schsrch, dbModel) =>
           paper22.should.be.an.Object()
           paper22.pv.should.equal('22')
           paper22.dirs.should.be.an.Array()
-          paper22.dirs.map(d => ({p: d.page, n: d.qN.toString()})).should.deepEqual([
-            {p: 10, n: 'GC'},
-            {p: 10, n: '1'},
-            {p: 11, n: '2'},
-            {p: 11, n: '3'},
-            {p: 11, n: '4'},
-            {p: 12, n: '5'},
-            {p: 12, n: '6'},
-            {p: 12, n: '7'},
-            {p: 12, n: '8'}
+          paper22.dirs.map(d => ({p: d.page, n: d.qNs})).should.deepEqual([
+            {p: 10, n: [1]},
+            {p: 11, n: [2]},
+            {p: 11, n: [3]},
+            {p: 11, n: [4]},
+            {p: 12, n: [5]},
+            {p: 12, n: [6]},
+            {p: 12, n: [7]},
+            {p: 12, n: [8]}
+          ])
+        })
+        .end(done)
+    })
+    it('should work for Examiner Report (0470_s08)', function (done) {
+      this.timeout(10000)
+      debugger
+      supertest(schsrch)
+        .get('/doc/' + er3._id + '/?as=dir')
+        .set('Host', 'schsrch.xyz')
+        .expect(200)
+        .expect(res => res.body.should.be.an.Object())
+        .expect(res => res.body.type.should.equal('er'))
+        .expect(res => res.body.papers.should.be.an.Array())
+        .expect(res => res.body.papers.length.should.equal(4))
+        .expect(res => {
+          res.body.papers.map(x => x.pv).should.deepEqual(['10', '20', '30', '40'])
+          let paper1 = res.body.papers[0]
+          paper1.dirs.map(x => ({n: x.qNs, p: x.page})).should.deepEqual([
+            {n: [1,2,3,4], p: 0},
+            {n: [5], p: 0},
+            {n: [6], p: 1},
+            {n: [7], p: 1},
+            {n: [8], p: 1},
+            {n: [9], p: 1},
+            {n: [10], p: 1},
+            {n: [11], p: 1},
+            {n: [12], p: 2},
+            {n: [13], p: 2},
+            {n: [14], p: 2},
+            {n: [15,16,17,18,19,20,21,22,23,24,25], p: 2}
           ])
         })
         .end(done)

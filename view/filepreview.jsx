@@ -352,7 +352,6 @@ class FilePreview extends React.Component {
       let highlightDirIdx = this.props.highlightingDirIndex
       let linksToRelated = (relatedDir || currentType === 'er') ? inPageDirs.map(dir => {
         if (currentType !== 'er' && dir.i >= relatedDir.dirs.length) return null
-        if (dir.qN === 'GC') return null
         return {
           boundX: true,
           lt: isMcqMs ? [dir.qNRect.x1 - 2, dir.qNRect.y1 - 1] : [0, dir.qNRect.y1 - 4],
@@ -377,7 +376,7 @@ class FilePreview extends React.Component {
       }) : []
       let linksToEr = (currentType !== 'er' && erDir && !isMcqMs) ? inPageDirs.map(dir => {
         if (dir.i + 1 >= erDir.dirs.length) return null
-        let erD = erDir.dirs[dir.i + 1] // the first is GC
+        let erD = erDir.dirs[dir.i]
         if (erD.qN !== dir.qN) return null
         return {
           boundX: false,
@@ -420,6 +419,7 @@ class FilePreview extends React.Component {
     window.open(this.getDownloadUrl())
   }
   changePage (page, highlightingDirIndex) {
+    if (!this.state.docMeta) return
     if (page < 0 || page >= this.state.docMeta.numPages) return
     AppState.dispatch({type: 'previewChangePage', page, highlightingDirIndex})
   }
