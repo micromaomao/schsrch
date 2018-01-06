@@ -5,7 +5,7 @@ group: edge
 node_js:
   - "9"
 env:
-  - CXX=g++-6 MONGODB=127.0.0.1 ES=127.0.0.1:9200
+  - CXX=g++-6 MONGODB=mongodb://127.0.0.1/test ES=127.0.0.1:9200
 install:
   - find /usr -name '*poppler*.so*'
   - npm install -g npm@latest

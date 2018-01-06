@@ -24,7 +24,10 @@ try {
   process.exit(1)
 }
 
-let db = mongoose.createConnection(DB)
+let db = mongoose.createConnection(DB).catch(err => {
+  console.error(err)
+  process.exit(1)
+})
 let es = new elasticsearch.Client({
   host: ES
 })
