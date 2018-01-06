@@ -24,7 +24,8 @@ try {
   process.exit(1)
 }
 
-let db = mongoose.createConnection(DB).catch(err => {
+let db = mongoose.createConnection()
+db.openUri(DB).catch(err => {
   console.error(err)
   process.exit(1)
 })
