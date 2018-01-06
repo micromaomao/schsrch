@@ -5,10 +5,10 @@ const PaperUtils = require('../view/paperutils.js')
 module.exports = schsrch =>
   describe('Search for specific paper', function () {
     function dsTest (query, expect) {
-      it(query, function (done) {
-        expect = expect.sort().map(x => `0610_${x}`)
+      expect = expect.sort().map(x => `0610_${x}`)
+      it(`${query} as=json`, function (done) {
         supertest(schsrch)
-          .get('/search/?query=' + encodeURIComponent(query) + '&as=json')
+          .get(`/search/?query=${encodeURIComponent(query)}&as=json`)
           .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -23,7 +23,22 @@ module.exports = schsrch =>
           .expect(res => res.body.list = res.body.list.map(x => `${PaperUtils.setToString(x)}_${x.type}`))
           .expect(res => res.body.list = res.body.list.sort())
           .expect(res => res.body.list.length.should.equal(expect.length, `Response should have ${expect.length} results returned. (Got ${res.body.list.join(', ')})`))
-          .expect(res => res.body.list.forEach((x, idx) => x.should.equal(expect[idx])))
+          .expect(res => res.body.list.should.deepEqual(expect))
+          .end(done)
+      })
+      it(`${query} as=raw`, function (done) {
+        supertest(schsrch)
+          .get(`/search/?query=${encodeURIComponent(query)}&as=raw`)
+          .set('Host', 'schsrch.xyz')
+          .expect('Content-Type', /text/)
+          .expect(200)
+          .expect(res => res.text.should.be.an.String())
+          .expect(res => {
+            let list = res.text.split('\n').filter(x => x.length !== 0)
+            list.length.should.equal(expect.length, `Response should have ${expect.length} results returned.`)
+            list = list.sort()
+            list.should.deepEqual(expect)
+          })
           .end(done)
       })
     }

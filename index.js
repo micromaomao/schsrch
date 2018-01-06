@@ -14,6 +14,7 @@ global.serverRender = null
 const mongoose = require.main.require('mongoose')
 const state2meta = require('./view/state2meta.js')
 const Recognizer = require('./lib/recognizer.js')
+const ParseQuery = require('./lib/parseQuery.js')
 
 let indexPath = path.join(__dirname, 'dist/index.html')
 let indexHtml = fs.readFileSync(indexPath)
@@ -133,6 +134,48 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
         res.redirect('/')
         return
       }
+      let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/search/', search: query, format})
+      saveRecord(rec)
+      if (format === 'raw') {
+        let {finder: mongoFinder} = ParseQuery(query)
+        if (typeof mongoFinder !== 'object') {
+          res.status(400)
+          res.send("Can't perform text search with raw format.")
+          return
+        }
+        let wLinks = req.query.wlinks === '1' || req.query.wlinks === 'true'
+        let wLinksOnly = req.query.wlinks === 'only'
+        let dataStream = PastPaperDoc.find(mongoFinder, {subject: true, time: true, paper: true, variant: true, type: true}).cursor({
+          transform: (!wLinksOnly
+                        ? (doc => `${PaperUtils.setToString(doc)}_${doc.type}${wLinks ? `\thttps://${req.hostname}/doc/${doc._id}/` : ''}`)
+                        : (doc => `https://${req.hostname}/doc/${doc._id}/`))
+        })
+        let ended = false
+        res.type('text')
+        dataStream.on('data', line => {
+          if (ended) return
+          res.write(line, 'utf-8')
+          res.write('\n')
+        })
+        dataStream.on('error', err => {
+          if (ended) return
+          res.end(`-- Error orroured: ${err}`)
+          dataStream.close()
+          ended = true
+        })
+        dataStream.on('end', () => {
+          if (ended) return
+          res.end()
+          dataStream.close()
+          ended = true
+        })
+        res.on('close', () => {
+          if (ended) return
+          dataStream.close()
+          ended = true
+        })
+        return
+      }
       doSearch(query).then(rst => {
         if (format === 'json') {
           res.send(rst)
@@ -147,8 +190,6 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
         res.status(500)
         next(err)
       })
-      let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/search/', search: query})
-      saveRecord(rec)
     })
     rMain.get('/disclaim/', function (req, res, next) {
       renderView({view: 'disclaim'}, res)
