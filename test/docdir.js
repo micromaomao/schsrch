@@ -23,6 +23,7 @@ module.exports = (schsrch, dbModel) =>
     let paper6
     let er2
     let er3
+    let er4
     function getDocBeforeHook (query, cb) {
       before(function (done) {
         PastPaperDoc.find(query).then(docs => {
@@ -49,6 +50,7 @@ module.exports = (schsrch, dbModel) =>
     getDocBeforeHook({subject: '9702', type: 'qp', time: 's16', paper: 2, variant: 2}, d => paper6 = d)
     getDocBeforeHook({subject: '9702', type: 'er', time: 's16'}, d => er2 = d)
     getDocBeforeHook({subject: '0470', type: 'er', time: 's08'}, d => er3 = d)
+    getDocBeforeHook({subject: '9708', type: 'er', time: 's15'}, d => er4 = d)
     function expectBasicDir (st, mcq = false, xLimit = 90) {
       return st
         .expect(200)
@@ -336,6 +338,29 @@ module.exports = (schsrch, dbModel) =>
             {n: [13], p: 2},
             {n: [14], p: 2},
             {n: [15,16,17,18,19,20,21,22,23,24,25], p: 2}
+          ])
+        })
+        .end(done)
+    })
+    it('should work for Examiner Report (9708_s15)', function (done) {
+      this.timeout(10000)
+      debugger
+      supertest(schsrch)
+        .get('/doc/' + er4._id + '/?as=dir')
+        .set('Host', 'schsrch.xyz')
+        .expect(200)
+        .expect(res => res.body.should.be.an.Object())
+        .expect(res => res.body.type.should.equal('er'))
+        .expect(res => res.body.papers.should.be.an.Array())
+        .expect(res => res.body.papers.length.should.equal(4*3))
+        .expect(res => {
+          let paper21 = res.body.papers.find(x => x.pv === '21')
+          should.exist(paper21)
+          paper21.dirs.map(x => ({n: x.qNs, p: x.page})).should.deepEqual([
+            {n: [1], p: 6},
+            {n: [2], p: 7},
+            {n: [3], p: 7},
+            {n: [4], p: 8}
           ])
         })
         .end(done)

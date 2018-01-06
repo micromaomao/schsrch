@@ -141,8 +141,7 @@ module.exports = schsrch =>
         .expect(200)
         .expect(res => {
           res.body.should.be.an.Array()
-          res.body.length.should.equal(9)
-          res.body.map(x => x._id).sort().should.deepEqual(['0450', '0470', '0610', '0611', '0612', '9699', '9701', '9702', '9709'])
+          res.body.map(x => x._id).sort().should.deepEqual(['0450', '0470', '0610', '0611', '0612', '9699', '9701', '9702', '9708', '9709'])
           let deepTested = false
           res.body.forEach(s => {
             s.times.should.be.an.Array()
