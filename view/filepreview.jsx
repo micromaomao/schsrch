@@ -305,15 +305,12 @@ class FilePreview extends React.Component {
       if (!currentDir) return []
       let thisPv = this.state.docMeta.paper.toString() + this.state.docMeta.variant.toString()
 
-      let erDir = null // the array of {qN: ...}-like objects for the er of this qp/ms. Null if currentType === 'er'.
+      let erDir = null // {dirs: {qNs: ...}-like objects} for the er of this qp/ms. Null if currentType === 'er'.
       if (bDirs.er && bDirs.er.type === 'er' && currentType !== 'er') {
-        let erDirs = bDirs.er.papers.filter(p => p.pv === thisPv) // Find the corrosponding paper
-        if (erDirs.length > 0) {
-          erDir = erDirs[0]
-        }
+        erDir = bDirs.er.papers.find(p => p.pv === thisPv) || null // Find the corrosponding paper
       }
 
-      let relatedDir = null // for qp, this is the ms dir, and for ms, this is the qp dir. Same for sp and sm.
+      let relatedDir = null // for qp, this is the ms dir, and for ms, this is the qp dir. Same for sp and sm. For er, this is the qp, although ms should work equally well.
       let theOtherType = (() => {
         switch (currentType) {
           case 'qp': return 'ms'
@@ -328,8 +325,9 @@ class FilePreview extends React.Component {
       if (!relatedDir && currentType !== 'er') return []
 
       let inPageDirs = null // {qN: ...}-like objects in current page.
-        // For erdirs, this is an array of {qN: ...}-like objects, except
-        // the objects also has i, docid and pv properties assigned.
+        // For erdirs, this is an array of {qNs: ...}-like objects, except
+        // the objects also has docid and pv properties assigned.
+        // For normal dirs, i as in Index is assigned to each object.
       if (currentDir.type === 'questions' || currentDir.type === 'mcqMs') {
         inPageDirs = currentDir.dirs
           .map((a, i) => Object.assign({}, a, {i})) // Used for tracking which dir is the user clicking, for example.
@@ -358,26 +356,26 @@ class FilePreview extends React.Component {
           rb: isMcqMs ? [dir.qNRect.x2 + 2, dir.qNRect.y2 + 1] : [pgWidth - erBtnWidth, dir.qNRect.y2 + 4],
           className: 'questionln' +
             (((currentDir.type === 'questions' || currentDir.type === 'mcqMs') && highlightDirIdx === dir.i)
-              || (currentDir.type === 'er' && (typeof highlightDirIdx === 'object') && highlightDirIdx.pv === dir.pv && highlightDirIdx.qN === dir.qN) ? ' highlight' : ''),
+              || (currentDir.type === 'er' && (typeof highlightDirIdx === 'object') && highlightDirIdx.pv === dir.pv && dir.qNs.includes(highlightDirIdx.qN)) ? ' highlight' : ''),
           stuff: null,
           onClick: evt => {
             if (this.props.doc !== doc) return
             if (relatedDir && currentType !== 'er') {
+              // Go to qp/ms
               let dirRl = relatedDir.dirs[dir.i]
               if (!dirRl || dirRl.qN !== dir.qN) return
               AppState.dispatch({type: 'previewFile', fileId: relatedDir.docid, page: dirRl.page, highlightingDirIndex: dir.i})
             } else if (currentType === 'er') {
               if (dir.docid) {
-                AppState.dispatch({type: 'previewFile', fileId: dir.docid, page: 0, highlightingDirIndex: dir.qN - 1, jumpToHighlight: true})
+                AppState.dispatch({type: 'previewFile', fileId: dir.docid, page: 0, highlightingDirIndex: dir.qNs[0] - 1, jumpToHighlight: true})
               }
             }
           }
         }
       }) : []
       let linksToEr = (currentType !== 'er' && erDir && !isMcqMs) ? inPageDirs.map(dir => {
-        if (dir.i + 1 >= erDir.dirs.length) return null
-        let erD = erDir.dirs[dir.i]
-        if (erD.qN !== dir.qN) return null
+        let erD = erDir.dirs.find(d => d.qNs.includes(dir.qN))
+        if (!erD) return null
         return {
           boundX: false,
           lt: [pgWidth - erBtnWidth, dir.qNRect.y1 - 4],
