@@ -45,7 +45,7 @@ db.on('open', function () {
   schsrch.use(_schsrch({mongodb: db, elasticsearch: es}))
   schsrch.use(function (err, req, res, next) {
     console.error(err)
-    next()
+    next(err)
   })
   require('../lib/dbModel.js')(db, es).then(_dbModel => {
     dbModel = _dbModel
