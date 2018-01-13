@@ -2,6 +2,8 @@
 const request = require('request')
 const cheerio = require('cheerio')
 const url = require('url')
+const fs = require('fs')
+const path = require('path')
 
 function addTrailingSlash (url) {
   if (url.endsWith('/')) return url
@@ -18,7 +20,9 @@ function parseArguments (args) {
     listSubjectLevel: 'all',
     subjects: [],
     seasonFilter: [],
-    quiet: false
+    quiet: false,
+    downloadDir: null,
+    dlThreads: 4
   }
   for (let i = 0; i < args.length; i ++) {
     let c = args[i]
@@ -97,6 +101,24 @@ function parseArguments (args) {
       continue
     }
 
+    const dashDownload = '--download='
+    if (c.startsWith(dashDownload)) {
+      options.operation = 'download'
+      options.downloadDir = c.substr(dashDownload.length)
+      let stat = fs.statSync(options.downloadDir)
+      if (!stat.isDirectory()) throw new Error(`${options.downloadDir} is not a directory.`)
+      fs.accessSync(options.downloadDir, fs.constants.W_OK)
+      continue
+    }
+
+    const dashDownloadThreads = '--download-threads='
+    if (c.startsWith(dashDownloadThreads)) {
+      let ts = parseInt(c.substr(dashDownloadThreads.length))
+      if (!Number.isSafeInteger(ts) || ts <= 0) throw new Error(`Invalid thread number ${ts}`)
+      options.dlThreads = ts
+      continue
+    }
+
     throw new Error(`Unrecognized argument ${c}`)
   }
 
@@ -126,6 +148,8 @@ if (options.help) {
   -t t1[,t2,...]\tFilter time (-t s17 means only download s17 papers, for example)
   --list-subject[=<all|IGCSE|A>]
   --query-papers\tList all seasons and its papers
+  --download=<dir>\tDownload papers to given directory.
+  --download-threads=<n>\tUse n connections while downloading.
 `)
   process.exit(0)
 }
@@ -337,7 +361,7 @@ function doJob () {
       }
     }
 
-    if (options.operation === 'query-papers') {
+    if (options.operation === 'query-papers' || options.operation === 'download') {
       if (options.subjects.length === 0) {
         return Promise.reject(new Error('No subjects specified.'))
       }
@@ -346,20 +370,36 @@ function doJob () {
         let subject = subjectIdMap[id]
         if (!subject) return Promise.reject(new Error(`Unknow subject ${id}.`))
         return queryPapers(subject).then(seasons => {
-          options.quiet || process.stderr.write(`${id} done.\n`)
+          (options.quiet || options.operation === 'download') || process.stderr.write(`${id} done.\n`)
           return Promise.resolve({
             subject: subjectIdMap[id],
             seasons
           })
         })
       })).then(ss => {
-        for (let ps of ss) {
-          process.stdout.write(ps.subject.id)
-          process.stdout.write('\t')
-          process.stdout.write(ps.subject.name)
-          process.stdout.write(':\n')
-          printPaperList(ps.seasons)
+        if (options.operation === 'query-papers') {
+          for (let ps of ss) {
+            process.stdout.write(ps.subject.id)
+            process.stdout.write('\t')
+            process.stdout.write(ps.subject.name)
+            process.stdout.write(':\n')
+            printPaperList(ps.seasons)
+          }
+          return Promise.resolve()
         }
+        if (options.operation === 'download') {
+          let queue = []
+          for (let ps of ss) {
+            for (let t of Object.keys(ps.seasons)) {
+              let se = ps.seasons[t]
+              for (let p of se) {
+                queue.push(p.url)
+              }
+            }
+          }
+          return downloadPapers(queue)
+        }
+        return Promise.reject(new Error())
       })
     }
 
@@ -385,4 +425,53 @@ function printPaperList (seasons) {
       process.stdout.write(`    ${p.string}: ${p.url.match(/\/([^\/]+\.pdf)$/)[1]}\n`)
     }
   }
+}
+
+function downloadPapers (queue) {
+  options.quiet || process.stderr.write(`${queue.length} to download.\n`)
+  return new Promise((resolve, reject) => {
+    let doneAmount = 0
+    let totalAmount = queue.length
+    function thread (id) {
+      if (totalAmount === doneAmount) return void done()
+      if (queue.length === 0) return void setTimeout(() => {
+        if (totalAmount === doneAmount) return void done()
+        thread(id)
+      }, 1000)
+      let task = queue.pop()
+      req({
+        url: task,
+        encoding: null,
+        timeout: 3000
+      }, (err, res, body) => {
+        if (err) return void error(task, err, id)
+        if (res.statusCode !== 200) return void error(task, new Error(`Got ${res.statusCode} (${res.statusMessage}) from ${task}`), id)
+        let urlSplit = res.request.uri.path.split('/')
+        let fname = urlSplit[urlSplit.length - 1]
+        if (!fname) {
+          return void error(task, new Error("No filename returned."), id)
+        }
+        fs.writeFile(path.join(options.downloadDir, fname), body, {encoding: null, flag: 'w'}, err => {
+          if (err) return void error(task, err, id)
+          doneAmount ++
+          if (doneAmount === totalAmount) return done()
+          options.quiet || process.stderr.write(`[${id}]: ${task} ... (${totalAmount - doneAmount} left / ${totalAmount})             \r`)
+          thread(id)
+        })
+      }, 500)
+    }
+    for (let ti = 0; ti < options.dlThreads; ti ++) thread(ti)
+    let doned = false
+    function done () {
+      if (doned) return
+      doned = true
+      process.stderr.write('\nDone\n')
+      resolve()
+    }
+    function error (task, error, tid) {
+      process.stderr.write(`Error: ${error.message}. Retrying later...\n`)
+      queue.push(task)
+      thread(tid)
+    }
+  })
 }
