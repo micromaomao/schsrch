@@ -222,7 +222,9 @@ function queryPapers (subject) {
           let times = {}
           for (let y of processedYears) {
             for (let t of y.qs) {
-              times[t.letter + y.year] = t.papers
+              let pv = t.letter + y.year
+              if (options.seasonFilter.length > 0 && !options.seasonFilter.includes(pv)) continue
+              times[pv] = t.papers
             }
           }
           return Promise.resolve(times)
