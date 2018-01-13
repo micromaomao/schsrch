@@ -343,7 +343,9 @@ function doJob () {
       }
       options.quiet || process.stderr.write('Querying subject pages...\n')
       return Promise.all(options.subjects.map(id => {
-        return queryPapers(subjectIdMap[id]).then(seasons => {
+        let subject = subjectIdMap[id]
+        if (!subject) return Promise.reject(new Error(`Unknow subject ${id}.`))
+        return queryPapers(subject).then(seasons => {
           options.quiet || process.stderr.write(`${id} done.\n`)
           return Promise.resolve({
             subject: subjectIdMap[id],
