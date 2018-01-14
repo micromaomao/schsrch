@@ -302,19 +302,9 @@ function queryPapers (subject) {
       let papers = []
       stuff.each((i, stuffEl) => {
         let $stuffEl = $(stuffEl)
-        let tagName = $stuffEl[0].tagName
-        if (tagName === 'ul') {
-          let subli = $stuffEl.children('li')
-          subli.find('a').each((i, el) => {
-            a_s.push($(el))
-          })
-        } else if (tagName === 'li') {
-          $stuffEl.find('a').each((i, el) => {
-            a_s.push($(el))
-          })
-        } else {
-          throw new Error(`Expected ${tagName} to be ul or li.`)
-        }
+        $stuffEl.find('a').each((i, el) => {
+          a_s.push($(el))
+        })
       })
       for (let $a of a_s) {
         if ($a.text().trim() === '') continue
