@@ -27,6 +27,11 @@ module.exports = [
     name: 'Accounting'
   },
   {
+    id: '0455',
+    level: 'IGCSE',
+    name: 'Economics'
+  },
+  {
     id: '0460',
     level: 'IGCSE',
     name: 'Geography'
