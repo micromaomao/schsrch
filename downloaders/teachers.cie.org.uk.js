@@ -286,6 +286,9 @@ function queryPapers (subject) {
     return yearHeadings.map((i, el) => {
       let $el = $(el)
       let tText = $el.text().trim()
+      if (tText === '2017') {
+        tText = 'March 2017' // Their bad.
+      }
       if (!tText.endsWith(' ' + fullYear)) throw new Error(`Unrecognized title ${tText}`)
       let month = tText.split(' ')[0]
       let letter = ({
