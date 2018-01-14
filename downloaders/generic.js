@@ -17,7 +17,7 @@ try {
 
 if (options.help) {
   process.stdout.write(
-`./pastpapers.papacambridge.com.js [options] <startUrl> <outputDir>
+`./generic.js [options] <startUrl> <outputDir>
 
   Options:
     --download-threads=<n>\tUse n connections while downloading.
@@ -42,45 +42,28 @@ function pageThread () {
     let urlParse = new URL(currentUrl)
     options.quiet || process.stderr.write(`${currentUrl}                   \n`)
     outputProgress()
-    if (urlParse.pathname === '/') {
-      let dir = urlParse.searchParams.get('dir')
-      if (dir === null) return void resolve()
-      req({url: currentUrl}, (err, res, body) => {
-        if (err) return void reject(err)
-        if (res.statusCode !== 200) {
-          process.stderr.write(`Got ${res.statusCode} (${res.statusMessage}) from ${currentUrl}. Ignoring this page.`)
-          return void resolve()
-        }
-        let $ = cheerio.load(body)
-        $('a').each((i, el) => {
-          let $a = $(el)
-          let href = $a.attr('href')
-          if (!href) return
-          if (href.startsWith('javascript:')) return
-          let hrefUrl = new URL(href.split('#')[0], urlParse)
-          if (hrefUrl.pathname === '/') {
-            let nDir = hrefUrl.searchParams.get('dir')
-            if (!nDir) return
-            if (nDir.startsWith(dir) && nDir.length > dir.length) {
-              pageQueue.push(hrefUrl.href)
-            }
-          } else {
-            pageQueue.push(hrefUrl.href)
-          }
-        })
-        resolve()
-      })
-    } else if (urlParse.pathname === '/view.php') {
-      let file = urlParse.searchParams.get('id')
-      if (file === null) return void resolve()
-      let fileUrl = new URL(file, urlParse).href.split('#')[0]
-      options.quiet || process.stderr.write(`  dl: ${fileUrl}       \n`)
-      outputProgress()
-      urlsToDownload.add(fileUrl)
-      resolve()
-    } else {
-      resolve()
+    if (urlParse.pathname.endsWith('.pdf')) {
+      urlsToDownload.add(urlParse.href)
+      return void resolve()
     }
+    req({url: urlParse.href}, (err, res, body) => {
+      if (err) return void reject(err)
+      if (res.statusCode !== 200) {
+        process.stderr.write(`Got ${res.statusCode} (${res.statusMessage}) from ${currentUrl}. Ignoring this page.`)
+        return void resolve()
+      }
+      let $ = cheerio.load(body)
+      $('a').each((i, el) => {
+        let $a = $(el)
+        let href = $a.attr('href')
+        if (!href) return
+        let hrefParse = new URL(href.split('#')[0], urlParse)
+        if (hrefParse.pathname.startsWith(urlParse.pathname) && hrefParse.pathname.length > urlParse.pathname.length) {
+          pageQueue.push(hrefParse.href)
+        }
+      })
+      resolve()
+    })
   }).then(() => {
     numProcessing --
     if (pageQueue.length === 0) {
