@@ -27,7 +27,7 @@ class SearchPrompt extends React.Component {
       }
     }
     return (
-      prompt ? <div className='searchprompt'>{prompt}</div> : null
+      prompt ? <div className={'searchprompt' + (this.props.center ? ' center' : '')}>{prompt}</div> : null
     )
   }
 }

@@ -15,6 +15,7 @@ const Sidebar = require('./sidebar.jsx')
 const bowser = require('bowser')
 const SubjectsView = require('./subjectsview.jsx')
 const Help = require('./help.jsx')
+const SearchPrompt = require('./searchprompt.jsx')
 
 class SchSrch extends React.Component {
   constructor (props) {
@@ -213,6 +214,7 @@ class SchSrch extends React.Component {
         <div className={'searchbarcontain' + (showHelp ? ' helping' : '')} key='searchbarcontain'>
           <SearchBar key='searchbar' ref={f => this.searchbar = f} big={!showHelp} onQuery={this.handleSearchBarQuery} alwaysShowIcon={showHelp}/>
         </div>
+        <SearchPrompt center={true} query={(AppState.getState().querying || {query: ''}).query} />
         <Description showHelp={showHelp} />
         {showHelp ? <Help /> : null}
       </div>
