@@ -1,6 +1,6 @@
 const React = require('react')
 const AppState = require('./appstate.js')
-const FetchErrorPromise = require('./fetcherrorpromise.js')
+const FetchErrorPromise = require('./fetcherrorpromise.jsx')
 
 class ChallengeReplaceView extends React.Component {
   constructor (props) {

@@ -7,6 +7,7 @@ const OverflowView = require('./overflowview.jsx')
 const CIESubjects = require('./CIESubjects.js')
 const SearchPrompt = require('./searchprompt.jsx')
 const FilePreview = require('./filepreview.jsx')
+const FetchErrorPromise = require('./fetcherrorpromise.jsx')
 
 class SearchResult extends React.Component {
   constructor (props) {
@@ -83,13 +84,7 @@ class SearchResult extends React.Component {
       <div className={'searchresult' + (querying.loading ? ' loading' : '') + (this.props.smallerSetName ? ' smallsetname' : '')}>
         <SearchPrompt query={querying.query} />
         {querying.error
-          ? <div className='error'>
-              <div>
-                Unable to search:&nbsp;
-                <span className='msg'>{querying.error.message}</span>
-              </div>
-              <div className='retry' onClick={evt => this.props.onRetry && this.props.onRetry()}>Retry search</div>
-            </div>
+          ? <FetchErrorPromise.ErrorDisplay error={querying.error} serverErrorActionText={'handle your query'} onRetry={this.props.onRetry} />
           : null}
         {deprecationStates.map((dst, i) => (
           <div className='warning' key={i}>

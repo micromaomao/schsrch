@@ -1,5 +1,5 @@
 const React = require('react')
-const FetchErrorPromise = require('./fetcherrorpromise.js')
+const FetchErrorPromise = require('./fetcherrorpromise.jsx')
 const AppState = require('./appstate.js')
 
 class LoginView extends React.Component {
@@ -29,9 +29,7 @@ class LoginView extends React.Component {
         <h1>Login / Register&hellip;</h1>
         {this.state.lastError
           ? (
-              <div className='error'>
-                {this.state.lastError.toString()}
-              </div>
+              <FetchErrorPromise.ErrorDisplay error={this.state.lastError} serverErrorActionText={'log you in'} />
             )
           : null}
         {!this.state.requestState && this.state.stage === 'username'
@@ -169,7 +167,7 @@ class LoginView extends React.Component {
     }, err => {
       this.setState({
         requestState: null,
-        lastError: err.message
+        lastError: err
       })
     })
   }
@@ -186,7 +184,7 @@ class LoginView extends React.Component {
       this.setState({usernameCheckState: 'exist'})
     }, err => {
       if (this.state.usernameInput !== username) return
-      if (/404/.test(err.message)) {
+      if (err.status === '404') {
         this.setState({usernameCheckState: 'notexist'})
       } else {
         this.setState({usernameCheckState: null, lastError: err})
@@ -238,7 +236,7 @@ class LoginView extends React.Component {
     }, err => {
       this.setState({
         requestState: null,
-        lastError: err.message
+        lastError: err
       })
       if (timeout) clearTimeout(timeout)
     })
@@ -268,7 +266,7 @@ class LoginView extends React.Component {
     }, err => {
       this.setState({
         requestState: null,
-        lastError: err.message
+        lastError: err
       })
     })
   }
@@ -292,7 +290,7 @@ class LoginView extends React.Component {
     }, err => {
       this.setState({
         requestState: null,
-        lastError: err.message
+        lastError: err
       })
     })
   }

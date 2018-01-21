@@ -2,7 +2,7 @@ const React = require('react')
 const AppState = require('./appstate.js')
 const SubjectData = require('./CIESubjects.data.js')
 const Feedback = require('./feedback.jsx')
-const FetchErrorPromise = require('./fetcherrorpromise.js')
+const FetchErrorPromise = require('./fetcherrorpromise.jsx')
 
 class SubjectsView extends React.Component {
   constructor (props) {

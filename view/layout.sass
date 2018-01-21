@@ -489,8 +489,10 @@ $sidebar-width: 300px
     .large
       font-size: 1rem
       color: lighten($color-primary, 5%)
-    .error
-      color: red
+    .error-display
+      max-width: 40rem
+      margin-left: auto
+      margin-right: auto
     .reload span
       color: $color-link
       line-height: 2
@@ -519,21 +521,6 @@ $sidebar-width: 300px
       cursor: pointer
       padding: 1rem
       margin: -1rem
-
-.errorbox
-  padding: 1rem 2rem
-  color: $color-primary
-  .msg
-    color: red
-  .retry
-    cursor: pointer
-    color: white
-    display: inline-block
-    width: 10rem
-    text-align: center
-    padding: 0.5rem 0.5rem
-    margin: 1rem
-    background-color: $color-primary
 
 .schsrch .view-search
   display: flex
@@ -626,8 +613,6 @@ $sidebar-width: 300px
           text-decoration: inherit
   .empty
     padding: 3rem 5rem
-  .error
-    @extend .errorbox
   .set, .filepreview
     margin-top: 0.5rem
     margin-bottom: 0.3rem
@@ -835,7 +820,7 @@ $feedback-top-height: 2rem + 1.3rem
     padding: 1rem 2rem
     flex-grow: 0
     flex-shrink: 0
-  .loading, .error, .top
+  .loading, .top
     background-color: $color-filepreview-top
   .top
     text-align: center
@@ -903,17 +888,10 @@ $feedback-top-height: 2rem + 1.3rem
       opacity: 0.5
     .prev
       margin-right: 1rem
-  .error
-    @extend .errorbox
+  .error-display .download
     color: $color-primary
-    background-color: white
-  .error, .loading
-    .download
-      color: $color-primary
-      cursor: pointer
-  .error
-    .download
-      padding-left: 1.2rem
+    cursor: pointer
+    text-decoration: none
   .pdfview
     flex-grow: 1
     flex-shrink: 1
@@ -1270,21 +1248,14 @@ $feedback-top-height: 2rem + 1.3rem
         flex-wrap: nowrap
         flex-direction: column
         overflow: hidden // Blame Firefox, IE & Safari for this (again)
-        > .loading, .error
+        > .loading, .error-display
           flex-grow: 0
           flex-shrink: 0
+        > .loading
           text-align: center
           font-size: 1.2rem
           line-height: 2
-        > .loading
           color: $color-secondary-text
-        > .error
-          color: red
-          .retry
-            font-size: 0.9rem
-            color: $color-primary
-            cursor: pointer
-            line-height: 2
         .collectionEditor
           flex-grow: 1
           flex-shrink: 1
@@ -1503,14 +1474,6 @@ $feedback-top-height: 2rem + 1.3rem
       text-align: left
       width: 100%
       outline: none
-    .error
-      color: red
-      border-top: solid 1px red
-      border-bottom: solid 1px red
-      padding-top: 0.5rem
-      padding-bottom: 0.5rem
-      &.bmargin
-        margin-bottom: 1rem
     .progress
       color: $color-primary
   &.view-login > .contain .stage,
@@ -1661,3 +1624,28 @@ $feedback-top-height: 2rem + 1.3rem
     text-align: center
     .reload-btn
       @extend .material_button
+
+.error-display
+  text-align: left
+  color: black
+  .heading
+    color: rgba(black, 0.5)
+    font-size: 0.8rem
+    text-align: center
+    .retry
+      @extend .material_button
+      margin-left: 0.5rem
+  .message
+    color: red
+    border-top: solid 1px red
+    border-bottom: solid 1px red
+    padding-top: 0.5rem
+    padding-bottom: 0.5rem
+    text-align: center
+    &.bmargin
+      margin-bottom: 1rem
+  .submessage
+    margin-top: 1rem
+  .submessage, .message
+    padding-left: 0.5rem
+    padding-right: 0.5rem

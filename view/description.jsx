@@ -1,7 +1,7 @@
 const React = require('react')
 const { createStore } = require('redux')
 const AppState = require('./appstate.js')
-const FetchErrorPromise = require('./fetcherrorpromise.js')
+const FetchErrorPromise = require('./fetcherrorpromise.jsx')
 const CIESubjects = require('./CIESubjects.js')
 
 let statusInfoState = createStore(function (state = {}, action) {
@@ -108,7 +108,7 @@ class Description extends React.Component {
     } else {
       statusInfo = (
         <div className='status'>
-          <div className='error'>Error fetching status info: {this.state.error.message}</div>
+          <FetchErrorPromise.ErrorDisplay error={this.state.error} serverErrorActionText={'fetch status'} />
           {reloadBtn}
         </div>
       )

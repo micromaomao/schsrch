@@ -1,6 +1,6 @@
 const React = require('react')
 const AppState = require('./appstate.js')
-const FetchErrorPromise = require('./fetcherrorpromise.js')
+const FetchErrorPromise = require('./fetcherrorpromise.jsx')
 const { Editor } = require('./collectioneditor.jsx')
 
 class Collection extends React.Component {
@@ -141,10 +141,7 @@ class Collection extends React.Component {
             : null}
           {col.error
             ? (
-                <div className='error'>
-                  {col.error}
-                  <div className='retry' onClick={evt => AppState.dispatch({type: 'collection-reload'})}>Retry</div>
-                </div>
+                <FetchErrorPromise.ErrorDisplay error={col.error} serverErrorActionText={'get this collection'} onRetry={evt => AppState.dispatch({type: 'collection-reload'})} />
               )
             : null}
           {!AppState.getState().authToken
@@ -219,13 +216,13 @@ class Collection extends React.Component {
     fetch(`/collection/${col.id}/content/`, {headers: authHeaders}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
       if (this.props.collection.id !== col.id) return
       if (result.error) {
-        AppState.dispatch({type: 'collection-load-error', error: result.error})
+        AppState.dispatch({type: 'collection-load-error', error: {message: result.error}})
       } else {
         AppState.dispatch({type: 'collection-load-data', content: result})
       }
     }, err => {
       if (this.props.collection.id !== col.id) return
-      AppState.dispatch({type: 'collection-load-error', error: err.message})
+      AppState.dispatch({type: 'collection-load-error', error: err})
     })
   }
 
@@ -245,7 +242,7 @@ class Collection extends React.Component {
       .then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
         AppState.dispatch({type: 'collection-put-done', content: content})
       }, err => {
-        if (err.message.toString().match(/401/)) {
+        if (err.status === 401) {
           this.setState({noEditAccess: true})
           AppState.dispatch({type: 'collection-reload'})
         }

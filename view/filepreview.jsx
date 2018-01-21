@@ -3,7 +3,7 @@ const PaperUtils = require('./paperutils.js')
 const SsPdfView = require('./sspdfview.jsx')
 const AppState = require('./appstate.js')
 const DocDirList = require('./docdirlist.jsx')
-const FetchErrorPromise = require('./fetcherrorpromise.js')
+const FetchErrorPromise = require('./fetcherrorpromise.jsx')
 const {view2client} = require('./pointutils.js')
 
 // TODO: Highlight
@@ -232,14 +232,11 @@ class FilePreview extends React.Component {
           : null}
         {!this.state.loading && this.state.error
           ? (
-              <div className='error'>
-                <div>
-                  Unable to preview the document:&nbsp;
-                  <span className='msg'>{this.state.error.message}</span>
+              <FetchErrorPromise.ErrorDisplay error={this.state.error} serverErrorActionText={'get the document'} onRetry={evt => this.load(this.props.doc, this.props.page)} submessage={
+                <div className='submessage'>
+                  You can <a className='download' onClick={this.handleDownload} href={this.getDownloadUrl()}>download this document</a> instead - that may work.
                 </div>
-                <div className='retry' onClick={evt => this.load(this.props.doc, this.props.page)}>Try again</div>
-                <div className='download' onClick={this.handleDownload}>Download this document</div>
-              </div>
+              } />
             )
           : null}
         {!this.state.error && this.state.docJson

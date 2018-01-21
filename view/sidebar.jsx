@@ -1,5 +1,5 @@
 const React = require('react')
-const FetchErrorPromise = require('./fetcherrorpromise.js')
+const FetchErrorPromise = require('./fetcherrorpromise.jsx')
 const AppState = require('./appstate.js')
 const Feedback = require('./feedback.jsx')
 
