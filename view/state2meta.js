@@ -32,7 +32,7 @@ module.exports = function (state) {
         let url = origin + '/search/?as=page&query=' + encodeURIComponent(query)
         if (/^\d{4}$/.test(query)) {
           let subject = null
-          let queryResult = state.querying.result
+          let queryResult = state.querying.result || {response: 'empty'}
           if ((subject = CIESubjects.findExactById(query))) {
             return {
               url,
