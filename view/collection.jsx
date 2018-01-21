@@ -242,7 +242,7 @@ class Collection extends React.Component {
       .then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
         AppState.dispatch({type: 'collection-put-done', content: content})
       }, err => {
-        if (err.status === 401) {
+        if (err.status === '401') {
           this.setState({noEditAccess: true})
           AppState.dispatch({type: 'collection-reload'})
         }
