@@ -25,7 +25,8 @@ class ErrorDisplay extends React.Component {
       err = Object.assign({
         unknow: false,
         type: 'generic',
-        status: null
+        status: null,
+        submessage: null
       }, err)
     }
 
@@ -65,6 +66,7 @@ class ErrorDisplay extends React.Component {
         <div className='message'>
           {err.unknow ? '???' : err.message}
         </div>
+        {err.submessage}
         {err.type === 'network' ? (
           <div className='submessage'>
             <p>This may means that SchSrch is down, but please check your network connection.</p>

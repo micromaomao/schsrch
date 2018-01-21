@@ -57,7 +57,7 @@ class SchSrch extends React.Component {
     }
 
     if (state.querying) {
-      if (state.querying.loading && state.querying.query !== this.state.lastQueryLoad) {
+      if (state.querying.loading && (state.querying.query !== this.state.lastQueryLoad || !state.querying.result)) {
         this.loadQuery()
       }
     } else {

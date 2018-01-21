@@ -138,6 +138,17 @@ class FilePreview extends React.Component {
       }
     }, err => {
       if (this.props.doc !== doc || this.props.page !== page) return
+      if (err.status === '404') {
+        Object.assign(err, {
+          type: 'strange',
+          message: 'The document you are trying to open no longer existed.',
+          submessage: (
+            <div className='submessage'>
+              <a onClick={evt => AppState.dispatch({type: 'retry-query'})}>Retrying your search</a> may solve this.
+            </div>
+          )
+        })
+      }
       this.setState({loading: false, error: err, docJson: null})
       this.currentLoading = null
     })
