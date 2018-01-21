@@ -54,6 +54,13 @@ let AppState = createStore(function (state = {}, action) {
         }),
         showSidebar: false
       })
+    case 'retry-query':
+      return Object.assign({}, state, {
+        querying: Object.assign({}, state.querying || {}, {
+          loading: true,
+          error: null
+        })
+      })
     case 'replaceQuerying':
       return Object.assign({}, state, {
         querying: action.querying

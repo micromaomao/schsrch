@@ -31,6 +31,7 @@ class SchSrch extends React.Component {
     this.handleSearchBarQuery = this.handleSearchBarQuery.bind(this)
     this.handleSearchContainScroll = this.handleSearchContainScroll.bind(this)
     this.handleBlackCoverDown = this.handleBlackCoverDown.bind(this)
+    this.retryQuery = this.retryQuery.bind(this)
     // UI Components should support server rendering to allow javascript-disabled users to use this App.
     // The DOM produced by server and client javascript could (and should) differ.
     if (AppState.getState().serverrender) {
@@ -250,7 +251,7 @@ class SchSrch extends React.Component {
             querying={AppState.getState().querying}
             previewing={previewing}
             showSmallPreview={!this.shouldShowBigPreview()}
-            onRetry={this.loadQuery}
+            onRetry={this.retryQuery}
             smallerSetName={this.state.server ? false : window.innerWidth <= 500 || displayingBigPreview} />
         </div>
         {AppState.getState().serverrender ? null : (
@@ -279,6 +280,12 @@ class SchSrch extends React.Component {
       AppState.dispatch({type: 'query-load', query, result})
     }, err => {
       AppState.dispatch({type: 'query-error', query, error: err})
+    })
+  }
+
+  retryQuery () {
+    this.setState({lastQueryLoad: null}, () => {
+      AppState.dispatch({type: 'retry-query'})
     })
   }
 
