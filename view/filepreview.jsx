@@ -238,7 +238,7 @@ class FilePreview extends React.Component {
                   <span className='msg'>{this.state.error.message}</span>
                 </div>
                 <div className='retry' onClick={evt => this.load(this.props.doc, this.props.page)}>Try again</div>
-                <div className='download' onClick={evt => this.download()}>Download this document</div>
+                <div className='download' onClick={this.handleDownload}>Download this document</div>
               </div>
             )
           : null}
