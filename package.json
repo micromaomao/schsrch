@@ -49,7 +49,7 @@
     "es6-set": "^0.1.5",
     "express": "^4.16.2",
     "fetch-polyfill": "^0.8.2",
-    "file-loader": "^1.1.6",
+    "file-loader": "^1.1.9",
     "fullscreen-api-polyfill": "^1.1.2",
     "html-webpack-plugin": "^2.30.1",
     "mocha": "^5.0.1",
