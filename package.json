@@ -66,6 +66,7 @@
     "sharp": "^0.20.0",
     "should": "^13.2.1",
     "supertest": "^3.0.0",
-    "webpack": "^4.1.1"
+    "webpack": "^4.1.1",
+    "webpack-cli": "^2.0.11"
   }
 }

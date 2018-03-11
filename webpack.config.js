@@ -5,31 +5,45 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const dev = process.env.NODE_ENV !== 'production'
 
 baseConfig = {
+  mode: dev ? 'development' : 'production',
   module: {
-    loaders: [
-      { test: /\.sass$/, loaders: ['css-loader', 'sass-loader'] },
+    rules: [
+      { test: /\.sass$/, use: ['css-loader', 'sass-loader'] },
       {
         test: /\.jsx$/,
-        loader: 'babel-loader',
-        query: {
-          presets: ['env'],
-          plugins: ['transform-react-jsx']
-        }
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['env'],
+              plugins: ['transform-react-jsx']
+            }
+          }
+        ]
       },
       {
         test: /\.js$/,
-        loader: 'babel-loader',
-        query: {
-          presets: ['env'],
-        }
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['env']
+            }
+          }
+        ]
       },
       {
         test: /\.png$/,
-        loader: 'file-loader'
+        use: 'file-loader'
       },
       {
         test: /\.pug$/,
-        loader: 'pug-loader'
+        use: [
+          {
+            loader: 'pug-loader',
+            options: {}
+          }
+        ]
       }
     ]
   },
@@ -49,7 +63,7 @@ module.exports = [
     plugins: [
       new HtmlWebpackPlugin({
         template: './view/index.pug',
-        minify: {removeComments: true, useShortDoctype: true, sortClassName: true, sortAttributes: true},
+        minify: dev ? false : {removeComments: true, useShortDoctype: true, sortClassName: true, sortAttributes: true},
         chunks: [ 'clientrender' ],
         inject: false
       }),
@@ -61,18 +75,13 @@ module.exports = [
         version: '0.6.0',
         ServiceWorker: {
           scope: '/',
-          publicPath: '/sw.js'
+          publicPath: '/sw.js',
+          minify: !dev && false // FIXME
         },
         AppCache: null,
         rewrites: {
           'index.html': '/'
         }
-      }),
-      dev ? null : new webpack.optimize.UglifyJsPlugin({
-        minimize: dev,
-        compress: dev,
-        sourceMap: true,
-        comments: false
       })
     ].filter(x => x !== null)
   }),
