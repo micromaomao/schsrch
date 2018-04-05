@@ -102,9 +102,23 @@ module.exports = [
     name: 'Physics'
   },
   {
+    id: '0654',
+    level: 'IGCSE',
+    name: 'Co-ordinated Sciences'
+  },
+  {
     id: '8681',
     level: 'AS',
     name: 'Chinese - Language (AS Level only)'
+  },
+  {
+    id: '8693',
+    level: 'AS',
+    name: 'English - Language (AS Level only)',
+    deprecation: {
+      successor: '9093',
+      final: 'w13'
+    }
   },
   {
     id: '8987',
@@ -114,6 +128,11 @@ module.exports = [
       successor: '9239',
       final: 'w15'
     }
+  },
+  {
+    id: '9093',
+    level: 'A/s',
+    name: 'English Language'
   },
   {
     id: '9231',
@@ -134,6 +153,11 @@ module.exports = [
     id: '9609',
     level: 'A/s',
     name: 'Business'
+  },
+  {
+    id: '9695',
+    level: 'A/s',
+    name: 'English - Literature'
   },
   {
     id: '9697',
