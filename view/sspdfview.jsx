@@ -660,7 +660,7 @@ class SsPdfView extends React.Component {
     if (!this.shouldPreventScrollDefault(evt)) return
     if (evt.ctrlKey) {
       let point = this.client2view([evt.clientX, evt.clientY])
-      let nStat = this.calcResizeOnPoint(point, Math.pow(2, -Math.sign(evt.deltaY) * 0.3))
+      let nStat = this.calcResizeOnPoint(point, Math.pow(2, -this.limitDelta(evt.deltaY) * 0.2))
       if (nStat.ctSize[0] > this.props.width * 5) return
       if (nStat.ctSize[0] < this.props.width && nStat.ctSize[1] < this.props.height) {
         nStat = this.calcCenter()
@@ -680,10 +680,13 @@ class SsPdfView extends React.Component {
     let ns = this.scrollGetNewCt(evt)
     return !this.stateSimillar(this.ctAnimationGetFinalState(), ns)
   }
+  limitDelta (d) {
+    return Math.min(1, Math.max(-1, d))
+  }
   scrollGetNewCt (evt) {
     if (evt.ctrlKey) return this.ctAnimationGetFinalState()
-    let dx = -Math.sign(evt.deltaX) * 100
-    let dy = -Math.sign(evt.deltaY) * 100
+    let dx = -this.limitDelta(evt.deltaX) * 40
+    let dy = -this.limitDelta(evt.deltaY) * 40
     if (Math.abs(dx) < 0.1 && evt.shiftKey) {
       dx = dy
       dy = 0
