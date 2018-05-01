@@ -19,6 +19,7 @@ module.exports = (schsrch, dbModel) =>
     let paper4
     let ms4
     let ms5
+    let ms6
     let er1
     let paper6
     let er2
@@ -47,6 +48,7 @@ module.exports = (schsrch, dbModel) =>
     getDocBeforeHook({subject: '9701', type: 'qp', time: 's17', paper: 4, variant: 2}, d => paper4 = d)
     getDocBeforeHook({subject: '9701', type: 'ms', time: 's17', paper: 4, variant: 2}, d => ms4 = d)
     getDocBeforeHook({subject: '9709', type: 'ms', time: 's10', paper: 3, variant: 1}, d => ms5 = d)
+    getDocBeforeHook({subject: '9700', type: 'ms', time: 'w11', paper: 2, variant: 2}, d => ms6 = d)
     getDocBeforeHook({subject: '9709', type: 'er', time: 'w11'}, d => er1 = d)
     getDocBeforeHook({subject: '9702', type: 'qp', time: 's16', paper: 2, variant: 2}, d => paper6 = d)
     getDocBeforeHook({subject: '9702', type: 'er', time: 's16'}, d => er2 = d)
@@ -175,6 +177,26 @@ module.exports = (schsrch, dbModel) =>
         .expect(res => res.body.dirs.length.should.equal(10))
         .end(done)
       )
+    })
+    it('/doc/?as=dir for ms (9700_w11_2_2_ms)', function (done) {
+      this.timeout(5000)
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + ms6._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz'), false, 100)
+        .expect(res => {
+          let dirs = res.body.dirs
+          dirs.length.should.equal(6)
+          dirs.map(d => ({n: d.qN.toString(), p: d.page})).should.deepEqual([
+            {n: '1', p: 2},
+            {n: '2', p: 3},
+            {n: '3', p: 4},
+            {n: '4', p: 5},
+            {n: '5', p: 7},
+            {n: '6', p: 7}
+          ])
+        })
+        .end(done)
     })
     it('should cache dir result', function (done) {
       PastPaperDoc.findOne({_id: paper1}, {fileBlob: false}).then(doc => {

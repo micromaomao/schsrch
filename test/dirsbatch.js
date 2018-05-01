@@ -76,7 +76,7 @@ module.exports = (schsrch, dbModel) =>
           .expect(200)
           .expect(res => res.body.should.be.an.Object())
           .expect(res => {
-            Object.keys(res.body).should.deepEqual(['qp', 'ms', 'er'])
+            Object.keys(res.body).sort().should.deepEqual(['qp', 'ms', 'er'].sort())
             res.body.qp.should.deepEqual({
               type: 'testing', docType: 'qp', paper: 1, variant: 3, docid: qp._id.toString()
             })
