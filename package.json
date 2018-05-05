@@ -55,18 +55,18 @@
     "mocha": "^5.1.1",
     "mongoose": "^5.0.17",
     "node-sass": "^4.9.0",
-    "offline-plugin": "^4.9.1",
+    "offline-plugin": "^5.0.3",
     "pug": "^2.0.3",
     "pug-loader": "^2.4.0",
     "raw-loader": "^0.5.1",
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
-    "redux": "^3.7.2",
-    "sass-loader": "^6.0.7",
+    "redux": "^4.0.0",
+    "sass-loader": "^7.0.1",
     "sharp": "^0.20.2",
     "should": "^13.2.1",
     "supertest": "^3.0.0",
-    "webpack": "^4.6.0",
+    "webpack": "^4.7.0",
     "webpack-cli": "^2.1.2"
   }
 }
