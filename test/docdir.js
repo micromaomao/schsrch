@@ -20,6 +20,8 @@ module.exports = (schsrch, dbModel) =>
     let ms4
     let ms5
     let ms6
+    let ms7
+    let ms8
     let er1
     let paper6
     let er2
@@ -49,6 +51,8 @@ module.exports = (schsrch, dbModel) =>
     getDocBeforeHook({subject: '9701', type: 'ms', time: 's17', paper: 4, variant: 2}, d => ms4 = d)
     getDocBeforeHook({subject: '9709', type: 'ms', time: 's10', paper: 3, variant: 1}, d => ms5 = d)
     getDocBeforeHook({subject: '9700', type: 'ms', time: 'w11', paper: 2, variant: 2}, d => ms6 = d)
+    getDocBeforeHook({subject: '9702', type: 'ms', time: 'w17', paper: 3, variant: 1}, d => ms7 = d)
+    getDocBeforeHook({subject: '9702', type: 'ms', time: 's17', paper: 3, variant: 4}, d => ms8 = d)
     getDocBeforeHook({subject: '9709', type: 'er', time: 'w11'}, d => er1 = d)
     getDocBeforeHook({subject: '9702', type: 'qp', time: 's16', paper: 2, variant: 2}, d => paper6 = d)
     getDocBeforeHook({subject: '9702', type: 'er', time: 's16'}, d => er2 = d)
@@ -194,6 +198,38 @@ module.exports = (schsrch, dbModel) =>
             {n: '4', p: 5},
             {n: '5', p: 7},
             {n: '6', p: 7}
+          ])
+        })
+        .end(done)
+    })
+    it('/doc/?as=dir for ms (9702_w17_3_1_ms)', function (done) {
+      this.timeout(5000)
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + ms7._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz'))
+        .expect(res => {
+          let dirs = res.body.dirs
+          dirs.length.should.equal(2)
+          dirs.map(d => ({n: d.qN.toString(), p: d.page})).should.deepEqual([
+            {n: '1', p: 1},
+            {n: '2', p: 3}
+          ])
+        })
+        .end(done)
+    })
+    it('/doc/?as=dir for ms (9702_s17_3_4_ms)', function (done) {
+      this.timeout(5000)
+      expectBasicDir(
+        supertest(schsrch)
+          .get('/doc/' + ms8._id + '/?as=dir')
+          .set('Host', 'schsrch.xyz'))
+        .expect(res => {
+          let dirs = res.body.dirs
+          dirs.length.should.equal(2)
+          dirs.map(d => ({n: d.qN.toString(), p: d.page})).should.deepEqual([
+            {n: '1', p: 1},
+            {n: '2', p: 3}
           ])
         })
         .end(done)
