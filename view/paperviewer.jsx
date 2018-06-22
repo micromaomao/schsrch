@@ -624,9 +624,15 @@ class PDFJSViewer extends React.Component {
     let [w, h] = this.viewDim
     this.paintCanvas.width = w
     this.paintCanvas.height = h
+    let lastViewportSize = this.stage.viewportSize
     this.stage.setViewportSize(w, h)
     this.paint()
-    this.stage.animationGetFinalState().boundInContentBox().startAnimation(100)
+    let pendingTransform = this.stage.animationGetFinalState().boundInContentBox()
+    if (lastViewportSize[0] < 1) {
+      pendingTransform.applyImmediate()
+    } else {
+      pendingTransform.startAnimation(100)
+    }
   }
 
   componentWillUnmount () {
