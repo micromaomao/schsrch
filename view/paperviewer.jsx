@@ -243,7 +243,7 @@ class PendingTransform {
     }
     stage.currentAnimation = this
 
-    let initialState = {translate: stage.translate, scale: stage.scale}
+    let initialState = {translate: stage.translate.slice(), scale: stage.scale}
     let startTime = Date.now()
     let self = this
     this.animationFrame = requestAnimationFrame(function nextFrame () {
