@@ -490,6 +490,7 @@ class TransformationStage {
   handleMove (evt) {
     evt.preventDefault()
     if (!this.pressState) return
+    this.lastTapTime = null
     if (!this.moveEventFrame) {
       this.moveEventFrame = requestAnimationFrame(() => {
         this.moveEventFrame = null
