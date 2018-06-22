@@ -716,14 +716,17 @@ class PDFJSViewer extends React.Component {
     for (let p of this.pages) {
       if (!this.pageInView(p)) continue
       let [x, y] = stage.stage2canvas(p.stageOffset)
-      let [w, h] = [p.stageWidth * stage.scale, p.stageHeight * stage.scale]
+      let scale = stage.scale
+      let [w, h] = [p.stageWidth * scale, p.stageHeight * scale]
       if (!p.renderedCanvas) {
         ctx.beginPath()
         ctx.rect(x, y, w, h)
         ctx.stroke()
         p.render(stage.scale).then(this.deferredPaint)
       } else {
-        ctx.drawImage(p.renderedCanvas, x, y, w, h)
+        let pCanvasScale = p.renderedCanvas.width / p.initWidth
+        let [sx, sy, sw, sh] = p.clipRectangle.map(x => x * pCanvasScale)
+        ctx.drawImage(p.renderedCanvas, sx, sy, sw, sh, x, y, w, h)
       }
     }
   }
