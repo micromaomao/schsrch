@@ -327,6 +327,7 @@ class TransformationStage {
     this.currentAnimation = null
 
     this.pressState = null
+    this.lastTapTime = null
 
     this.handleDown = this.handleDown.bind(this)
     this.handleMove = this.handleMove.bind(this)
@@ -447,10 +448,20 @@ class TransformationStage {
     if (evt.touches) {
       if (evt.touches.length === 1) {
         let t = evt.touches[0]
+        if (this.lastTapTime !== null && Date.now() - this.lastTapTime < 500) {
+          this.pressState = null
+          this.lastTapTime = null
+          this.handleDoubleTap([t.clientX, t.clientY])
+          return
+        }
         this.initMove(t)
+        this.lastTapTime = Date.now()
       } else if (evt.touches.length === 2) {
         let [tA, tB] = evt.touches
         this.initPinch(tA, tB)
+        this.lastTapTime = null
+      } else {
+        this.lastTapTime = null
       }
     }
   }
@@ -534,6 +545,16 @@ class TransformationStage {
 
     new PendingTransform(this.translate, this.scale, this).boundInContentBox().startAnimation()
 
+    if (this.onAfterUserInteration) {
+      this.onAfterUserInteration()
+    }
+  }
+
+  handleDoubleTap (point) {
+    let cPoint = client2view(point, this.eventTarget)
+    let sPoint = this.canvas2stage(cPoint)
+    let nScale = this.scale > 1 ? 0.9 : 2
+    new PendingTransform([0, 0], nScale, this).mapPointToPoint(sPoint, cPoint).boundInContentBox().startAnimation(200)
     if (this.onAfterUserInteration) {
       this.onAfterUserInteration()
     }
@@ -712,9 +733,10 @@ class PDFJSViewer extends React.Component {
   updatePages () {
     let stage = this.stage
     if (!this.pages) return
+    let scale = stage.animationGetFinalState().nScale
     for (let p of this.pages) {
       if (this.pageInView(p)) {
-        p.render(stage.scale).then(this.deferredPaint)
+        p.render(scale).then(this.deferredPaint)
       } else {
         p.freeCanvas()
       }
