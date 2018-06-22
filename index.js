@@ -106,7 +106,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
       saveRecord(rec)
     })
     rMain.use('/resources', express.static(path.join(__dirname, 'dist')))
-    // rMain.use('/resources', express.static(path.join(__dirname, 'view/public')))
+    rMain.use('/resources/pdfjs', express.static(path.join(__dirname, 'node_modules/pdfjs-dist/build')))
     rMain.get('/sw.js', function (req, res) {
       res.set('cache-control', 'max-age=0')
       res.sendFile(path.join(__dirname, 'dist/sw.js'))

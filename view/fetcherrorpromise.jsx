@@ -64,7 +64,7 @@ class ErrorDisplay extends React.Component {
           {err.type === 'generic' ? 'An error occurred\u2026' : `A ${err.type} error occurred\u2026`}{retryBtn}
         </div>
         <div className='message'>
-          {err.unknow ? '???' : err.message}
+          {err.unknow ? '???' : (err.message.indexOf('<!DOCTYPE html>') >= 0 ? err.status : err.message)}
         </div>
         {err.submessage}
         {err.type === 'network' ? (

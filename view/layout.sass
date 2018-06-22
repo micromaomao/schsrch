@@ -357,7 +357,8 @@ $sidebar-width: 300px
       margin-right: auto
       height: $inputFontSize * $inputLineHeight
       .querybox
-        flex: 1
+        flex-grow: 1
+        flex-shrink: 1
       .stroke
         position: absolute
         z-index: 2
@@ -376,7 +377,8 @@ $sidebar-width: 300px
         padding-right: 0.5rem
         background-color: rgba(white, 0.7)
         z-index: 1
-        flex: content
+        flex-grow: 0
+        flex-shrink: 0
         .clearInput
           display: inline-block
           cursor: pointer
@@ -539,6 +541,7 @@ $sidebar-width: 300px
     > .sidebarbtn
       flex-grow: 0
       flex-shrink: 0
+      width: 38px
       transition: transform 100ms
     > .searchbar
       flex-grow: 1
@@ -550,6 +553,7 @@ $sidebar-width: 300px
     flex-grow: 1
     flex-shrink: 1
     overflow-y: auto
+    position: relative
   .fbBtn
     color: $color-link
     border-top: solid 1px $color-primary
@@ -692,6 +696,72 @@ $sidebar-width: 300px
       &:hover
         color: darken($color-link, 20%)
         border-bottom: solid 1px rgba($color-secondary-text, 0.2)
+
+
+.searchresult.v2
+  position: absolute
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  overflow: hidden
+  .v2container
+    height: 100%
+    display: flex
+    flex-direction: row
+    flex-wrap: nowrap
+    align-items: stretch
+
+    .v2paperlist
+      flex-shrink: 0
+      flex-grow: 0
+      width: 40px
+      overflow-y: auto
+
+      .tsscontainer
+        width: 100%
+        min-height: 100%
+        border-right: 2px $color-primary solid
+        display: flex
+        flex-direction: column
+        flex-wrap: nowrap
+        overflow-x: visible
+
+      .ts
+        overflow-x: visible
+        .tit
+          border-bottom: $color-primary dashed 2px
+          font-size: 0.7rem
+          color: $color-primary
+          padding-top: 1rem
+          text-align: right
+        .paper
+          cursor: pointer
+          color: $color-link
+          font-size: 1.1rem
+          text-align: center
+          padding: 0.7rem 0
+          $a: rgba(1,1,1,0) solid 2px
+          border-left: $a
+          border-top: $a
+          border-bottom: $a
+          &.current
+            $b: $color-primary solid 2px
+            border-left: $b
+            border-top: $b
+            border-bottom: $b
+            color: $color-primary
+            margin-right: -2px
+            background-color: white
+
+    .viewercontain
+      flex-shrink: 1
+      flex-grow: 1
+      .null
+        text-align: center
+        margin-top: 2rem
+        color: $color-secondary-text
+
 .searchresult.smallsetname .set, .set.small, .set.mini
   .setname
     font-size: 0.9rem
@@ -1654,3 +1724,100 @@ $feedback-top-height: 2rem + 1.3rem
       cursor: pointer
       color: $color-link
       text-decoration: none
+
+.paperviewer
+  width: 100%
+  height: 100%
+  overflow: hidden
+
+  &.loading
+    text-align: center
+    padding-top: 1rem
+
+    .loadingtitle
+      font-size: 1.1rem
+      color: $color-primary
+    .loadingdesc
+      margin-top: 1rem
+      font-size: 0.8rem
+      color: $color-secondary-text
+
+  &.mode-t
+    display: flex
+    flex-direction: column
+    flex-wrap: nowrap
+    .typebar
+      flex-grow: 0
+      flex-shrink: 0
+      height: 30px
+      background-color: $color-filepreview-top
+      display: flex
+      flex-direction: row
+      flex-wrap: nowrap
+      overflow-x: auto
+      align-items: flex-end
+      padding-left: 0.5rem
+      padding-right: 0.5rem
+
+      > .item
+        height: 22px
+        width: 6rem
+        overflow: hidden
+        font-size: 1rem
+        text-align: center
+        color: white
+        position: relative
+        cursor: pointer
+        .loadingfill
+          position: absolute
+          background-color: rgba(white, 0.2)
+          top: 0
+          bottom: 0
+          left: 0
+
+        &.current
+          height: 26px
+          background-color: white
+          border-top: solid 2px $color-primary
+          color: black
+          .loadingfill
+            background-color: rgba($color-primary, 0.2)
+
+    .pdfcontain
+      flex-grow: 1
+      flex-shrink: 1
+      position: relative
+      .pdfjsviewer
+        position: absolute
+        top: 0
+        left: 0
+        right: 0
+        bottom: 0
+
+.paperviewer
+  &.loading .progressbar,
+  &.mode-t .pdfcontain.loading .progressbar
+    background-color: lighten($color-primary, 30%)
+    width: 80%
+    height: 2px
+    margin: 1rem auto
+    padding: 0
+    .fill
+      margin: 0
+      background-color: $color-primary
+      height: 2px
+      transition: width 100ms
+
+.pdfjsviewer
+  width: 100%
+  height: 100%
+  margin: 0
+  padding: 0
+  overflow: hidden
+  position: relative
+  canvas
+    margin: 0
+    padding: 0
+    position: absolute
+    top: 0
+    left: 0

@@ -6,7 +6,7 @@ const Feedback = require('./feedback.jsx')
 const Disclaimer = require('./disclaimer.jsx')
 const AppState = require('./appstate.js')
 const FetchErrorPromise = require('./fetcherrorpromise.jsx')
-const FilePreview = require('./filepreview.jsx')
+const V1FilePreview = require('./v1filepreview.jsx')
 const Collection = require('./collection.jsx')
 const { LoginView } = require('./auth.jsx')
 const ChallengeReplaceView = require('./challengereplace.jsx')
@@ -139,7 +139,7 @@ class SchSrch extends React.Component {
           <div className={'viewcontain' + (displayingBigPreview ? ' sidepane' : '')}>
             {view}
             {displayingBigPreview ? (
-              <FilePreview doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} />
+              <V1FilePreview doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} />
             ) : null }
           </div>
           {!paperCropClipboard && collection && collection.homeFromCollection

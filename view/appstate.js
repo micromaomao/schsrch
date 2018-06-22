@@ -1,4 +1,4 @@
-const InterfaceVersion = 19
+const InterfaceVersion = 20
 const { createStore } = require('redux')
 const bowser = require('bowser')
 
@@ -135,6 +135,7 @@ let AppState = createStore(function (state = {}, action) {
           highlightingDirIndex: action.highlightingDirIndex,
           jumpToHighlight: action.jumpToHighlight || false
         },
+        v2viewing: null,
         previewPages: setPreviewPages(state.previewPages, action.fileId, action.page)
       })
     case 'doJumpToHighlight':
@@ -451,6 +452,19 @@ let AppState = createStore(function (state = {}, action) {
           loading: false,
           error: action.error
         })
+      })
+    case 'v2view':
+      if (!AppState.supportSspdfView) {
+        window.open('/doc/' + encodeURIComponent(action.fileId))
+        return state
+      }
+      return Object.assign({}, state, {
+        previewing: null,
+        v2viewing: {
+          fileId: action.fileId,
+          atPage: action.page,
+          expandedQuestionN: null
+        }
       })
   }
 })

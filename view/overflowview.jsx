@@ -3,7 +3,7 @@ const CIESubjects = require('./CIESubjects.js')
 const PaperUtils = require('./paperutils.js')
 const AppState = require('./appstate.js')
 const PaperSet = require('./paperset.jsx')
-const FilePreview = require('./filepreview.jsx')
+const V1FilePreview = require('./v1filepreview.jsx')
 
 class OverflowView extends React.Component {
   constructor (props) {
@@ -96,7 +96,7 @@ class OverflowView extends React.Component {
                       mini={true} />,
                       (
                         (previewing !== null && previewing.psKey === doc._id && this.props.showSmallPreview) ? (
-                          <FilePreview
+                          <V1FilePreview
                             key={doc._id + '_preview'}
                             doc={previewing.id}
                             page={previewing.page}

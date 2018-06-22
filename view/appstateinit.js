@@ -9,6 +9,7 @@ module.exports = {
   },
   showSidebar: false,
   previewing: null,
+  v2viewing: null,
   serverrender: null,
   collection: null,
   view: 'home',

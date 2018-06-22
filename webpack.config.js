@@ -69,10 +69,10 @@ module.exports = [
       }),
       new OfflinePlugin({
         caches: {
-          main: [':rest:']
+          main: [':rest:', '/resources/pdfjs/pdf.min.js', '/resources/pdfjs/pdf.worker.min.js']
         },
         responseStrategy: 'cache-first',
-        version: '0.6.0',
+        version: '2.0.0',
         ServiceWorker: {
           scope: '/',
           publicPath: '/sw.js',
@@ -86,6 +86,42 @@ module.exports = [
     ].filter(x => x !== null)
   }),
   Object.assign({}, baseConfig, {
+    module: Object.assign({}, baseConfig.module, {
+      rules: [
+        { test: /\.sass$/, use: ['css-loader', 'sass-loader'] },
+        {
+          test: /\.jsx$/,
+          use: [
+            {
+              loader: 'babel-loader',
+              options: {
+                presets: [['env', {
+                  targets: {
+                    node: 'current'
+                  }
+                }]],
+                plugins: ['transform-react-jsx']
+              }
+            }
+          ]
+        },
+        {
+          test: /\.js$/,
+          use: [
+            {
+              loader: 'babel-loader',
+              options: {
+                presets: [['env', {
+                  targets: {
+                    node: 'current'
+                  }
+                }]]
+              }
+            }
+          ]
+        }
+      ]
+    }),
     entry: {
       'serverrender': './view/serverrender.jsx'
     },

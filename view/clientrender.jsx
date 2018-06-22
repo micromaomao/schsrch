@@ -32,6 +32,7 @@ if (/^https:\/\/beta\.schsrch\.xyz\//.test(window.location.href)) {
 // AppState is like a global variable, where UI components can listen to change of state and response.
 // States include things like current query, current previewing documents, etc.
 // This also make sure that the App won't "reset" once user switch to other Apps and switch back.
+require('./lpdfjs.js')
 const AppState = require('./appstate.js')
 
 const React = require('react')

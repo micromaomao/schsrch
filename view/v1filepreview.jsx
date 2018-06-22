@@ -6,9 +6,7 @@ const DocDirList = require('./docdirlist.jsx')
 const FetchErrorPromise = require('./fetcherrorpromise.jsx')
 const {view2client} = require('./pointutils.js')
 
-// TODO: Highlight
-
-class FilePreview extends React.Component {
+class V1FilePreview extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -472,4 +470,4 @@ class FilePreview extends React.Component {
   }
 }
 
-module.exports = FilePreview
+module.exports = V1FilePreview

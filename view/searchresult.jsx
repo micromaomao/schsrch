@@ -6,8 +6,9 @@ const AppState = require('./appstate.js')
 const OverflowView = require('./overflowview.jsx')
 const CIESubjects = require('./CIESubjects.js')
 const SearchPrompt = require('./searchprompt.jsx')
-const FilePreview = require('./filepreview.jsx')
+const V1FilePreview = require('./v1filepreview.jsx')
 const FetchErrorPromise = require('./fetcherrorpromise.jsx')
+const PaperViewer = require('./paperviewer.jsx')
 
 class SearchResult extends React.Component {
   constructor (props) {
@@ -28,6 +29,7 @@ class SearchResult extends React.Component {
       this.componentWillReceiveProps(this.props)
     }
   }
+  // TODO: Replace with getDerivedStateFromProps
   componentWillReceiveProps (nextProps) {
     if (!this.state.resultCache || !this.props.querying || !this.props.querying.result || !nextProps.querying ||
         !nextProps.querying.result || nextProps.querying.result !== this.props.querying.result) {
@@ -55,9 +57,28 @@ class SearchResult extends React.Component {
           }
         }
         bucket.sort(PaperUtils.funcSortSet)
-        this.setState({
-          resultCache: bucket
-        })
+        if (!AppState.getState().serverrender) {
+          let timesets = []
+          for (let p of bucket) {
+            let lastTimeset = timesets[timesets.length - 1]
+            if (!lastTimeset || lastTimeset.subject !== p.subject || lastTimeset.time !== p.time) {
+              timesets.push({
+                subject: p.subject,
+                time: p.time,
+                papers: [p]
+              })
+            } else {
+              lastTimeset.papers.push(p)
+            }
+          }
+          this.setState({
+            resultCache: {v: 2, timesets}
+          })
+        } else {
+          this.setState({
+            resultCache: bucket
+          })
+        }
       } else if (result.response === 'text') {
         let items = result.list.map(set => {
           let metas = {subject: set.doc.subject, time: set.doc.time, paper: set.doc.paper, variant: set.doc.variant}
@@ -80,9 +101,10 @@ class SearchResult extends React.Component {
     let relatedSubject = querying.query.match(/^(\d{4})(\s|$)/)
     if (relatedSubject) relatedSubject = relatedSubject[1]
     let deprecationStates = relatedSubject ? CIESubjects.deprecationStates(relatedSubject) : []
+    let v2 = this.state.resultCache && this.state.resultCache.v === 2
     return (
-      <div className={'searchresult' + (querying.loading ? ' loading' : '') + (this.props.smallerSetName ? ' smallsetname' : '')}>
-        <SearchPrompt query={querying.query} />
+      <div className={'searchresult' + (querying.loading ? ' loading' : '') + (this.props.smallerSetName ? ' smallsetname' : '') + (v2 ? ' v2' : '')}>
+        {!v2 ? <SearchPrompt query={querying.query} /> : null}
         {querying.error
           ? <FetchErrorPromise.ErrorDisplay error={querying.error} serverErrorActionText={'handle your query'} onRetry={this.props.onRetry} />
           : null}
@@ -144,34 +166,66 @@ class SearchResult extends React.Component {
           )
       }
     }
-    if (result.response === 'pp' && Array.isArray(this.state.resultCache)) {
+    if (result.response === 'pp' && (Array.isArray(this.state.resultCache) || this.state.resultCache.v === 2)) {
       let bucket = this.state.resultCache
-      return (
-        <div className='pplist'>
-          {(() => {
-            let elements = []
-            for (let set of bucket) {
-              let psKey = PaperUtils.setToString(set)
-              let previewing = this.props.previewing
-              let current = previewing !== null && previewing.psKey === psKey
-              elements.push(<PaperSet
-                  paperSet={set}
-                  key={psKey}
-                  current={current}
-                  onOpenFile={(id, page) => {
-                      AppState.dispatch({type: 'previewFile', fileId: id, page, psKey})
-                    }}
-                  />)
-              if (current && this.props.showSmallPreview) {
-                elements.push(
-                  <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
-                )
+      let v2viewing = AppState.getState().v2viewing
+      if (bucket.v === 2) {
+        return (
+          <div className='v2container'>
+            <div className='v2paperlist'>
+              <div className='tsscontainer'>
+                {bucket.timesets ? bucket.timesets.map(ts => {
+                  return (
+                    <div className='ts' key={ts.subject + ' ' + ts.time}>
+                      <div className='tit'>{ts.subject}<br />{ts.time}</div>
+                      {ts.papers.map(paper => {
+                        let viewingThis = v2viewing && paper.types.find(ent => ent._id === v2viewing.fileId)
+                        return (
+                          <div className={'paper' + (viewingThis ? ' current' : '')}
+                              onClick={evt => AppState.dispatch({type: 'v2view', fileId: (paper.types.find(x => x.type === 'qp') || paper.types[0])._id, atPage: 0})}>
+                            {paper.paper}{paper.variant}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                }) : null}
+              </div>
+            </div>
+            <div className='viewercontain'>
+              {!v2viewing ? <div className='null'>Choose a paper to open&hellip;</div> : null}
+              {v2viewing ? <PaperViewer /> : null}
+            </div>
+          </div>
+        )
+      } else {
+        return (
+          <div className='pplist'>
+            {(() => {
+              let elements = []
+              for (let set of bucket) {
+                let psKey = PaperUtils.setToString(set)
+                let previewing = this.props.previewing
+                let current = previewing !== null && previewing.psKey === psKey
+                elements.push(<PaperSet
+                    paperSet={set}
+                    key={psKey}
+                    current={current}
+                    onOpenFile={(id, page) => {
+                        AppState.dispatch({type: 'previewFile', fileId: id, page, psKey})
+                      }}
+                    />)
+                if (current && this.props.showSmallPreview) {
+                  elements.push(
+                    <V1FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
+                  )
+                }
               }
-            }
-            return elements
-          })()}
-        </div>
-      )
+              return elements
+            })()}
+          </div>
+        )
+      }
     }
     if (result.response === 'text' && Array.isArray(this.state.resultCache)) {
         let items = this.state.resultCache
@@ -194,7 +248,7 @@ class SearchResult extends React.Component {
                     />)
                   if (current && this.props.showSmallPreview) {
                     elements.push(
-                      <FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
+                      <V1FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
                     )
                   }
                 }
