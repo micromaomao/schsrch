@@ -311,6 +311,10 @@ class PendingTransform {
     }
     return new PendingTransform([tX, tY], this.nScale, this.stage)
   }
+
+  shift ([dx, dy]) {
+    return new PendingTransform([this.nTranslate[0] + dx, this.nTranslate[1] + dy], this.nScale, this.stage)
+  }
 }
 
 /**
@@ -436,7 +440,6 @@ class TransformationStage {
   }
 
   handleDown (evt) {
-    evt.preventDefault()
     document.removeEventListener('mousemove', this.handleMove)
     document.removeEventListener('mouseup', this.handleUp)
     if (this.moveEventFrame) {
@@ -446,6 +449,7 @@ class TransformationStage {
     if (this.currentAnimation) this.currentAnimation.stop()
 
     if (evt.touches) {
+      evt.preventDefault()
       if (evt.touches.length === 1) {
         let t = evt.touches[0]
         if (this.lastTapTime !== null && Date.now() - this.lastTapTime < 500) {
@@ -562,7 +566,39 @@ class TransformationStage {
   }
 
   handleWheel (evt) {
+    function boundDelta (x) { return Math.max(-1, Math.min(1, x)) }
     evt.preventDefault()
+    if (!evt.ctrlKey) {
+      let dx = -boundDelta(evt.deltaX) * 80
+      let dy = -boundDelta(evt.deltaY) * 80
+      if (evt.shiftKey) {
+        let t = dx
+        dx = dy
+        dy = t
+      }
+      this.animationGetFinalState().shift([dx, dy]).boundInContentBox().startAnimation(200)
+    } else {
+      let nScale = this.scale * Math.pow(1.5, -boundDelta(evt.deltaY))
+      if (this.minScale) {
+        nScale = Math.max(this.minScale, nScale)
+      }
+      if (this.maxScale) {
+        nScale = Math.min(this.maxScale, nScale)
+      }
+      let cPoint = client2view([evt.clientX, evt.clientY], this.eventTarget)
+      let sPoint = this.canvas2stage(cPoint)
+      new PendingTransform([0, 0], nScale, this).mapPointToPoint(sPoint, cPoint).boundInContentBox().startAnimation(200)
+    }
+
+    if (this.handleWheel_userInteractionTimeout) {
+      clearTimeout(this.handleWheel_userInteractionTimeout)
+    }
+    this.handleWheel_userInteractionTimeout = setTimeout(() => {
+      this.handleWheel_userInteractionTimeout = null
+      if (this.onAfterUserInteration) {
+        this.onAfterUserInteration()
+      }
+    }, 100)
   }
 }
 
@@ -571,7 +607,9 @@ class PDFJSViewer extends React.Component {
   constructor (props) {
     super(props)
     this.elem = null
-    this.canvas = null
+    this.paintCanvas = null
+    this.textLayersContain = null
+    this.textLayers = []
     this.aframeMeasureSize = null
     this.viewDim = [0, 0]
     this.paintCanvas = null
@@ -589,9 +627,12 @@ class PDFJSViewer extends React.Component {
     if (!this.elem) throw new Error('this.elem is ' + this.elem)
     this.paintCanvas = document.createElement('canvas')
     this.elem.appendChild(this.paintCanvas)
+    this.textLayersContain = document.createElement('div')
+    this.textLayersContain.className = 'textlayercontain'
+    this.elem.appendChild(this.textLayersContain)
     this.measureViewDim()
     this.startSizeMeasurementAFrame()
-    this.stage.bindTouchEvents(this.paintCanvas)
+    this.stage.bindTouchEvents(this.textLayersContain)
     this.stage.onUpdate = this.deferredPaint.bind(this)
     this.stage.onAfterUserInteration = this.updatePages.bind(this)
 
@@ -642,7 +683,7 @@ class PDFJSViewer extends React.Component {
       this.aframeMeasureSize = null
     }
     this.setDocument(null)
-    this.stage.removeTouchEvents(this.paintCanvas)
+    this.stage.removeTouchEvents(this.textLayersContain)
     this.stage.destroy()
     this.stage = null
     this.paintCanvas.width = this.paintCanvas.height = 0
@@ -665,6 +706,8 @@ class PDFJSViewer extends React.Component {
       }
       delete this.pages
     }
+    this.textLayersContain.innerHTML = ''
+    this.textLayers = []
     this.pages = []
     if (doc) {
       this.initDocument()
@@ -713,8 +756,15 @@ class PDFJSViewer extends React.Component {
     ctx.clearRect(0, 0, this.viewDim[0], this.viewDim[1])
     if (!this.pages) return
     let stage = this.stage
-    for (let p of this.pages) {
-      if (!this.pageInView(p)) continue
+    for (let i = 0; i < this.pages.length; i ++) {
+      let p = this.pages[i]
+      if (!this.pageInView(p)) {
+        if (this.textLayers[i]) {
+          this.textLayers[i].remove()
+          this.textLayers[i] = null
+        }
+        continue
+      }
       let [x, y] = stage.stage2canvas(p.stageOffset)
       let scale = stage.scale
       let [w, h] = [p.stageWidth * scale, p.stageHeight * scale]
@@ -723,10 +773,36 @@ class PDFJSViewer extends React.Component {
         ctx.rect(x, y, w, h)
         ctx.stroke()
         p.render(stage.scale).then(this.deferredPaint)
+        if (this.textLayers[i]) {
+          this.textLayers[i].remove()
+          this.textLayers[i] = null
+        }
       } else {
         let pCanvasScale = p.renderedCanvas.width / p.initWidth
         let [sx, sy, sw, sh] = p.clipRectangle.map(x => x * pCanvasScale)
         ctx.drawImage(p.renderedCanvas, sx, sy, sw, sh, x, y, w, h)
+        if (p.textLayer) {
+          if (this.textLayers[i] != p.textLayer) {
+            if (this.textLayers[i]) {
+              this.textLayers[i].remove()
+            }
+            this.textLayers[i] = p.textLayer
+            this.textLayersContain.appendChild(p.textLayer)
+          }
+          let cssTScale = w / sw
+          Object.assign(this.textLayers[i].style, {
+            position: 'absolute',
+            left: x + 'px',
+            top: y + 'px',
+            transformOrigin: 'top left',
+            transform: 'scale(' + cssTScale + ')'
+          })
+        } else {
+          if (this.textLayers[i]) {
+            this.textLayers[i].remove()
+            this.textLayers[i] = null
+          }
+        }
       }
     }
   }
@@ -777,6 +853,8 @@ class ManagedPage {
     this.stageOffset = [0, 0]
     this.clipRectangle = [0, 0, this.initWidth, this.initHeight] // [x, y, w, h]
     this.renderedCanvas = null
+    this.textContent = null
+    this.textLayer = null
     this.renderedScale = null
     this.renderTask = null
     this.renderringScale = null
@@ -827,7 +905,33 @@ class ManagedPage {
       this.renderringScale = null
       this.renderedScale = scale
       this.renderedCanvas = nCanvas
-      return Promise.resolve()
+      this.textContent = null
+      this.textLayer = null
+      return this.pdfjsPage.getTextContent({
+        disableCombineTextItems: false
+      }).then(tc => {
+        if (this.renderTask !== renderTask) {
+          return Promise.resolve()
+        }
+        this.textContent = tc
+        if (window.pdfjsLib) {
+          this.textLayer = document.createElement('div')
+          let nViewport = viewport.clone()
+          nViewport.offsetX = viewport.offsetX - this.clipRectangle[0] * scale
+          nViewport.offsetY = viewport.offsetY - this.clipRectangle[1] * scale
+          nViewport = nViewport.clone() // to recalculate transformation matrix and stuff
+          pdfjsLib.renderTextLayer({
+            textContent: tc,
+            container: this.textLayer,
+            viewport: nViewport,
+            enhanceTextSelection: true,
+          })
+          this.textLayer.style.width = (this.clipRectangle[2] * scale) + 'px'
+          this.textLayer.style.height = (this.clipRectangle[3] * scale) + 'px'
+          this.textLayer.style.overflow = 'hidden'
+        }
+        return Promise.resolve()
+      }, () => Promise.resolve())
     }, () => {})
   }
 
@@ -842,6 +946,12 @@ class ManagedPage {
       this.renderedCanvas.width = this.renderedCanvas.height = 0
       delete this.renderedCanvas
     }
+    if (this.textLayer) {
+      this.textLayer.innerHTML = ''
+      this.textLayer.remove()
+      this.textLayer = null
+    }
+    this.textContent = null
   }
 }
 

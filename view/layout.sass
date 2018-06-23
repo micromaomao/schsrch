@@ -1821,3 +1821,22 @@ $feedback-top-height: 2rem + 1.3rem
     position: absolute
     top: 0
     left: 0
+    z-index: 1
+  .textlayercontain, .textlayercontain > *, .textlayercontain > * > *
+    position: absolute
+    white-space: pre
+    transform-origin: top left
+    color: rgba(black, 0)
+  .textlayercontain > * > *
+    cursor: text
+    &::selection,
+    &::-moz-selection
+      background-color: rgba($color-primary, 0.3)
+      color: rgba(black, 0)
+  .textlayercontain
+    overflow: hidden
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    z-index: 2
