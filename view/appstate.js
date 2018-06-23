@@ -1,4 +1,4 @@
-const InterfaceVersion = 20
+const InterfaceVersion = 22
 const { createStore } = require('redux')
 const bowser = require('bowser')
 
@@ -463,8 +463,16 @@ let AppState = createStore(function (state = {}, action) {
         v2viewing: {
           fileId: action.fileId,
           atPage: action.page,
-          expandedQuestionN: null
+          expandedQuestionN: null,
+          tCurrentType: state.v2viewing ? state.v2viewing.tCurrentType : null
         }
+      })
+    case 'v2view-set-tCurrentType':
+      if (!state.v2viewing) return state
+      return Object.assign({}, state, {
+        v2viewing: Object.assign({}, state.v2viewing, {
+          tCurrentType: action.tCurrentType
+        })
       })
   }
 })

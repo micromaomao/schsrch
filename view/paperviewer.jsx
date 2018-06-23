@@ -13,8 +13,7 @@ class PaperViewer extends React.Component {
       dirs: null,
       loadError: null,
       mode: null,
-      pdfjsObjs: null,
-      tCurrentType: null
+      pdfjsObjs: null
     }
 
     this.handleAppStateUpdate = this.handleAppStateUpdate.bind(this)
@@ -51,9 +50,11 @@ class PaperViewer extends React.Component {
         if (true) {
           let sortedTypeStrArr = Object.keys(json).sort(PaperUtils.funcSortType)
           this.setState({
-            mode: 't',
-            tCurrentType: this.state.tCurrentType || sortedTypeStrArr[0]
+            mode: 't'
           })
+          if (AppState.getState().v2viewing.tCurrentType === null) {
+            AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: sortedTypeStrArr[0]})
+          }
           for (let type of sortedTypeStrArr) {
             let docid = json[type].docid
             this.loadPDF(type, docid)
@@ -132,6 +133,7 @@ class PaperViewer extends React.Component {
         </div>
       )
     }
+    let v2viewing = AppState.getState().v2viewing
     if (!this.state.mode) {
       let desc = null
       let progress = null
@@ -159,7 +161,7 @@ class PaperViewer extends React.Component {
             {this.state.pdfjsObjs ? Object.keys(this.state.pdfjsObjs).sort(PaperUtils.funcSortType).map(typeStr => {
               let obj = this.state.pdfjsObjs[typeStr]
               return (
-                <div className={'item' + (this.state.tCurrentType === typeStr ? ' current' : '')} key={typeStr}
+                <div className={'item' + (v2viewing.tCurrentType === typeStr ? ' current' : '')} key={typeStr}
                   onClick={evt => this.tSwitchTo(typeStr)}>
                   {typeStr}{!obj.document ? '\u2026' : null}
                   {!obj.document ? <div className='loadingfill' style={{width: (obj.progress * 100) + '%'}} /> : null}
@@ -167,8 +169,8 @@ class PaperViewer extends React.Component {
               )
             }) : null}
           </div>
-          {this.state.pdfjsObjs && this.state.pdfjsObjs[this.state.tCurrentType] ? (() => {
-            let obj = this.state.pdfjsObjs[this.state.tCurrentType]
+          {this.state.pdfjsObjs && this.state.pdfjsObjs[v2viewing.tCurrentType] ? (() => {
+            let obj = this.state.pdfjsObjs[v2viewing.tCurrentType]
             if (!obj.document) {
               return (
                 <div className='pdfcontain loading'>
@@ -196,9 +198,7 @@ class PaperViewer extends React.Component {
   }
 
   tSwitchTo (typeStr) {
-    if (this.state.mode === 't') {
-      this.setState({tCurrentType: typeStr})
-    }
+    AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: typeStr})
   }
 }
 
