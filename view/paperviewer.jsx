@@ -455,7 +455,6 @@ class TransformationStage {
         return
       }
     }
-    evt.preventDefault()
 
     if (this.currentAnimation) this.currentAnimation.stop()
 
@@ -478,6 +477,7 @@ class TransformationStage {
         this.lastTapTime = null
       }
     } else {
+      evt.preventDefault()
       this.initMoveMouse([evt.clientX, evt.clientY])
       this.lastTapTime = null
       document.addEventListener('mousemove', this.handleMove)
@@ -513,8 +513,20 @@ class TransformationStage {
   }
 
   handleMove (evt) {
-    evt.preventDefault()
     if (!this.pressState) return
+    if (this.onMoveEvent) {
+      if (this.onMoveEvent(evt) === false) {
+        document.removeEventListener('mousemove', this.handleMove)
+        document.removeEventListener('mouseup', this.handleUp)
+        if (this.moveEventFrame) {
+          cancelAnimationFrame(this.moveEventFrame)
+          this.moveEventFrame = null
+        }
+        this.pressState = null
+        return
+      }
+    }
+    evt.preventDefault()
     this.lastTapTime = null
     if (!this.moveEventFrame) {
       this.moveEventFrame = requestAnimationFrame(() => {
@@ -654,6 +666,7 @@ class PDFJSViewer extends React.Component {
     this.deferredPaint = this.deferredPaint.bind(this)
     this.updatePages = this.updatePages.bind(this)
     this.handleStageDownEvent = this.handleStageDownEvent.bind(this)
+    this.handleStageMoveEvent = this.handleStageMoveEvent.bind(this)
   }
 
   componentDidMount () {
@@ -669,6 +682,7 @@ class PDFJSViewer extends React.Component {
     this.stage.onUpdate = this.deferredPaint
     this.stage.onAfterUserInteration = this.updatePages
     this.stage.onDownEvent = this.handleStageDownEvent
+    this.stage.onMoveEvent = this.handleStageMoveEvent
 
     this.setDocument(this.props.doc)
   }
@@ -879,6 +893,12 @@ class PDFJSViewer extends React.Component {
 
   handleStageDownEvent (evt) {
     if (!evt.touches && window.getComputedStyle(evt.target).cursor === 'text') return false
+  }
+
+  handleStageMoveEvent (evt) {
+    if (evt.touches && evt.touches.length === 1) {
+      if (window.getSelection().toString().trim().length > 0) return false
+    }
   }
 }
 
