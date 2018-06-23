@@ -580,21 +580,24 @@ class TransformationStage {
       cancelAnimationFrame(this.moveEventFrame)
       this.moveEventFrame = null
     }
+    let finish = () => {
+      this.pressState = null
+      if (this.onAfterUserInteration) {
+        this.onAfterUserInteration()
+      }
+      new PendingTransform(this.translate, this.scale, this).boundInContentBox().startAnimation()
+    }
     if (!this.pressState) return
     if (evt.touches) {
       if (evt.touches.length === 0) {
-        this.pressState = null
+        return finish()
       } else if (evt.touches.length === 1) {
         this.initMove(evt.touches[0])
+      } else {
+        return finish()
       }
     } else {
-      this.pressState = null
-    }
-
-    new PendingTransform(this.translate, this.scale, this).boundInContentBox().startAnimation()
-
-    if (this.onAfterUserInteration) {
-      this.onAfterUserInteration()
+      return finish()
     }
   }
 
