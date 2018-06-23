@@ -1840,3 +1840,35 @@ $feedback-top-height: 2rem + 1.3rem
     right: 0
     bottom: 0
     z-index: 2
+  .scrollbar
+    position: absolute
+    right: 0
+    top: 0
+    bottom: 0
+    width: 20px
+    z-index: 3
+    overflow: visible
+    .line
+      position: absolute
+      top: 20px
+      bottom: 20px
+      right: 8px
+      width: 4px
+      border-radius: 2px
+      background-color: rgba($color-secondary-text, 0.5)
+    .indicator
+      position: absolute
+      background-color: rgba(black, 0.8)
+      color: #999
+      font-size: 1rem
+      width: auto
+      height: auto
+      padding: 10px
+      border-radius: 4px
+      line-height: 20px
+      right: 15px
+      transform: translate(0, -20px)
+      text-align: center
+      white-space: nowrap
+      b
+        color: white

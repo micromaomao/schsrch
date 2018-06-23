@@ -663,6 +663,8 @@ class PDFJSViewer extends React.Component {
     this.pages = null // [ManagedPage]
     this.readyState = PDFJSViewer.NOT_READY
     this.stage = new TransformationStage()
+    this.scrollbar = null
+    this.scrollbarTouchState = null
 
     this.measureViewDim = this.measureViewDim.bind(this)
     this.paint = this.paint.bind(this)
@@ -670,6 +672,11 @@ class PDFJSViewer extends React.Component {
     this.updatePages = this.updatePages.bind(this)
     this.handleStageDownEvent = this.handleStageDownEvent.bind(this)
     this.handleStageMoveEvent = this.handleStageMoveEvent.bind(this)
+    this.scrollBarHandleDown = this.scrollBarHandleDown.bind(this)
+    this.scrollbarHandleMove = this.scrollbarHandleMove.bind(this)
+    this.scrollbarHandleUp = this.scrollbarHandleUp.bind(this)
+    this.scrollbarHandleWheel = this.scrollbarHandleWheel.bind(this)
+    this.scrollbarHandleMouseWheel = this.scrollbarHandleMouseWheel.bind(this)
   }
 
   componentDidMount () {
@@ -682,6 +689,20 @@ class PDFJSViewer extends React.Component {
     this.measureViewDim()
     this.startSizeMeasurementAFrame()
     this.stage.bindTouchEvents(this.textLayersContain)
+    this.scrollbar = document.createElement('div')
+    this.scrollbar.className = 'scrollbar'
+    this.elem.appendChild(this.scrollbar)
+    let scrollbarLine = document.createElement('div')
+    scrollbarLine.className = 'line'
+    this.scrollbar.appendChild(scrollbarLine)
+    let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
+    this.scrollbar.addEventListener('mousedown', this.scrollBarHandleDown, noPassiveEventsArgument)
+    this.scrollbar.addEventListener('touchstart', this.scrollBarHandleDown, noPassiveEventsArgument)
+    this.scrollbar.addEventListener('touchmove', this.scrollbarHandleMove, noPassiveEventsArgument)
+    this.scrollbar.addEventListener('touchend', this.scrollbarHandleUp, noPassiveEventsArgument)
+    this.scrollbar.addEventListener('touchcancel', this.scrollbarHandleUp, noPassiveEventsArgument)
+    this.scrollbar.addEventListener('wheel', this.scrollbarHandleWheel, noPassiveEventsArgument)
+    this.scrollbar.addEventListener('mousewheel', this.scrollbarHandleMouseWheel, noPassiveEventsArgument)
     this.stage.onUpdate = this.deferredPaint
     this.stage.onAfterUserInteration = this.updatePages
     this.stage.onDownEvent = this.handleStageDownEvent
@@ -715,6 +736,9 @@ class PDFJSViewer extends React.Component {
 
   handleViewportSizeUpdate () {
     let [w, h] = this.viewDim
+    if (this.scrollbarTouchState) {
+      this.scrollbarTouchRelease()
+    }
     this.paintCanvas.width = w
     this.paintCanvas.height = h
     let lastViewportSize = this.stage.viewportSize
@@ -823,7 +847,8 @@ class PDFJSViewer extends React.Component {
         ctx.beginPath()
         ctx.rect(x, y, w, h)
         ctx.stroke()
-        p.render(stage.scale).then(this.deferredPaint)
+        if (!stage.currentAnimation)
+          p.render(stage.scale).then(this.deferredPaint)
         if (this.textLayers[i]) {
           this.textLayers[i].remove()
           this.textLayers[i] = null
@@ -902,6 +927,120 @@ class PDFJSViewer extends React.Component {
     if (evt.touches && evt.touches.length === 1) {
       if (window.getSelection().toString().trim().length > 0) return false
     }
+  }
+
+  scrollBarHandleDown (evt) {
+    document.removeEventListener('mousemove', this.scrollbarHandleMove)
+    document.removeEventListener('mouseup', this.scrollbarHandleUp)
+    evt.preventDefault()
+    if (this.scrollbarTouchState)
+      this.scrollbarTouchRelease()
+
+    if (evt.touches) {
+      if (evt.touches.length === 1) {
+        let t = evt.touches[0]
+        this.scrollbarTouchState = {
+          touchId: t.identifier
+        }
+        this.scrollBarUpdatePoint([t.clientX, t.clientY])
+      }
+    } else {
+      this.scrollbarTouchState = {
+        touchId: null
+      }
+      this.scrollBarUpdatePoint([evt.clientX, evt.clientY])
+      document.addEventListener('mousemove', this.scrollbarHandleMove)
+      document.addEventListener('mouseup', this.scrollbarHandleUp)
+    }
+  }
+
+  scrollbarHandleMove (evt) {
+    if (!this.scrollbarTouchState) return
+    evt.preventDefault()
+
+    if (!this.scrollbarHandleMove_animationFrame) {
+      this.scrollbarHandleMove_animationFrame = requestAnimationFrame(() => {
+        this.scrollbarHandleMove_animationFrame = null
+
+        if (evt.touches) {
+          if (evt.touches.length === 1) {
+            let t = evt.touches[0]
+            if (t.identifier === this.scrollbarTouchState.touchId) {
+              this.scrollBarUpdatePoint([t.clientX, t.clientY])
+            } else {
+              this.scrollbarTouchRelease()
+            }
+          } else {
+            this.scrollbarTouchRelease()
+          }
+        } else {
+          this.scrollBarUpdatePoint([evt.clientX, evt.clientY])
+        }
+      })
+    }
+  }
+
+  scrollBarUpdatePoint (point) {
+    let cY = client2view(point, this.scrollbar)[1]
+    let sH = this.viewDim[1]
+    if (cY < 20) cY = 20
+    if (cY > sH - 21) cY = sH - 21
+
+    if (!this.scrollbarTouchState) return
+    let indicator = this.scrollbarTouchState.indicator
+    if (!indicator) {
+      indicator = document.createElement('div')
+      this.scrollbarTouchState.indicator = indicator
+      this.scrollbar.appendChild(indicator)
+      indicator.className = 'indicator'
+    }
+    indicator.style.top = cY + 'px'
+    indicator.innerHTML = '&nbsp;'
+    let p = (cY - 20) / (sH - 40)
+    if (this.pages && this.pages.length > 0) {
+      let cPage = Math.floor(p * this.pages.length)
+      indicator.innerHTML = 'go to page <b>' + (cPage + 1) + '</b>'
+      this.scrollbarTouchState.gotoPage = cPage
+    }
+  }
+
+  scrollbarTouchRelease () {
+    document.removeEventListener('mousemove', this.scrollbarHandleMove)
+    document.removeEventListener('mouseup', this.scrollbarHandleUp)
+    if (this.scrollbarTouchState) {
+      if (this.scrollbarTouchState.indicator) {
+        this.scrollbarTouchState.indicator.remove()
+      }
+    }
+    this.scrollbarTouchState = null
+    if (this.scrollbarHandleMove_animationFrame) {
+      cancelAnimationFrame(this.scrollbarHandleMove_animationFrame)
+      this.scrollbarHandleMove_animationFrame = null
+    }
+  }
+
+  scrollbarHandleUp (evt) {
+    try {
+      if (Number.isSafeInteger(this.scrollbarTouchState.gotoPage)) {
+        let cPage = this.scrollbarTouchState.gotoPage
+        let pageY = this.pages[cPage].stageOffset[1] - 5
+        let pt = this.stage.animationGetFinalState()
+        pt = new PendingTransform([pt.nTranslate[0], -pageY * pt.nScale], pt.nScale, this.stage).boundInContentBox()
+        pt.startAnimation(200)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+    this.scrollbarTouchRelease()
+    evt.preventDefault()
+  }
+
+  scrollbarHandleWheel (evt) {
+    evt.preventDefault()
+  }
+
+  scrollbarHandleMouseWheel (evt) {
+    evt.preventDefault()
   }
 }
 
