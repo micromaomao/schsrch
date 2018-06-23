@@ -424,6 +424,8 @@ class TransformationStage {
   }
 
   removeTouchEvents (element) {
+    document.removeEventListener('mousemove', this.handleMove)
+    document.removeEventListener('mouseup', this.handleUp)
     element.removeEventListener('mousedown', this.handleDown)
     element.removeEventListener('touchstart', this.handleDown)
     element.removeEventListener('touchmove', this.handleMove)
@@ -665,6 +667,7 @@ class PDFJSViewer extends React.Component {
     this.stage = new TransformationStage()
     this.scrollbar = null
     this.scrollbarTouchState = null
+    this.scrollbarFloating = null
 
     this.measureViewDim = this.measureViewDim.bind(this)
     this.paint = this.paint.bind(this)
@@ -695,6 +698,9 @@ class PDFJSViewer extends React.Component {
     let scrollbarLine = document.createElement('div')
     scrollbarLine.className = 'line'
     this.scrollbar.appendChild(scrollbarLine)
+    this.scrollbarFloating = document.createElement('div')
+    this.scrollbarFloating.className = 'floating'
+    this.scrollbar.appendChild(this.scrollbarFloating)
     let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
     this.scrollbar.addEventListener('mousedown', this.scrollBarHandleDown, noPassiveEventsArgument)
     this.scrollbar.addEventListener('touchstart', this.scrollBarHandleDown, noPassiveEventsArgument)
@@ -753,6 +759,8 @@ class PDFJSViewer extends React.Component {
   }
 
   componentWillUnmount () {
+    document.removeEventListener('mousemove', this.scrollbarHandleMove)
+    document.removeEventListener('mouseup', this.scrollbarHandleUp)
     if (this.aframeMeasureSize !== null) {
       cancelAnimationFrame(this.aframeMeasureSize)
       this.aframeMeasureSize = null
@@ -881,6 +889,14 @@ class PDFJSViewer extends React.Component {
         }
       }
     }
+    let y1 = stage.canvas2stage([0, 0])[1]
+    let y2 = stage.canvas2stage([0, stage.viewportSize[1]])[1]
+    let yTot = stage.contentSize[1]
+    let sbLen = this.viewDim[1] - 40
+    let y1sb = 20 + (y1 / yTot) * sbLen
+    let y2sb = this.viewDim[1] - (20 + (y2 / yTot) * sbLen)
+    this.scrollbarFloating.style.top = y1sb + 'px'
+    this.scrollbarFloating.style.bottom = y2sb + 'px'
   }
 
   deferredPaint () {

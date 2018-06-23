@@ -1848,14 +1848,17 @@ $feedback-top-height: 2rem + 1.3rem
     width: 20px
     z-index: 3
     overflow: visible
-    .line
+    .line, .floating
       position: absolute
-      top: 20px
-      bottom: 20px
       right: 8px
       width: 4px
       border-radius: 2px
+    .line
+      top: 20px
+      bottom: 20px
       background-color: rgba($color-secondary-text, 0.5)
+    .floating
+      background-color: $color-primary
     .indicator
       position: absolute
       background-color: rgba(black, 0.8)
@@ -1866,7 +1869,7 @@ $feedback-top-height: 2rem + 1.3rem
       padding: 10px
       border-radius: 4px
       line-height: 20px
-      right: 15px
+      right: 50px
       transform: translate(0, -20px)
       text-align: center
       white-space: nowrap
