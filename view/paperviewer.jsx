@@ -343,6 +343,7 @@ class TransformationStage {
 
     this.onUpdate = null
     this.onAfterUserInteration = null
+    this.onDownEvent = null
 
     this.minScale = 0.2
     this.maxScale = 7
@@ -446,10 +447,19 @@ class TransformationStage {
       cancelAnimationFrame(this.moveEventFrame)
       this.moveEventFrame = null
     }
+
+    if (this.onDownEvent) {
+      let ret = this.onDownEvent(evt)
+      if (ret === false) {
+        this.pressState = null
+        return
+      }
+    }
+    evt.preventDefault()
+
     if (this.currentAnimation) this.currentAnimation.stop()
 
     if (evt.touches) {
-      evt.preventDefault()
       if (evt.touches.length === 1) {
         let t = evt.touches[0]
         if (this.lastTapTime !== null && Date.now() - this.lastTapTime < 500) {
@@ -467,6 +477,11 @@ class TransformationStage {
       } else {
         this.lastTapTime = null
       }
+    } else {
+      this.initMoveMouse([evt.clientX, evt.clientY])
+      this.lastTapTime = null
+      document.addEventListener('mousemove', this.handleMove)
+      document.addEventListener('mouseup', this.handleUp)
     }
   }
 
@@ -477,6 +492,12 @@ class TransformationStage {
       stagePoint: this.canvas2stage(client2view([t.clientX, t.clientY], this.eventTarget)),
       startingClientPoint: [t.clientX, t.clientY],
       timestamp: Date.now()
+    }
+  }
+  initMoveMouse (clientPoint) {
+    this.pressState = {
+      mode: 'mouse-press',
+      stagePoint: this.canvas2stage(client2view(clientPoint, this.eventTarget))
     }
   }
   initPinch (tA, tB) {
@@ -530,6 +551,10 @@ class TransformationStage {
                   .applyImmediate()
             }
           }
+        } else if (this.pressState.mode === 'mouse-press') {
+          new PendingTransform([0, 0], this.scale, this)
+            .mapPointToPoint(this.pressState.stagePoint, client2view([evt.clientX, evt.clientY], this.eventTarget))
+            .applyImmediate()
         }
       })
     }
@@ -537,15 +562,21 @@ class TransformationStage {
 
   handleUp (evt) {
     evt.preventDefault()
+    document.removeEventListener('mousemove', this.handleMove)
+    document.removeEventListener('mouseup', this.handleUp)
     if (this.moveEventFrame) {
       cancelAnimationFrame(this.moveEventFrame)
       this.moveEventFrame = null
     }
     if (!this.pressState) return
-    if (evt.touches.length === 0) {
+    if (evt.touches) {
+      if (evt.touches.length === 0) {
+        this.pressState = null
+      } else if (evt.touches.length === 1) {
+        this.initMove(evt.touches[0])
+      }
+    } else {
       this.pressState = null
-    } else if (evt.touches.length === 1) {
-      this.initMove(evt.touches[0])
     }
 
     new PendingTransform(this.translate, this.scale, this).boundInContentBox().startAnimation()
@@ -621,6 +652,8 @@ class PDFJSViewer extends React.Component {
     this.measureViewDim = this.measureViewDim.bind(this)
     this.paint = this.paint.bind(this)
     this.deferredPaint = this.deferredPaint.bind(this)
+    this.updatePages = this.updatePages.bind(this)
+    this.handleStageDownEvent = this.handleStageDownEvent.bind(this)
   }
 
   componentDidMount () {
@@ -633,8 +666,9 @@ class PDFJSViewer extends React.Component {
     this.measureViewDim()
     this.startSizeMeasurementAFrame()
     this.stage.bindTouchEvents(this.textLayersContain)
-    this.stage.onUpdate = this.deferredPaint.bind(this)
-    this.stage.onAfterUserInteration = this.updatePages.bind(this)
+    this.stage.onUpdate = this.deferredPaint
+    this.stage.onAfterUserInteration = this.updatePages
+    this.stage.onDownEvent = this.handleStageDownEvent
 
     this.setDocument(this.props.doc)
   }
@@ -841,6 +875,10 @@ class PDFJSViewer extends React.Component {
     } else {
       return true
     }
+  }
+
+  handleStageDownEvent (evt) {
+    if (!evt.touches && window.getComputedStyle(evt.target).cursor === 'text') return false
   }
 }
 
