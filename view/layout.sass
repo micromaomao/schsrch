@@ -757,6 +757,7 @@ $sidebar-width: 300px
     .viewercontain
       flex-shrink: 1
       flex-grow: 1
+      overflow: hidden
       .null
         text-align: center
         margin-top: 2rem
@@ -1746,7 +1747,9 @@ $feedback-top-height: 2rem + 1.3rem
     display: flex
     flex-direction: column
     flex-wrap: nowrap
+    align-items: stretch
     .typebar
+      width: 100%
       flex-grow: 0
       flex-shrink: 0
       height: 30px
@@ -1776,17 +1779,28 @@ $feedback-top-height: 2rem + 1.3rem
           left: 0
 
         &.current
+          width: 12rem
           height: 26px
           background-color: white
           border-top: solid 2px $color-primary
           color: black
+          cursor: default
           .loadingfill
             background-color: rgba($color-primary, 0.2)
+          .download
+            display: inline-block
+            padding: 0.2rem 0.5rem
+            margin-top: -0.2rem
+            margin-bottom: -0.2rem
+            color: $color-link
+            cursor: pointer
+            text-decoration: none
 
     .pdfcontain
       flex-grow: 1
       flex-shrink: 1
       position: relative
+      width: 100%
       .pdfjsviewer
         position: absolute
         top: 0

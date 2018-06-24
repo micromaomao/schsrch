@@ -462,16 +462,27 @@ let AppState = createStore(function (state = {}, action) {
         previewing: null,
         v2viewing: {
           fileId: action.fileId,
-          atPage: action.page,
           expandedQuestionN: null,
-          tCurrentType: state.v2viewing ? state.v2viewing.tCurrentType : null
+          tCurrentType: state.v2viewing ? state.v2viewing.tCurrentType : null,
+          stageTransform: null
         }
       })
     case 'v2view-set-tCurrentType':
       if (!state.v2viewing) return state
       return Object.assign({}, state, {
         v2viewing: Object.assign({}, state.v2viewing, {
-          tCurrentType: action.tCurrentType
+          tCurrentType: action.tCurrentType,
+          stageTransform: null
+        })
+      })
+    case 'v2view-user-move-page':
+      if (!state.v2viewing) return state
+      return Object.assign({}, state, {
+        v2viewing: Object.assign({}, state.v2viewing, {
+          stageTransform: {
+            nTranslate: action.nTranslate,
+            nScale: action.nScale
+          }
         })
       })
   }

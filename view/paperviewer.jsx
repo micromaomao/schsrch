@@ -17,17 +17,20 @@ class PaperViewer extends React.Component {
     }
 
     this.handleAppStateUpdate = this.handleAppStateUpdate.bind(this)
+    this.handlePDFUserMove = this.handlePDFUserMove.bind(this)
   }
 
   loadPaper (fileId) {
-    if (this.state.paperFileId === fileId) return
+    if (this.state.paperFileId === fileId && !this.state.loadError) return
     this.setState({loadError: null})
     if (this.state.paperFileId) {
-      for (let t of Object.keys(this.state.pdfjsObjs)) {
-        if (this.state.pdfjsObjs[t].document) {
-          this.state.pdfjsObjs[t].document.destroy()
+      if (this.state.pdfjsObjs) {
+        for (let t of Object.keys(this.state.pdfjsObjs)) {
+          if (this.state.pdfjsObjs[t].document) {
+            this.state.pdfjsObjs[t].document.destroy()
+          }
+          delete this.state.pdfjsObjs[t]
         }
-        delete this.state.pdfjsObjs[t]
       }
       this.setState({
         dirs: null,
@@ -124,12 +127,16 @@ class PaperViewer extends React.Component {
     }
   }
 
+  handlePDFUserMove (nTransform) {
+    AppState.dispatch({type: 'v2view-user-move-page', nTranslate: nTransform.nTranslate, nScale: nTransform.nScale})
+  }
+
   render () {
     if (!this.state.paperFileId) return null
     if (this.state.loadError) {
       return (
         <div className='paperviewer'>
-          <FetchErrorPromise.ErrorDisplay error={this.state.loadError} serverErrorActionText={'get document'} />
+          <FetchErrorPromise.ErrorDisplay error={this.state.loadError} serverErrorActionText={'get document'} onRetry={() => this.loadPaper(this.state.paperFileId)} />
         </div>
       )
     }
@@ -160,10 +167,19 @@ class PaperViewer extends React.Component {
           <div className='typebar'>
             {this.state.pdfjsObjs ? Object.keys(this.state.pdfjsObjs).sort(PaperUtils.funcSortType).map(typeStr => {
               let obj = this.state.pdfjsObjs[typeStr]
+              let current = v2viewing.tCurrentType === typeStr
               return (
-                <div className={'item' + (v2viewing.tCurrentType === typeStr ? ' current' : '')} key={typeStr}
+                <div className={'item' + (current ? ' current' : '')} key={typeStr}
                   onClick={evt => this.tSwitchTo(typeStr)}>
-                  {typeStr}{!obj.document ? '\u2026' : null}
+                  {typeStr}{!obj.document ? '\u2026' : null}{current ? ':' : null}
+                  {current ? (
+                    <a
+                      className='download'
+                      href={'/doc/' + encodeURIComponent(this.state.dirs[v2viewing.tCurrentType].docid) + '/'}
+                      target='_blank'>
+                      pdf
+                    </a>
+                  ) : null}
                   {!obj.document ? <div className='loadingfill' style={{width: (obj.progress * 100) + '%'}} /> : null}
                 </div>
               )
@@ -182,7 +198,7 @@ class PaperViewer extends React.Component {
             } else {
               return (
                 <div className='pdfcontain'>
-                  <PDFJSViewer doc={obj.document} />
+                  <PDFJSViewer doc={obj.document} dir={this.state.dirs[v2viewing.tCurrentType]} onUserMove={this.handlePDFUserMove} stageTransform={v2viewing.stageTransform} />
                 </div>
               )
             }
@@ -228,6 +244,14 @@ class PendingTransform {
     stage.scale = this.nScale
 
     if (stage.onUpdate) stage.onUpdate()
+  }
+
+  simillarTo (obj) {
+    let nT = obj.nTranslate
+    if (Math.abs(nT[0] - this.nTranslate[0]) >= 1) return false
+    if (Math.abs(nT[1] - this.nTranslate[1]) >= 1) return false
+    if (Math.abs(obj.nScale - this.nScale) >= 0.0001) return false
+    return true
   }
 
   stop () {
@@ -675,6 +699,7 @@ class PDFJSViewer extends React.Component {
     this.updatePages = this.updatePages.bind(this)
     this.handleStageDownEvent = this.handleStageDownEvent.bind(this)
     this.handleStageMoveEvent = this.handleStageMoveEvent.bind(this)
+    this.handleStageAfterUserInteration = this.handleStageAfterUserInteration.bind(this)
     this.scrollBarHandleDown = this.scrollBarHandleDown.bind(this)
     this.scrollbarHandleMove = this.scrollbarHandleMove.bind(this)
     this.scrollbarHandleUp = this.scrollbarHandleUp.bind(this)
@@ -710,15 +735,31 @@ class PDFJSViewer extends React.Component {
     this.scrollbar.addEventListener('wheel', this.scrollbarHandleWheel, noPassiveEventsArgument)
     this.scrollbar.addEventListener('mousewheel', this.scrollbarHandleMouseWheel, noPassiveEventsArgument)
     this.stage.onUpdate = this.deferredPaint
-    this.stage.onAfterUserInteration = this.updatePages
+    this.stage.onAfterUserInteration = this.handleStageAfterUserInteration
     this.stage.onDownEvent = this.handleStageDownEvent
     this.stage.onMoveEvent = this.handleStageMoveEvent
 
     this.setDocument(this.props.doc)
   }
 
+  handleStageAfterUserInteration () {
+    this.updatePages()
+
+    if (this.props.onUserMove) {
+      this.props.onUserMove(this.stage.animationGetFinalState())
+    }
+  }
+
   componentDidUpdate () {
     this.setDocument(this.props.doc)
+
+    if (this.props.stageTransform) {
+      let currentTransform = this.stage.animationGetFinalState()
+      if (!currentTransform.simillarTo(this.props.stageTransform)) {
+        new PendingTransform(this.props.stageTransform.nTranslate, this.props.stageTransform.nScale, this.stage)
+          .startAnimation(400)
+      }
+    }
   }
 
   startSizeMeasurementAFrame () {
@@ -828,8 +869,13 @@ class PDFJSViewer extends React.Component {
   initStagePosAndSize () {
     let firstPage = this.pages[0]
     if (!firstPage) return
-    this.stage.putOnCenter([firstPage.stageOffset[0], firstPage.stageOffset[1] - 10, firstPage.stageWidth, firstPage.stageHeight + 20])
-                .applyImmediate()
+    if (!this.props.stageTransform) {
+      this.stage.putOnCenter([firstPage.stageOffset[0], firstPage.stageOffset[1] - 10, firstPage.stageWidth, firstPage.stageHeight + 20])
+                  .applyImmediate()
+    } else {
+      new PendingTransform(this.props.stageTransform.nTranslate, this.props.stageTransform.nScale, this.stage)
+        .applyImmediate()
+    }
     this.paint()
     this.updatePages()
   }
@@ -1015,7 +1061,31 @@ class PDFJSViewer extends React.Component {
     let p = (cY - 20) / (sH - 40)
     if (this.pages && this.pages.length > 0) {
       let cPage = Math.floor(p * this.pages.length)
-      indicator.innerHTML = 'go to page <b>' + (cPage + 1) + '</b>'
+      if (!this.props.dir) {
+        indicator.innerHTML = 'go to page <b>' + (cPage + 1) + '</b>'
+      } else {
+        let dir = this.props.dir
+        if (dir.type === 'questions') {
+          let questions = []
+          for (let q of dir.dirs) {
+            if (q.page === cPage) {
+              questions.push(q)
+            }
+          }
+          if (questions.length > 0) {
+            indicator.innerHTML = `go to page <b>${cPage + 1}</b> (question${questions.length > 1 ? 's' : ''} ${questions.map(x => `<b>${parseInt(x.qN)}</b>`).join(', ')})`
+          } else {
+            let lastQuestion = dir.dirs.filter(q => q.page < cPage).slice(-1)[0]
+            if (lastQuestion) {
+              indicator.innerHTML = `go to page <b>${cPage + 1}</b> (question ${parseInt(lastQuestion.qN)} continued)`
+            } else {
+              indicator.innerHTML = `go to page <b>${cPage + 1}</b>`
+            }
+          }
+        } else {
+          indicator.innerHTML = 'go to page <b>' + (cPage + 1) + '</b>'
+        }
+      }
       this.scrollbarTouchState.gotoPage = cPage
     }
   }
