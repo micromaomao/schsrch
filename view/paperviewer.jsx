@@ -18,6 +18,7 @@ class PaperViewer extends React.Component {
 
     this.handleAppStateUpdate = this.handleAppStateUpdate.bind(this)
     this.handlePDFUserMove = this.handlePDFUserMove.bind(this)
+    this.handlePDFJSViewerPostDraw = this.handlePDFJSViewerPostDraw.bind(this)
   }
 
   loadPaper (fileId) {
@@ -198,7 +199,7 @@ class PaperViewer extends React.Component {
             } else {
               return (
                 <div className='pdfcontain'>
-                  <PDFJSViewer doc={obj.document} dir={this.state.dirs[v2viewing.tCurrentType]} onUserMove={this.handlePDFUserMove} stageTransform={v2viewing.stageTransform} />
+                  <PDFJSViewer doc={obj.document} dir={this.state.dirs[v2viewing.tCurrentType]} onUserMove={this.handlePDFUserMove} stageTransform={v2viewing.stageTransform} postDrawCanvas={this.handlePDFJSViewerPostDraw} />
                 </div>
               )
             }
@@ -215,6 +216,35 @@ class PaperViewer extends React.Component {
 
   tSwitchTo (typeStr) {
     AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: typeStr})
+  }
+
+  handlePDFJSViewerPostDraw (drawnPages, ctx, stage) {
+    let v2viewing = AppState.getState().v2viewing
+    let cDir = this.state.dirs[v2viewing.tCurrentType]
+    if (cDir && cDir.type === 'questions') {
+      for (let p of drawnPages) {
+        let pDirs = cDir.dirs.filter(x => x.page === p.pageIndex)
+        for (let d of pDirs) {
+          if (d.qNRect) {
+            let r = d.qNRect
+            let pagePoint1 = [r.x1, r.y1]
+            let [tX, tY] = stage.stage2canvas([0, 1].map(c => pagePoint1[c] + p.stageOffset[c]))
+            let [tW, tH] = [r.x2 - r.x1, r.y2 - r.y1].map(x => x * stage.scale)
+            ctx.globalCompositeOperation = 'screen' // magic
+
+            ctx.fillStyle = '#ff5722'
+            ctx.fillRect(tX, tY, tW, tH)
+
+            ctx.fillStyle = '#e91e63'
+            ctx.fillRect(Math.max(0, tX + tW), tY, ctx.canvas.width, tH)
+
+            ctx.globalCompositeOperation = 'multiply'
+            ctx.fillRect(stage.stage2canvas(p.stageOffset)[0], tY + tH, p.stageWidth * stage.scale, 1)
+          }
+        }
+      }
+      ctx.globalCompositeOperation = 'source-over'
+    }
   }
 }
 
@@ -746,7 +776,7 @@ class PDFJSViewer extends React.Component {
     this.updatePages()
 
     if (this.props.onUserMove) {
-      this.props.onUserMove(this.stage.animationGetFinalState())
+      this.props.onUserMove(this.stage.animationGetFinalState().boundInContentBox())
     }
   }
 
@@ -881,10 +911,13 @@ class PDFJSViewer extends React.Component {
   }
 
   paint () {
-    let ctx = this.paintCanvas.getContext('2d')
-    ctx.clearRect(0, 0, this.viewDim[0], this.viewDim[1])
+    let ctx = this.paintCanvas.getContext('2d', {alpha: false})
+    ctx.globalCompositeOperation = 'source-over'
+    ctx.fillStyle = '#fff'
+    ctx.fillRect(0, 0, this.viewDim[0], this.viewDim[1])
     if (!this.pages) return
     let stage = this.stage
+    let drawnPages = []
     for (let i = 0; i < this.pages.length; i ++) {
       let p = this.pages[i]
       if (!this.pageInView(p)) {
@@ -908,6 +941,7 @@ class PDFJSViewer extends React.Component {
           this.textLayers[i] = null
         }
       } else {
+        drawnPages.push(p)
         let pCanvasScale = p.renderedCanvas.width / p.initWidth
         let [sx, sy, sw, sh] = p.clipRectangle.map(x => x * pCanvasScale)
         ctx.drawImage(p.renderedCanvas, sx, sy, sw, sh, x, y, w, h)
@@ -934,6 +968,9 @@ class PDFJSViewer extends React.Component {
           }
         }
       }
+    }
+    if (this.props.postDrawCanvas) {
+      this.props.postDrawCanvas(drawnPages, ctx, stage)
     }
     let y1 = stage.canvas2stage([0, 0])[1]
     let y2 = stage.canvas2stage([0, stage.viewportSize[1]])[1]
@@ -1138,6 +1175,7 @@ class ManagedPage {
     this.initHeight = this.unitViewport.height
     this.stageOffset = [0, 0]
     this.clipRectangle = [0, 0, this.initWidth, this.initHeight] // [x, y, w, h]
+    this.pageIndex = pdfjsPage.pageIndex
     this.renderedCanvas = null
     this.textContent = null
     this.textLayer = null
