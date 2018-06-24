@@ -715,6 +715,9 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           renderView({view: 'subjects', subjectStatistics: {loading: false, error: null, result: agg}}, res, ($, reactRoot) => {reactRoot.attr('data-subject-stats', JSON.stringify(agg))})
         } else if (req.query.as === 'json') {
           res.send(agg)
+        } else {
+          res.status(404)
+          res.send('Format unknow.')
         }
       }
       PastPaperDoc.aggregate([{$sort: {subject: 1}}, {$group: {_id: '$subject', totalPaper: {$sum: 1}}}]).then(agg => {
