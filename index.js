@@ -2,6 +2,7 @@ const express = require.main.require('express')
 const path = require('path')
 const os = require('os')
 const PaperUtils = require('./view/paperutils')
+const CIESubjects = require('./view/CIESubjects.js')
 const sspdf = require('./lib/sspdf')
 const fs = require('fs')
 const cheerio = require('cheerio')
@@ -722,7 +723,12 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
             let r = aggr[i]
             if (!r) return g
             r = r.map(x => ({subject: g._id, time: x._id, paper: 0, variant: 0})).sort(PaperUtils.funcSortSet).map(x => x.time)
-            return Object.assign({}, g, {times: r})
+            let cSubj = CIESubjects.findExactById(g._id)
+            if (cSubj) {
+              return Object.assign({}, g, {times: r, name: cSubj.name, level: cSubj.level})
+            } else {
+              return Object.assign({}, g, {times: r, name: null, level: null})
+            }
           })
           response(nagg)
         }, err => {

@@ -115,11 +115,6 @@ class Description extends React.Component {
     }
     return (
       <div className='home-desc'>
-        {!this.props.showHelp ? (
-          <div className='cieinprog'>
-            CIE s18 is in progress {">﹏<"} Best wishes for your exam.
-          </div>
-        ) : null}
         {this.state.server && !this.props.showHelp ? (
           <div className='links'>
             <a href='/disclaim/'>Disclaimer</a>
