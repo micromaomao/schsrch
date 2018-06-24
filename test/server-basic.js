@@ -2,6 +2,7 @@ const supertest = require('supertest')
 const should = require('should')
 const fs = require('fs')
 const path = require('path')
+const CIESubjects = require('../view/CIESubjects.js')
 
 module.exports = schsrch =>
   describe('Basic pages', function () {
@@ -145,6 +146,14 @@ module.exports = schsrch =>
           let deepTested = false
           res.body.forEach(s => {
             s.times.should.be.an.Array()
+            let cSubj = CIESubjects.findExactById(s._id)
+            if (cSubj) {
+              if (!s.name || !s.level) {
+                throw new Error(`Expected s.name and s.level to exist for subject ${JSON.stringify(cSubj)}. Got ${s.name} and ${s.level}.`)
+              }
+              s.name.should.equal(cSubj.name)
+              s.level.should.equal(cSubj.level)
+            }
             if (s._id === '9709') {
               s.times.slice().sort().should.deepEqual(['s10', 'w11'])
               s.totalPaper.should.equal(2)
