@@ -1743,7 +1743,7 @@ $feedback-top-height: 2rem + 1.3rem
       font-size: 0.8rem
       color: $color-secondary-text
 
-  &.mode-t
+  &.loaded
     display: flex
     flex-direction: column
     flex-wrap: nowrap
@@ -1807,10 +1807,27 @@ $feedback-top-height: 2rem + 1.3rem
         left: 0
         right: 0
         bottom: 0
+        z-index: 1
+      .dirmenu
+        position: absolute
+        background-color: lighten($color-primary, 40%)
+        color: $color-primary
+        display: flex
+        flex-direction: column
+        flex-wrap: nowrap
+        width: 80px
+        z-index: 2
+        box-shadow: 2px 2px 2px rgba(black, 0.5)
+        > .item
+          flex-grow: 0
+          flex-shrink: 0
+          width: 80px
+          padding: 0.5rem 1rem
+          cursor: pointer
 
 .paperviewer
   &.loading .progressbar,
-  &.mode-t .pdfcontain.loading .progressbar
+  &.loaded .pdfcontain.loading .progressbar
     background-color: lighten($color-primary, 30%)
     width: 80%
     height: 2px

@@ -12,18 +12,24 @@ class PaperViewer extends React.Component {
       paperFileId: null,
       dirs: null,
       loadError: null,
-      mode: null,
-      pdfjsObjs: null
+      pdfjsObjs: null,
+      initialLoadTime: null,
+      dirMenu: null
     }
+
+    this.paperDirHitRegions = null // [{y1, y2, dir}, ...]
+    this.pdfjsViewerInstance = null
 
     this.handleAppStateUpdate = this.handleAppStateUpdate.bind(this)
     this.handlePDFUserMove = this.handlePDFUserMove.bind(this)
     this.handlePDFJSViewerPostDraw = this.handlePDFJSViewerPostDraw.bind(this)
+    this.handlePDFJSViewerDownEvent = this.handlePDFJSViewerDownEvent.bind(this)
   }
 
   loadPaper (fileId) {
     if (this.state.paperFileId === fileId && !this.state.loadError) return
-    this.setState({loadError: null})
+    this.setState({loadError: null, initialLoadTime: Date.now(), dirMenu: null})
+    this.paperDirHitRegions = null
     if (this.state.paperFileId) {
       if (this.state.pdfjsObjs) {
         for (let t of Object.keys(this.state.pdfjsObjs)) {
@@ -35,7 +41,6 @@ class PaperViewer extends React.Component {
       }
       this.setState({
         dirs: null,
-        mode: null,
         pdfjsObjs: null
       })
     }
@@ -45,24 +50,21 @@ class PaperViewer extends React.Component {
     })
 
     if (fileId) {
-      fetch(`/dirs/batch/?docid=${encodeURIComponent(fileId)}`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
+      fetch(`/dirs/batch/?docid=${encodeURIComponent(fileId)}&flattenEr=true`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
         if (this.state.paperFileId !== fileId) return
 
         this.setState({dirs: json, pdfjsObjs: {}})
 
-        // TODO
-        if (true) {
-          let sortedTypeStrArr = Object.keys(json).sort(PaperUtils.funcSortType)
-          this.setState({
-            mode: 't'
-          })
-          if (AppState.getState().v2viewing.tCurrentType === null) {
-            AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: sortedTypeStrArr[0]})
+        let sortedTypeStrArr = Object.keys(json).sort(PaperUtils.funcSortType)
+        if (AppState.getState().v2viewing.tCurrentType === null) {
+          AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: sortedTypeStrArr[0]})
+        }
+        for (let type of sortedTypeStrArr) {
+          let docid = json[type].docid
+          if (json[type].type === 'questions') {
+            json[type].dirs = json[type].dirs.map((d, i) => Object.assign(d, {i}))
           }
-          for (let type of sortedTypeStrArr) {
-            let docid = json[type].docid
-            this.loadPDF(type, docid)
-          }
+          this.loadPDF(type, docid)
         }
       }, err => {
         if (this.state.paperFileId !== fileId) return
@@ -115,6 +117,7 @@ class PaperViewer extends React.Component {
   componentWillUnmount () {
     // free resources
     this.loadPaper(null)
+    this.pdfjsViewerInstance = null
     this._appstateUnsub()
     this._appstateUnsub = null
   }
@@ -129,7 +132,7 @@ class PaperViewer extends React.Component {
   }
 
   handlePDFUserMove (nTransform) {
-    AppState.dispatch({type: 'v2view-user-move-page', nTranslate: nTransform.nTranslate, nScale: nTransform.nScale})
+    AppState.dispatch({type: 'v2view-user-move-page', stageTransform: {nTranslate: nTransform.nTranslate, nScale: nTransform.nScale}})
   }
 
   render () {
@@ -142,29 +145,22 @@ class PaperViewer extends React.Component {
       )
     }
     let v2viewing = AppState.getState().v2viewing
-    if (!this.state.mode) {
-      let desc = null
-      let progress = null
-      if (!this.state.dirs) {
-        progress = 0
-        desc = 'Loading paper structure'
-      } else {
-        progress = 0.2
-        desc = 'Loading question paper'
-      }
+    if (!this.state.dirs) {
+      let progress = Math.min(1, Math.log10((Date.now() - this.state.initialLoadTime + 70) / 70) / 2.17)
+      requestAnimationFrame(() => this.forceUpdate())
       return (
         <div className='paperviewer loading'>
           <div className='loadingtitle'>Downloading&hellip;</div>
-          <div className='loadingdesc'>{desc}</div>
+          <div className='loadingdesc'>Loading paper structure&hellip;</div>
 
           <div className='progressbar'>
             <div className='fill' style={{width: (progress * 100) + '%'}} />
           </div>
         </div>
       )
-    } else if (this.state.mode === 't') {
+    } else  {
       return (
-        <div className='paperviewer mode-t'>
+        <div className='paperviewer loaded'>
           <div className='typebar'>
             {this.state.pdfjsObjs ? Object.keys(this.state.pdfjsObjs).sort(PaperUtils.funcSortType).map(typeStr => {
               let obj = this.state.pdfjsObjs[typeStr]
@@ -187,7 +183,8 @@ class PaperViewer extends React.Component {
             }) : null}
           </div>
           {this.state.pdfjsObjs && this.state.pdfjsObjs[v2viewing.tCurrentType] ? (() => {
-            let obj = this.state.pdfjsObjs[v2viewing.tCurrentType]
+            let tCurrentType = v2viewing.tCurrentType
+            let obj = this.state.pdfjsObjs[tCurrentType]
             if (!obj.document) {
               return (
                 <div className='pdfcontain loading'>
@@ -197,9 +194,67 @@ class PaperViewer extends React.Component {
                 </div>
               )
             } else {
+              let menu = null
+              if (this.state.dirMenu && this.pdfjsViewerInstance) {
+                let [aX, aY] = this.state.dirMenu.appearsMenuAt
+                aX = Math.max(0, Math.min(this.pdfjsViewerInstance.viewDim[0] - 80, aX))
+                aY = Math.max(0, aY)
+                menu = (
+                  <div className='dirmenu' style={{
+                    left: aX + 'px',
+                    top: aY + 'px'
+                  }}>
+                    {Object.keys(this.state.dirs).sort(PaperUtils.funcSortType).map(typeStr => {
+                      if (typeStr === tCurrentType) return null
+                      if ((typeStr === 'ms' || typeStr === 'qp') && this.state.dirs[typeStr] && (this.state.dirs[typeStr].type === 'questions' || this.state.dirs[typeStr].type === 'mcqMs')) {
+                        let dd = this.state.dirs[typeStr].dirs.find(x => x.i === this.state.dirMenu.dir.i)
+                        if (!dd) return null
+                        let go = evt => {
+                          this.setState({dirMenu: null})
+                          AppState.dispatch({
+                            type: 'v2view-set-tCurrentType',
+                            tCurrentType: typeStr,
+                            viewDir: dd,
+                            stageTransform: null
+                          })
+                        }
+                        return (
+                          <div className='item' key={typeStr} onClick={go}>{typeStr}</div>
+                        )
+                      }
+                      if (typeStr === 'er' && this.state.dirs[typeStr].type === 'er-flattened') {
+                        let dd = this.state.dirs[typeStr].dirs.find(x => x.qNs.includes(this.state.dirMenu.dir.qN))
+                        if (!dd) return null
+                        let go = evt => {
+                          this.setState({dirMenu: null})
+                          AppState.dispatch({
+                            type: 'v2view-set-tCurrentType',
+                            tCurrentType: typeStr,
+                            viewDir: dd,
+                            stageTransform: null
+                          })
+                        }
+                        return (
+                          <div className='item' key={typeStr} onClick={go}>{typeStr}</div>
+                        )
+                      }
+                      return null
+                    })}
+                  </div>
+                )
+              }
               return (
                 <div className='pdfcontain'>
-                  <PDFJSViewer doc={obj.document} dir={this.state.dirs[v2viewing.tCurrentType]} onUserMove={this.handlePDFUserMove} stageTransform={v2viewing.stageTransform} postDrawCanvas={this.handlePDFJSViewerPostDraw} />
+                  <PDFJSViewer
+                    doc={obj.document}
+                    dir={this.state.dirs[tCurrentType]}
+                    onUserMove={this.handlePDFUserMove}
+                    stageTransform={v2viewing.stageTransforms[tCurrentType]}
+                    postDrawCanvas={this.handlePDFJSViewerPostDraw}
+                    onDownEvent={this.handlePDFJSViewerDownEvent}
+                    ref={f => this.pdfjsViewerInstance = f}
+                    initToDir={v2viewing.viewDir} />
+                  {menu}
                 </div>
               )
             }
@@ -215,13 +270,17 @@ class PaperViewer extends React.Component {
   }
 
   tSwitchTo (typeStr) {
+    this.paperDirHitRegions = null
+    this.setState({dirMenu: null})
     AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: typeStr})
   }
 
   handlePDFJSViewerPostDraw (drawnPages, ctx, stage) {
+    this.paperDirHitRegions = null
     let v2viewing = AppState.getState().v2viewing
     let cDir = this.state.dirs[v2viewing.tCurrentType]
     if (cDir && cDir.type === 'questions') {
+      this.paperDirHitRegions = []
       for (let p of drawnPages) {
         let pDirs = cDir.dirs.filter(x => x.page === p.pageIndex)
         for (let d of pDirs) {
@@ -240,11 +299,65 @@ class PaperViewer extends React.Component {
 
             ctx.globalCompositeOperation = 'multiply'
             ctx.fillRect(stage.stage2canvas(p.stageOffset)[0], tY + tH, p.stageWidth * stage.scale, 1)
+
+            this.paperDirHitRegions.push({
+              y1: tY,
+              y2: tY + tH,
+              dir: d
+            })
           }
         }
       }
       ctx.globalCompositeOperation = 'source-over'
     }
+  }
+
+  handlePDFJSViewerDownEvent (evt) {
+    if (!this.paperDirHitRegions || !this.pdfjsViewerInstance) return true
+    this.setState({dirMenu: null})
+    let y = null
+    let canvasPoint = null
+    if (evt.touches && evt.touches.length === 1) {
+      let t = evt.touches[0]
+      canvasPoint = client2view([t.clientX, t.clientY], this.pdfjsViewerInstance.paintCanvas)
+      y = canvasPoint[1]
+    } else if (!evt.touches) {
+      canvasPoint = client2view([evt.clientX, evt.clientY], this.pdfjsViewerInstance.paintCanvas)
+      y = canvasPoint[1]
+    } else return true
+    for (let hr of this.paperDirHitRegions) {
+      if (y > hr.y1 && y < hr.y2) {
+        if (evt.touches) {
+          let cancel = () => {
+            evt.target.removeEventListener('touchmove', moveHandler)
+            evt.target.removeEventListener('touchend', endHandler)
+            evt.target.removeEventListener('touchcancel', cancel)
+          }
+          let t = evt.touches[0]
+          let moveHandler = evt => {
+            if (evt.touches.length !== 1) return cancel()
+            let t2 = evt.touches[0]
+            if (t2.identifier !== t.identifier || Math.abs(t2.clientX - t.clientX) + Math.abs(t2.clientY - t.clientY) > 5) return cancel()
+          }
+          let endHandler = evt => {
+            cancel()
+            if (evt.touches.length === 0 || (evt.touches.length === 1 && evt.changedTouches.length === 1 && evt.touches[0].identifier === evt.changedTouches[0].identifier)) {
+              this.showDirMenu(hr.dir, canvasPoint)
+            }
+          }
+          evt.target.addEventListener('touchmove', moveHandler)
+          evt.target.addEventListener('touchend', endHandler)
+          evt.target.addEventListener('touchcancel', cancel)
+        } else {
+          this.showDirMenu(hr.dir, canvasPoint)
+          return false
+        }
+      }
+    }
+  }
+
+  showDirMenu (dir, appearsMenuAt) {
+    this.setState({dirMenu: {dir, appearsMenuAt}})
   }
 }
 
@@ -368,6 +481,10 @@ class PendingTransform {
 
   shift ([dx, dy]) {
     return new PendingTransform([this.nTranslate[0] + dx, this.nTranslate[1] + dy], this.nScale, this.stage)
+  }
+
+  setTranslate (point) {
+    return new PendingTransform([0,1].map(p => point[p] !== null ? point[p] : this.nTranslate[p]), this.nScale, this.stage)
   }
 }
 
@@ -899,15 +1016,28 @@ class PDFJSViewer extends React.Component {
   initStagePosAndSize () {
     let firstPage = this.pages[0]
     if (!firstPage) return
-    if (!this.props.stageTransform) {
-      this.stage.putOnCenter([firstPage.stageOffset[0], firstPage.stageOffset[1] - 10, firstPage.stageWidth, firstPage.stageHeight + 20])
-                  .applyImmediate()
+    if (!this.props.initToDir) {
+      if (!this.props.stageTransform) {
+        this.stage.putOnCenter([firstPage.stageOffset[0], firstPage.stageOffset[1] - 10, firstPage.stageWidth, firstPage.stageHeight + 20])
+                    .applyImmediate()
+      } else {
+        new PendingTransform(this.props.stageTransform.nTranslate, this.props.stageTransform.nScale, this.stage)
+          .applyImmediate()
+      }
     } else {
-      new PendingTransform(this.props.stageTransform.nTranslate, this.props.stageTransform.nScale, this.stage)
-        .applyImmediate()
+      let dd = this.props.initToDir
+      let rPage = this.pages[dd.page]
+      if (!rPage) {
+        new PendingTransform([0, 0], 1, this.stage).applyImmediate()
+      } else {
+        let stageY = rPage.stageOffset[1] + dd.qNRect.y1 - 5 - rPage.clipRectangle[1]
+        let centerPendingT = this.stage.putOnCenter([rPage.stageOffset[0] + dd.qNRect.x1 - 5 - rPage.clipRectangle[0], stageY,
+                                rPage.stageWidth - dd.qNRect.x1 + rPage.clipRectangle[0], rPage.stageHeight / 2])
+        centerPendingT.setTranslate([null, -stageY * centerPendingT.nScale]).applyImmediate()
+      }
     }
+    this.handleStageAfterUserInteration()
     this.paint()
-    this.updatePages()
   }
 
   paint () {
@@ -1019,7 +1149,13 @@ class PDFJSViewer extends React.Component {
   }
 
   handleStageDownEvent (evt) {
+    if (this.props.onDownEvent) {
+      if (this.props.onDownEvent(evt) === false) {
+        return false
+      }
+    }
     if (!evt.touches && window.getComputedStyle(evt.target).cursor === 'text') return false
+    return true
   }
 
   handleStageMoveEvent (evt) {
@@ -1031,6 +1167,11 @@ class PDFJSViewer extends React.Component {
   scrollBarHandleDown (evt) {
     document.removeEventListener('mousemove', this.scrollbarHandleMove)
     document.removeEventListener('mouseup', this.scrollbarHandleUp)
+    if (this.props.onDownEvent) {
+      if (this.props.onDownEvent(evt) === false) {
+        return false
+      }
+    }
     evt.preventDefault()
     if (this.scrollbarTouchState)
       this.scrollbarTouchRelease()

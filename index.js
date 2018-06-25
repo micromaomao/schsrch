@@ -252,6 +252,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     rMain.get('/dirs/batch/', function (req, res, next) {
       if (!req.query.docid) return next()
       let docid = req.query.docid.trim()
+      let flattenEr = req.query.flattenEr === 'true'
       PastPaperDoc.findOne({_id: docid}).then(initDoc => {
         if (!initDoc) {
           next()
@@ -278,7 +279,19 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           }))).then(tds => {
             let obj = {}
             for (let td of tds) {
-              obj[td.type] = td.dir
+              if (td.type !== 'er' || !flattenEr || td.dir.type !== 'er') {
+                obj[td.type] = td.dir
+              } else {
+                let target = td.dir.papers.find(x => x.pv === `${initDoc.paper}${initDoc.variant}`)
+                if (!target) {
+                  obj[td.type] = {type: 'questions', dirs: []}
+                } else {
+                  obj[td.type] = {
+                    type: 'er-flattened',
+                    dirs: target.dirs
+                  }
+                }
+              }
               obj[td.type].docid = td.docid
             }
             res.send(obj)
