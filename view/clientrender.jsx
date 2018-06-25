@@ -222,7 +222,11 @@ class AppMain extends React.Component {
   }
 
   handleReload (evt) {
-    window.location.reload(false)
+    window.localStorage.removeItem('state')
+    window.history.replaceState(null, 'SchSrch crash', window.location.toString())
+    setTimeout(() => {
+      window.location = window.location.toString()
+    }, 100)
   }
 }
 ReactDOM.render(
