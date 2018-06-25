@@ -246,7 +246,7 @@ class SearchResult extends React.Component {
                   {result.list.map(it => {
                     let itid = it.index._id
                     return (
-                      <div className={'paper fulltext' + (v2viewing.searchIndex === itid ? ' current' : '')} key={itid}
+                      <div className={'paper fulltext' + (v2viewing && v2viewing.searchIndex === itid ? ' current' : '')} key={itid}
                           onClick={evt => AppState.dispatch({
                                                               type: 'v2view',
                                                               searchIndex: itid,
