@@ -214,7 +214,14 @@ class PaperViewer extends React.Component {
                     {types.map(typeStr => {
                       if (typeStr === tCurrentType) return null
                       if ((typeStr === 'ms' || typeStr === 'qp') && this.state.dirs[typeStr] && (this.state.dirs[typeStr].type === 'questions' || this.state.dirs[typeStr].type === 'mcqMs')) {
-                        let dd = this.state.dirs[typeStr].dirs.find(x => x.i === this.state.dirMenu.dir.i)
+                        let dd = null
+                        let isMcq = false
+                        if (this.state.dirs[typeStr].type === 'questions') {
+                          dd = this.state.dirs[typeStr].dirs.find(x => x.i === this.state.dirMenu.dir.i)
+                        } else {
+                          isMcq = true
+                          dd = this.state.dirs[typeStr].dirs.find(x => x.qN === this.state.dirMenu.dir.qN)
+                        }
                         if (!dd) return null
                         let go = evt => {
                           this.setState({dirMenu: null})
@@ -227,7 +234,7 @@ class PaperViewer extends React.Component {
                         }
                         typeDisplayed ++
                         return (
-                          <div className='item' key={typeStr} onClick={go}>{typeStr}</div>
+                          <div className='item' key={typeStr} onClick={go}>{isMcq ? dd.qT : typeStr}</div>
                         )
                       }
                       if (typeStr === 'er' && this.state.dirs[typeStr].type === 'er-flattened') {
