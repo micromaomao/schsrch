@@ -1160,7 +1160,7 @@ class PDFJSViewer extends React.Component {
   updatePages () {
     let stage = this.stage
     if (!this.pages) return
-    let scale = stage.animationGetFinalState().nScale
+    let scale = stage.animationGetFinalState().nScale * window.devicePixelRatio
     for (let p of this.pages) {
       if (this.pageInView(p)) {
         p.render(scale).then(this.deferredPaint)
