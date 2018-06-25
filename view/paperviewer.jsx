@@ -161,6 +161,11 @@ class PaperViewer extends React.Component {
     } else  {
       return (
         <div className='paperviewer loaded'>
+          {v2viewing.showPaperSetTitle ? (
+            <div className='papersetindicate'>
+              {v2viewing.showPaperSetTitle}
+            </div>
+          ) : null}
           <div className='typebar'>
             {this.state.pdfjsObjs ? Object.keys(this.state.pdfjsObjs).sort(PaperUtils.funcSortType).map(typeStr => {
               let obj = this.state.pdfjsObjs[typeStr]
@@ -199,12 +204,14 @@ class PaperViewer extends React.Component {
                 let [aX, aY] = this.state.dirMenu.appearsMenuAt
                 aX = Math.max(0, Math.min(this.pdfjsViewerInstance.viewDim[0] - 80, aX))
                 aY = Math.max(0, aY)
+                let types = Object.keys(this.state.dirs).sort(PaperUtils.funcSortType)
+                let typeDisplayed = 0
                 menu = (
                   <div className='dirmenu' style={{
                     left: aX + 'px',
                     top: aY + 'px'
                   }}>
-                    {Object.keys(this.state.dirs).sort(PaperUtils.funcSortType).map(typeStr => {
+                    {types.map(typeStr => {
                       if (typeStr === tCurrentType) return null
                       if ((typeStr === 'ms' || typeStr === 'qp') && this.state.dirs[typeStr] && (this.state.dirs[typeStr].type === 'questions' || this.state.dirs[typeStr].type === 'mcqMs')) {
                         let dd = this.state.dirs[typeStr].dirs.find(x => x.i === this.state.dirMenu.dir.i)
@@ -218,6 +225,7 @@ class PaperViewer extends React.Component {
                             stageTransform: null
                           })
                         }
+                        typeDisplayed ++
                         return (
                           <div className='item' key={typeStr} onClick={go}>{typeStr}</div>
                         )
@@ -234,12 +242,18 @@ class PaperViewer extends React.Component {
                             stageTransform: null
                           })
                         }
+                        typeDisplayed ++
                         return (
                           <div className='item' key={typeStr} onClick={go}>{typeStr}</div>
                         )
                       }
                       return null
                     })}
+                    {typeDisplayed === 0 ? (
+                      <div className='item nothing'>
+                        {'(///ᴗ///)'}
+                      </div>
+                    ) : null}
                   </div>
                 )
               }
@@ -823,6 +837,7 @@ class TransformationStage {
 
 class PDFJSViewer extends React.Component {
   static get NOT_READY () {return 0}
+  static get READY () {return 1}
   constructor (props) {
     super(props)
     this.elem = null
@@ -890,7 +905,9 @@ class PDFJSViewer extends React.Component {
   }
 
   handleStageAfterUserInteration () {
-    this.updatePages()
+    if (this.readyState === PDFJSViewer.ready) {
+      this.updatePages()
+    }
 
     if (this.props.onUserMove) {
       this.props.onUserMove(this.stage.animationGetFinalState().boundInContentBox())
@@ -900,12 +917,18 @@ class PDFJSViewer extends React.Component {
   componentDidUpdate () {
     this.setDocument(this.props.doc)
 
-    if (this.props.stageTransform) {
-      let currentTransform = this.stage.animationGetFinalState()
-      if (!currentTransform.simillarTo(this.props.stageTransform)) {
-        new PendingTransform(this.props.stageTransform.nTranslate, this.props.stageTransform.nScale, this.stage)
-          .startAnimation(400)
+    if (this.readyState === PDFJSViewer.READY) {
+      if (this.props.stageTransform) {
+        let currentTransform = this.stage.animationGetFinalState()
+        if (!currentTransform.simillarTo(this.props.stageTransform)) {
+          new PendingTransform(this.props.stageTransform.nTranslate, this.props.stageTransform.nScale, this.stage)
+            .startAnimation(400)
+        }
+      } else if (this.props.initToDir) {
+        this.getInitDirPendingTransform(this.props.initToDir).startAnimation(400)
       }
+
+      this.updatePages()
     }
   }
 
@@ -970,6 +993,7 @@ class PDFJSViewer extends React.Component {
 
   setDocument (doc) {
     if (this.pdfjsDocument === doc) return
+    this.readyState = PDFJSViewer.NOT_READY
     this.pdfjsDocument = doc
     if (this.pages) {
       for (let p of this.pages) {
@@ -1025,19 +1049,31 @@ class PDFJSViewer extends React.Component {
           .applyImmediate()
       }
     } else {
-      let dd = this.props.initToDir
-      let rPage = this.pages[dd.page]
-      if (!rPage) {
-        new PendingTransform([0, 0], 1, this.stage).applyImmediate()
+      this.getInitDirPendingTransform(this.props.initToDir).applyImmediate()
+    }
+    this.handleStageAfterUserInteration()
+    this.paint()
+    this.forceUpdate()
+    this.readyState = PDFJSViewer.READY
+  }
+
+  /**
+    * @param dd only need {page, qNRect}. Can be faked.
+    */
+  getInitDirPendingTransform (dd) {
+    let rPage = this.pages[dd.page]
+    if (!rPage) {
+      return new PendingTransform([0, 0], 1, this.stage)
+    } else {
+      if (!dd.qNRect) {
+        return this.stage.putOnCenter([rPage.stageOffset[0], rPage.stageOffset[1] - 10, rPage.stageWidth, rPage.stageHeight + 20])
       } else {
         let stageY = rPage.stageOffset[1] + dd.qNRect.y1 - 5 - rPage.clipRectangle[1]
         let centerPendingT = this.stage.putOnCenter([rPage.stageOffset[0] + dd.qNRect.x1 - 5 - rPage.clipRectangle[0], stageY,
                                 rPage.stageWidth - dd.qNRect.x1 + rPage.clipRectangle[0], rPage.stageHeight / 2])
-        centerPendingT.setTranslate([null, -stageY * centerPendingT.nScale]).applyImmediate()
+        return centerPendingT.setTranslate([null, -stageY * centerPendingT.nScale])
       }
     }
-    this.handleStageAfterUserInteration()
-    this.paint()
   }
 
   paint () {

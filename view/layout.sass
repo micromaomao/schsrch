@@ -736,24 +736,25 @@ $sidebar-width: 300px
           color: $color-primary
           padding-top: 1rem
           text-align: right
-        .paper
-          cursor: pointer
-          color: $color-link
-          font-size: 1.1rem
-          text-align: center
-          padding: 0.7rem 0
-          $a: rgba(1,1,1,0) solid 2px
-          border-left: $a
-          border-top: $a
-          border-bottom: $a
-          &.current
-            $b: $color-primary solid 2px
-            border-left: $b
-            border-top: $b
-            border-bottom: $b
-            color: $color-primary
-            margin-right: -2px
-            background-color: white
+
+      .paper
+        cursor: pointer
+        color: $color-link
+        font-size: 1.1rem
+        text-align: center
+        padding: 0.7rem 0
+        $a: rgba(1,1,1,0) solid 2px
+        border-left: $a
+        border-top: $a
+        border-bottom: $a
+        &.current
+          $b: $color-primary solid 2px
+          border-left: $b
+          border-top: $b
+          border-bottom: $b
+          color: $color-primary
+          margin-right: -2px
+          background-color: white
 
     .viewercontain
       flex-shrink: 1
@@ -1749,6 +1750,14 @@ $feedback-top-height: 2rem + 1.3rem
     flex-direction: column
     flex-wrap: nowrap
     align-items: stretch
+    .papersetindicate
+      width: 100%
+      flex-grow: 0
+      flex-shrink: 0
+      background-color: $color-filepreview-top
+      font-size: 1rem
+      padding: 0.5rem 0.5rem 0 0.5rem
+      color: white
     .typebar
       width: 100%
       flex-grow: 0
@@ -1825,6 +1834,9 @@ $feedback-top-height: 2rem + 1.3rem
           width: 80px
           padding: 0.5rem 1rem
           cursor: pointer
+          &.nothing
+            cursor: default
+            font-size: 0.7rem
 
 .paperviewer
   &.loading .progressbar,

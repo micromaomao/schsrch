@@ -240,7 +240,7 @@ class SchSrch extends React.Component {
     let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
       <div className='view view-search'>
-        <div key='searchbarcontain' className={'searchbarcontain prepare-shadow' + (this.state.viewScrollAtTop ? ' noshadow' : ' shadow')}>
+        <div key='searchbarcontain' className='searchbarcontain'>
           {!this.state.server ? (
             <div className='sidebarbtn' onClick={evt => AppState.dispatch({type: 'show-sidebar'})}>
               <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars"></use></svg>

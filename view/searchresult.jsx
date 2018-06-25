@@ -78,6 +78,7 @@ class SearchResult extends React.Component {
     let deprecationStates = relatedSubject ? CIESubjects.deprecationStates(relatedSubject) : []
     let resultOrganized = this.organizeResult(querying.result)
     let v2 = resultOrganized && resultOrganized.v === 2
+    if (querying.result && querying.result.response === 'text' && !AppState.getState().serverrender) v2 = true
     return (
       <div className={'searchresult' + (querying.loading ? ' loading' : '') + (this.props.smallerSetName ? ' smallsetname' : '') + (v2 ? ' v2' : '')}>
         {!v2 ? <SearchPrompt query={querying.query} /> : null}
@@ -146,9 +147,9 @@ class SearchResult extends React.Component {
           )
       }
     }
+    let v2viewing = AppState.getState().v2viewing
     if (result.response === 'pp' && (Array.isArray(resultOrganized) || resultOrganized.v === 2)) {
       let bucket = resultOrganized
-      let v2viewing = AppState.getState().v2viewing
       if (bucket.v === 2) {
         return (
           <div className='v2container'>
@@ -174,7 +175,7 @@ class SearchResult extends React.Component {
             </div>
             <div className='viewercontain'>
               {!v2viewing ? <div className='null'>Choose a paper to open&hellip;</div> : null}
-              {v2viewing ? <PaperViewer /> : null}
+              {v2viewing ? <PaperViewer key='paperviewer' /> : null}
             </div>
           </div>
         )
@@ -209,33 +210,64 @@ class SearchResult extends React.Component {
     }
     if (result.response === 'text' && Array.isArray(resultOrganized)) {
         let items = resultOrganized
-        return (
-          <div className='fulltextlist'>
-            {(() => {
-                let elements = []
-                for (let item of items) {
-                  let psKey = '!!index!' + item.types[0].index._id
-                  let previewing = this.props.previewing
-                  let current = previewing !== null && previewing.psKey === psKey
-                  elements.push(<PaperSet
-                    paperSet={item}
-                    key={psKey}
-                    query={query}
-                    current={current}
-                    onOpenFile={(id, page) => {
-                        AppState.dispatch({type: 'previewFile', fileId: id, page, psKey})
-                      }}
-                    />)
-                  if (current && this.props.showSmallPreview) {
-                    elements.push(
-                      <V1FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
-                    )
+        if (AppState.getState().serverrender) {
+          return (
+            <div className='fulltextlist'>
+              {(() => {
+                  let elements = []
+                  for (let item of items) {
+                    let psKey = '!!index!' + item.types[0].index._id
+                    let previewing = this.props.previewing
+                    let current = previewing !== null && previewing.psKey === psKey
+                    elements.push(<PaperSet
+                      paperSet={item}
+                      key={psKey}
+                      query={query}
+                      current={current}
+                      onOpenFile={(id, page) => {
+                          AppState.dispatch({type: 'previewFile', fileId: id, page, psKey})
+                        }}
+                      />)
+                    if (current && this.props.showSmallPreview) {
+                      elements.push(
+                        <V1FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
+                      )
+                    }
                   }
-                }
-                return elements
-            })()}
-          </div>
-        )
+                  return elements
+              })()}
+            </div>
+          )
+        } else {
+          return (
+            <div className='v2container'>
+              <div className='v2paperlist'>
+                <div className='tsscontainer'>
+                  {result.list.map(it => {
+                    let itid = it.index._id
+                    return (
+                      <div className={'paper fulltext' + (v2viewing.searchIndex === itid ? ' current' : '')} key={itid}
+                          onClick={evt => AppState.dispatch({
+                                                              type: 'v2view',
+                                                              searchIndex: itid,
+                                                              fileId: it.doc._id,
+                                                              tCurrentType: it.doc.type,
+                                                              showPaperSetTitle: `${it.doc.subject} ${it.doc.time} ${it.doc.paper}${it.doc.variant}`,
+                                                              viewDir: { page: it.index.page  /*, qNRect: null*/}
+                                                            })}>
+                        {it.doc.type}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className='viewercontain'>
+                {!v2viewing ? <div className='null'>Choose a paper to open&hellip;</div> : null}
+                {v2viewing ? <PaperViewer key='paperviewer' /> : null}
+              </div>
+            </div>
+          )
+        }
     }
     return null
   }

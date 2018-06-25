@@ -462,9 +462,11 @@ let AppState = createStore(function (state = {}, action) {
         previewing: null,
         v2viewing: {
           fileId: action.fileId,
-          tCurrentType: state.v2viewing ? state.v2viewing.tCurrentType : null,
+          tCurrentType: action.tCurrentType ? action.tCurrentType : (state.v2viewing ? state.v2viewing.tCurrentType : null),
           stageTransforms: {},
-          viewDir: null
+          viewDir: action.viewDir || null,
+          searchIndex: action.searchIndex || null,
+          showPaperSetTitle: action.showPaperSetTitle || null
         }
       })
     case 'v2view-set-tCurrentType':
