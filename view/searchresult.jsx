@@ -161,7 +161,7 @@ class SearchResult extends React.Component {
                       {ts.papers.map(paper => {
                         let viewingThis = v2viewing && paper.types.find(ent => ent._id === v2viewing.fileId)
                         return (
-                          <div className={'paper' + (viewingThis ? ' current' : '')}
+                          <div className={'paper' + (viewingThis ? ' current' : '')} key={`${paper.paper}${paper.variant}`}
                               onClick={evt => AppState.dispatch({type: 'v2view', fileId: (paper.types.find(x => x.type === 'qp') || paper.types[0])._id, atPage: 0})}>
                             {paper.paper}{paper.variant}
                           </div>
