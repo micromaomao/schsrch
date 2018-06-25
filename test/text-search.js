@@ -14,6 +14,7 @@ module.exports = (schsrch, dbModel) =>
         .expect(res => res.body.list.forEach(x => x.doc.fileType.should.equal('pdf')))
         .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.doc)))
         .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.fileBlob)))
+        .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.dir)))
         .expect(res => res.body.list.forEach(x => x.index.should.be.an.Object()))
         .expect(res => res.body.list.forEach(x => x.index._id.should.be.an.String()))
         .expect(res => res.body.list.forEach(x => x.index.docId.should.be.an.String()))
