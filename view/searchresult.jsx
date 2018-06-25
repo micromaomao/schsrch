@@ -9,91 +9,66 @@ const SearchPrompt = require('./searchprompt.jsx')
 const V1FilePreview = require('./v1filepreview.jsx')
 const FetchErrorPromise = require('./fetcherrorpromise.jsx')
 const PaperViewer = require('./paperviewer.jsx')
+const memoizeOne = require('./memoize-one.js')
 
 class SearchResult extends React.Component {
   constructor (props) {
     super(props)
-    this.state = {
-      resultCache: null
-    }
-    if (props) {
-      if (AppState.getState().serverrender) {
-        this.setState = nState => Object.assign(this.state, nState)
-      }
-      this.componentWillReceiveProps(props)
-    }
     this.handleOverflowChangeQuery = this.handleOverflowChangeQuery.bind(this)
+    this.organizeResult = memoizeOne(this.organizeResult)
   }
-  componentDidMount () {
-    if (this.props) {
-      this.componentWillReceiveProps(this.props)
-    }
-  }
-  // TODO: Replace with getDerivedStateFromProps
-  componentWillReceiveProps (nextProps) {
-    if (!this.state.resultCache || !this.props.querying || !this.props.querying.result || !nextProps.querying ||
-        !nextProps.querying.result || nextProps.querying.result !== this.props.querying.result) {
-      let result = nextProps.querying ? nextProps.querying.result : null
-      if (!result || !result.list || result.list.length === 0) {
-        this.setState({resultCache: null})
-      } else if (result.response === 'overflow' || result.response === 'empty') {
-        this.setState({resultCache: null})
-      } else if (result.response === 'pp') {
-        let bucket = []
-        for (let entity of result.list) {
-          let existing = bucket.find(x => PaperUtils.setEqual(x, entity))
-          if (existing) {
-            existing.types.push(entity)
-          } else {
-            bucket.push({
-              subject: entity.subject,
-              time: entity.time,
-              paper: entity.paper,
-              variant: entity.variant,
-              types: [
-                entity
-              ]
-            })
-          }
-        }
-        bucket.sort(PaperUtils.funcSortSet)
-        if (!AppState.getState().serverrender) {
-          let timesets = []
-          for (let p of bucket) {
-            let lastTimeset = timesets[timesets.length - 1]
-            if (!lastTimeset || lastTimeset.subject !== p.subject || lastTimeset.time !== p.time) {
-              timesets.push({
-                subject: p.subject,
-                time: p.time,
-                papers: [p]
-              })
-            } else {
-              lastTimeset.papers.push(p)
-            }
-          }
-          this.setState({
-            resultCache: {v: 2, timesets}
-          })
+  organizeResult (result) {
+    if (!result || !result.list || result.list.length === 0) {
+      return null
+    } else if (result.response === 'overflow' || result.response === 'empty') {
+      return null
+    } else if (result.response === 'pp') {
+      let bucket = []
+      for (let entity of result.list) {
+        let existing = bucket.find(x => PaperUtils.setEqual(x, entity))
+        if (existing) {
+          existing.types.push(entity)
         } else {
-          this.setState({
-            resultCache: bucket
+          bucket.push({
+            subject: entity.subject,
+            time: entity.time,
+            paper: entity.paper,
+            variant: entity.variant,
+            types: [
+              entity
+            ]
           })
         }
-      } else if (result.response === 'text') {
-        let items = result.list.map(set => {
-          let metas = {subject: set.doc.subject, time: set.doc.time, paper: set.doc.paper, variant: set.doc.variant}
-          // paperSet should looks like: { subject: ..., paper: ..., ..., types: [ {_id: <docId>, type: ..., index: { ... }}, {_id: <docId>, type: ...}... ] }
-          // query: the words user searched. Used for highlighting content.
-          return Object.assign({}, metas, {types: [Object.assign({}, set.doc, {index: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})
-        })
-        this.setState({
-          resultCache: items
-        })
-      } else {
-        this.setState({
-          resultCache: null
-        })
       }
+      bucket.sort(PaperUtils.funcSortSet)
+      if (!AppState.getState().serverrender) {
+        let timesets = []
+        for (let p of bucket) {
+          let lastTimeset = timesets[timesets.length - 1]
+          if (!lastTimeset || lastTimeset.subject !== p.subject || lastTimeset.time !== p.time) {
+            timesets.push({
+              subject: p.subject,
+              time: p.time,
+              papers: [p]
+            })
+          } else {
+            lastTimeset.papers.push(p)
+          }
+        }
+        return {v: 2, timesets}
+      } else {
+        return bucket
+      }
+    } else if (result.response === 'text') {
+      let items = result.list.map(set => {
+        let metas = {subject: set.doc.subject, time: set.doc.time, paper: set.doc.paper, variant: set.doc.variant}
+        // paperSet should looks like: { subject: ..., paper: ..., ..., types: [ {_id: <docId>, type: ..., index: { ... }}, {_id: <docId>, type: ...}... ] }
+        // query: the words user searched. Used for highlighting content.
+        return Object.assign({}, metas, {types: [Object.assign({}, set.doc, {index: set.index}), ...set.related.map(x => Object.assign({}, metas, x))]})
+      })
+      return items
+    } else {
+      return null
     }
   }
   render () {
@@ -101,14 +76,15 @@ class SearchResult extends React.Component {
     let relatedSubject = querying.query.match(/^(\d{4})(\s|$)/)
     if (relatedSubject) relatedSubject = relatedSubject[1]
     let deprecationStates = relatedSubject ? CIESubjects.deprecationStates(relatedSubject) : []
-    let v2 = this.state.resultCache && this.state.resultCache.v === 2
+    let resultOrganized = this.organizeResult(querying.result)
+    let v2 = resultOrganized && resultOrganized.v === 2
     return (
       <div className={'searchresult' + (querying.loading ? ' loading' : '') + (this.props.smallerSetName ? ' smallsetname' : '') + (v2 ? ' v2' : '')}>
         {!v2 ? <SearchPrompt query={querying.query} /> : null}
         {querying.error
           ? <FetchErrorPromise.ErrorDisplay error={querying.error} serverErrorActionText={'handle your query'} onRetry={this.props.onRetry} />
           : null}
-        {deprecationStates.map((dst, i) => (
+        {!resultOrganized ? deprecationStates.map((dst, i) => (
           <div className='warning' key={i}>
             {(() => {
               let newQuery = `${dst.of}${querying.query.substr(4)}`
@@ -135,7 +111,7 @@ class SearchResult extends React.Component {
               return null
             })()}
           </div>
-        ))}
+        )) : null}
         {querying.result && querying.result.typeFilter
           ? (
             <div className='warning'>Only showing {PaperUtils.getTypeString(querying.result.typeFilter)} because it is provided as part of the search filter.</div>
@@ -152,8 +128,8 @@ class SearchResult extends React.Component {
   }
   renderResult (result) {
     let query = this.props.querying && this.props.querying.query ? this.props.querying.query : ''
-    let resultCache = this.state.resultCache
-    if (resultCache === null) {
+    let resultOrganized = this.organizeResult(result)
+    if (resultOrganized === null) {
       switch (result.response) {
         case 'overflow':
           return (
@@ -166,8 +142,8 @@ class SearchResult extends React.Component {
           )
       }
     }
-    if (result.response === 'pp' && (Array.isArray(this.state.resultCache) || this.state.resultCache.v === 2)) {
-      let bucket = this.state.resultCache
+    if (result.response === 'pp' && (Array.isArray(resultOrganized) || resultOrganized.v === 2)) {
+      let bucket = resultOrganized
       let v2viewing = AppState.getState().v2viewing
       if (bucket.v === 2) {
         return (
@@ -227,8 +203,8 @@ class SearchResult extends React.Component {
         )
       }
     }
-    if (result.response === 'text' && Array.isArray(this.state.resultCache)) {
-        let items = this.state.resultCache
+    if (result.response === 'text' && Array.isArray(resultOrganized)) {
+        let items = resultOrganized
         return (
           <div className='fulltextlist'>
             {(() => {
