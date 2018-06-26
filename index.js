@@ -201,7 +201,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     })
 
     rMain.get('/doc/:id', function (req, res, next) {
-      let docId = req.params.id
+      let docId = req.params.id.toString()
       let format = req.query.as || 'blob'
       let page = parseInt(req.query.page || 'NaN')
       if (!Number.isSafeInteger(page)) page = null
@@ -251,7 +251,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
 
     rMain.get('/dirs/batch/', function (req, res, next) {
       if (!req.query.docid) return next()
-      let docid = req.query.docid.trim()
+      let docid = req.query.docid.toString().trim()
       let flattenEr = req.query.flattenEr === 'true'
       PastPaperDoc.findOne({_id: docid}).then(initDoc => {
         if (!initDoc) {
@@ -310,6 +310,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
         res.send('Need login.')
         return
       }
+      authHeader = authHeader.toString()
       if (!(tokenMatch = authHeader.match(/^Bearer\s+([0-9a-f]+)$/))) {
         res.status(400)
         res.send('Authorization header invalid.')
@@ -349,7 +350,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     })
 
     rMain.head('/auth/:username', function (req, res, next) {
-      let username = req.params.username.trim()
+      let username = req.params.username.toString().trim()
       PastPaperId.count({username}).then(ct => {
         if (ct === 0) {
           res.status(404)
@@ -359,10 +360,9 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           res.end()
         }
       })
-      // TODO: implement GET for this
     })
     rMain.post('/auth/:username/', function (req, res, next) {
-      let username = req.params.username.trim()
+      let username = req.params.username.toString().trim()
       if (!/^[^\s]{1,}$/.test(username)) {
         res.status(400)
         res.send('Username invalid. Must not contain space.')
@@ -421,7 +421,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     rMain.post('/auth/:username/newSession/', function (req, res, next) {
       postJsonReceiver(req, res, next, parsed => {
         let challenge = parsed
-        let username = req.params.username.toString()
+        let username = req.params.username
         if (typeof username !== 'string' || typeof challenge !== 'object') {
           res.status(400)
           res.send('Invalid payload.')
@@ -473,7 +473,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     })
 
     rMain.get('/collection/:collectionId/content/', optionalAuthentication, function (req, res, next) {
-      let { collectionId } = req.params
+      let collectionId = req.params.collectionId.toString()
       PastPaperCollection.findOne({_id: collectionId}).then(doc => {
         if (!doc) {
           next()
@@ -500,7 +500,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     })
 
     rMain.put('/collection/:collectionId/content/', requireAuthentication, function (req, res, next) {
-      let { collectionId } = req.params
+      let collectionId = req.params.collectionId.toString()
       PastPaperCollection.findOne({_id: collectionId}).then(collectionDoc => {
         if (!collectionDoc) {
           next()
@@ -517,6 +517,15 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
           if (allowEdit) {
             try {
               assert.notDeepEqual(collectionDoc.content, parsed)
+              function assertKeyNameNoDollar (obj) {
+                if (typeof obj === 'object') {
+                  for (let k in obj) {
+                    if (k.indexOf('$') >= 0) throw new Error('No $ in key name allowed.')
+                    assertKeyNameNoDollar(obj[k])
+                  }
+                }
+              }
+              assertKeyNameNoDollar(parsed)
               collectionDoc.content = parsed
               collectionDoc.save().then(() => {
                 res.status(200)
@@ -544,7 +553,7 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     })
 
     rMain.delete('/collection/:id', requireAuthentication, function (req, res, next) {
-      let id = req.params.id
+      let id = req.params.id.toString()
       PastPaperCollection.findOne({_id: id}, {_id: true, owner: true}).then(col => {
         if (!col) {
           next()
@@ -703,6 +712,11 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
         } catch (e) {
           res.status(403)
           res.send('Content is not valid JSON.')
+          return
+        }
+        if (typeof parsed.email !== 'string' || typeof parsed.text !== 'string' || (parsed.search && typeof parsed.search !== 'string')) {
+          res.status(403)
+          res.send('JSON is malformed.')
           return
         }
         let fb = new PastPaperFeedback({
