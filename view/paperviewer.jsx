@@ -296,7 +296,7 @@ class PaperViewer extends React.Component {
     AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: typeStr})
   }
 
-  handlePDFJSViewerPostDraw (drawnPages, ctx, stage) {
+  handlePDFJSViewerPostDraw (drawnPages, ctx, stage, dpr) {
     this.paperDirHitRegions = null
     let v2viewing = AppState.getState().v2viewing
     let cDir = this.state.dirs[v2viewing.tCurrentType]
@@ -308,8 +308,8 @@ class PaperViewer extends React.Component {
           if (d.qNRect) {
             let r = d.qNRect
             let pagePoint1 = [r.x1, r.y1]
-            let [tX, tY] = stage.stage2canvas([0, 1].map(c => pagePoint1[c] + p.stageOffset[c]))
-            let [tW, tH] = [r.x2 - r.x1, r.y2 - r.y1].map(x => x * stage.scale)
+            let [tX, tY] = stage.stage2view([0, 1].map(c => pagePoint1[c] + p.stageOffset[c])).map(x => x * dpr)
+            let [tW, tH] = [r.x2 - r.x1, r.y2 - r.y1].map(x => x * stage.scale * dpr)
             ctx.globalCompositeOperation = 'screen' // magic
 
             ctx.fillStyle = '#ff5722'
@@ -319,11 +319,11 @@ class PaperViewer extends React.Component {
             ctx.fillRect(Math.max(0, tX + tW), tY, ctx.canvas.width, tH)
 
             ctx.globalCompositeOperation = 'multiply'
-            ctx.fillRect(stage.stage2canvas(p.stageOffset)[0], tY + tH, p.stageWidth * stage.scale, 1)
+            ctx.fillRect(stage.stage2view(p.stageOffset)[0] * dpr, tY + tH, p.stageWidth * stage.scale * dpr, dpr)
 
             this.paperDirHitRegions.push({
-              y1: tY,
-              y2: tY + tH,
+              y1: tY / dpr,
+              y2: (tY + tH) / dpr,
               dir: d
             })
           }
@@ -455,16 +455,16 @@ class PendingTransform {
   }
 
   /**
-   * @see TransformationStage.canvas2stage
+   * @see TransformationStage.view2stage
    */
-  canvas2stage (point) {
+  view2stage (point) {
     return [0,1].map(p => (point[p] - this.nTranslate[p])/this.nScale)
   }
 
   /**
-   * @see TransformationStage.stage2canvas
+   * @see TransformationStage.stage2view
    */
-  stage2canvas (point) {
+  stage2view (point) {
     return [0,1].map(p => point[p]*this.nScale + this.nTranslate[p])
   }
 
@@ -476,7 +476,7 @@ class PendingTransform {
    * @return {PendingTransform} new transform
    */
   mapPointToPoint (pStage, pCanvas) {
-    let canvasNow = this.stage2canvas(pStage)
+    let canvasNow = this.stage2view(pStage)
     let canvasDesired = pCanvas
     let newTranslate = [0,1].map(p => this.nTranslate[p] + canvasDesired[p] - canvasNow[p])
     return new PendingTransform(newTranslate, this.nScale, this.stage)
@@ -553,7 +553,7 @@ class TransformationStage {
    * @param {Array<number>} point
    * @return {Array<number>}
    */
-  canvas2stage (point) {
+  view2stage (point) {
     return [0,1].map(p => (point[p] - this.translate[p])/this.scale)
   }
 
@@ -562,7 +562,7 @@ class TransformationStage {
    * @param {Array<number>} point
    * @return {Array<number>}
    */
-  stage2canvas (point) {
+  stage2view (point) {
     return [0,1].map(p => point[p]*this.scale + this.translate[p])
   }
 
@@ -683,7 +683,7 @@ class TransformationStage {
     this.pressState = {
       mode: 'single-touch',
       touchId: t.identifier,
-      stagePoint: this.canvas2stage(client2view([t.clientX, t.clientY], this.eventTarget)),
+      stagePoint: this.view2stage(client2view([t.clientX, t.clientY], this.eventTarget)),
       startingClientPoint: [t.clientX, t.clientY],
       timestamp: Date.now()
     }
@@ -691,11 +691,11 @@ class TransformationStage {
   initMoveMouse (clientPoint) {
     this.pressState = {
       mode: 'mouse-press',
-      stagePoint: this.canvas2stage(client2view(clientPoint, this.eventTarget))
+      stagePoint: this.view2stage(client2view(clientPoint, this.eventTarget))
     }
   }
   initPinch (tA, tB) {
-    let stagePoint = this.canvas2stage(client2view([tA.clientX + tB.clientX, tA.clientY + tB.clientY].map(x => x / 2), this.eventTarget))
+    let stagePoint = this.view2stage(client2view([tA.clientX + tB.clientX, tA.clientY + tB.clientY].map(x => x / 2), this.eventTarget))
     this.pressState = {
       mode: 'double-touch',
       A: tA.identifier,
@@ -797,7 +797,7 @@ class TransformationStage {
 
   handleDoubleTap (point) {
     let cPoint = client2view(point, this.eventTarget)
-    let sPoint = this.canvas2stage(cPoint)
+    let sPoint = this.view2stage(cPoint)
     let nScale = this.scale > 1 ? 0.9 : 2
     new PendingTransform([0, 0], nScale, this).mapPointToPoint(sPoint, cPoint).boundInContentBox().startAnimation(200)
     if (this.onAfterUserInteration) {
@@ -826,7 +826,7 @@ class TransformationStage {
         nScale = Math.min(this.maxScale, nScale)
       }
       let cPoint = client2view([evt.clientX, evt.clientY], this.eventTarget)
-      let sPoint = this.canvas2stage(cPoint)
+      let sPoint = this.view2stage(cPoint)
       new PendingTransform([0, 0], nScale, this).mapPointToPoint(sPoint, cPoint).boundInContentBox().startAnimation(200)
     }
 
@@ -963,8 +963,13 @@ class PDFJSViewer extends React.Component {
     if (this.scrollbarTouchState) {
       this.scrollbarTouchRelease()
     }
-    this.paintCanvas.width = w
-    this.paintCanvas.height = h
+    let dpr = window.devicePixelRatio
+    this.paintCanvas.width = w * dpr
+    this.paintCanvas.height = h * dpr
+    Object.assign(this.paintCanvas.style, {
+      width: w + 'px',
+      height: h + 'px'
+    })
     let lastViewportSize = this.stage.viewportSize
     this.stage.setViewportSize(w, h)
     this.paint()
@@ -1087,7 +1092,8 @@ class PDFJSViewer extends React.Component {
     let ctx = this.paintCanvas.getContext('2d', {alpha: false})
     ctx.globalCompositeOperation = 'source-over'
     ctx.fillStyle = '#fff'
-    ctx.fillRect(0, 0, this.viewDim[0], this.viewDim[1])
+    ctx.fillRect(0, 0, this.paintCanvas.width, this.paintCanvas.height)
+    let dpr = Math.round(this.paintCanvas.width / this.viewDim[0] * 1000) / 1000
     if (!this.pages) return
     let stage = this.stage
     let drawnPages = []
@@ -1100,24 +1106,28 @@ class PDFJSViewer extends React.Component {
         }
         continue
       }
-      let [x, y] = stage.stage2canvas(p.stageOffset)
+      let [cssX, cssY] = stage.stage2view(p.stageOffset)
+      let [x, y] = [cssX, cssY].map(x => x * dpr)
       let scale = stage.scale
-      let [w, h] = [p.stageWidth * scale, p.stageHeight * scale]
+      let [cssW, cssH] = [p.stageWidth * scale, p.stageHeight * scale]
+      let [w, h] = [cssW, cssH].map(x => x * dpr)
       if (!p.renderedCanvas) {
         ctx.beginPath()
         ctx.rect(x, y, w, h)
         ctx.stroke()
         if (!stage.currentAnimation)
-          p.render(stage.scale).then(this.deferredPaint)
+          p.render(this.documentRenderingScale).then(this.deferredPaint)
         if (this.textLayers[i]) {
           this.textLayers[i].remove()
           this.textLayers[i] = null
         }
       } else {
         drawnPages.push(p)
-        let pCanvasScale = p.renderedCanvas.width / p.initWidth
-        let [sx, sy, sw, sh] = p.clipRectangle.map(x => x * pCanvasScale)
-        ctx.drawImage(p.renderedCanvas, sx, sy, sw, sh, x, y, w, h)
+        let pageRenderredCanvasScale = p.renderedCanvas.width / p.initWidth
+        let [sx, sy, sw, sh] = p.clipRectangle.map(x => x * pageRenderredCanvasScale)
+        if (Math.abs(sw - w) <= 1) w = sw
+        if (Math.abs(sh - h) <= 1) h = sh
+        ctx.drawImage(p.renderedCanvas, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh), Math.round(x), Math.round(y), Math.round(w), Math.round(h))
         if (p.textLayer) {
           if (this.textLayers[i] != p.textLayer) {
             if (this.textLayers[i]) {
@@ -1126,11 +1136,11 @@ class PDFJSViewer extends React.Component {
             this.textLayers[i] = p.textLayer
             this.textLayersContain.appendChild(p.textLayer)
           }
-          let cssTScale = w / sw
+          let cssTScale = cssW / sw
           Object.assign(this.textLayers[i].style, {
             position: 'absolute',
-            left: x + 'px',
-            top: y + 'px',
+            left: cssX + 'px',
+            top: cssY + 'px',
             transformOrigin: 'top left',
             transform: 'scale(' + cssTScale + ')'
           })
@@ -1143,10 +1153,10 @@ class PDFJSViewer extends React.Component {
       }
     }
     if (this.props.postDrawCanvas) {
-      this.props.postDrawCanvas(drawnPages, ctx, stage)
+      this.props.postDrawCanvas(drawnPages, ctx, stage, dpr)
     }
-    let y1 = stage.canvas2stage([0, 0])[1]
-    let y2 = stage.canvas2stage([0, stage.viewportSize[1]])[1]
+    let y1 = stage.view2stage([0, 0])[1]
+    let y2 = stage.view2stage([0, stage.viewportSize[1]])[1]
     let yTot = stage.contentSize[1]
     let sbLen = this.viewDim[1] - 40
     let y1sb = 20 + (y1 / yTot) * sbLen
@@ -1164,13 +1174,16 @@ class PDFJSViewer extends React.Component {
     }
   }
 
+  get documentRenderingScale () {
+    return this.stage.animationGetFinalState().nScale * window.devicePixelRatio
+  }
+
   updatePages () {
     let stage = this.stage
     if (!this.pages) return
-    let scale = stage.animationGetFinalState().nScale * (window.devicePixelRatio + 1)
     for (let p of this.pages) {
       if (this.pageInView(p)) {
-        p.render(scale).then(this.deferredPaint)
+        p.render(this.documentRenderingScale).then(this.deferredPaint)
       } else {
         p.freeCanvas()
       }
@@ -1179,8 +1192,8 @@ class PDFJSViewer extends React.Component {
 
   pageInView (p) {
     let stage = this.stage
-    let y1 = stage.stage2canvas(p.stageOffset)[1]
-    let y2 = stage.stage2canvas([0, p.stageOffset[1] + p.stageHeight])[1]
+    let y1 = stage.stage2view(p.stageOffset)[1]
+    let y2 = stage.stage2view([0, p.stageOffset[1] + p.stageHeight])[1]
     let yTop = 0
     let yBottom = stage.viewportSize[1]
 
