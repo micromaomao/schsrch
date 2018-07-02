@@ -5,9 +5,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "install": "node-gyp rebuild",
-    "prepare": "npm run webpack",
-    "webpack-dev": "webpack --progress --colors --watch",
+    "install": "if [ -e binding.gyp ]; then node-gyp rebuild; fi",
+    "prepare": "if [ -e webpack.config.js ]; then npm run webpack; fi",
+    "webpack-dev": "NODE_ENV=development webpack --progress --colors --watch",
     "webpack": "NODE_ENV=production webpack --progress --optimize-minimize --define process.env.NODE_ENV='\"production\"'; if [ $? -eq 0 ]; then echo OK.; else echo Failed.; fi",
     "test": "mocha --delay --exit",
     "coverage": "node_modules/.bin/istanbul cover -x \"**/dist-server/**\" --report lcovonly node_modules/.bin/_mocha -- --delay --exit -R spec",
