@@ -1,0 +1,42 @@
+version: '3'
+networks:
+  mw:
+    driver: bridge
+services:
+  www:
+    container_name: schsrch-www
+    build: .
+    networks:
+      - mw
+    ports:
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
+    environment:
+      NODE_ENV: development
+      MONGODB: mongodb://mw-mongo/schsrch
+      ES: mw-es:9200
+      SITE_ORIGIN: localhost
+    stdin_open: true
+    tty: true
+    command: bash
+    depends_on:
+      - mongo
+      - es
+    volumes:
+      - ./view:/usr/src/app/view
+  mongo:
+    container_name: mw-mongo
+    image: mongo:latest
+    networks:
+      - mw
+    volumes:
+      - /data/db
+      - /data/configdb
+    command: ["--noauth"]
+  es:
+    container_name: mw-es
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.0
+    networks:
+      - mw
+    volumes:
+      - /usr/share/elasticsearch/data

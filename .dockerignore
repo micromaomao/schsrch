@@ -1,0 +1,7 @@
+**/*.swp
+**/*.swo
+node_modules
+.env
+package-lock.json
+dist*
+.git
