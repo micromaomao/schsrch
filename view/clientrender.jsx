@@ -65,7 +65,7 @@ if (history.state) {
 } else {
   AppState.dispatch({type: 'init'})
   let queryMatch
-  let hostname = location.origin || 'https://schsrch.xyz'
+  let hostname = window.location.origin
   let loc = location.toString().replace(/#.+$/, '').replace(hostname, '') // location.pathname no query string.
   if ((queryMatch = loc.match(/^\/search\/\?/))) {
     try {

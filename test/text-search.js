@@ -29,7 +29,6 @@ module.exports = (schsrch, dbModel) =>
       ftExpectBasic(
         supertest(schsrch)
           .get('/search/?query=' + encodeURIComponent(itx ? itx : s16qp1Keyword))
-          .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
           .expect(res => res.body.should.be.an.Object())
@@ -58,7 +57,6 @@ module.exports = (schsrch, dbModel) =>
       ftExpectBasic(
         supertest(schsrch)
           .get('/search/?query=' + encodeURIComponent('Lorem ipsum dolor sit amet'))
-          .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
           .expect(res => res.body.should.be.an.Object())
@@ -79,7 +77,6 @@ module.exports = (schsrch, dbModel) =>
       ftExpectBasic(
         supertest(schsrch)
           .get('/search/?query=' + encodeURIComponent('0612 Lorem ipsum dolor sit amet'))
-          .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
           .expect(res => res.body.should.be.an.Object())
@@ -96,7 +93,6 @@ module.exports = (schsrch, dbModel) =>
       ftExpectBasic(
         supertest(schsrch)
           .get('/search/?query=' + encodeURIComponent('0611 Lorem ipsum dolor sit amet'))
-          .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
           .expect(res => res.body.should.be.an.Object())
@@ -121,7 +117,6 @@ module.exports = (schsrch, dbModel) =>
         ftExpectBasic(
           supertest(schsrch)
             .get('/search/?query=' + encodeURIComponent(`0611 ${paper} Lorem ipsum dolor sit amet`))
-            .set('Host', 'schsrch.xyz')
             .expect('Content-Type', /json/)
             .expect(200)
             .expect(res => res.body.should.be.an.Object())
@@ -141,29 +136,25 @@ module.exports = (schsrch, dbModel) =>
     it('Case: 0611 paper 3 Lorem ipsum dolor sit amet', function (done) {
       ftExpectEmpty(
         supertest(schsrch)
-          .get('/search/?query=0611 paper 3 Lorem ipsum dolor sit amet')
-          .set('Host', 'schsrch.xyz'))
+          .get('/search/?query=0611 paper 3 Lorem ipsum dolor sit amet'))
         .end(done)
     })
     it('Case: 0611 paper3 Lorem ipsum dolor sit amet', function (done) {
       ftExpectEmpty(
         supertest(schsrch)
-          .get('/search/?query=0611 paper3 Lorem ipsum dolor sit amet')
-          .set('Host', 'schsrch.xyz'))
+          .get('/search/?query=0611 paper3 Lorem ipsum dolor sit amet'))
         .end(done)
     })
     it('Case: 0611 p3 Lorem ipsum dolor sit amet', function (done) {
       ftExpectEmpty(
         supertest(schsrch)
-          .get('/search/?query=0611 p3 Lorem ipsum dolor sit amet')
-          .set('Host', 'schsrch.xyz'))
+          .get('/search/?query=0611 p3 Lorem ipsum dolor sit amet'))
         .end(done)
     })
     it('Case: 0613 Lorem ipsum dolor sit amet', function (done) {
       ftExpectBasic(
         supertest(schsrch)
           .get('/search/?query=' + encodeURIComponent('0613 Lorem ipsum dolor sit amet'))
-          .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
           .expect(res => res.body.should.be.an.Object())
@@ -180,7 +171,6 @@ module.exports = (schsrch, dbModel) =>
       ftExpectEmpty(
         supertest(schsrch)
           .get('/search/?query=' + encodeURIComponent('!!index!000000000000000000000000'))
-          .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
       ).end(done)
@@ -190,7 +180,6 @@ module.exports = (schsrch, dbModel) =>
         ftExpectEmpty(
           supertest(schsrch)
             .get('/search/?query=' + encodeURIComponent(s16qp1Keyword))
-            .set('Host', 'schsrch.xyz')
             .expect('Content-Type', /json/)
             .expect(200)
         ).end(done)
@@ -200,7 +189,6 @@ module.exports = (schsrch, dbModel) =>
       ftExpectEmpty(
         supertest(schsrch)
           .get('/search/?query=' + encodeURIComponent('!!index!' + indexToSearch))
-          .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
       ).end(done)

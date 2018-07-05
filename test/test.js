@@ -20,7 +20,7 @@ try {
   DB.should.be.a.String().and.should.not.be.empty()
   ES.should.be.a.String().and.should.not.be.empty()
 } catch (e) {
-  console.log('You need to provide env MONGODB. E.g. MONGODB=127.0.0.1')
+  console.log('You need to provide env MONGODB and ES. E.g. MONGODB=mongodb://127.0.0.1/ ES=127.0.0.1')
   process.exit(1)
 }
 
@@ -42,7 +42,7 @@ db.on('open', function () {
     console.log(`\x1b[2;37m    ${req.method.toUpperCase()} ${req.path}\x1b[0m`)
     next()
   })
-  schsrch.use(_schsrch({mongodb: db, elasticsearch: es}))
+  schsrch.use(_schsrch({mongodb: db, elasticsearch: es, siteOrigin: 'https://schsrch.xyz'}))
   schsrch.use(function (err, req, res, next) {
     console.error(err)
     next(err)

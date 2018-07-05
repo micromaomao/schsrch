@@ -16,7 +16,6 @@ module.exports = (schsrch, dbModel) =>
           let hash = crypto.createHash('sha256')
           supertest(schsrch)
             .get('/doc/' + encodeURIComponent(tDoc._id) + '/' + (withFormat ? '?as=blob' : ''))
-            .set('Host', 'schsrch.xyz')
             .expect(200)
             .expect('Content-Type', /pdf/)
             .expect(res => res.header['content-length'].should.be.above(0))
@@ -52,14 +51,12 @@ module.exports = (schsrch, dbModel) =>
     it('/doc/ with 000000000000000000000000', function (done) {
       supertest(schsrch)
         .get('/doc/000000000000000000000000/?as=blob')
-        .set('Host', 'schsrch.xyz')
         .expect(404)
         .end(done)
     })
     it('/doc/ with 000000000000000000000000', function (done) {
       supertest(schsrch)
         .get('/doc/000000000000000000000000/?as=dir')
-        .set('Host', 'schsrch.xyz')
         .expect(404)
         .end(done)
     })
@@ -75,7 +72,6 @@ module.exports = (schsrch, dbModel) =>
         sspdfTestDoc = tDoc
         supertest(schsrch)
           .get('/doc/' + encodeURIComponent(tDoc._id) + '/?page=0&as=sspdf')
-          .set('Host', 'schsrch.xyz')
           .expect(200)
           .expect('Content-Type', /json/)
           .expect(res => res.body.should.be.an.Object())
@@ -95,7 +91,6 @@ module.exports = (schsrch, dbModel) =>
           }
           supertest(schsrch)
             .get('/doc/' + encodeURIComponent(tMsDoc._id) + '/?page=0&as=sspdf')
-            .set('Host', 'schsrch.xyz')
             .expect(200)
             .expect('Content-Type', /json/)
             .expect(res => res.body.should.be.an.Object())
@@ -131,7 +126,6 @@ module.exports = (schsrch, dbModel) =>
       let tDoc = sspdfTestDoc
       supertest(schsrch)
         .get('/doc/' + encodeURIComponent(tDoc._id) + '/?as=sspdf&page=' + page)
-        .set('Host', 'schsrch.xyz')
         .expect(404)
         .end(done)
     }
@@ -147,14 +141,12 @@ module.exports = (schsrch, dbModel) =>
     it('404 for 000000000000000000000000', function (done) {
       supertest(schsrch)
         .get('/doc/000000000000000000000000/?as=sspdf&page=0')
-        .set('Host', 'schsrch.xyz')
         .expect(404)
         .end(done)
     })
     it('404 for unknow format', function (done) {
       supertest(schsrch)
         .get(`/doc/${sspdfTestDoc._id}/?as=lol`)
-        .set('Host', 'schsrch.xyz')
         .expect(404)
         .expect(res => res.text.should.match(/format unknow/i))
         .end(done)
@@ -162,7 +154,6 @@ module.exports = (schsrch, dbModel) =>
     it('404 for blob with page', function (done) {
       supertest(schsrch)
         .get(`/doc/${sspdfTestDoc._id}/?as=blob&page=0`)
-        .set('Host', 'schsrch.xyz')
         .expect(404)
         .end(done)
     })

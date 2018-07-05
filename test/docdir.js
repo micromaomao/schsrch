@@ -89,24 +89,21 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + paper1._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'))
+          .get('/doc/' + paper1._id + '/?as=dir'))
         .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs1))
         .end(done)
     })
     it('/doc/?as=dir&page=1', function (done) {
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + paper1._id + '/?as=dir&page=1')
-          .set('Host', 'schsrch.xyz'))
+          .get('/doc/' + paper1._id + '/?as=dir&page=1'))
         .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs1.filter(x => x.p === 1)))
         .end(done)
     })
     it('/doc/?as=dir&page=2', function (done) {
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + paper1._id + '/?as=dir&page=2')
-          .set('Host', 'schsrch.xyz'))
+          .get('/doc/' + paper1._id + '/?as=dir&page=2'))
         .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs1.filter(x => x.p === 2)))
         .end(done)
     })
@@ -114,8 +111,7 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + ms1._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'))
+          .get('/doc/' + ms1._id + '/?as=dir'))
         .expect(res => res.body.dirs.length.should.equal(expectedDirs1.length))
         .end(done)
     })
@@ -123,8 +119,7 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + paper2._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'))
+          .get('/doc/' + paper2._id + '/?as=dir'))
         .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs2))
         .end(done)
     })
@@ -132,8 +127,7 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + ms2._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'), false, 100)
+          .get('/doc/' + ms2._id + '/?as=dir'), false, 100)
         .expect(res => {
           let dirs = res.body.dirs
           dirs.length.should.equal(3)
@@ -149,8 +143,7 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + paper3._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'))
+          .get('/doc/' + paper3._id + '/?as=dir'))
         .expect(res => res.body.dirs.map(di => ({p: di.page, t: di.qT})).should.deepEqual(expectedDirs3))
         .end(done)
     })
@@ -158,8 +151,7 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + paper4._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'))
+          .get('/doc/' + paper4._id + '/?as=dir'))
         .expect(res => res.body.dirs.length.should.equal(8))
         .end(done)
     })
@@ -167,8 +159,7 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + ms4._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'))
+          .get('/doc/' + ms4._id + '/?as=dir'))
         .expect(res => res.body.dirs.length.should.equal(8))
         .end(done)
     })
@@ -176,8 +167,7 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + ms5._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz')
+        .get('/doc/' + ms5._id + '/?as=dir')
         .expect(res => res.body.dirs.length.should.equal(10))
         .end(done)
       )
@@ -186,8 +176,7 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + ms6._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'), false, 100)
+          .get('/doc/' + ms6._id + '/?as=dir'), false, 100)
         .expect(res => {
           let dirs = res.body.dirs
           dirs.length.should.equal(6)
@@ -206,8 +195,7 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + ms7._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'))
+          .get('/doc/' + ms7._id + '/?as=dir'))
         .expect(res => {
           let dirs = res.body.dirs
           dirs.length.should.equal(2)
@@ -222,8 +210,7 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + ms8._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'))
+          .get('/doc/' + ms8._id + '/?as=dir'))
         .expect(res => {
           let dirs = res.body.dirs
           dirs.length.should.equal(2)
@@ -248,16 +235,14 @@ module.exports = (schsrch, dbModel) =>
     it('should work for MCQ Mark Scheme (type 1)', function (done) {
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + MCQms1._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'), true)
+          .get('/doc/' + MCQms1._id + '/?as=dir'), true)
         .expect(res => res.body.dirs.map(x => x.qT).join('').should.equal('DCBCB BCACD BDADD BDCDC BCCDA ABCDB BBACB CDBBC'.replace(/ /g, '')))
         .end(done)
     })
     it('should work for MCQ Mark Scheme (type 2)', function (done) {
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + MCQms2._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'), true)
+          .get('/doc/' + MCQms2._id + '/?as=dir'), true)
         .expect(res => res.body.dirs.map(x => x.qT).join('').should.equal('DDADC BBCDA ADCAA CCDAD ABBBC BCCAA BACAC BCABC'.replace(/ /g, '')))
         .end(done)
     })
@@ -265,7 +250,6 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(10000)
       supertest(schsrch)
         .get('/doc/' + er1._id + '/?as=dir')
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => res.body.type.should.equal('er'))
@@ -338,8 +322,7 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(5000)
       expectBasicDir(
         supertest(schsrch)
-          .get('/doc/' + paper6._id + '/?as=dir')
-          .set('Host', 'schsrch.xyz'))
+          .get('/doc/' + paper6._id + '/?as=dir'))
         .expect(res => res.body.dirs.map(d => d.page).should.deepEqual([3, 5, 7, 8, 10, 12, 13, 15]))
         .end(done)
     })
@@ -347,7 +330,6 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(10000)
       supertest(schsrch)
         .get('/doc/' + er2._id + '/?as=dir')
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => res.body.type.should.equal('er'))
@@ -376,7 +358,6 @@ module.exports = (schsrch, dbModel) =>
       debugger
       supertest(schsrch)
         .get('/doc/' + er3._id + '/?as=dir')
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => res.body.type.should.equal('er'))
@@ -406,7 +387,6 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(10000)
       supertest(schsrch)
         .get('/doc/' + er4._id + '/?as=dir')
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => res.body.type.should.equal('er'))
@@ -428,7 +408,6 @@ module.exports = (schsrch, dbModel) =>
       this.timeout(10000)
       supertest(schsrch)
         .get('/doc/' + special1._id + '/?as=dir')
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => res.body.dirs.should.deepEqual([], 'dirs should be an empty array.'))

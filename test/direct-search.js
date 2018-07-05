@@ -9,7 +9,6 @@ module.exports = schsrch =>
       it(`${query} as=json`, function (done) {
         supertest(schsrch)
           .get(`/search/?query=${encodeURIComponent(query)}&as=json`)
-          .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
           .expect(res => res.body.should.be.an.Object())
@@ -29,7 +28,6 @@ module.exports = schsrch =>
       it(`${query} as=raw`, function (done) {
         supertest(schsrch)
           .get(`/search/?query=${encodeURIComponent(query)}&as=raw`)
-          .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /text/)
           .expect(200)
           .expect(res => res.text.should.be.an.String())
@@ -204,7 +202,6 @@ module.exports = schsrch =>
     it('Overflow result', function (done) {
       supertest(schsrch)
         .get('/search/?query=0611&as=json')
-        .set('Host', 'schsrch.xyz')
         .expect('Content-Type', /json/)
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
@@ -216,7 +213,6 @@ module.exports = schsrch =>
       it(`Overflow when empty query (${JSON.stringify(query)})`, function (done) {
         supertest(schsrch)
           .get(`/search/?query=${encodeURIComponent(query)}&as=json`)
-          .set('Host', 'schsrch.xyz')
           .expect('Content-Type', /json/)
           .expect(200)
           .expect(res => res.body.should.be.an.Object())
@@ -230,7 +226,6 @@ module.exports = schsrch =>
     it('Unknow format', function (done) {
       supertest(schsrch)
         .get('/search/?query=0610 s17 ms 1&as=lol')
-        .set('Host', 'schsrch.xyz')
         .expect(404)
         .expect(res => res.text.should.match(/format unknow/i))
         .end(done)
@@ -239,7 +234,6 @@ module.exports = schsrch =>
     it('should have typeFilter value when there is a type filter', function (done) {
       supertest(schsrch)
         .get('/search/?query=' + encodeURIComponent('0610 s16 ms'))
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => should.equal(res.body.typeFilter, 'ms'))
         .end(done)
@@ -247,7 +241,6 @@ module.exports = schsrch =>
     it('should have typeFilter value when there is a type filter', function (done) {
       supertest(schsrch)
         .get('/search/?query=' + encodeURIComponent('0610_s17_qp_1.pdf'))
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => should.equal(res.body.typeFilter, 'qp'))
         .end(done)
@@ -255,7 +248,6 @@ module.exports = schsrch =>
     it('should return null for typeFilter when there is no type filter', function (done) {
       supertest(schsrch)
         .get('/search/?query=' + encodeURIComponent('0610 s17 1'))
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => should.equal(res.body.typeFilter, null))
         .end(done)
@@ -263,7 +255,6 @@ module.exports = schsrch =>
     it('should not do raw formatted search output for non-direct search', function (done) {
       supertest(schsrch)
         .get('/search/?query=test&as=raw')
-        .set('Host', 'schsrch.xyz')
         .expect(400)
         .expect(res => res.text.should.match(/text/i))
         .end(done)

@@ -6,15 +6,14 @@ const CIESubjects = require('../view/CIESubjects.js')
 
 module.exports = schsrch =>
   describe('Basic pages', function () {
-    it('200 for schsrch.xyz/', function (done) {
+    it('200 for /', function (done) {
       supertest(schsrch)
         .get('/')
-        .set('Host', 'schsrch.xyz')
         .expect('Content-Type', /html/)
         .expect(200)
         .end(done)
     })
-    it('200 for beta.schsrch.xyz/', function (done) {
+    it('200 for beta.siteOrigin/', function (done) {
       supertest(schsrch)
         .get('/')
         .set('Host', 'beta.schsrch.xyz')
@@ -22,7 +21,7 @@ module.exports = schsrch =>
         .expect(200)
         .end(done)
     })
-    it('beta.schsrch.xyz/robots.txt', function (done) {
+    it('beta.siteOrigin/robots.txt', function (done) {
       supertest(schsrch)
         .get('/robots.txt')
         .set('Host', 'beta.schsrch.xyz')
@@ -31,7 +30,7 @@ module.exports = schsrch =>
         .expect(res => res.text.should.match(/Disallow: \//))
         .end(done)
     })
-    it('schsrch.xyz/robots.txt', function (done) {
+    it('siteOrigin/robots.txt', function (done) {
       supertest(schsrch)
         .get('/robots.txt')
         .set('Host', 'schsrch.xyz')
@@ -40,7 +39,7 @@ module.exports = schsrch =>
         .expect(res => res.text.should.have.length(0))
         .end(done)
     })
-    it('www.schsrch.xyz', function (done) {
+    it('www.siteOrigin', function (done) {
       supertest(schsrch)
         .get('/whatever')
         .set('Host', 'www.schsrch.xyz')
@@ -51,7 +50,6 @@ module.exports = schsrch =>
     it('/status', function (done) {
       supertest(schsrch)
         .get('/status')
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => res.body.docCount.should.be.a.Number())
@@ -64,7 +62,6 @@ module.exports = schsrch =>
         if (err) return done(err)
         supertest(schsrch)
           .get('/sw.js')
-          .set('Host', 'schsrch.xyz')
           .expect(200)
           .expect('Content-Type', /javascript/)
           .expect(res => res.text.should.equal(data))
@@ -76,7 +73,6 @@ module.exports = schsrch =>
         if (err) return done(err)
         supertest(schsrch)
           .get('/opensearch.xml')
-          .set('Host', 'schsrch.xyz')
           .expect(200)
           .expect('Content-Type', /opensearchdescription\+xml/)
           .expect(res => res.text.should.equal(data))
@@ -86,7 +82,6 @@ module.exports = schsrch =>
     it('/disclaim/', function (done) {
       supertest(schsrch)
         .get('/disclaim/')
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect('Content-Type', /html/)
         .expect(res => res.text.length.should.be.above(0))
@@ -95,7 +90,6 @@ module.exports = schsrch =>
     it('/help/', function (done) {
       supertest(schsrch)
         .get('/help/')
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect('Content-Type', /html/)
         .expect(res => res.text.length.should.be.above(0))
@@ -105,7 +99,6 @@ module.exports = schsrch =>
       const tQuery = `whateverqueryhere${Math.random()}`
       supertest(schsrch)
         .get('/search/?as=page&query=' + encodeURIComponent(tQuery))
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect('Content-Type', /html/)
         .expect(res => res.text.indexOf(`<input type="text" class="querybox border" value=${JSON.stringify(tQuery)} name="query" autocomplete="off"`).should.be.aboveOrEqual(0))
@@ -114,7 +107,6 @@ module.exports = schsrch =>
     it('/search/?as=page&query=(empty)', function (done) {
       supertest(schsrch)
         .get('/search/?as=page&query=')
-        .set('Host', 'schsrch.xyz')
         .expect(302)
         .expect('Location', '/')
         .end(done)
@@ -122,7 +114,6 @@ module.exports = schsrch =>
     it('/search/?as=page&query=(space)', function (done) {
       supertest(schsrch)
         .get('/search/?as=page&query=%20')
-        .set('Host', 'schsrch.xyz')
         .expect(302)
         .expect('Location', '/')
         .end(done)
@@ -130,7 +121,6 @@ module.exports = schsrch =>
     it('/redbook', function (done) {
       supertest(schsrch)
         .get('/redbook')
-        .set('Host', 'schsrch.xyz')
         .expect(302)
         .expect('Location', 'https://static.maowtm.org/redbook.pdf')
         .end(done)
@@ -138,7 +128,6 @@ module.exports = schsrch =>
     it('/subjects/', function (done) {
       supertest(schsrch)
         .get('/subjects/?as=json')
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => {
           res.body.should.be.an.Array()

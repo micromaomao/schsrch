@@ -72,7 +72,6 @@ module.exports = (schsrch, dbModel) =>
         let doc = gdoc()
         supertest(schsrch)
           .get(`/dirs/batch/?docid=${encodeURIComponent(doc._id)}`)
-          .set('Host', 'schsrch.xyz')
           .expect(200)
           .expect(res => res.body.should.be.an.Object())
           .expect(res => {
@@ -97,7 +96,6 @@ module.exports = (schsrch, dbModel) =>
     it(`/dirs/batch/ should work for er`, function (done) {
       supertest(schsrch)
         .get(`/dirs/batch/?docid=${encodeURIComponent(er._id)}`)
-        .set('Host', 'schsrch.xyz')
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => {

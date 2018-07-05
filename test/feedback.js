@@ -17,7 +17,6 @@ module.exports = (schsrch, dbModel) =>
     it('should not accept non-json content-type', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/x-www-form-urlencoded')
         .send('a=1')
         .expect(415)
@@ -26,7 +25,6 @@ module.exports = (schsrch, dbModel) =>
     it('should not accept invalid json', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send('{a:1}')
         .expect(403)
@@ -35,7 +33,6 @@ module.exports = (schsrch, dbModel) =>
     it('should not accept invalid json', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send('')
         .expect(403)
@@ -44,7 +41,6 @@ module.exports = (schsrch, dbModel) =>
     it('should not accept invalid json', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send('0')
         .expect(403)
@@ -53,7 +49,6 @@ module.exports = (schsrch, dbModel) =>
     it('should not accept json array', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send([1, 2, 3])
         .expect(403)
@@ -62,7 +57,6 @@ module.exports = (schsrch, dbModel) =>
     it('should not accept empty test', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send({email: '', text: '', search: null})
         .expect(403)
@@ -73,7 +67,6 @@ module.exports = (schsrch, dbModel) =>
     it('should not accept too long', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send({email: '', text: 'x'.repeat(5001), search: null})
         .expect(403)
@@ -83,7 +76,6 @@ module.exports = (schsrch, dbModel) =>
     it('should not accept invalid email', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send({email: 'm@', text: 'stub!', search: null})
         .expect(403)
@@ -93,7 +85,6 @@ module.exports = (schsrch, dbModel) =>
     it('should not accept too long email', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send({email: 'm'.repeat(5000) + '@maowtm.org', text: 'stub!', search: null})
         .expect(403)
@@ -103,7 +94,6 @@ module.exports = (schsrch, dbModel) =>
     it('should not accept too long search', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send({email: 'm@maowtm.org', text: 'stub!', search: 'x'.repeat(5001)})
         .expect(403)
@@ -120,7 +110,6 @@ module.exports = (schsrch, dbModel) =>
     it('should store feedback with no email and no search', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send({text: 'stub1', email: '', search: null})
         .expect(200)
@@ -142,7 +131,6 @@ module.exports = (schsrch, dbModel) =>
     it('should store feedback with null email (convert to empty string) and no search', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send({text: 'stub2', email: null, search: null})
         .expect(200)
@@ -164,7 +152,6 @@ module.exports = (schsrch, dbModel) =>
     it('should store feedback with email and no search', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send({text: 'stub3', email: 'mao@example.com', search: null})
         .expect(200)
@@ -191,7 +178,6 @@ module.exports = (schsrch, dbModel) =>
     it('should store feedback with no email and a search', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send({text: 'stub4', email: '', search: 'whateverquery'})
         .expect(200)
@@ -218,7 +204,6 @@ module.exports = (schsrch, dbModel) =>
     it('should store feedback with an email and a search', function (done) {
       supertest(schsrch)
         .post('/feedback/')
-        .set('Host', 'schsrch.xyz')
         .set('Content-Type', 'application/json')
         .send({text: 'stub5', email: 'm@example.com', search: 'whateverquery'})
         .expect(200)

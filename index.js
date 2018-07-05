@@ -18,7 +18,7 @@ const Recognizer = require('./lib/recognizer.js')
 const ParseQuery = require('./lib/parseQuery.js')
 
 let indexPath = path.join(__dirname, 'dist/index.html')
-let indexHtml = fs.readFileSync(indexPath)
+let indexHtml = fs.readFileSync(indexPath, {encoding: 'utf8'})
 if (process.env.NODE_ENV !== 'production') {
   fs.watch(indexPath, list => {
     fs.readFile(indexPath, { encoding: 'utf8' }, (err, data) => {
@@ -32,7 +32,8 @@ if (process.env.NODE_ENV !== 'production') {
   })
 }
 
-module.exports = ({mongodb: db, elasticsearch: es}) => {
+module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
+  if (!siteOrigin) siteOrigin = 'https://schsrch.xyz'
   let rMain = express.Router()
 
   require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord, PastPaperCollection, PastPaperId}) => {
@@ -45,13 +46,11 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
 
     rMain.use(function (req, res, next) {
       if (req.hostname.match(/^www\./)) {
-        res.redirect('https://schsrch.xyz' + req.path)
+        res.redirect(siteOrigin + req.path)
       } else {
         let org
         if ((org = req.get('Origin'))) {
-          if (/^https:\/\/[a-zA-Z0-9_\-]+\.schsrch\.xyz$/.test(org)) {
-            res.set('Access-Control-Allow-Origin', org)
-          }
+          res.set('Access-Control-Allow-Origin', org)
         }
         next()
       }
@@ -62,13 +61,13 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
 
     function renderView (state, res, postProcess) {
       res.type('html')
-      let $ = cheerio.load(indexHtml)
+      let $ = cheerio.load(indexHtml.replace(/SITE_ORIGIN/g, siteOrigin))
       // We want this to be static so that service worker don't end up caching old data, and that's why no status.
       $('.react-root').html(serverRender(state))
       if (postProcess) {
         postProcess($, $('.react-root'))
       }
-      let metas = state2meta(state)
+      let metas = state2meta(state, siteOrigin)
       if (metas) {
         let headStyle = $('head style:last-child')
         if (metas.url) {
@@ -114,7 +113,6 @@ module.exports = ({mongodb: db, elasticsearch: es}) => {
     })
     rMain.get('/opensearch.xml', function (req, res) {
       res.set('cache-control', 'max-age=0')
-      res.set()
       res.sendFile(path.join(__dirname, 'view/opensearch.xml'), {
         headers: {
           'content-type': 'application/opensearchdescription+xml'

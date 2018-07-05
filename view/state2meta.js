@@ -1,9 +1,8 @@
 const CIESubjects = require('./CIESubjects.js')
 const PaperUtils = require('./paperutils.js')
-const origin = 'https://schsrch.xyz'
 const AppStateInit = require('./appstateinit.js')
 
-module.exports = function (state) {
+module.exports = function (state, origin = window.location.origin) {
   state = Object.assign({}, AppStateInit, state)
   try {
     if (state.feedback && state.feedback.show) {
