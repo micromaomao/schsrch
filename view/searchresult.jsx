@@ -261,7 +261,9 @@ class SearchResult extends React.Component {
                     }
                     if (v2current) {
                       elements.push(
-                        <PaperViewer key={psKey + '_v2paperviewer'} />
+                        <div className='paperviewercontain'>
+                          <PaperViewer key={psKey + '_v2paperviewer'} />
+                        </div>
                       )
                     }
                   }
