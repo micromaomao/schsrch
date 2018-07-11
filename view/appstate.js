@@ -85,6 +85,12 @@ let AppState = createStore(function (state = {}, action) {
           result: action.result
         })
       })
+    case 'query-clear':
+      return Object.assign({}, state, {
+        querying: null,
+        previewing: null,
+        v2viewing: null
+      })
     case 'show-help':
       return Object.assign({}, state, {
         showHelp: true

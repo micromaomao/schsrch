@@ -73,6 +73,7 @@ class SearchBar extends AnimatorReactComponent {
   clear () {
     this.setQueryImmediate('')
     this.focus()
+    AppState.dispatch({type: 'query-clear'})
   }
   handleKey (evt) {
     if (evt.key === 'ArrowDown' || evt.keyCode === 40) {
