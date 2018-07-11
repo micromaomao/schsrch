@@ -50,7 +50,7 @@ class PaperSet extends React.Component {
         </div>
         {firstDoc !== null
           ? (
-            <div className='file first' key={firstDoc._id} onClick={evt => this.openFile(firstDoc._id, firstDoc.index.page)}>
+            <div className='file first' key={firstDoc._id} onClick={evt => this.openFile(firstDoc._id, firstDoc.index.page, firstDoc.type)}>
               {(() => {
                 let pt = (
                   <span>
@@ -92,7 +92,7 @@ class PaperSet extends React.Component {
               </span>
             )
             return (
-              <div className='file' key={file._id} onClick={evt => this.openFile(file._id, this.getLastPreviewPage(file._id))}>
+              <div className='file' key={file._id} onClick={evt => this.openFile(file._id, this.getLastPreviewPage(file._id), file.type)}>
                 {!this.state.server ? pt : (
                   <a href={this.fileUrl(file._id)} target='_blank'>
                     {pt}
@@ -113,9 +113,9 @@ class PaperSet extends React.Component {
     return false
   }
 
-  openFile (id, page = 0) {
+  openFile (id, page = 0, type = null) {
     if (this.props.onOpenFile) {
-      this.props.onOpenFile(id, page)
+      this.props.onOpenFile(id, page, type)
     }
   }
   fileUrl (id) {

@@ -972,6 +972,10 @@ class PDFJSViewer extends React.Component {
     })
     let lastViewportSize = this.stage.viewportSize
     this.stage.setViewportSize(w, h)
+    if (lastViewportSize[0] < 1 || lastViewportSize[1] < 1 || this.stage.scale < 0.001) {
+      this.initStagePosAndSize()
+      return
+    }
     this.paint()
     let pendingTransform = this.stage.animationGetFinalState().boundInContentBox()
     if (lastViewportSize[0] < 1) {
@@ -1050,6 +1054,7 @@ class PDFJSViewer extends React.Component {
   }
 
   initStagePosAndSize () {
+    if (!this.pages) return
     let firstPage = this.pages[0]
     if (!firstPage) return
     if (!this.props.initToDir) {
@@ -1395,6 +1400,7 @@ class ManagedPage {
 
   render (scale) {
     if (scale > 10) scale = 10 // avoid excessive memory usage
+    if (scale === 0) return Promise.resolve()
     if (this.renderedScale && this.renderedCanvas && Math.abs(this.renderedScale - scale) < 0.00001) return Promise.resolve()
     if (this.renderringScale && Math.abs(this.renderringScale - scale) < 0.00001) return Promise.resolve()
     console.log('Rendering page ' + this.pdfjsPage.pageNumber)

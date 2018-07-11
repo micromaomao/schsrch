@@ -473,7 +473,7 @@ let AppState = createStore(function (state = {}, action) {
       return (() => {
         if (!state.v2viewing) return state
         let stageTransformAssign = {}
-        if (action.stageTransform) {
+        if (action.stageTransform || action.stageTransform === null) {
           stageTransformAssign[action.tCurrentType] = action.stageTransform
         }
         return Object.assign({}, state, {

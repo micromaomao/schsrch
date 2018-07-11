@@ -254,7 +254,7 @@ class SchSrch extends React.Component {
             previewing={previewing}
             showSmallPreview={!this.shouldShowBigPreview()}
             onRetry={this.retryQuery}
-            smallerSetName={this.state.server ? false : window.innerWidth <= 500 || displayingBigPreview} />
+            smallerSetName={true} />
         </div>
         {AppState.getState().serverrender ? null : (
           <a className='fbBtn' onClick={evt => Feedback.show(query)}>Report issues/missing/errors with this search...</a>
