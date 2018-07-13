@@ -51,7 +51,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
         let org
         if ((org = req.get('Origin'))) {
           let corsMethod = req.get('Access-Control-Request-Method')
-          if (method.toUpperCase() === 'GET' || method.toUpperCase() === 'HEAD') {
+          if (corsMethod && corsMethod.toUpperCase() === 'GET' || corsMethod.toUpperCase() === 'HEAD') {
             res.set('Access-Control-Allow-Origin', org)
             res.set('Access-Control-Allow-Credentials', 'false')
             res.set('Access-Control-Allow-Methods', 'GET, HEAD')
