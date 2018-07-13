@@ -7,7 +7,7 @@ module.exports = (schsrch, dbModel) =>
     let subjectNumber = null
     before(function (done) {
       function trySubjectNumber () {
-        subjectNumber = Math.floor(Math.random() * 10000).toString()
+        subjectNumber = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
         PastPaperDoc.count({subject: subjectNumber}).then(ct => {
           if (ct === 0) {
             console.log(`Using syllabus number ${subjectNumber} for testing...`)
@@ -20,7 +20,33 @@ module.exports = (schsrch, dbModel) =>
       trySubjectNumber()
     })
 
-    let qp = null, ms = null, er = null
+    let docs = [null, {qp: null, ms: null}, {qp: null, ms: null}]
+    const erTest_papers = [
+      {
+        pv: '11',
+        dirs: []
+      },
+      {
+        pv: '12',
+        dirs: []
+      },
+      {
+        pv: '13',
+        dirs: ['testing-er', 1, 3]
+      },
+      {
+        pv: '21',
+        dirs: []
+      },
+      {
+        pv: '22',
+        dirs: ['testing-er', 2, 2]
+      },
+      {
+        pv: '23',
+        dirs: []
+      }
+    ]
     before(function (done) {
       let insertPromises = []
       for (let type of ['qp', 'ms']) {
@@ -43,8 +69,10 @@ module.exports = (schsrch, dbModel) =>
             })
             insertPromises.push(doc.save())
             if (paper === 1 && variant === 3) {
-              if (type === 'qp') qp = doc
-              else if (type === 'ms') ms = doc
+              docs[1][type] = doc
+            }
+            if (paper === 2 && variant === 2) {
+              docs[2][type] = doc
             }
           }
         }
@@ -59,51 +87,73 @@ module.exports = (schsrch, dbModel) =>
         fileType: 'nul',
         numPages: 0,
         dir: {
-          type: 'testing',
-          docType: 'er'
+          type: 'er',
+          docType: 'er',
+          papers: erTest_papers
         }
       })
       insertPromises.push(er.save())
       Promise.all(insertPromises).then(() => done(), err => done(err))
     })
 
-    function testWith (gdoc, dtype) {
-      it(`/dirs/batch/ should work for ${dtype}`, function (done) {
-        let doc = gdoc()
-        supertest(schsrch)
-          .get(`/dirs/batch/?docid=${encodeURIComponent(doc._id)}`)
-          .expect(200)
-          .expect(res => res.body.should.be.an.Object())
-          .expect(res => {
-            Object.keys(res.body).sort().should.deepEqual(['qp', 'ms', 'er'].sort())
-            res.body.qp.should.deepEqual({
-              type: 'testing', docType: 'qp', paper: 1, variant: 3, docid: qp._id.toString()
-            })
-            res.body.ms.should.deepEqual({
-              type: 'testing', docType: 'ms', paper: 1, variant: 3, docid: ms._id.toString()
-            })
-            res.body.er.should.deepEqual({
-              type: 'testing', docType: 'er', docid: er._id.toString()
-            })
+    for (let i = 1; i <= 2; i ++) {
+      for (let t of ['qp', 'ms']) {
+        for (let flattenEr of [false, true]) {
+          it(`/dirs/batch/ test ${i}.${t} with flattenEr = ${flattenEr}`, function (done) {
+            let {qp, ms} = docs[i]
+            supertest(schsrch)
+              .get(`/dirs/batch/?docid=${encodeURIComponent(docs[i][t]._id.toString())}&flattenEr=${flattenEr}`)
+              .expect(200)
+              .expect(res => res.body.should.be.an.Object())
+              .expect(res => {
+                Object.keys(res.body).sort().should.deepEqual(['qp', 'ms', 'er'].sort())
+                res.body.qp.should.deepEqual({
+                  type: 'testing', docType: 'qp', paper: qp.paper, variant: qp.variant, docid: qp._id.toString()
+                })
+                res.body.ms.should.deepEqual({
+                  type: 'testing', docType: 'ms', paper: qp.paper, variant: qp.variant, docid: ms._id.toString()
+                })
+                if (!flattenEr) {
+                  assertErDir(res.body.er)
+                } else {
+                  res.body.er.should.deepEqual({
+                    type: 'er-flattened', docid: er._id.toString(), dirs: ['testing-er', qp.paper, qp.variant]
+                  })
+                }
+              })
+              .end(done)
           })
-          .end(done)
-      })
+        }
+      }
     }
 
-    testWith(() => qp, 'qp')
-    testWith(() => ms, 'ms')
-
-    it(`/dirs/batch/ should work for er`, function (done) {
+    it('/dirs/batch/ should work for docid=er', function (done) {
       supertest(schsrch)
         .get(`/dirs/batch/?docid=${encodeURIComponent(er._id)}`)
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => {
           Object.keys(res.body).should.deepEqual(['er'])
-          res.body.er.should.deepEqual({
-            type: 'testing', docType: 'er', docid: er._id.toString()
-          })
+          assertErDir(res.body.er)
         })
         .end(done)
     })
+
+    function assertErDir (erDir) {
+      erDir.should.be.an.Object()
+      erDir.type.should.equal('er')
+      erDir.docType.should.equal('er')
+      erDir.docid.should.equal(er._id.toString())
+      erDir.papers.should.be.an.Array()
+      for (let i = 1; i <= 2; i ++) {
+        let { qp } = docs[i]
+        let f = erDir.papers.filter(d => d.pv === `${qp.paper}${qp.variant}`)
+        f.length.should.equal(1)
+        f[0].docid.should.equal(qp._id.toString())
+      }
+      erDir.papers.map(x => {
+        delete x.docid
+        return x
+      }).should.deepEqual(erTest_papers)
+    }
   })

@@ -287,6 +287,43 @@ module.exports = (schsrch, dbModel) =>
       }, err => done(err))
     })
 
+    it('should not be able to write to collection if body contain $-beginning object keys', function (done) {
+      getNewId().then(owner => {
+        let col = new PastPaperCollection({
+          creationTime: Date.now(),
+          ownerModifyTime: Date.now(),
+          content: {},
+          owner: owner.id,
+          allowedWrite: []
+        })
+        let testContent = {name: 'test set name', $mongodb: 'handle this'}
+        col.save(() => {
+          supertest(schsrch)
+            .put(`/collection/${col._id}/content/`)
+            .set('Authorization', 'Bearer ' + owner.tokenHex)
+            .set('Content-Type', 'application/json')
+            .send(testContent)
+            .expect(403)
+            .end(err => {
+              if (err) {
+                done(err)
+                return
+              }
+              PastPaperCollection.findOne({_id: col._id}).then(col => {
+                try {
+                  should.exist(col)
+                  col.should.be.an.Object()
+                  col.content.should.deepEqual({})
+                  done()
+                } catch (e) {
+                  done(e)
+                }
+              }, err => done(err))
+            })
+        }, err => done(err))
+      }, err => done(err))
+    })
+
     function allowedWriteTest (numPeers, testPeer, _antiTest) {
       it(`should ${_antiTest ? 'not ' : ''}allow those ${_antiTest ? 'not ' : ''}in allowedWrite to write to the collection. (${_antiTest ? `outsider,` : `#${testPeer} in`} ${numPeers} peers)`, function (done) {
         getNewId().then(owner => {

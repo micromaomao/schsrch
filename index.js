@@ -534,15 +534,15 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
                 res.status(200)
                 res.end()
               }, err => {
-                res.status(403)
-                res.send(err.message)
+                next(err)
               })
             } catch (e) {
               if (e.code === 'ERR_ASSERTION') {
                 res.status(200)
                 res.end()
               } else {
-                next(e)
+                res.status(403)
+                res.send(e.message)
               }
             }
           } else {
