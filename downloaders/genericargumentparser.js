@@ -27,7 +27,7 @@ function parseArguments (args) {
     if (c.startsWith(dashHeader)) {
       let hd = c.substr(dashHeader.length).match(/^([^:]+): ?(.+)$/)
       if (!hd) throw new Error(`Malformatted header ${c.substr(dashHeader.length)}`)
-      options.headers[hd[0]] = hd[1]
+      options.headers[hd[1]] = hd[2]
       continue
     }
 
