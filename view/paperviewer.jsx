@@ -53,18 +53,22 @@ class PaperViewer extends React.Component {
       fetch(`/dirs/batch/?docid=${encodeURIComponent(fileId)}&flattenEr=true`).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
         if (this.state.paperFileId !== fileId) return
 
-        this.setState({dirs: json, pdfjsObjs: {}})
-
-        let sortedTypeStrArr = Object.keys(json).sort(PaperUtils.funcSortType)
-        if (AppState.getState().v2viewing.tCurrentType === null) {
-          AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: sortedTypeStrArr[0]})
-        }
-        for (let type of sortedTypeStrArr) {
-          let docid = json[type].docid
-          if (json[type].type === 'questions') {
-            json[type].dirs = json[type].dirs.map((d, i) => Object.assign(d, {i}))
+        try {
+          let sortedTypeStrArr = Object.keys(json).sort(PaperUtils.funcSortType)
+          this.setState({pdfjsObjs: {}})
+          for (let type of sortedTypeStrArr) {
+            let docid = json[type].docid
+            if (Array.isArray(json[type].dirs)) {
+              json[type].dirs = json[type].dirs.map((d, i) => Object.assign(d, {i}))
+            }
+            this.loadPDF(type, docid)
           }
-          this.loadPDF(type, docid)
+          this.setState({dirs: json})
+          if (AppState.getState().v2viewing.tCurrentType === null && !sortedTypeStrArr.includes('qp')) {
+            AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: sortedTypeStrArr[0]})
+          }
+        } catch (e) {
+          this.setState({loadError: e})
         }
       }, err => {
         if (this.state.paperFileId !== fileId) return
@@ -158,7 +162,7 @@ class PaperViewer extends React.Component {
           </div>
         </div>
       )
-    } else  {
+    } else {
       return (
         <div className='paperviewer loaded'>
           {v2viewing.showPaperSetTitle ? (
@@ -167,6 +171,16 @@ class PaperViewer extends React.Component {
             </div>
           ) : null}
           <div className='typebar'>
+            {(() => {
+              if (!this.state.dirs.qp) return null
+              // The "ques" tab
+              let current = v2viewing.tCurrentType === null
+              return (
+                <div className={'item' + (current ? ' current' : '')} onClick={evt => this.tSwitchTo(null)}>
+                  ques
+                </div>
+              )
+            })()}
             {this.state.pdfjsObjs ? Object.keys(this.state.pdfjsObjs).sort(PaperUtils.funcSortType).map(typeStr => {
               let obj = this.state.pdfjsObjs[typeStr]
               let current = v2viewing.tCurrentType === typeStr
@@ -187,99 +201,179 @@ class PaperViewer extends React.Component {
               )
             }) : null}
           </div>
-          {this.state.pdfjsObjs && this.state.pdfjsObjs[v2viewing.tCurrentType] ? (() => {
+          {(() => {
             let tCurrentType = v2viewing.tCurrentType
-            let obj = this.state.pdfjsObjs[tCurrentType]
-            if (!obj.document) {
-              return (
-                <div className='pdfcontain loading'>
-                  <div className='progressbar'>
-                    <div className='fill' style={{width: (obj.progress * 100) + '%'}} />
+            if (this.state.pdfjsObjs && tCurrentType !== null && this.state.pdfjsObjs[tCurrentType]) {
+              let obj = this.state.pdfjsObjs[tCurrentType]
+              if (!obj.document) {
+                return (
+                  <div className='pdfcontain loading'>
+                    <div className='progressbar'>
+                      <div className='fill' style={{width: (obj.progress * 100) + '%'}} />
+                    </div>
                   </div>
-                </div>
-              )
-            } else {
-              let menu = null
-              if (this.state.dirMenu && this.pdfjsViewerInstance) {
-                let [aX, aY] = this.state.dirMenu.appearsMenuAt
-                aX = Math.max(0, Math.min(this.pdfjsViewerInstance.viewDim[0] - 80, aX))
-                aY = Math.max(0, aY)
-                let types = Object.keys(this.state.dirs).sort(PaperUtils.funcSortType)
-                let typeDisplayed = 0
-                menu = (
-                  <div className='dirmenu' style={{
-                    left: aX + 'px',
-                    top: aY + 'px'
-                  }}>
-                    {types.map(typeStr => {
-                      if (typeStr === tCurrentType) return null
-                      if ((typeStr === 'ms' || typeStr === 'qp') && this.state.dirs[typeStr] && (this.state.dirs[typeStr].type === 'questions' || this.state.dirs[typeStr].type === 'mcqMs')) {
-                        let dd = null
-                        let isMcq = false
-                        if (this.state.dirs[typeStr].type === 'questions') {
-                          dd = this.state.dirs[typeStr].dirs.find(x => x.i === this.state.dirMenu.dir.i)
-                        } else {
-                          isMcq = true
-                          dd = this.state.dirs[typeStr].dirs.find(x => x.qN === this.state.dirMenu.dir.qN)
+                )
+              } else {
+                let menu = null
+                if (this.state.dirMenu && this.pdfjsViewerInstance) {
+                  let [aX, aY] = this.state.dirMenu.appearsMenuAt
+                  aX = Math.max(0, Math.min(this.pdfjsViewerInstance.viewDim[0] - 80, aX))
+                  aY = Math.max(0, aY)
+                  let types = Object.keys(this.state.dirs).sort(PaperUtils.funcSortType)
+                  let typeDisplayed = 0
+                  menu = (
+                    <div className='dirmenu' style={{
+                      left: aX + 'px',
+                      top: aY + 'px'
+                    }}>
+                      {types.map(typeStr => {
+                        if (typeStr === tCurrentType) return null
+                        if ((typeStr === 'ms' || typeStr === 'qp') && this.state.dirs[typeStr] && (this.state.dirs[typeStr].type === 'questions' || this.state.dirs[typeStr].type === 'mcqMs')) {
+                          let dd = null
+                          let isMcq = false
+                          if (this.state.dirs[typeStr].type === 'questions') {
+                            dd = this.state.dirs[typeStr].dirs.find(x => x.i === this.state.dirMenu.dir.i)
+                          } else {
+                            isMcq = true
+                            dd = this.state.dirs[typeStr].dirs.find(x => x.qN === this.state.dirMenu.dir.qN)
+                          }
+                          if (!dd) return null
+                          let go = evt => {
+                            this.setState({dirMenu: null})
+                            AppState.dispatch({
+                              type: 'v2view-set-tCurrentType',
+                              tCurrentType: typeStr,
+                              viewDir: dd,
+                              stageTransform: null
+                            })
+                          }
+                          typeDisplayed ++
+                          return (
+                            <div className='item' key={typeStr} onClick={go}>{isMcq ? dd.qT : typeStr}</div>
+                          )
                         }
-                        if (!dd) return null
-                        let go = evt => {
-                          this.setState({dirMenu: null})
-                          AppState.dispatch({
-                            type: 'v2view-set-tCurrentType',
-                            tCurrentType: typeStr,
-                            viewDir: dd,
-                            stageTransform: null
-                          })
+                        if (typeStr === 'er' && this.state.dirs[typeStr].type === 'er-flattened') {
+                          let dd = this.state.dirs[typeStr].dirs.find(x => x.qNs.includes(this.state.dirMenu.dir.qN))
+                          if (!dd) return null
+                          let go = evt => {
+                            this.setState({dirMenu: null})
+                            AppState.dispatch({
+                              type: 'v2view-set-tCurrentType',
+                              tCurrentType: typeStr,
+                              viewDir: dd,
+                              stageTransform: null
+                            })
+                          }
+                          typeDisplayed ++
+                          return (
+                            <div className='item' key={typeStr} onClick={go}>{typeStr}</div>
+                          )
                         }
-                        typeDisplayed ++
-                        return (
-                          <div className='item' key={typeStr} onClick={go}>{isMcq ? dd.qT : typeStr}</div>
-                        )
-                      }
-                      if (typeStr === 'er' && this.state.dirs[typeStr].type === 'er-flattened') {
-                        let dd = this.state.dirs[typeStr].dirs.find(x => x.qNs.includes(this.state.dirMenu.dir.qN))
-                        if (!dd) return null
-                        let go = evt => {
-                          this.setState({dirMenu: null})
-                          AppState.dispatch({
-                            type: 'v2view-set-tCurrentType',
-                            tCurrentType: typeStr,
-                            viewDir: dd,
-                            stageTransform: null
-                          })
-                        }
-                        typeDisplayed ++
-                        return (
-                          <div className='item' key={typeStr} onClick={go}>{typeStr}</div>
-                        )
-                      }
-                      return null
-                    })}
-                    {typeDisplayed === 0 ? (
-                      <div className='item nothing'>
-                        {'(///ᴗ///)'}
-                      </div>
-                    ) : null}
+                        return null
+                      })}
+                      {typeDisplayed === 0 ? (
+                        <div className='item nothing'>
+                          {'(///ᴗ///)'}
+                        </div>
+                      ) : null}
+                    </div>
+                  )
+                }
+                return (
+                  <div className='pdfcontain'>
+                    <PDFJSViewer
+                      doc={obj.document}
+                      dir={this.state.dirs[tCurrentType]}
+                      onUserMove={this.handlePDFUserMove}
+                      stageTransform={v2viewing.stageTransforms[tCurrentType]}
+                      postDrawCanvas={this.handlePDFJSViewerPostDraw}
+                      onDownEvent={this.handlePDFJSViewerDownEvent}
+                      ref={f => this.pdfjsViewerInstance = f}
+                      initToDir={v2viewing.viewDir} />
+                    {menu}
                   </div>
                 )
               }
+            } else if (tCurrentType === null) {
+              let qdirs = this.state.dirs.qp
+              let sortedTypeStrArr = Object.keys(this.state.dirs).sort(PaperUtils.funcSortType)
+              if (!qdirs || qdirs.type !== 'questions') return null
               return (
-                <div className='pdfcontain'>
-                  <PDFJSViewer
-                    doc={obj.document}
-                    dir={this.state.dirs[tCurrentType]}
-                    onUserMove={this.handlePDFUserMove}
-                    stageTransform={v2viewing.stageTransforms[tCurrentType]}
-                    postDrawCanvas={this.handlePDFJSViewerPostDraw}
-                    onDownEvent={this.handlePDFJSViewerDownEvent}
-                    ref={f => this.pdfjsViewerInstance = f}
-                    initToDir={v2viewing.viewDir} />
-                  {menu}
+                <div className='pdfcontain ques'>
+                  <div className='h'>This paper contains {qdirs.dirs.length} questions.</div>
+                  {qdirs.dirs.map(d => {
+                    let qOnClick = evt => {
+                      if (this.state.dirs.qp) {
+                        let rDir = this.state.dirs.qp
+                        if (rDir.type === 'questions' && rDir.dirs.length > d.i) {
+                          let tDir = rDir.dirs[d.i]
+                          AppState.dispatch({
+                            type: 'v2view-set-tCurrentType',
+                            tCurrentType: 'qp',
+                            viewDir: tDir,
+                            stageTransform: null
+                          })
+                        }
+                      }
+                    }
+                    return (
+                      <div className='question' key={d.i} onClick={qOnClick}>
+                        <div className='left'>
+                          <div className='num'>
+                            {d.qN}
+                          </div>
+                        </div>
+                        <div className='body'>
+                          <div className='title'>
+                            {d.qT}
+                          </div>
+                          <div className='jump'>
+                            Goto:
+                            {sortedTypeStrArr.map(ts => {
+                              let rDir = this.state.dirs[ts]
+                              if (rDir) {
+                                let tDir = null
+                                if (rDir.type === 'questions' && d.i < rDir.dirs.length) {
+                                  tDir = rDir.dirs[d.i]
+                                } else if (rDir.type === 'mcqMs') {
+                                  tDir = rDir.dirs.find(x => x.qN === d.qN)
+                                } else if (rDir.type === 'er-flattened') {
+                                  tDir = rDir.dirs.find(x => x.qNs.includes(d.qN))
+                                }
+                                if (tDir) {
+                                  let onClick = evt => {
+                                    evt.stopPropagation()
+                                    AppState.dispatch({
+                                      type: 'v2view-set-tCurrentType',
+                                      tCurrentType: ts,
+                                      viewDir: tDir,
+                                      stageTransform: null
+                                    })
+                                  }
+                                  return (
+                                    <a onClick={onClick} key={ts}>
+                                      {ts}
+                                    </a>
+                                  )
+                                }
+                              }
+                              return (
+                                <a className='disabled' onClick={e => e.stopPropagation()} key={ts}>
+                                  {ts}
+                                </a>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )
+            } else {
+              return null
             }
-          })() : null}
+          })()}
         </div>
       )
     }

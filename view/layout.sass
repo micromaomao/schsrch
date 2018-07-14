@@ -1846,6 +1846,63 @@ $feedback-top-height: 2rem + 1.3rem
             cursor: default
             font-size: 0.7rem
 
+    .ques
+      overflow-y: auto
+      .h
+        padding: 0.5rem 1rem
+      .question
+        display: flex
+        flex-direction: row
+        flex-wrap: nowrap
+        align-items: stretch
+        max-width: 100%
+        padding: 1px 0
+        border-bottom: $color-secondary-text solid 1px
+        cursor: pointer
+        .left
+          flex-grow: 0
+          flex-shrink: 0
+          width: 3rem
+          border-right: $color-primary solid 1px
+          display: flex
+          flex-direction: column
+          flex-wrap: nowrap
+          justify-content: center
+          align-items: center
+          .num
+            color: $color-primary
+            font-size: 1.1rem
+        .body
+          flex-grow: 1
+          flex-shrink: 1
+          display: flex
+          flex-direction: column
+          flex-wrap: nowrap
+          justify-content: center
+          align-items: stretch
+          overflow: hidden
+          padding-left: 0.5rem
+          .title
+            font-size: 1rem
+            height: 1.5rem
+            line-height: 1.5rem
+            overflow: hidden
+            white-space: nowrap
+            text-overflow: ellipsis
+          .jump
+            font-size: 0.8rem
+            color: $color-secondary-text
+            a
+              margin: -0.5rem 0
+              padding: 0.5rem 0.5rem
+              display: inline-block
+              color: $color-link
+              cursor: pointer
+              &.disabled
+                cursor: default
+                color: $color-secondary-text
+                text-decoration: line-through
+
 .paperviewer
   &.loading .progressbar,
   &.loaded .pdfcontain.loading .progressbar
