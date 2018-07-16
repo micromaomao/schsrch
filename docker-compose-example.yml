@@ -24,6 +24,7 @@ services:
       - es
     volumes:
       - ./view:/usr/src/app/view
+      - ./test:/usr/src/app/test
   mongo:
     container_name: mw-mongo
     image: mongo:latest

@@ -28,6 +28,7 @@ module.exports = (schsrch, dbModel) =>
     let er3
     let er4
     let special1
+    let df
     function getDocBeforeHook (query, cb) {
       before(function (done) {
         PastPaperDoc.find(query).then(docs => {
@@ -59,6 +60,7 @@ module.exports = (schsrch, dbModel) =>
     getDocBeforeHook({subject: '0470', type: 'er', time: 's08'}, d => er3 = d)
     getDocBeforeHook({subject: '9708', type: 'er', time: 's15'}, d => er4 = d)
     getDocBeforeHook({subject: '9703', type: 'ms', time: 's02', paper: 1}, d => special1 = d)
+    getDocBeforeHook({subject: '0417', type: 'df', time: 's18', paper: 1}, d => df = d)
     function expectBasicDir (st, mcq = false, xLimit = 90) {
       return st
         .expect(200)
@@ -411,6 +413,19 @@ module.exports = (schsrch, dbModel) =>
         .expect(200)
         .expect(res => res.body.should.be.an.Object())
         .expect(res => res.body.dirs.should.deepEqual([], 'dirs should be an empty array.'))
+        .end(done)
+    })
+    it('should return type=blob for non-PDFs', function (done) {
+      this.timeout(500)
+      supertest(schsrch)
+        .get('/doc/' + df._id + '/?as=dir')
+        .expect(200)
+        .expect(res => {
+          res.body.should.deepEqual({
+            type: 'blob',
+            fileType: 'df'
+          })
+        })
         .end(done)
     })
   })

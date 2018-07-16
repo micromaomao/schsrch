@@ -211,13 +211,26 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
       PastPaperDoc.findOne({_id: docId}).then(doc => {
         let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/doc/', targetId: req.params.id, targetPage: page, targetFormat: format})
         saveRecord(rec)
-        if (!doc || (page !== null && (page < 0 || page >= doc.numPages))) {
-          next()
-          return
+        if (!doc) {
+          return void next()
+        }
+        if (doc.numPages !== null) {
+          if (page !== null && (page < 0 || page >= doc.numPages)) {
+            res.status(404)
+            res.send(`Page ${page} out of range.`)
+            return
+          }
+        } else {
+          if (page !== null) {
+            res.status(406)
+            res.send("Page should not be specified on this document.")
+            return
+          }
         }
         if (format === 'blob') {
           if (page !== null) {
-            next()
+            res.status(400)
+            res.send("Page should not be specified for download request.")
             return
           }
           let fname = `${PaperUtils.setToString(doc)}_${doc.type}.${doc.fileType}`
@@ -229,14 +242,22 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
             next(err)
           })
         } else if (format === 'sspdf') {
+          if (doc.fileType !== 'pdf') {
+            res.status(406)
+            res.send(`sspdf only works on PDF files. This file has fileType ${doc.fileType}.`)
+            return
+          }
           if (page === null) {
-            next()
+            res.status(400)
+            res.send("A page number is required for sspdf request.")
             return
           }
           processSSPDF(doc, page).then(sspdf => {
             res.set('Cache-Control', 'max-age=' + (10 * 24 * 60 * 60 - 1).toString())
             res.send(sspdf)
-          }, err => next(err))
+          }, err => {
+            next(err)
+          })
         } else if (format === 'dir') {
           doc.ensureDir().then(dir => {
             if (page === null) {
@@ -637,6 +658,9 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
 
     function processSSPDF (doc, pn) {
       return new Promise((resolve, reject) => {
+        if (doc.fileType !== 'pdf') {
+          return void reject(new Error(`sspdf only works on PDF files. This doc has fileType ${doc.fileType}.`))
+        }
         function postCache (stuff) {
           let result = stuff
           result.doc = doc

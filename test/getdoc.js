@@ -5,49 +5,90 @@ const crypto = require('crypto')
 module.exports = (schsrch, dbModel) =>
   describe('Getting the document', function () {
     const {PastPaperDoc, PastPaperIndex} = dbModel
-    function testBody (withFormat) {
-      return function (done) {
-        PastPaperDoc.find({subject: '0610', time: 's17', paper: 1, variant: 1, type: 'qp'}).then(docs => {
-          if (!docs || docs.length !== 1) {
-            done(new Error(`There should be one and only one 0610_s17_1_1_qp in the testing database (there are currently ${docs.length}).`))
-            return
-          }
-          let tDoc = docs[0]
-          let hash = crypto.createHash('sha256')
-          supertest(schsrch)
-            .get('/doc/' + encodeURIComponent(tDoc._id) + '/' + (withFormat ? '?as=blob' : ''))
-            .expect(200)
-            .expect('Content-Type', /pdf/)
-            .expect(res => res.header['content-length'].should.be.above(0))
-            .buffer()
-            .parse((res, callback) => {
-              res.on('data', chunk => {
-                hash.write(chunk)
-              })
-              res.on('end', () => {
-                hash.end()
-                callback(null, null)
-              })
+    let simpleTestQP = null
+    let simpleTestDF = null
+    before(function (done) {
+      PastPaperDoc.find({subject: '0610', time: 's17', paper: 1, variant: 1, type: 'qp'}).then(docs => {
+        if (!docs || docs.length !== 1) {
+          return void done(new Error(`There should be one 0610_s17_1_1_qp, and only one. Got ${docs ? docs.length : 0}.`))
+        }
+        simpleTestQP = docs[0]
+        done()
+      })
+    })
+    before(function (done) {
+      PastPaperDoc.find({subject: '0417', time: 's18', paper: 1, variant: 0, type: 'df'}).then(docs => {
+        if (!docs || docs.length !== 1) {
+          return void done(new Error(`There should be one 0417_s18_1_0_df, and only one. Got ${docs ? docs.length : 0}.`))
+        }
+        simpleTestDF = docs[0]
+        done()
+      })
+    })
+
+    for (let withFormat of [false, true]) {
+      it('/doc/' + (withFormat ? '?as=blob' : '') + ' (normal qp pdf)', function (done) {
+        let tDoc = simpleTestQP
+        let hash = crypto.createHash('sha256')
+        supertest(schsrch)
+          .get('/doc/' + encodeURIComponent(tDoc._id) + '/' + (withFormat ? '?as=blob' : ''))
+          .expect(200)
+          .expect('Content-Type', /pdf/)
+          .expect(res => res.header['content-length'].should.be.above(0))
+          .buffer()
+          .parse((res, callback) => {
+            res.on('data', chunk => {
+              hash.write(chunk)
             })
-            .end(err => {
-              if (err) {
-                done(err)
-                return
+            res.on('end', () => {
+              hash.end()
+              callback(null, null)
+            })
+          })
+          .end(err => {
+            if (err) {
+              done(err)
+              return
+            }
+            hash.on('readable', () => {
+              try {
+                hash.read().toString('hex').should.equal('00a2562f321e764b70a69fa4d374f8ac5aee20731e4a788f2ce4a898f41f262b') // sha256sum test/pastpapers/0610_s17_qp_11.pdf
+                done()
+              } catch (e) {
+                done(e)
               }
-              hash.on('readable', () => {
-                try {
-                  hash.read().toString('hex').should.equal('00a2562f321e764b70a69fa4d374f8ac5aee20731e4a788f2ce4a898f41f262b') // sha256sum test/pastpapers/0610_s17_qp_11.pdf
-                  done()
-                } catch (e) {
-                  done(e)
-                }
-              })
             })
-        })
-      }
+          })
+      })
+      it('/doc/' + (withFormat ? '?as=blob' : '') + ' (df blob)', function (done) {
+        let tDoc = simpleTestDF
+        let chunks = []
+        supertest(schsrch)
+          .get('/doc/' + encodeURIComponent(tDoc._id) + '/' + (withFormat ? '?as=blob' : ''))
+          .expect(200)
+          .expect('Content-Type', /octet-stream/)
+          .expect(res => res.header['content-length'].should.be.above(0))
+          .buffer()
+          .parse((res, callback) => {
+            res.on('data', chunk => {
+              chunks.push(chunk)
+            })
+            res.on('end', () => {
+              callback(null, null)
+            })
+          })
+          .end(err => {
+            if (err) {
+              done(err)
+              return
+            }
+            let bf = Buffer.concat(chunks)
+            bf.toString('hex').should.equal('deadbeef')
+            done()
+          })
+      })
     }
-    it('/doc/?as=blob', testBody(true))
-    it('/doc/', testBody(false))
+
     it('/doc/ with 000000000000000000000000', function (done) {
       supertest(schsrch)
         .get('/doc/000000000000000000000000/?as=blob')
@@ -123,9 +164,8 @@ module.exports = (schsrch, dbModel) =>
     })
     function testPage404 (page, done) {
       page = parseInt(page)
-      let tDoc = sspdfTestDoc
       supertest(schsrch)
-        .get('/doc/' + encodeURIComponent(tDoc._id) + '/?as=sspdf&page=' + page)
+        .get('/doc/' + encodeURIComponent(sspdfTestDoc._id) + '/?as=sspdf&page=' + page)
         .expect(404)
         .end(done)
     }
@@ -135,8 +175,17 @@ module.exports = (schsrch, dbModel) =>
     it('404 for sspdf with page 1 (out of range)', function (done) {
       testPage404(1, done)
     })
-    it('404 for sspdf with page NaN', function (done) {
-      testPage404('NaN', done)
+    it('400 for sspdf with page NaN', function (done) {
+      supertest(schsrch)
+        .get('/doc/' + encodeURIComponent(sspdfTestDoc._id) + '/?as=sspdf&page=NaN')
+        .expect(400)
+        .end(done)
+    })
+    it('400 for sspdf with no page number', function (done) {
+      supertest(schsrch)
+        .get('/doc/' + encodeURIComponent(sspdfTestDoc._id) + '/?as=sspdf')
+        .expect(400)
+        .end(done)
     })
     it('404 for 000000000000000000000000', function (done) {
       supertest(schsrch)
@@ -151,10 +200,10 @@ module.exports = (schsrch, dbModel) =>
         .expect(res => res.text.should.match(/format unknow/i))
         .end(done)
     })
-    it('404 for blob with page', function (done) {
+    it('400 for blob with page', function (done) {
       supertest(schsrch)
         .get(`/doc/${sspdfTestDoc._id}/?as=blob&page=0`)
-        .expect(404)
+        .expect(400)
         .end(done)
     })
     it('sspdf preview should be cached', function (done) {
@@ -178,5 +227,24 @@ module.exports = (schsrch, dbModel) =>
       PastPaperIndex.remove({docId: sspdfTestDoc._id}).then(() => {
         testPage404(0, done)
       }, err => done(err))
+    })
+
+    it('sspdf for non-PDFs with page specified should 406', function (done) {
+      supertest(schsrch)
+        .get(`/doc/${encodeURIComponent(simpleTestDF._id.toString())}/?page=0&as=sspdf`)
+        .expect(406)
+        .end(done)
+    })
+    it('dir for non-PDFs with page specified should 406', function (done) {
+      supertest(schsrch)
+        .get(`/doc/${encodeURIComponent(simpleTestDF._id.toString())}/?page=0&as=dir`)
+        .expect(406)
+        .end(done)
+    })
+    it('sspdf for non-PDFs with page not specified should 406', function (done) {
+      supertest(schsrch)
+        .get(`/doc/${encodeURIComponent(simpleTestDF._id.toString())}/?as=sspdf`)
+        .expect(406)
+        .end(done)
     })
   })

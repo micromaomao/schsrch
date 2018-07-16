@@ -26,6 +26,26 @@ let es = new elasticsearch.Client({
 })
 db.on('open', () => {
   require('./lib/dbModel.js')(db, es).then(({PastPaperIndex, PastPaperDoc, PastPaperPaperBlob}) => {
+    function storeData (data, doc) {
+      let chunks = []
+      let chunkLength = 10 * 1024 * 1024 // 10 MiB
+      for (let cOffset = 0; cOffset < data.length; cOffset += chunkLength) {
+        let slice = data.slice(cOffset, Math.min(data.length, cOffset + chunkLength))
+        chunks.push(new PastPaperPaperBlob({
+          docId: doc._id,
+          offset: cOffset,
+          data: slice
+        }))
+      }
+      if (chunks.length > 1 && debug) {
+        process.stderr.write(`${chunks.length} chunks for ${path} (${Math.round(data.length / 1024 / 1024 * 10) / 10} MiB)        \n`)
+      }
+      return Promise.all(chunks.map(c => c.save()))
+    }
+    function removeDoc (doc) {
+      return PastPaperIndex.remove({docId: doc._id}).exec().then(() => doc.remove())
+    }
+
     const indexPdf = path => new Promise((resolve, reject) => {
       const fname = path.split('/').slice(-1)[0]
       if (debug) {
@@ -43,22 +63,6 @@ db.on('open', () => {
           // Will add numPages later.
           fileType: 'pdf'
         })
-        let storeData = () => {
-          let chunks = []
-          let chunkLength = 10 * 1024 * 1024 // 10 MiB
-          for (let cOffset = 0; cOffset < data.length; cOffset += chunkLength) {
-            let slice = data.slice(cOffset, Math.min(data.length, cOffset + chunkLength))
-            chunks.push(new PastPaperPaperBlob({
-              docId: doc._id,
-              offset: cOffset,
-              data: slice
-            }))
-          }
-          if (chunks.length > 1) {
-            process.stderr.write(`${chunks.length} chunks for ${path} (${Math.round(data.length / 1024 / 1024 * 10) / 10} MiB)        \n`)
-          }
-          return Promise.all(chunks.map(c => c.save()))
-        }
         let loadPage = (pIndex, returnNumPages = false) => new Promise((resolve, reject) => {
           new Promise((resolve, reject) => {
             sspdfLock(function (done) {
@@ -103,7 +107,7 @@ db.on('open', () => {
         if (debug) {
           process.stderr.write(`Loading cover page in ${path}\n`)
         }
-        storeData().then(() => loadPage(0, true)).then(([idx0, numPages]) => {
+        storeData(data, doc).then(() => loadPage(0, true)).then(([idx0, numPages]) => {
           if (debug) {
             process.stderr.write(`Load cover page in ${path}, numPages = ${numPages}\n`)
           }
@@ -250,7 +254,6 @@ db.on('open', () => {
             if (debug) {
               process.stderr.write(`Perpare to process ${path}\n`)
             }
-            let removeDoc = doc => PastPaperIndex.remove({docId: doc._id}).exec().then(() => doc.remove())
             let assignDir = () => new Promise((resolve, reject) => {
               if (debug) {
                 process.stderr.write(`Pre assignDir ${path}\n`)
@@ -280,6 +283,79 @@ db.on('open', () => {
         })
       })
     })
+
+    const indexBlob = path => new Promise((resolve, reject) => {
+      const fname = path.split('/').slice(-1)[0]
+      let nameMatch = fname.match(/^(\d+)_([a-z]\d\d)_([a-zA-Z0-9]+)_(\d{1,2})\.(\w+)$/)
+      let nameMetaMatch = fname.match(/^(\d+)_([a-z]\d\d)_([a-zA-Z0-9]+)\.(\w+)$/)
+      let doc = null
+      if (nameMatch) {
+        let pv = nameMatch[4]
+        let paper = '0'
+        let variant = '0'
+        if (pv.length === 1) {
+          paper = pv[0]
+        } else {
+          if (pv[0] === '0') {
+            paper = pv[1]
+          } else {
+            paper = pv[0]
+            variant = pv[1]
+          }
+        }
+        paper = parseInt(paper)
+        variant = parseInt(variant)
+        if (!Number.isSafeInteger(paper) || !Number.isSafeInteger(variant)) {
+          return void reject(new Error('Invalid pv ' + pv))
+        }
+        doc = new PastPaperDoc({
+          subject: nameMatch[1],
+          time: nameMatch[2],
+          type: nameMatch[3],
+          paper,
+          variant,
+          fileBlob: null,
+          fileType: nameMatch[5],
+          numPages: null
+        })
+      } else if (nameMetaMatch) {
+        doc = new PastPaperDoc({
+          subject: nameMetaMatch[1],
+          time: nameMetaMatch[2],
+          type: nameMetaMatch[3],
+          paper: 0,
+          variant: 0,
+          fileBlob: null,
+          fileType: nameMetaMatch[4],
+          numPages: null
+        })
+      } else {
+        return void reject(new Error(`Unrecognized file name ${fname}`))
+      }
+      if (debug) {
+        process.stderr.write(`Reading ${path}\n`)
+      }
+      fs.readFile(path, (err, data) => {
+        if (err) {
+          return void reject(err)
+        }
+
+        storeData(data, doc).then(() => {
+          return PastPaperDoc.find({
+            subject: doc.subject,
+            time: doc.time,
+            paper: doc.paper,
+            variant: doc.variant,
+            type: doc.type
+          }).then(docs => Promise.all(docs.map(d => removeDoc(d))))
+        }).then(() => doc.save()).then(resolve, reject)
+      })
+    })
+
+    function doIndex (path) {
+      if (path.endsWith('.pdf')) return indexPdf(path)
+      else return indexBlob(path)
+    }
 
     let queue = process.argv.slice(2)
     let total = () => queue.length + done
@@ -331,7 +407,7 @@ db.on('open', () => {
             resolve(true)
           }
         })
-      }).then(doit => doit ? indexPdf(task) : Promise.resolve(false)).then(() => {
+      }).then(doit => doit ? doIndex(task) : Promise.resolve(false)).then(() => {
         if (debug) {
           process.stderr.write(`Done ${task}\n`)
         }

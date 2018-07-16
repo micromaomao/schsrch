@@ -259,4 +259,32 @@ module.exports = schsrch =>
         .expect(res => res.text.should.match(/text/i))
         .end(done)
     })
+
+    it('should behave normally for non-PDFs', function (done) {
+      supertest(schsrch)
+        .get(`/search/?query=${encodeURIComponent('0417 s18')}`)
+        .expect(200)
+        .expect(res => {
+          res.body.should.be.an.Object()
+          res.body.response.should.equal('pp')
+          res.body.list.should.be.an.Array()
+          res.body.list.length.should.equal(2)
+          let qp = res.body.list[0]
+          let df = res.body.list[1]
+          if (qp.type === 'df' && df.type === 'qp') {
+            [ df, qp ] = [ qp, df ]
+          }
+          qp.type.should.equal('qp')
+          df.type.should.equal('df')
+          for (let a of [qp, df]) {
+            a.subject.should.equal('0417')
+            a.time.should.equal('s18')
+            a.paper.should.equal(1)
+            a.variant.should.equal(0)
+            should.not.exist(a.fileBlob)
+            should.not.exist(a.dir)
+          }
+        })
+        .end(done)
+    })
   })

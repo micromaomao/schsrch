@@ -59,7 +59,7 @@ module.exports = (schsrch, dbModel) =>
               paper: paper,
               variant: variant,
               fileBlob: Buffer.from(''),
-              fileType: 'nul',
+              fileType: 'pdf',
               numPages: 0,
               dir: {
                 type: 'testing',
@@ -84,7 +84,7 @@ module.exports = (schsrch, dbModel) =>
         paper: 0,
         variant: 0,
         fileBlob: Buffer.from(''),
-        fileType: 'nul',
+        fileType: 'pdf',
         numPages: 0,
         dir: {
           type: 'er',
@@ -155,5 +155,48 @@ module.exports = (schsrch, dbModel) =>
         delete x.docid
         return x
       }).should.deepEqual(erTest_papers)
+    }
+
+    let deSet = []
+    before(function (done) {
+      PastPaperDoc.find({subject: '0417', time: 's18', paper: 1}).then(docs => {
+        if (docs.length !== 2) {
+          return void done(new Error(`Expected 2, got ${docs.length}.`))
+        }
+        let [qp, df] = docs
+        if (qp.type === 'df' && df.type === 'qp') {
+          [df, qp] = [qp, df]
+        }
+        try {
+          qp.type.should.equal('qp')
+          df.type.should.equal('df')
+          deSet = [qp, df]
+          done()
+        } catch (e) {
+          done(e)
+        }
+      }, err => done(err))
+    })
+
+    for (let i of [0, 1]) {
+      it('testing the df set with ' + ['qp', 'df'][i], function (done) {
+        let testDoc = deSet[i]
+        supertest(schsrch)
+          .get(`/dirs/batch/?docid=${encodeURIComponent(testDoc._id)}`)
+          .expect(200)
+          .expect(res => {
+            res.body.should.be.an.Object()
+            Object.keys(res.body).sort().should.deepEqual(['df', 'qp'])
+            res.body.df.should.deepEqual({
+              type: 'blob',
+              fileType: 'df',
+              docid: deSet[1]._id.toString()
+            })
+            res.body.qp.should.be.an.Object()
+            res.body.qp.docid.should.equal(deSet[0]._id.toString())
+            res.body.qp.type.should.not.equal('blob')
+          })
+          .end(done)
+      })
     }
   })
