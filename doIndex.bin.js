@@ -123,8 +123,8 @@ db.on('open', () => {
             let variant = 0
             let specimen = false
             try {
-              let nameMat = fname.match(/^(\d+)_([a-z]\d\d)_([a-z]+)_(\d{1,2})\.pdf$/)
-              let nameErMat = fname.match(/^(\d+)_([a-z]\d\d)_([a-z]+)\.pdf$/)
+              let nameMat = fname.match(/^(\d+)_([a-z]\d\d)_([a-zA-Z0-9]+)_(\d{1,2})\.pdf$/)
+              let nameErMat = fname.match(/^(\d+)_([a-z]\d\d)_([a-zA-Z0-9]+)\.pdf$/)
               if (!nameMat && !nameErMat) {
                 // Detect paper "identity" (metadata) based on the first page.
                 if (idxes.length === 0) {
