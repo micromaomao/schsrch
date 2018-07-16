@@ -1,4 +1,4 @@
-#!/bin/env node
+#!/usr/bin/env node
 const request = require('request')
 const cheerio = require('cheerio')
 const { URL } = require('url')
@@ -61,10 +61,10 @@ function pageThread () {
           if (hrefUrl.pathname === '/') {
             let nDir = hrefUrl.searchParams.get('dir')
             if (!nDir) return
-            if (nDir.startsWith(dir) && nDir.length > dir.length) {
+            if (nDir.startsWith(dir) && nDir.length > dir.length && !/Resources\/?$/.test(nDir)) {
               pageQueue.push(hrefUrl.href)
             }
-          } else {
+          } else if (hrefUrl.pathname === '/view.php') {
             pageQueue.push(hrefUrl.href)
           }
         })
@@ -73,6 +73,7 @@ function pageThread () {
     } else if (urlParse.pathname === '/view.php') {
       let file = urlParse.searchParams.get('id')
       if (file === null) return void resolve()
+      if (/sy\.pdf$/.test(file)) return void resolve()
       let fileUrl = new URL(file, urlParse).href.split('#')[0]
       options.quiet || process.stderr.write(`  dl: ${fileUrl}       \n`)
       outputProgress()

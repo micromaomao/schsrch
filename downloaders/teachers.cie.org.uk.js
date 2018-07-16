@@ -1,4 +1,4 @@
-#!/bin/env node
+#!/usr/bin/env node
 const request = require('request')
 const cheerio = require('cheerio')
 const url = require('url')
@@ -289,7 +289,20 @@ function queryPapers (subject) {
       if (tText === '2017') {
         tText = 'March 2017' // Their bad.
       }
-      if (!tText.endsWith(' ' + fullYear)) throw new Error(`Unrecognized title ${tText}`)
+      if (tText === 'March 2018' && fullYear.toString() === '2019') {
+        return null // Their bad again. https://teachers.cie.org.uk/qualifications/academic/middlesec/igcse/subject?assdef_id=998
+      }
+      if (tText.endsWith(' 2017') && (fullYear.toString() === '2018' || fullYear.toString() === '2019')) {
+        /*
+          https://teachers.cie.org.uk/qualifications/academic/uppersec/alevel/subject/?assdef_id=761&year=2018
+          https://teachers.cie.org.uk/qualifications/academic/uppersec/alevel/subject/?assdef_id=761&year=2019
+        */
+        return null // Their bad again.
+      }
+      if (tText === 'March' && fullYear.toString() === '2018') {
+        tText += ' 2018'
+      }
+      if (!tText.endsWith(' ' + fullYear)) throw new Error(`Unrecognized title ${tText}. This title should have been <month> ${fullYear}.`)
       let month = tText.split(' ')[0]
       let letter = ({
         'March': 'm',
@@ -323,7 +336,7 @@ function queryPapers (subject) {
       return {
         letter, papers
       }
-    }).get()
+    }).get().filter(x => x !== null)
   }
 }
 

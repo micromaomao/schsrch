@@ -1,4 +1,4 @@
-#!/bin/env node
+#!/usr/bin/env node
 const request = require('request')
 const cheerio = require('cheerio')
 const { URL } = require('url')
@@ -42,7 +42,7 @@ function pageThread () {
     let urlParse = new URL(currentUrl)
     options.quiet || process.stderr.write(`${currentUrl}                   \n`)
     outputProgress()
-    if (urlParse.pathname.endsWith('.pdf')) {
+    if (urlParse.pathname.endsWith('.pdf') || urlParse.pathname.endsWith('.zip') || urlParse.pathname.endsWith('.mp3')) {
       urlsToDownload.add(urlParse.href)
       return void resolve()
     }
