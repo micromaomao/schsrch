@@ -795,12 +795,8 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
     })
 
     rMain.get('/robots.txt', function (req, res) {
-      if (req.hostname.match(/^beta\./)) {
-        res.sendFile(path.join(__dirname, 'view/betaRobots.txt'))
-      } else {
-        res.type('txt')
-        res.send('')
-      }
+      res.type('txt')
+      res.send('')
     })
     rMain.get('/redbook', function (req, res) {
       res.redirect('https://static.maowtm.org/redbook.pdf')

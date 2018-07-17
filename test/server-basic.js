@@ -27,7 +27,7 @@ module.exports = schsrch =>
         .set('Host', 'beta.schsrch.xyz')
         .expect('Content-Type', /text\/plain/)
         .expect(200)
-        .expect(res => res.text.should.match(/Disallow: \//))
+        .expect(res => res.text.should.have.length(0))
         .end(done)
     })
     it('siteOrigin/robots.txt', function (done) {
