@@ -12,9 +12,33 @@ module.exports = [
     name: 'Art & Design',
   },
   {
+    id: '0408',
+    level: 'IGCSE',
+    name: 'World Literature'
+  },
+  {
     id: '0410',
     level: 'IGCSE',
     name: 'Music'
+  },
+  {
+    id: '0417',
+    level: 'IGCSE',
+    name: 'Information and Communication Technology'
+  },
+  {
+    id: '0420',
+    level: 'IGCSE',
+    name: 'Computer Studies',
+    deprecation: {
+      successor: '0478',
+      final: 'w14'
+    }
+  },
+  {
+    id: '0445',
+    level: 'IGCSE',
+    name: 'Design and Technology'
   },
   {
     id: '0450',
@@ -32,6 +56,11 @@ module.exports = [
     name: 'Economics'
   },
   {
+    id: '0457',
+    level: 'IGCSE',
+    name: 'Global Perspectives'
+  },
+  {
     id: '0460',
     level: 'IGCSE',
     name: 'Geography'
@@ -40,6 +69,11 @@ module.exports = [
     id: '0470',
     level: 'IGCSE',
     name: 'History'
+  },
+  {
+    id: '0478',
+    level: 'IGCSE',
+    name: 'Computer Science'
   },
   {
     id: '0486',
@@ -57,14 +91,29 @@ module.exports = [
     name: 'English - First Language'
   },
   {
+    id: '0502',
+    level: 'IGCSE',
+    name: 'Spanish - First Language'
+  },
+  {
     id: '0509',
     level: 'IGCSE',
     name: 'Chinese - First Language'
   },
   {
+    id: '0510',
+    level: 'IGCSE',
+    name: 'English as a Second Language (Speaking endorsement)'
+  },
+  {
     id: '0511',
     level: 'IGCSE',
-    name: 'English as a Second Language'
+    name: 'English as a Second Language (Count-in speaking)'
+  },
+  {
+    id: '0520',
+    level: 'IGCSE',
+    name: 'French - Foreign Language'
   },
   {
     id: '0522',
@@ -75,6 +124,16 @@ module.exports = [
     id: '0530',
     level: 'IGCSE',
     name: 'Spanish - Foreign Language'
+  },
+  {
+    id: '0538',
+    level: 'IGCSE',
+    name: 'Bahasa Indonesia'
+  },
+  {
+    id: '0544',
+    level: 'IGCSE',
+    name: 'Arabic - Foreign Language'
   },
   {
     id: '0580',
@@ -102,14 +161,33 @@ module.exports = [
     name: 'Physics'
   },
   {
+    id: '0637',
+    level: 'IGCSE',
+    name: 'Child Development',
+    deprecation: {
+      successor: null,
+      final: 'w19'
+    }
+  },
+  {
     id: '0654',
     level: 'IGCSE',
     name: 'Co-ordinated Sciences'
   },
   {
+    id: '0680',
+    level: 'IGCSE',
+    name: 'Environmental Management'
+  },
+  {
     id: '8681',
     level: 'AS',
     name: 'Chinese - Language (AS Level only)'
+  },
+  {
+    id: '8682',
+    level: 'AS',
+    name: 'French - Language (AS Level only)'
   },
   {
     id: '8693',
@@ -150,9 +228,19 @@ module.exports = [
     name: 'History'
   },
   {
+    id: '9608',
+    level: 'A/s',
+    name: 'Computer Science'
+  },
+  {
     id: '9609',
     level: 'A/s',
     name: 'Business'
+  },
+  {
+    id: '9694',
+    level: 'A/s',
+    name: 'Thinking Skills'
   },
   {
     id: '9695',
@@ -167,6 +255,11 @@ module.exports = [
       successor: '9389',
       final: 'w14'
     }
+  },
+  {
+    id: '9698',
+    level: 'A/s',
+    name: 'Psychology'
   },
   {
     id: '9699',
@@ -187,6 +280,11 @@ module.exports = [
     id: '9702',
     level: 'A/s',
     name: 'Physics'
+  },
+  {
+    id: '9706',
+    level: 'A/s',
+    name: 'Accounting'
   },
   {
     id: '9707',

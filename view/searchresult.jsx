@@ -92,13 +92,21 @@ class SearchResult extends React.Component {
               let href = AppState.getState().serverrender ? `/search/?as=page&query=${encodeURIComponent(newQuery)}` : null
               let handleClick = evt => AppState.dispatch({type: 'query', query: newQuery})
               if (dst.type === 'former') {
-                return (
-                    <div className='msg'>
-                      Syllabus {relatedSubject} had been replaced by syllabus <a href={href} onClick={handleClick}>{dst.of} ({CIESubjects.findExactById(dst.of).name})</a>.
-                      Its final examination series was {PaperUtils.myTimeToHumanTime(dst.final)}. For newer past papers, you should
-                      specify the new syllabus code {dst.of}.
-                    </div>
-                  )
+                if (dst.of) {
+                  return (
+                      <div className='msg'>
+                        Syllabus {relatedSubject} had been replaced by syllabus <a href={href} onClick={handleClick}>{dst.of} ({CIESubjects.findExactById(dst.of).name})</a>.
+                        Its final examination series was {PaperUtils.myTimeToHumanTime(dst.final)}. For newer past papers, you should
+                        specify the new syllabus code {dst.of}.
+                      </div>
+                    )
+                } else {
+                  return (
+                      <div className='msg'>
+                        Syllabus {relatedSubject} ({CIESubjects.findExactById(relatedSubject).name}) has been withdrawn by Cambridge, its final examination series will be {PaperUtils.myTimeToHumanTime(dst.final)}.
+                      </div>
+                    )
+                }
               }
               if (dst.type === 'successor') {
                 return (
