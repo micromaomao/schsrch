@@ -64,7 +64,7 @@ class PaperViewer extends React.Component {
             this.loadPDF(type, docid)
           }
           this.setState({dirs: json})
-          if (AppState.getState().v2viewing.tCurrentType === null && !sortedTypeStrArr.includes('qp')) {
+          if (AppState.getState().v2viewing.tCurrentType === null && (!sortedTypeStrArr.includes('qp') || json.qp.type !== 'questions' || json.qp.dirs.length === 0)) {
             AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: sortedTypeStrArr[0]})
           }
         } catch (e) {
