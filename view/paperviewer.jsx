@@ -61,7 +61,9 @@ class PaperViewer extends React.Component {
             if (Array.isArray(json[type].dirs)) {
               json[type].dirs = json[type].dirs.map((d, i) => Object.assign(d, {i}))
             }
-            this.loadPDF(type, docid)
+            if (json[type].type !== 'blob') {
+              this.loadPDF(type, docid)
+            }
           }
           this.setState({dirs: json})
           if (AppState.getState().v2viewing.tCurrentType === null && (!sortedTypeStrArr.includes('qp') || json.qp.type !== 'questions' || json.qp.dirs.length === 0)) {
@@ -181,9 +183,18 @@ class PaperViewer extends React.Component {
                 </div>
               )
             })()}
-            {this.state.pdfjsObjs ? Object.keys(this.state.pdfjsObjs).sort(PaperUtils.funcSortType).map(typeStr => {
+            {this.state.dirs ? Object.keys(this.state.dirs).sort(PaperUtils.funcSortType).map(typeStr => {
               let obj = this.state.pdfjsObjs[typeStr]
+              let dir = this.state.dirs[typeStr]
               let current = v2viewing.tCurrentType === typeStr
+              if (!obj || dir.type === 'blob') {
+                return (
+                  <div className={'item' + (current ? ' current' : '')} key={typeStr}
+                      onClick={evt => this.tSwitchTo(typeStr)}>
+                    {typeStr}
+                  </div>
+                )
+              }
               return (
                 <div className={'item' + (current ? ' current' : '')} key={typeStr}
                   onClick={evt => this.tSwitchTo(typeStr)}>
@@ -203,7 +214,7 @@ class PaperViewer extends React.Component {
           </div>
           {(() => {
             let tCurrentType = v2viewing.tCurrentType
-            if (this.state.pdfjsObjs && tCurrentType !== null && this.state.pdfjsObjs[tCurrentType]) {
+            if (this.state.pdfjsObjs && tCurrentType !== null && this.state.pdfjsObjs[tCurrentType] && this.state.dirs[tCurrentType] && this.state.dirs[tCurrentType].type !== 'blob') {
               let obj = this.state.pdfjsObjs[tCurrentType]
               if (!obj.document) {
                 return (
@@ -368,6 +379,17 @@ class PaperViewer extends React.Component {
                       </div>
                     )
                   })}
+                </div>
+              )
+            } else if (this.state.dirs[tCurrentType] && this.state.dirs[tCurrentType].type === 'blob') {
+              let fileType = this.state.dirs[tCurrentType].fileType
+              return (
+                <div className='pdfcontain blob'>
+                  <div className='h'>Download this resource&hellip;</div>
+                  <div className='dl'>
+                    <a href={`/doc/${this.state.dirs[tCurrentType].docid}`} target='_blank'>Big download link</a>
+                  </div>
+                  (Opens in new window)
                 </div>
               )
             } else {

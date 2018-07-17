@@ -25,7 +25,7 @@ const longTypes = [
   'standards booklet',
   'answer booklet',
   "teachers’ guide to prescribed works",
-  'map',
+  'attachment',
   'sample research planning sheet',
   'research log guidance',
   'sample research log',
