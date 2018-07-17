@@ -6,12 +6,12 @@ require('offline-plugin/runtime').install()
 require('fullscreen-api-polyfill')
 
 if (/^https:\/\/(beta\.)?schsrch\.xyz\//.test(window.location.href)) {
+  setTimeout(function () {
+    window.location.replace('https://paper.sc')
+  }, 200)
   navigator.serviceWorker.getRegistration('/').then(reg => reg.unregister(), err => Promise.resolve()).then(() => {
     window.location.replace('https://paper.sc')
   })
-  setTimeout(function () {
-    window.location.replace('https://paper.sc')
-  }, 1000)
 }
 
 // Node.remove polyfill for collections.
