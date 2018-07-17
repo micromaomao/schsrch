@@ -9,7 +9,7 @@ let { MONGODB: DB, ES, SITE_ORIGIN: siteOrigin, BIND_ADDR } = process.env
 try {
   if (!DB || !ES) throw new Error()
   if (!siteOrigin) {
-    siteOrigin = 'https://schsrch.xyz'
+    siteOrigin = 'https://paper.sc'
   }
   if (!BIND_ADDR) {
     BIND_ADDR = '0.0.0.0'

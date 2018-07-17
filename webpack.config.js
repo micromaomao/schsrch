@@ -58,7 +58,7 @@ module.exports = [
     output: {
       path: path.join(__dirname, './dist'),
       publicPath: '/resources/',
-      filename: '[hash]-[name].js'
+      filename: '[name].js'
     },
     plugins: [
       new HtmlWebpackPlugin({
@@ -72,16 +72,16 @@ module.exports = [
           main: [':rest:', '/resources/pdfjs/pdf.min.js', '/resources/pdfjs/pdf.worker.min.js']
         },
         responseStrategy: 'cache-first',
-        version: '2.0.0',
         ServiceWorker: {
           scope: '/',
           publicPath: '/sw.js',
-          minify: !dev && false // FIXME
+          minify: !dev
         },
         AppCache: null,
         rewrites: {
           'index.html': '/'
-        }
+        },
+        autoUpdate: true
       })
     ].filter(x => x !== null)
   }),

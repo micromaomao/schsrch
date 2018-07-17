@@ -33,7 +33,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
-  if (!siteOrigin) siteOrigin = 'https://schsrch.xyz'
+  if (!siteOrigin) siteOrigin = 'https://paper.sc'
   let rMain = express.Router()
 
   require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord, PastPaperCollection, PastPaperId}) => {
