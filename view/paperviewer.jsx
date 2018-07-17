@@ -385,11 +385,11 @@ class PaperViewer extends React.Component {
               let fileType = this.state.dirs[tCurrentType].fileType
               return (
                 <div className='pdfcontain blob'>
-                  <div className='h'>Download this resource&hellip;</div>
+                  <div className='h'>Download this {PaperUtils.getTypeString(tCurrentType)}&hellip;</div>
                   <div className='dl'>
                     <a href={`/doc/${this.state.dirs[tCurrentType].docid}`} target='_blank'>Big download link</a>
                   </div>
-                  (Opens in new window)
+                  (Opens in new window, this is a file with type {fileType})
                 </div>
               )
             } else {
