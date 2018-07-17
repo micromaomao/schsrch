@@ -3,7 +3,7 @@ sudo: no
 dist: trusty
 group: edge
 node_js:
-  - "9"
+  - "8"
   - "10"
 env:
   - CXX=g++-6 MONGODB=mongodb://127.0.0.1/test ES=127.0.0.1:9200
