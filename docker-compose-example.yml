@@ -15,7 +15,7 @@ services:
       NODE_ENV: development
       MONGODB: mongodb://mw-mongo/schsrch
       ES: mw-es:9200
-      SITE_ORIGIN: localhost
+      SITE_ORIGIN: http://localhost
     stdin_open: true
     tty: true
     command: bash # After running "docker-compose -f docker-compose-example.yml up -d", run "docker attach schsrch-www" to get a shell and run "npm run webpack-dev &" and/or node server.js .

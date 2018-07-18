@@ -515,9 +515,12 @@ $sidebar-width: 300px
         color: darken($color-link, 20%)
   .status.loading
     opacity: 0.5
-  .cieinprog
+  .cieinprog, .mirrornotice
     margin-bottom: 1rem
     color: $color-primary
+    a
+      color: $color-link
+      text-decoration: none
   .help
     margin-bottom: 1rem
     .helpbtn
@@ -527,6 +530,12 @@ $sidebar-width: 300px
       cursor: pointer
       padding: 1rem
       margin: -1rem
+  .notification
+    background-color: lighten($color-primary, 42%)
+    color: $color-primary
+    padding: 0.5rem 1rem
+    margin-bottom: 0.5rem
+    border-top: $color-link solid 3px
 
 .schsrch .view-search
   display: flex

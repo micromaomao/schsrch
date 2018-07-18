@@ -69,7 +69,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
       res.type('html')
       let $ = cheerio.load(indexHtml.replace(/SITE_ORIGIN/g, siteOrigin))
       // We want this to be static so that service worker don't end up caching old data, and that's why no status.
-      $('.react-root').html(serverRender(state))
+      $('.react-root').html(serverRender(Object.assign(state, {siteOrigin})))
       if (postProcess) {
         postProcess($, $('.react-root'))
       }
