@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/micromaomao/schsrch#readme",
   "dependencies": {
-    "bowser": "^1.9.3",
+    "bowser": "^1.9.4",
     "cheerio": "^1.0.0-rc.2",
     "express": "^4.16.3",
     "nan": "^2.10.0",
@@ -54,7 +54,7 @@
     "fullscreen-api-polyfill": "^1.1.2",
     "html-webpack-plugin": "^3.2.0",
     "mocha": "^5.2.0",
-    "mongoose": "^5.2.3",
+    "mongoose": "^5.2.4",
     "node-sass": "^4.9.2",
     "offline-plugin": "^5.0.5",
     "pug": "^2.0.3",
@@ -67,7 +67,7 @@
     "sharp": "^0.20.5",
     "should": "^13.2.1",
     "supertest": "^3.1.0",
-    "webpack": "^4.16.0",
+    "webpack": "^4.16.1",
     "webpack-cli": "^3.0.8"
   }
 }
