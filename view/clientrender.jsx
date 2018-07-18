@@ -108,7 +108,7 @@ if (localStorageAuthToken && !AppState.getState().authToken) {
 // Make it F12 useable
 window.AppState = AppState
 
-let lastTitle = 'SchSrch'
+let lastTitle = null
 
 AppState.subscribe(() => {
   requestIdleCallback(() => {
@@ -205,7 +205,7 @@ class AppMain extends React.Component {
         <div className='schsrch-main-crash'>
           <h1>:(</h1>
           <h2>Something went terribly wrong&hellip;</h2>
-          <p>SchSrch has run into an error and must be reloaded before it can work again.</p>
+          <p>{window.location.origin} has run into an error and must be reloaded before it can work again.</p>
           <div className='reload-btn-contain'>
             <a className='reload-btn' onClick={this.handleReload}>Reload</a>
           </div>

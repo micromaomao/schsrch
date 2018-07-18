@@ -1,8 +1,8 @@
 /*
-  List of all CIE subjects that SchSrch officially maintain.
+  List of all CIE subjects that Paper.sc officially maintain.
 
-  If you want SchSrch to include additional subjects, report with either GitHub issues or on-site feedback.
-  SchSrch will do its best to keep all contents up-to-date.
+  If you want Paper.sc to include additional subjects, report with either GitHub issues or paper.sc on-site feedback.
+  Paper.sc will do its best to keep all contents up-to-date.
 */
 
 module.exports = [

@@ -34,6 +34,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
   if (!siteOrigin) siteOrigin = 'https://paper.sc'
+  const siteName = siteOrigin.match(/^https?:\/\/(.+)$/)[1]
   let rMain = express.Router()
 
   require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord, PastPaperCollection, PastPaperId}) => {
@@ -72,7 +73,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
       if (postProcess) {
         postProcess($, $('.react-root'))
       }
-      let metas = state2meta(state, siteOrigin)
+      let metas = state2meta(state, siteOrigin, siteName)
       if (metas) {
         let headStyle = $('head style:last-child')
         if (metas.url) {

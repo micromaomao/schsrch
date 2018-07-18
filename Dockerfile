@@ -4,7 +4,8 @@ WORKDIR /usr/src/app/
 RUN useradd --home-dir /usr/src/app -s /bin/false www && \
     chown -R www:www /usr/src/app && \
     apt-get update && \
-    apt-get install -y libpoppler-glib-dev
+    apt-get install -y libpoppler-glib-dev && \
+    rm -rf /var/lib/apt/lists/*
 USER www:www
 
 COPY --chown=www:www ./package.json .

@@ -9,8 +9,8 @@ html
     each icon in mf.icons
       link(rel='icon', size=icon.sizes, type=icon.type, href=icon.src)
     link(rel="apple-touch-icon", href=require('./icon-apple.png'))
-    link(rel="search", type="application/opensearchdescription+xml", title="schsrch", href="/opensearch.xml")
-    meta(name="apple-mobile-web-app-title", content="SchSrch")
+    link(rel="search", type="application/opensearchdescription+xml", title="papersc", href="/opensearch.xml")
+    meta(name="apple-mobile-web-app-title", content="Paper.sc")
     meta(name="apple-mobile-web-app-capable", content="yes")
     meta(property="og:image", content=(`SITE_ORIGIN${mf.icons[0].src}`))
     meta(property="og:image:type", content=mf.icons[0].type)
