@@ -86,28 +86,45 @@ class PaperViewer extends React.Component {
       let obj = this.state.pdfjsObjs[type]
       if (!obj) {
         obj = {
-          loadTask: null,
           document: null,
           progress: 0,
           error: null
         }
         this.state.pdfjsObjs[type] = obj
-        getDocument('/doc/' + encodeURIComponent(docid) + '/', loadTask => {
-          obj.loadTask = loadTask
-          this.forceUpdate()
-          loadTask.onProgress = ({loaded, total}) => {
-            obj.progress = loaded / total
+        let xhr = new XMLHttpRequest()
+        xhr.responseType = 'arraybuffer'
+        xhr.addEventListener('progress', evt => {
+          if (evt.lengthComputable) {
+            obj.progress = evt.loaded / evt.total
             this.forceUpdate()
           }
-        }).then(pdf => {
-          obj.document = pdf
-          resolve()
-          this.forceUpdate()
-        }, err => {
-          obj.error = err
-          reject(err)
+        })
+        xhr.addEventListener('error', evt => {
+          obj.error = evt.error
+          reject(obj.error)
           this.forceUpdate()
         })
+        xhr.addEventListener('timeout', evt => {
+          obj.error = new Error('Request has timed out.')
+          reject(obj.error)
+          this.forceUpdate()
+        })
+        xhr.addEventListener('load', evt => {
+          obj.progress = 1
+          this.forceUpdate()
+          getDocument(xhr.response).then(pdf => {
+            obj.document = pdf
+            resolve()
+            this.forceUpdate()
+          }, err => {
+            obj.error = err
+            reject(err)
+            this.forceUpdate()
+          })
+        })
+        xhr.open('GET', '/doc/' + encodeURIComponent(docid) + '/', true)
+        xhr.setRequestHeader('Accept', 'application/pdf')
+        xhr.send()
         this.forceUpdate()
       } else {
         resolve()

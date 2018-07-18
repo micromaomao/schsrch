@@ -16,10 +16,12 @@ if (typeof window !== 'undefined' && window.document) {
     document.body.appendChild(scriptTag)
   })
 
-  module.exports = (src, onLoadTaskReceived) => {
+  module.exports = (src, onLoadTaskReceived = null) => {
     return pPdfjsLib.then(pdfjsLib => {
       let loadTask = pdfjsLib.getDocument(src)
-      onLoadTaskReceived(loadTask)
+      if (onLoadTaskReceived) {
+        onLoadTaskReceived(loadTask)
+      }
       return loadTask
     })
   }
