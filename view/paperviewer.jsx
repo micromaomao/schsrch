@@ -812,6 +812,15 @@ class TransformationStage {
     }
   }
 
+  handleGestureStart (evt) {
+    document.removeEventListener('mousemove', this.handleMove)
+    document.removeEventListener('mouseup', this.handleUp)
+    if (this.moveEventFrame) {
+      cancelAnimationFrame(this.moveEventFrame)
+      this.moveEventFrame = null
+    }
+  }
+
   initMove (t) {
     this.pressState = {
       mode: 'single-touch',
@@ -939,19 +948,26 @@ class TransformationStage {
   }
 
   handleWheel (evt) {
-    function boundDelta (x) { return Math.max(-1, Math.min(1, x)) }
     evt.preventDefault()
+    let [evDx, evDy] = [evt.deltaX, evt.deltaY]
+    if (evt.deltaMode === 0x01) {
+      // Lines
+      evDx *= 53/3
+      evDy *= 53/3
+    } else if (evt.deltaMode === 0x02) {
+      // Pages
+      evDx *= 53/3 * 20
+      evDy *= 53/3 * 20
+    }
     if (!evt.ctrlKey) {
-      let dx = -boundDelta(evt.deltaX) * 80
-      let dy = -boundDelta(evt.deltaY) * 80
+      let dx = -evDx * 1.5
+      let dy = -evDy * 1.5
       if (evt.shiftKey) {
-        let t = dx
-        dx = dy
-        dy = t
+        [dy, dx] = [dx, dy]
       }
-      this.animationGetFinalState().shift([dx, dy]).boundInContentBox().startAnimation(200)
+      this.animationGetFinalState().shift([dx, dy]).boundInContentBox().applyImmediate()
     } else {
-      let nScale = this.scale * Math.pow(1.5, -boundDelta(evt.deltaY))
+      let nScale = this.animationGetFinalState().nScale * Math.pow(1.1, -evDy * 0.05)
       if (this.minScale) {
         nScale = Math.max(this.minScale, nScale)
       }
@@ -960,7 +976,7 @@ class TransformationStage {
       }
       let cPoint = client2view([evt.clientX, evt.clientY], this.eventTarget)
       let sPoint = this.view2stage(cPoint)
-      new PendingTransform([0, 0], nScale, this).mapPointToPoint(sPoint, cPoint).boundInContentBox().startAnimation(200)
+      new PendingTransform([0, 0], nScale, this).mapPointToPoint(sPoint, cPoint).boundInContentBox().applyImmediate()
     }
 
     if (this.handleWheel_userInteractionTimeout) {
