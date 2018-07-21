@@ -746,6 +746,9 @@ class TransformationStage {
     element.addEventListener('touchcancel', this.handleUp, noPassiveEventsArgument)
     element.addEventListener('wheel', this.handleWheel, noPassiveEventsArgument)
     element.addEventListener('mousewheel', this.handleMouseWheel, noPassiveEventsArgument)
+    element.addEventListener('gesturestart', this.handleGestureStart, noPassiveEventsArgument)
+    element.addEventListener('gesturechange', this.handleGestureChange, noPassiveEventsArgument)
+    element.addEventListener('gestureend', this.handleGestureEnd, noPassiveEventsArgument)
   }
 
   removeTouchEvents (element) {
@@ -758,6 +761,9 @@ class TransformationStage {
     element.removeEventListener('touchcancel', this.handleUp)
     element.removeEventListener('wheel', this.handleWheel)
     element.removeEventListener('mousewheel', this.handleMouseWheel)
+    element.removeEventListener('gesturestart', this.handleGestureStart)
+    element.removeEventListener('gesturechange', this.handleGestureChange)
+    element.removeEventListener('gestureend', this.handleGestureEnd)
     document.removeEventListener('mousemove', this.handleMove)
     document.removeEventListener('mouseup', this.handleUp)
     this.eventTarget = null
@@ -809,15 +815,6 @@ class TransformationStage {
       this.lastTapTime = null
       document.addEventListener('mousemove', this.handleMove)
       document.addEventListener('mouseup', this.handleUp)
-    }
-  }
-
-  handleGestureStart (evt) {
-    document.removeEventListener('mousemove', this.handleMove)
-    document.removeEventListener('mouseup', this.handleUp)
-    if (this.moveEventFrame) {
-      cancelAnimationFrame(this.moveEventFrame)
-      this.moveEventFrame = null
     }
   }
 
@@ -918,16 +915,19 @@ class TransformationStage {
     }
     let finish = () => {
       this.pressState = null
+      new PendingTransform(this.translate, this.scale, this).boundInContentBox().startAnimation()
       if (this.onAfterUserInteration) {
         this.onAfterUserInteration()
       }
-      new PendingTransform(this.translate, this.scale, this).boundInContentBox().startAnimation()
     }
     if (!this.pressState) return
     if (evt.touches) {
       if (evt.touches.length === 0) {
         return finish()
       } else if (evt.touches.length === 1) {
+        if (this.onAfterUserInteration) {
+          this.onAfterUserInteration()
+        }
         this.initMove(evt.touches[0])
       } else {
         return finish()
@@ -988,6 +988,49 @@ class TransformationStage {
         this.onAfterUserInteration()
       }
     }, 100)
+  }
+
+  handleGestureStart (evt) {
+    // https://developer.apple.com/documentation/webkitjs/gestureevent
+    // I don't have a Mac to test this.
+
+    // On iOS devices, touchstart is triggered when pinching, but this event is also triggered.
+    if (this.pressState) return
+
+    document.removeEventListener('mousemove', this.handleMove)
+    document.removeEventListener('mouseup', this.handleUp)
+    evt.preventDefault()
+
+    this.pressState = {
+      mode: 'gesture',
+      initialScale: this.animationGetFinalState().nScale
+    }
+  }
+
+  handleGestureChange (evt) {
+    if (!this.pressState || this.pressState.mode !== 'gesture') return
+    evt.preventDefault()
+
+    let nScale = this.pressState.initialScale * evt.scale
+    if (this.minScale) {
+      nScale = Math.max(this.minScale, nScale)
+    }
+    if (this.maxScale) {
+      nScale = Math.min(this.maxScale, nScale)
+    }
+    let cPoint = client2view([evt.clientX, evt.clientY], this.eventTarget)
+    let sPoint = this.view2stage(cPoint)
+    new PendingTransform([0, 0], nScale, this).mapPointToPoint(sPoint, cPoint).applyImmediate()
+  }
+
+  handleGestureEnd (evt) {
+    if (!this.pressState || this.pressState.mode !== 'gesture') return
+    evt.preventDefault()
+    this.pressState = null
+    this.animationGetFinalState().boundInContentBox().startAnimation(200)
+    if (this.onAfterUserInteration) {
+      this.onAfterUserInteration()
+    }
   }
 }
 
