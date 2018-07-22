@@ -663,6 +663,9 @@ class TransformationStage {
     this.handleUp = this.handleUp.bind(this)
     this.handleWheel = this.handleWheel.bind(this)
     this.handleMouseWheel = this.handleMouseWheel.bind(this)
+    this.handleGestureStart = this.handleGestureStart.bind(this)
+    this.handleGestureChange = this.handleGestureChange.bind(this)
+    this.handleGestureEnd = this.handleGestureEnd.bind(this)
 
     this.eventTarget = null
 
