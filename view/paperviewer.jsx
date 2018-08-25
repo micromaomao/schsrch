@@ -33,9 +33,14 @@ class PaperViewer extends React.Component {
     if (this.state.paperFileId) {
       if (this.state.pdfjsObjs) {
         for (let t of Object.keys(this.state.pdfjsObjs)) {
-          if (this.state.pdfjsObjs[t].document) {
-            this.state.pdfjsObjs[t].document.destroy()
+          let pdfjsobj = this.state.pdfjsObjs[t]
+          if (pdfjsobj.document) {
+            pdfjsobj.document.destroy()
           }
+          if (pdfjsobj.xhr) {
+            pdfjsobj.xhr.abort()
+          }
+          pdfjsobj = null
           delete this.state.pdfjsObjs[t]
         }
       }
@@ -85,13 +90,14 @@ class PaperViewer extends React.Component {
     return new Promise((resolve, reject) => {
       let obj = this.state.pdfjsObjs[type]
       if (!obj) {
+        let xhr = new XMLHttpRequest()
         obj = {
           document: null,
           progress: 0,
-          error: null
+          error: null,
+          xhr
         }
         this.state.pdfjsObjs[type] = obj
-        let xhr = new XMLHttpRequest()
         xhr.responseType = 'arraybuffer'
         xhr.addEventListener('progress', evt => {
           if (evt.lengthComputable) {
