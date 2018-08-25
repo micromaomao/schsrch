@@ -5,15 +5,27 @@ function assertValidPoint (point) {
   return true
 }
 
+let getClientOffsetCache = null
+
 function getClientOffset (view) {
-  let rect = view.getBoundingClientRect()
+  let rect = null
+  if (getClientOffsetCache && getClientOffsetCache.target === view) {
+    rect = getClientOffsetCache.rect
+  } else {
+    rect = view.getBoundingClientRect()
+    getClientOffsetCache = {
+      target: view,
+      rect
+    }
+  }
   if (rect.left === 0 && rect.top === 0)
     console.warn("client2view and view2client won't work if the view isn't affecting layout. (e.g. display: none)")
-  var supportPageOffset = window.pageXOffset !== undefined
-  var isCSS1Compat = ((document.compatMode || "") === "CSS1Compat")
-  var scrollX = supportPageOffset ? window.pageXOffset : isCSS1Compat ? document.documentElement.scrollLeft : document.body.scrollLeft
-  var scrollY = supportPageOffset ? window.pageYOffset : isCSS1Compat ? document.documentElement.scrollTop : document.body.scrollTop
-  return [rect.left + scrollX, rect.top + scrollY]
+  return [rect.left, rect.top]
+}
+
+function removeClientOffsetCache () {
+  getClientOffsetCache = null
+  requestAnimationFrame(removeClientOffsetCache)
 }
 
 function client2view (point, view) {
@@ -34,4 +46,4 @@ function pointDistance (a, b) {
   return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2))
 }
 
-module.exports = {assertValidPoint, client2view, pointDistance, view2client}
+module.exports = {assertValidPoint, client2view, pointDistance, view2client, removeClientOffsetCache}

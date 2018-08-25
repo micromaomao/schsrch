@@ -5,6 +5,9 @@ require('fetch-polyfill')
 require('offline-plugin/runtime').install()
 require('fullscreen-api-polyfill')
 
+const { removeClientOffsetCache } = require('./pointutils.js')
+removeClientOffsetCache()
+
 if (/^https:\/\/(beta\.)?schsrch\.xyz\//.test(window.location.href)) {
   setTimeout(function () {
     window.location.replace('https://paper.sc')

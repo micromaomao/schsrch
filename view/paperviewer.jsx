@@ -1336,14 +1336,16 @@ class PDFJSViewer extends React.Component {
             this.textLayers[i] = p.textLayer
             this.textLayersContain.appendChild(p.textLayer)
           }
-          let cssTScale = cssW / sw
-          Object.assign(this.textLayers[i].style, {
-            position: 'absolute',
-            left: cssX + 'px',
-            top: cssY + 'px',
-            transformOrigin: 'top left',
-            transform: 'scale(' + cssTScale + ')'
-          })
+          if (!stage.pressState) {
+            let cssTScale = cssW / sw
+            Object.assign(this.textLayers[i].style, {
+              position: 'absolute',
+              left: cssX + 'px',
+              top: cssY + 'px',
+              transformOrigin: 'top left',
+              transform: 'scale(' + cssTScale + ')'
+            })
+          }
         } else {
           if (this.textLayers[i]) {
             this.textLayers[i].remove()
