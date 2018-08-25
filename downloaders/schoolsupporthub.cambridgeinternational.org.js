@@ -341,6 +341,7 @@ function doJob () {
 }
 
 async function getDownloadUrls (filelists) {
+  const maxPerPack = 60
   function callScheduleDownload (fl) {
     return new Promise((resolve, reject) => {
       req({ uri: '/FileResource/ScheduleDownload', method: 'POST', headers: {'Content-Type': 'application/json; charset=utf-8'}, body: JSON.stringify(fl) },
@@ -371,17 +372,24 @@ async function getDownloadUrls (filelists) {
   let urls = []
 
   for (let fl of filelists) {
-    let s3id = await callScheduleDownload(fl.filelist)
-    let url = null
-    while (url === null) {
-      url = await callPackComplete(s3id)
-      if (url === null) {
-        options.quiet || process.stderr.write(`Probing isdownloadpackagecomplete for ${s3id}...\r`)
-        await delay(500)
-      }
+    let segments = []
+    for (let i = 0; i < fl.filelist.length; i += maxPerPack) {
+      segments.push(fl.filelist.slice(i, i + maxPerPack))
     }
-    options.quiet || process.stderr.write('\n')
-    urls.push(url)
+    for (let segi = 0; segi < segments.length; segi ++) {
+      let seg = segments[segi]
+      let s3id = await callScheduleDownload(seg)
+      let url = null
+      while (url === null) {
+        url = await callPackComplete(s3id)
+        if (url === null) {
+          options.quiet || process.stderr.write(`Probing isdownloadpackagecomplete for ${s3id} (${fl.subjectId}/${segi})...\r`)
+          await delay(500)
+        }
+      }
+      options.quiet || process.stderr.write('\n')
+      urls.push(url)
+    }
   }
 
   return urls
