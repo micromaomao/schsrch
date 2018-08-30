@@ -11,6 +11,59 @@ const FetchErrorPromise = require('./fetcherrorpromise.jsx')
 const PaperViewer = require('./paperviewer.jsx')
 const memoizeOne = require('./memoize-one.js')
 
+class InitResultList extends React.Component {
+  constructor (props) {
+    super(props)
+  }
+
+  render () {
+    let { timesets } = this.props.results
+    return (
+      <div className='initresultlist'>
+        {timesets.map(timeset => {
+          let subject = CIESubjects.findExactById(timeset.subject)
+          return (
+            <div className='timeset' key={`${timeset.subject} ${timeset.time}`}>
+              <div className='time'>
+                <span className='subjid'>{timeset.subject}</span> <span className='subjname'>({subject.level} {subject.name})</span> {timeset.time}
+              </div>
+              {timeset.papers.map(paper => {
+                return (
+                  <div className='paper' key={paper.paper + ' ' + paper.variant}>
+                    <span className='pv'>
+                      {paper.paper === 0 ? null : (
+                        paper.variant === 0 ? (
+                          <span>
+                            Paper {paper.paper}
+                          </span>
+                        ) : (
+                          <span>
+                            {paper.paper}{paper.variant}
+                          </span>
+                        )
+                      )}
+                    </span>
+                    <span className='typelist'>
+                      {paper.types.map(entity => {
+                        return (
+                          <a className='type' key={entity.type}
+                              onClick={evt => AppState.dispatch({type: 'v2view', fileId: (paper.types.find(x => x.type === entity.type) || paper.types[0])._id, tCurrentType: entity.type})}>
+                            {PaperUtils.capitalizeFirst(PaperUtils.getTypeString(entity.type))}
+                          </a>
+                        )
+                      })}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+}
+
 class SearchResult extends React.Component {
   constructor (props) {
     super(props)
@@ -41,6 +94,13 @@ class SearchResult extends React.Component {
         }
       }
       bucket.sort(PaperUtils.funcSortSet)
+      for (let p of bucket) {
+        p.types.sort((a, b) => PaperUtils.funcSortType(a.type, b.type))
+      }
+
+      // At this point, bucket is an Array of paper sets.
+      // The following code group them by exam seasons for the new UI.
+
       if (!AppState.getState().serverrender) {
         let timesets = []
         for (let p of bucket) {
@@ -163,7 +223,7 @@ class SearchResult extends React.Component {
           <div className='v2container'>
             <div className='v2paperlist'>
               <div className='tsscontainer'>
-                {bucket.timesets ? bucket.timesets.map(ts => {
+                {bucket.timesets && v2viewing ? bucket.timesets.map(ts => {
                   return (
                     <div className='ts' key={ts.subject + ' ' + ts.time}>
                       <div className='tit'>{ts.subject}<br />{ts.time}</div>
@@ -171,7 +231,7 @@ class SearchResult extends React.Component {
                         let viewingThis = v2viewing && paper.types.find(ent => ent._id === v2viewing.fileId)
                         return (
                           <div className={'paper' + (viewingThis ? ' current' : '')} key={`${paper.paper}${paper.variant}`}
-                              onClick={evt => AppState.dispatch({type: 'v2view', fileId: (paper.types.find(x => x.type === 'qp') || paper.types[0])._id, atPage: 0})}>
+                              onClick={evt => AppState.dispatch({type: 'v2view', fileId: (paper.types.find(x => x.type === 'qp') || paper.types[0])._id})}>
                             {paper.paper}{paper.variant}
                           </div>
                         )
@@ -182,7 +242,9 @@ class SearchResult extends React.Component {
               </div>
             </div>
             <div className='viewercontain'>
-              {!v2viewing ? <div className='null'>Choose a paper to open&hellip;</div> : null}
+              {!v2viewing ? (
+                <InitResultList results={bucket} />
+              ) : null}
               {v2viewing ? <PaperViewer key='paperviewer' /> : null}
             </div>
           </div>

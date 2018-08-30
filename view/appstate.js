@@ -52,7 +52,8 @@ let AppState = createStore(function (state = {}, action) {
           loading: true,
           error: null
         }),
-        showSidebar: false
+        showSidebar: false,
+        v2viewing: false
       })
     case 'retry-query':
       if (!state.querying) return state
