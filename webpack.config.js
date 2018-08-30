@@ -15,8 +15,8 @@ baseConfig = {
           {
             loader: 'babel-loader',
             options: {
-              presets: ['env'],
-              plugins: ['transform-react-jsx']
+              presets: ['@babel/preset-env'],
+              plugins: ['@babel/plugin-transform-react-jsx']
             }
           }
         ]
@@ -27,7 +27,7 @@ baseConfig = {
           {
             loader: 'babel-loader',
             options: {
-              presets: ['env']
+              presets: ['@babel/preset-env']
             }
           }
         ]
@@ -95,12 +95,12 @@ module.exports = [
             {
               loader: 'babel-loader',
               options: {
-                presets: [['env', {
+                presets: [['@babel/preset-env', {
                   targets: {
                     node: 'current'
                   }
                 }]],
-                plugins: ['transform-react-jsx']
+                plugins: ['@babel/plugin-transform-react-jsx']
               }
             }
           ]
@@ -111,7 +111,7 @@ module.exports = [
             {
               loader: 'babel-loader',
               options: {
-                presets: [['env', {
+                presets: [['@babel/preset-env', {
                   targets: {
                     node: 'current'
                   }
