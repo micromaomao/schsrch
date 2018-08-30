@@ -126,6 +126,9 @@ module.exports = [
       'serverrender': './view/serverrender.jsx'
     },
     target: 'node',
+    optimization: {
+      minimize: false
+    },
     output: {
       path: path.join(__dirname, './dist-server'),
       publicPath: '/resources/',
