@@ -63,7 +63,7 @@ db.on('open', () => {
           // Will add numPages later.
           fileType: 'pdf'
         })
-        sspdf.getPDFContentAll(data).then(() => storeData(data, doc)).then(pdfContents => {
+        sspdf.getPDFContentAll(data).then(pdfContents => storeData(data, doc).then(() => Promise.resolve(pdfContents))).then(pdfContents => {
           if (debug) {
             process.stderr.write(`Loading cover page in ${path}\n`)
           }
