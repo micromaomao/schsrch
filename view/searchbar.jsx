@@ -2,8 +2,8 @@ const React = require('react')
 const CIESubjects = require('./CIESubjects.js')
 const AppState = require('./appstate.js')
 const AnimatorReactComponent = require('./animatorReactComponent.jsx')
-import IconData from 'raw-loader!./icon.svg'
-import BannerDrawing from 'raw-loader!./banner.svg'
+const IconData = require('raw-loader!./icon.svg')
+const BannerDrawing = require('raw-loader!./banner.svg')
 
 class SearchBar extends AnimatorReactComponent {
   constructor (props) {
