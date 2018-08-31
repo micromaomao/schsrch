@@ -63,224 +63,168 @@ db.on('open', () => {
           // Will add numPages later.
           fileType: 'pdf'
         })
-        let loadPage = (pIndex, returnNumPages = false) => new Promise((resolve, reject) => {
-          new Promise((resolve, reject) => {
-            sspdfLock(function (done) {
-              if (debug) {
-                process.stderr.write(`Aquired sspdf lock for ${path} page ${pIndex}\n`)
-              }
-              sspdf.getPage(data, pIndex, function (err, pageData) {
-                if (debug) {
-                  process.stderr.write(`Releasing sspdf lock for ${path} page ${pIndex}\n`)
-                }
-                done()
-                if (err) return reject(err)
-                resolve(pageData)
-              })
-            })
-          }).then(pageData => {
-            function ok (sspdfCache) {
-              let idx = new PastPaperIndex({
-                docId: doc._id,
-                page: pIndex,
-                content: pageData.text,
-                sspdfCache
-              })
-              idx.rects = pageData.rects // TODO: Should I remove it later to not blow up database?
-              if (debug) {
-                process.stderr.write(`Creating index for ${path} page ${pIndex}\n`)
-              }
-              resolve(returnNumPages ? [idx, pageData.pageNum] : idx)
-            }
-            if (noCacheSSPDF) {
-              ok(null)
-            } else {
-              if (debug) {
-                process.stderr.write(`Precaching ${path} page ${pIndex}\n`)
-              }
-              sspdf.preCache(pageData, sspdfCache => {
-                ok(sspdfCache)
-              })
-            }
-          }).catch(reject)
-        })
-        if (debug) {
-          process.stderr.write(`Loading cover page in ${path}\n`)
-        }
-        storeData(data, doc).then(() => loadPage(0, true)).then(([idx0, numPages]) => {
+        sspdf.getPDFContentAll(data).then(pdfContents => storeData(data, doc).then(() => Promise.resolve(pdfContents))).then(pdfContents => {
           if (debug) {
-            process.stderr.write(`Load cover page in ${path}, numPages = ${numPages}\n`)
+            process.stderr.write(`Loading cover page in ${path}\n`)
           }
-          doc.set('numPages', numPages)
-          let pagePromises = [Promise.resolve(idx0)]
-          for (let pn = 1; pn < numPages; pn++) {
-            pagePromises.push(loadPage(pn))
-          }
-          Promise.all(pagePromises).then(idxes => new Promise((resolve, reject) => {
-            if (debug) {
-              process.stderr.write(`All page done creating index in ${path}\n`)
-            }
-            let subject
-            let time
-            let type
-            let paper
-            let variant = 0
-            let specimen = false
-            try {
-              let nameMat = fname.match(/^(\d+)_([a-z]\d\d)_([a-zA-Z0-9]+)_(\d{1,2})\.pdf$/)
-              let nameErMat = fname.match(/^(\d+)_([a-z]\d\d)_([a-zA-Z0-9]+)\.pdf$/)
-              if (!nameMat && !nameErMat) {
-                // Detect paper "identity" (metadata) based on the first page.
-                if (idxes.length === 0) {
-                  throw new Error("No page => can't identify paper")
-                }
-                let coverPage = idxes[0].content.split(/\n+/).map(x => x.replace(/\s+/g, ' ').trim())
-                let idtStr = coverPage.filter(a => /^\d{4}\/\d{2}$/.test(a))
-                if (idtStr.length === 1) {
-                  let spt = idtStr[0].split('/')
-                  subject = spt[0]
-                  if (spt[1][0] === '0') {
-                    paper = parseInt(spt[1][1])
-                  } else {
-                    paper = parseInt(spt[1][0])
-                    variant = parseInt(spt[1][1])
-                  }
-                } else if (idtStr.length === 0) {
-                  throw new Error("No xxxx/xx in first page => can't identify paper.")
-                } else {
-                  throw new Error('Compound.')
-                }
-                let timeStr = coverPage.map(a => {
-                  let mt
-                  if ((mt = a.match(/(\S+ \S+) series/))) {
-                    return mt[1]
-                  }
-                  return a
-                }).filter(a => /^[A-Z][a-z]+\/ ?[A-Z][a-z]+ 20\d\d$/.test(a))
-                if (timeStr.length > 1 && timeStr.filter(x => x !== timeStr[0]).length === 0) {
-                  timeStr = [timeStr[0]]
-                }
-                if (timeStr.length === 1) {
-                  let tsr = timeStr[0].split(' ')
-                  if (tsr.length === 3) {
-                    tsr = [tsr[0] + tsr[1], tsr[2]]
-                  }
-                  let pTime
-                  switch (tsr[0]) {
-                    case 'May/June':
-                      pTime = 's'
-                      break
-                    case 'October/November':
-                      pTime = 'w'
-                      break
-                    case 'February/March':
-                      pTime = 'm'
-                      break
-                    default:
-                      throw new Error(`Invalid pTime: ${tsr[0]}`)
-                  }
-                  let year = tsr[1].substr(2)
-                  time = pTime + year
-                } else {
-                  let spTimeStr = coverPage.map(a => a.match(/^For Examination from 20(\d\d)/)).filter(a => Array.isArray(a)).map(a => a[1])
-                  if (spTimeStr.length === 1) {
-                    time = 'y' + spTimeStr
-                    specimen = true
-                  } else {
-                    throw new Error("No Xxxx/Xxxx 20xx in first page => can't identify paper.")
-                  }
-                }
-                if (coverPage.find(a => /READ THESE INSTRUCTIONS FIRST/i.test(a))) {
-                  // FIXME: Identify insert
-                  if (!specimen) {
-                    type = 'qp'
-                  } else {
-                    type = 'sp'
-                  }
-                } else if (coverPage.find(a => /MARK SCHEME/i.test(a))) {
-                  if (!specimen) {
-                    type = 'ms'
-                  } else {
-                    type = 'sm'
-                  }
-                } else if (coverPage.find(a => /CONFIDENTIAL INSTRUCTIONS/i.test(a))) {
-                  if (!specimen) {
-                    type = 'ir'
-                  } else {
-                    type = 'sr'
-                  }
-                } else {
-                  throw new Error('No type identifier in paper.')
-                }
-              } else if (nameMat) {
-                // Detect identity its name
-                let pv
-                [, subject, time, type, pv] = nameMat
-                paper = parseInt(pv[0])
-                if (pv.length === 2) {
-                  variant = parseInt(pv[1])
-                }
-              } else if (nameErMat) {
-                // xxxx_xxx_er/gt/... .pdf
-                [, subject, time, type] = nameErMat
-                paper = variant = 0
-              }
-            } catch (e) {
-              reject(e)
-              return
-            }
-            let mt = {
-              subject,
-              time,
-              type,
-              paper: parseInt(paper),
-              variant: parseInt(variant)
-            }
-            if (debug) {
-              process.stderr.write(`Metadata detected: ${JSON.stringify(mt)} in ${path}\n`)
-            }
-            Object.assign(doc, mt)
-            let setStr = PaperUtils.setToString(mt)
-            if (raceLock[setStr] && raceLock[setStr][mt.type]) {
-              if (debug) {
-                process.stderr.write(`Couldn't obtain duplicate raceLock for ${path}, discarding data...\n`)
-              }
-              resolve()
-              return
-            } else {
-              let lt = raceLock[setStr] || (raceLock[setStr] = {})
-              lt[mt.type] = true
-            }
-            if (debug) {
-              process.stderr.write(`Perpare to process ${path}\n`)
-            }
-            let assignDir = () => new Promise((resolve, reject) => {
-              if (debug) {
-                process.stderr.write(`Pre assignDir ${path}\n`)
-              }
-              if (!noCacheSSPDF) doc.set('dir', Recognizer.dir(idxes))
-              if (debug) {
-                process.stderr.write(`assignDir ${path}\n`)
-              }
-              resolve()
+          doc.set('numPages', pdfContents.numPages)
+          let idxes = []
+          for (let pn = 0; pn < pdfContents.numPages; pn ++) {
+            let idx = new PastPaperIndex({
+              docId: doc._id,
+              page: pn,
+              content: pdfContents.pageTexts[pn],
+              sspdfCache: null
             })
-            assignDir().then(() => Promise.all(idxes.map(idx => {
-              let content = idx.content
-              delete idx.rects
-              return idx.save().then(() => {
-                return idx.indexToElastic(doc)
-              })
-            })).then(() => PastPaperDoc.find(mt, {_id: true}).exec())
-              .then(docs => Promise.all(docs.map(doc => removeDoc(doc)))).then(() => doc.save(), reject).then(a => {
-                if (debug) {
-                  process.stderr.write(`Saved ${path}\n`)
+            idxes.push(idx)
+          }
+          if (debug) {
+            process.stderr.write(`All page done creating index in ${path}\n`)
+          }
+          let subject
+          let time
+          let type
+          let paper
+          let variant = 0
+          let specimen = false
+          try {
+            let nameMat = fname.match(/^(\d+)_([a-z]\d\d)_([a-zA-Z0-9]+)_(\d{1,2})\.pdf$/)
+            let nameErMat = fname.match(/^(\d+)_([a-z]\d\d)_([a-zA-Z0-9]+)\.pdf$/)
+            if (!nameMat && !nameErMat) {
+              // Detect paper "identity" (metadata) based on the first page.
+              if (idxes.length === 0) {
+                throw new Error("No page => can't identify paper")
+              }
+              let coverPage = idxes[0].content.split(/\n+/).map(x => x.replace(/\s+/g, ' ').trim())
+              let idtStr = coverPage.filter(a => /^\d{4}\/\d{2}$/.test(a))
+              if (idtStr.length === 1) {
+                let spt = idtStr[0].split('/')
+                subject = spt[0]
+                if (spt[1][0] === '0') {
+                  paper = parseInt(spt[1][1])
+                } else {
+                  paper = parseInt(spt[1][0])
+                  variant = parseInt(spt[1][1])
                 }
-                return Promise.resolve(a)
-              }).then(resolve, err => reject(new Error("Can't save document: " + err))))
-          })).then(resolve, reject)
-        }, err => {
-          reject(err)
-        })
+              } else if (idtStr.length === 0) {
+                throw new Error("No xxxx/xx in first page => can't identify paper.")
+              } else {
+                throw new Error('Compound.')
+              }
+              let timeStr = coverPage.map(a => {
+                let mt
+                if ((mt = a.match(/(\S+ \S+) series/))) {
+                  return mt[1]
+                }
+                return a
+              }).filter(a => /^[A-Z][a-z]+\/ ?[A-Z][a-z]+ 20\d\d$/.test(a))
+              if (timeStr.length > 1 && timeStr.filter(x => x !== timeStr[0]).length === 0) {
+                timeStr = [timeStr[0]]
+              }
+              if (timeStr.length === 1) {
+                let tsr = timeStr[0].split(' ')
+                if (tsr.length === 3) {
+                  tsr = [tsr[0] + tsr[1], tsr[2]]
+                }
+                let pTime
+                switch (tsr[0]) {
+                  case 'May/June':
+                    pTime = 's'
+                    break
+                  case 'October/November':
+                    pTime = 'w'
+                    break
+                  case 'February/March':
+                    pTime = 'm'
+                    break
+                  default:
+                    throw new Error(`Invalid pTime: ${tsr[0]}`)
+                }
+                let year = tsr[1].substr(2)
+                time = pTime + year
+              } else {
+                let spTimeStr = coverPage.map(a => a.match(/^For Examination from 20(\d\d)/)).filter(a => Array.isArray(a)).map(a => a[1])
+                if (spTimeStr.length === 1) {
+                  time = 'y' + spTimeStr
+                  specimen = true
+                } else {
+                  throw new Error("No Xxxx/Xxxx 20xx in first page => can't identify paper.")
+                }
+              }
+              if (coverPage.find(a => /READ THESE INSTRUCTIONS FIRST/i.test(a))) {
+                // FIXME: Identify insert
+                if (!specimen) {
+                  type = 'qp'
+                } else {
+                  type = 'sp'
+                }
+              } else if (coverPage.find(a => /MARK SCHEME/i.test(a))) {
+                if (!specimen) {
+                  type = 'ms'
+                } else {
+                  type = 'sm'
+                }
+              } else if (coverPage.find(a => /CONFIDENTIAL INSTRUCTIONS/i.test(a))) {
+                if (!specimen) {
+                  type = 'ir'
+                } else {
+                  type = 'sr'
+                }
+              } else {
+                throw new Error('No type identifier in paper.')
+              }
+            } else if (nameMat) {
+              // Detect identity its name
+              let pv
+              [, subject, time, type, pv] = nameMat
+              paper = parseInt(pv[0])
+              if (pv.length === 2) {
+                variant = parseInt(pv[1])
+              }
+            } else if (nameErMat) {
+              // xxxx_xxx_er/gt/... .pdf
+              [, subject, time, type] = nameErMat
+              paper = variant = 0
+            }
+          } catch (e) {
+            reject(e)
+            return
+          }
+          let mt = {
+            subject,
+            time,
+            type,
+            paper: parseInt(paper),
+            variant: parseInt(variant)
+          }
+          if (debug) {
+            process.stderr.write(`Metadata detected: ${JSON.stringify(mt)} in ${path}\n`)
+          }
+          Object.assign(doc, mt)
+          let setStr = PaperUtils.setToString(mt)
+          if (raceLock[setStr] && raceLock[setStr][mt.type]) {
+            if (debug) {
+              process.stderr.write(`Couldn't obtain duplicate raceLock for ${path}, discarding data...\n`)
+            }
+            resolve()
+            return
+          } else {
+            let lt = raceLock[setStr] || (raceLock[setStr] = {})
+            lt[mt.type] = true
+          }
+          if (debug) {
+            process.stderr.write(`Perpare to process ${path}\n`)
+          }
+          Promise.all(idxes.map(idx => {
+            return idx.save().then(() => idx.indexToElastic(doc))
+          })).then(() => PastPaperDoc.find(mt, {_id: true}).exec())
+            .then(docs => Promise.all(docs.map(doc => removeDoc(doc)))).then(() => doc.save(), reject).then(a => {
+              if (debug) {
+                process.stderr.write(`Saved ${path}\n`)
+              }
+              return Promise.resolve(a)
+            }).then(resolve, err => reject(new Error("Can't save document: " + err)))
+        }, err => reject(err))
       })
     })
 
