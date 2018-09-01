@@ -521,6 +521,93 @@ class PaperViewer extends React.Component {
   }
 }
 
+class TransformVelocity {
+  constructor (transformList) {
+    if (transformList.length < 2) throw new Error(`transformList need to have length of at least 2, ${transformList.length} passed.`)
+    let from = transformList[0]
+    let to = transformList[transformList.length - 1]
+    let dt = to.time - from.time
+    let [dx, dy] = [0, 1].map(p => to.nTranslate[p] - from.nTranslate[p])
+    this.vX = dx / dt
+    this.vY = dy / dt
+    this.uX = this.vX
+    this.uY = this.vY
+    this.nextFrame = this.nextFrame.bind(this)
+    this.animationFrameId = null
+    this.stage = null
+    this.lastFrameTime = null
+    let [cX, cY] = to.nTranslate
+    this.currentX = cX
+    this.currentY = cY
+  }
+
+  toString () {
+    return `[TransformVelocity] vX = ${this.vX} px/ms, vY = ${this.vY} px/ms`
+  }
+
+  applyInertia (stage) {
+    return new Promise((resolve, reject) => {
+      if (Math.abs(this.vX - 0) < 0.01 && Math.abs(this.vY - 0) < 0.01) return void resolve()
+      if (stage.currentAnimation) {
+        stage.currentAnimation.stop()
+      }
+      this.stage = stage
+      stage.currentAnimation = this
+      this.onDone = resolve
+      this.lastFrameTime = Date.now()
+      this.nextFrame()
+    })
+  }
+
+  get nTranslate () {
+    return [this.currentX, this.currentY]
+  }
+  get nScale () {
+    return this.stage.scale
+  }
+
+  nextFrame () {
+    this.animationFrameId = null
+    if (this.lastFrameTime === null) throw new Error('this.lastFrameTime === null')
+    let dt = Date.now() - this.lastFrameTime
+    let nX = this.currentX + dt * this.vX
+    let nY = this.currentY + dt * this.vY
+    this.stage.translate = [nX, nY]
+    this.currentX = nX
+    this.currentY = nY
+    if (this.stage.onUpdate) this.stage.onUpdate()
+    const aFriction = 0.02 // px/ms^2
+    let nvX = this.vX - Math.sign(this.vX) * aFriction * dt
+    let nvY = this.vY - Math.sign(this.vY) * aFriction * dt
+    if (Math.sign(nvX) !== Math.sign(this.vX)) {
+      this.vX = 0
+    } else {
+      this.vX = nvX
+    }
+    if (Math.sign(nvY) !== Math.sign(this.vY)) {
+      this.vY = 0
+    } else {
+      this.vY = nvY
+    }
+    if (this.vX !== 0 || this.vY !== 0) {
+      this.lastFrameTime = Date.now()
+      this.animationFrameId = requestAnimationFrame(this.nextFrame)
+    } else {
+      this.stop()
+    }
+  }
+
+  stop () {
+    if (this.animationFrameId !== null) cancelAnimationFrame(this.animationFrameId)
+    this.animationFrameId = null
+    if (this.stage.currentAnimation === this) this.stage.currentAnimation = null
+    if (this.onDone) {
+      this.onDone()
+      this.onDone = null
+    }
+  }
+}
+
 class PendingTransform {
   static LINEAR (x) {
     return x
@@ -533,6 +620,7 @@ class PendingTransform {
     Object.defineProperty(this, 'nTranslate', {value: nTranslate, writable: false})
     Object.defineProperty(this, 'nScale', {value: nScale, writable: false})
     Object.defineProperty(this, 'stage', {value: stage, writable: false})
+    Object.defineProperty(this, 'time', {value: Date.now(), writable: false})
     this.animationFrame = null
   }
 
@@ -833,13 +921,15 @@ class TransformationStage {
       touchId: t.identifier,
       stagePoint: this.view2stage(client2view([t.clientX, t.clientY], this.eventTarget)),
       startingClientPoint: [t.clientX, t.clientY],
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      lastTransforms: null
     }
   }
   initMoveMouse (clientPoint) {
     this.pressState = {
       mode: 'mouse-press',
-      stagePoint: this.view2stage(client2view(clientPoint, this.eventTarget))
+      stagePoint: this.view2stage(client2view(clientPoint, this.eventTarget)),
+      lastTransforms: null
     }
   }
   initPinch (tA, tB) {
@@ -850,7 +940,8 @@ class TransformationStage {
       B: tB.identifier,
       initialDistance: pointDistance([tA.clientX, tA.clientY], [tB.clientX, tB.clientY]),
       initialScale: this.scale,
-      stagePoint
+      stagePoint,
+      lastTransforms: null
     }
   }
 
@@ -877,9 +968,29 @@ class TransformationStage {
           if (evt.touches.length === 1) {
             let t = evt.touches[0]
             if (this.pressState.mode === 'single-touch' && t.identifier === this.pressState.touchId) {
-              new PendingTransform([0, 0], this.scale, this)
+              let transform = new PendingTransform([0, 0], this.scale, this)
                 .mapPointToPoint(this.pressState.stagePoint, client2view([t.clientX, t.clientY], this.eventTarget))
-                .applyImmediate()
+              if (this.pressState.lastTransforms) {
+                let lastTransforms = this.pressState.lastTransforms
+                let now = Date.now()
+                for (var i = 0; i < lastTransforms.length; i ++) {
+                  if (now - lastTransforms[i].time < 300) {
+                    break
+                  }
+                }
+                if (i === lastTransforms.length) {
+                  lastTransforms = [transform]
+                } else if (i === 0) {
+                  lastTransforms.push(transform)
+                } else {
+                  lastTransforms.push(transform)
+                  lastTransforms = lastTransforms.slice(i)
+                }
+              } else {
+                this.pressState.lastTransforms = [transform]
+              }
+              transform.applyImmediate()
+              this.pressState.lastTransform = transform
             } else {
               this.initMove(t)
               if (this.onAfterUserInteration) {
@@ -923,11 +1034,20 @@ class TransformationStage {
       this.moveEventFrame = null
     }
     let finish = () => {
-      this.pressState = null
-      new PendingTransform(this.translate, this.scale, this).boundInContentBox().startAnimation()
-      if (this.onAfterUserInteration) {
-        this.onAfterUserInteration()
+      if (this.pressState.lastTransforms && this.pressState.lastTransforms.length > 1) {
+        let velocity = new TransformVelocity(this.pressState.lastTransforms)
+        velocity.applyInertia(this).then(() => {
+          if (this.onAfterUserInteration) {
+            this.onAfterUserInteration()
+          }
+        })
+      } else {
+        new PendingTransform(this.translate, this.scale, this).boundInContentBox().startAnimation()
+        if (this.onAfterUserInteration) {
+          this.onAfterUserInteration()
+        }
       }
+      this.pressState = null
     }
     if (!this.pressState) return
     if (evt.touches) {
@@ -1342,7 +1462,7 @@ class PDFJSViewer extends React.Component {
             this.textLayers[i] = p.textLayer
             this.textLayersContain.appendChild(p.textLayer)
           }
-          if (!stage.pressState) {
+          if (!stage.pressState && !stage.currentAnimation) {
             let cssTScale = cssW / sw
             Object.assign(this.textLayers[i].style, {
               position: 'absolute',
