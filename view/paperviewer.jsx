@@ -522,6 +522,7 @@ class PaperViewer extends React.Component {
 }
 
 class TransformVelocity {
+  static get timeBackward () {return 100}
   constructor (transformList) {
     if (transformList.length < 2) throw new Error(`transformList need to have length of at least 2, ${transformList.length} passed.`)
     let from = transformList[0]
@@ -576,7 +577,7 @@ class TransformVelocity {
     this.currentX = nX
     this.currentY = nY
     if (this.stage.onUpdate) this.stage.onUpdate()
-    const aFriction = 0.02 // px/ms^2
+    const aFriction = 0.005 // px/ms^2
     let nvX = this.vX - Math.sign(this.vX) * aFriction * dt
     let nvY = this.vY - Math.sign(this.vY) * aFriction * dt
     if (Math.sign(nvX) !== Math.sign(this.vX)) {
@@ -974,23 +975,22 @@ class TransformationStage {
                 let lastTransforms = this.pressState.lastTransforms
                 let now = Date.now()
                 for (var i = 0; i < lastTransforms.length; i ++) {
-                  if (now - lastTransforms[i].time < 300) {
+                  if (now - lastTransforms[i].time < TransformVelocity.timeBackward) {
                     break
                   }
                 }
                 if (i === lastTransforms.length) {
-                  lastTransforms = [transform]
+                  lastTransforms = this.pressState.lastTransforms = [transform]
                 } else if (i === 0) {
                   lastTransforms.push(transform)
                 } else {
                   lastTransforms.push(transform)
-                  lastTransforms = lastTransforms.slice(i)
+                  lastTransforms.splice(0, i)
                 }
               } else {
                 this.pressState.lastTransforms = [transform]
               }
               transform.applyImmediate()
-              this.pressState.lastTransform = transform
             } else {
               this.initMove(t)
               if (this.onAfterUserInteration) {
@@ -1441,8 +1441,7 @@ class PDFJSViewer extends React.Component {
         ctx.beginPath()
         ctx.rect(x, y, w, h)
         ctx.stroke()
-        if (!stage.currentAnimation)
-          p.render(this.documentRenderingScale).then(this.deferredPaint)
+        p.render(this.documentRenderingScale).then(this.deferredPaint)
         if (this.textLayers[i]) {
           this.textLayers[i].remove()
           this.textLayers[i] = null
