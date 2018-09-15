@@ -302,6 +302,7 @@ class TransformationStage {
         let velocity = new TransformVelocity(this.pressState.lastTransforms)
         velocity.applyInertia(this).then(() => {
           if (this.onAfterUserInteration) {
+            new PendingTransform(this.translate, this.scale, this).boundInContentBox().startAnimation()
             this.onAfterUserInteration()
           }
         })
@@ -320,6 +321,9 @@ class TransformationStage {
         return finish()
       } else if (evt.touches.length === 1) {
         this.initMove(evt.touches[0])
+        if (this.onAfterUserInteration) {
+          this.onAfterUserInteration()
+        }
       } else {
         return finish()
       }

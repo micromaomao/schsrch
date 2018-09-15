@@ -812,28 +812,30 @@ class PDFJSViewer extends React.Component {
         if (Math.abs(sw - w) <= 1) w = sw
         if (Math.abs(sh - h) <= 1) h = sh
         ctx.drawImage(p.renderedCanvas, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh), Math.round(x), Math.round(y), Math.round(w), Math.round(h))
-        if (p.textLayer) {
-          if (this.textLayers[i] != p.textLayer) {
+        if (!stage.currentAnimation && !stage.pressState) {
+          if (p.textLayer) {
+            if (this.textLayers[i] != p.textLayer) {
+              if (this.textLayers[i]) {
+                this.textLayers[i].remove()
+              }
+              this.textLayers[i] = p.textLayer
+              this.textLayersContain.appendChild(p.textLayer)
+            }
+            if (!stage.pressState && !stage.currentAnimation) {
+              let cssTScale = cssW / sw
+              Object.assign(this.textLayers[i].style, {
+                position: 'absolute',
+                left: cssX + 'px',
+                top: cssY + 'px',
+                transformOrigin: 'top left',
+                transform: 'scale(' + cssTScale + ')'
+              })
+            }
+          } else {
             if (this.textLayers[i]) {
               this.textLayers[i].remove()
+              this.textLayers[i] = null
             }
-            this.textLayers[i] = p.textLayer
-            this.textLayersContain.appendChild(p.textLayer)
-          }
-          if (!stage.pressState && !stage.currentAnimation) {
-            let cssTScale = cssW / sw
-            Object.assign(this.textLayers[i].style, {
-              position: 'absolute',
-              left: cssX + 'px',
-              top: cssY + 'px',
-              transformOrigin: 'top left',
-              transform: 'scale(' + cssTScale + ')'
-            })
-          }
-        } else {
-          if (this.textLayers[i]) {
-            this.textLayers[i].remove()
-            this.textLayers[i] = null
           }
         }
       }
@@ -865,7 +867,6 @@ class PDFJSViewer extends React.Component {
   }
 
   updatePages () {
-    let stage = this.stage
     if (!this.pages) return
     for (let p of this.pages) {
       if (this.pageInView(p)) {
