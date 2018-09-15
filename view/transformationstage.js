@@ -319,9 +319,6 @@ class TransformationStage {
       if (evt.touches.length === 0) {
         return finish()
       } else if (evt.touches.length === 1) {
-        if (this.onAfterUserInteration) {
-          this.onAfterUserInteration()
-        }
         this.initMove(evt.touches[0])
       } else {
         return finish()
