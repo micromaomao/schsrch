@@ -592,7 +592,7 @@ class PDFJSViewer extends React.Component {
   }
 
   handleStageAfterUserInteration () {
-    if (this.readyState === PDFJSViewer.ready) {
+    if (this.readyState === PDFJSViewer.READY) {
       this.updatePages()
     }
 
