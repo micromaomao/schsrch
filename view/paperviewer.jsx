@@ -607,7 +607,7 @@ class PDFJSViewer extends React.Component {
     if (this.readyState === PDFJSViewer.READY) {
       if (this.props.stageTransform) {
         let currentTransform = this.stage.animationGetFinalState()
-        if (!currentTransform.simillarTo(this.props.stageTransform)) {
+        if (!currentTransform.simillarTo(this.props.stageTransform) && !this.stage.pressState) {
           new PendingTransform(this.props.stageTransform.nTranslate, this.props.stageTransform.nScale, this.stage)
             .startAnimation(400)
         }

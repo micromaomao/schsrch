@@ -211,6 +211,7 @@ class TransformationStage {
 
   handleMove (evt) {
     if (!this.pressState) return
+    if (this.currentAnimation) this.currentAnimation.stop()
     if (this.onMoveEvent) {
       if (this.onMoveEvent(evt) === false) {
         document.removeEventListener('mousemove', this.handleMove)
@@ -313,6 +314,7 @@ class TransformationStage {
       this.pressState = null
     }
     if (!this.pressState) return
+    if (this.currentAnimation) this.currentAnimation.stop()
     if (evt.touches) {
       if (evt.touches.length === 0) {
         return finish()
