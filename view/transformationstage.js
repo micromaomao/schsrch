@@ -344,6 +344,7 @@ class TransformationStage {
 
   handleWheel (evt) {
     evt.preventDefault()
+    if (this.currentAnimation) this.currentAnimation.stop()
     let [evDx, evDy] = [evt.deltaX, evt.deltaY]
     if (evt.deltaMode === 0x01) {
       // Lines
