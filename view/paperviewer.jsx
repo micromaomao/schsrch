@@ -162,7 +162,7 @@ class PaperViewer extends React.Component {
   }
 
   handlePDFUserMove (nTransform) {
-    AppState.dispatch({type: 'v2view-user-move-page', stageTransform: {nTranslate: nTransform.nTranslate, nScale: nTransform.nScale}})
+    AppState.dispatch({type: 'v2view-user-move-page', stageTransform: nTransform})
   }
 
   render () {
@@ -523,6 +523,7 @@ class PaperViewer extends React.Component {
 }
 
 class PDFJSViewer extends React.Component {
+  // No touching AppState.dispatch in this class.
   static get NOT_READY () {return 0}
   static get READY () {return 1}
   constructor (props) {
@@ -606,16 +607,21 @@ class PDFJSViewer extends React.Component {
 
     if (this.readyState === PDFJSViewer.READY) {
       if (this.props.stageTransform) {
-        let currentTransform = this.stage.animationGetFinalState()
-        if (!currentTransform.simillarTo(this.props.stageTransform) && !this.stage.pressState) {
-          new PendingTransform(this.props.stageTransform.nTranslate, this.props.stageTransform.nScale, this.stage)
-            .startAnimation(400)
-        }
+        this.checkPropStageTransform()
       } else if (this.props.initToDir) {
         this.getInitDirPendingTransform(this.props.initToDir).startAnimation(400)
       }
 
       this.updatePages()
+    }
+  }
+
+  checkPropStageTransform () {
+    let currentTransform = this.stage.animationGetFinalState()
+    let targetTransform = this.props.stageTransform
+    if (targetTransform.time <= currentTransform.time) return
+    if (!currentTransform.simillarTo(targetTransform) && !this.stage.pressState) {
+      targetTransform.startAnimation(400)
     }
   }
 

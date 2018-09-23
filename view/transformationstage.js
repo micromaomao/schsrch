@@ -33,6 +33,8 @@ class TransformationStage {
 
     this.minScale = 0.2
     this.maxScale = 7
+
+    this.lastTransformTime = null
   }
 
   destroy () {
@@ -70,9 +72,9 @@ class TransformationStage {
 
   animationGetFinalState () {
     if (this.currentAnimation) {
-      return new PendingTransform(this.currentAnimation.nTranslate, this.currentAnimation.nScale, this)
+      return this.currentAnimation
     } else {
-      return new PendingTransform(this.translate, this.scale, this)
+      return new PendingTransform(this.translate, this.scale, this, this.lastTransformTime)
     }
   }
 
@@ -438,12 +440,12 @@ class PendingTransform {
     return 1 - Math.pow(1-x, 2)
   }
 
-  constructor (nTranslate, nScale, stage) {
-    Object.defineProperty(this, 'nTranslate', {value: nTranslate, writable: false})
-    Object.defineProperty(this, 'nScale', {value: nScale, writable: false})
-    Object.defineProperty(this, 'stage', {value: stage, writable: false})
-    Object.defineProperty(this, 'time', {value: Date.now(), writable: false})
-    this.animationFrame = null
+  constructor (nTranslate, nScale, stage, time) {
+    Object.defineProperty(this, 'nTranslate', {value: nTranslate, writable: false, enumerable: true})
+    Object.defineProperty(this, 'nScale', {value: nScale, writable: false, enumerable: true})
+    Object.defineProperty(this, 'stage', {value: stage, writable: false, enumerable: false})
+    Object.defineProperty(this, 'time', {value: time || Date.now(), writable: false, enumerable: true})
+    Object.defineProperty(this, 'animationFrame', {value: null, writable: true, enumerable: false})
   }
 
   applyImmediate () {
@@ -455,6 +457,7 @@ class PendingTransform {
 
     stage.translate = this.nTranslate
     stage.scale = this.nScale
+    stage.lastTransformTime = this.time
 
     if (stage.onUpdate) stage.onUpdate()
   }
@@ -479,6 +482,7 @@ class PendingTransform {
       stage.currentAnimation.stop()
     }
     stage.currentAnimation = this
+    stage.lastTransformTime = this.time
 
     let initialState = {translate: stage.translate.slice(), scale: stage.scale}
     let startTime = Date.now()
@@ -546,7 +550,7 @@ class PendingTransform {
       tY = Math.min(0, tY)
       tY = Math.max(stage.viewportSize[1] - this.nScale * stage.contentSize[1], tY)
     }
-    return new PendingTransform([tX, tY], this.nScale, this.stage)
+    return new PendingTransform([tX, tY], this.nScale, this.stage, this.time)
   }
 
   shift ([dx, dy]) {
@@ -558,7 +562,7 @@ class PendingTransform {
   }
 }
 
-class TransformVelocity {
+class TransformVelocity /* implements PendingTransform */ {
   static get timeBackward () {return 100}
   constructor (transformList) {
     if (transformList.length < 2) throw new Error(`transformList need to have length of at least 2, ${transformList.length} passed.`)
@@ -566,17 +570,20 @@ class TransformVelocity {
     let to = transformList[transformList.length - 1]
     let dt = to.time - from.time
     let [dx, dy] = [0, 1].map(p => to.nTranslate[p] - from.nTranslate[p])
-    this.vX = dx / dt
-    this.vY = dy / dt
-    this.uX = this.vX
-    this.uY = this.vY
-    this.nextFrame = this.nextFrame.bind(this)
-    this.animationFrameId = null
-    this.stage = null
-    this.lastFrameTime = null
+    Object.defineProperty(this, 'vX', {value: dx / dt, writable: true, enumerable: false})
+    Object.defineProperty(this, 'vY', {value: dy / dt, writable: true, enumerable: false})
+    Object.defineProperty(this, 'uX', {value: this.vX, writable: true, enumerable: false})
+    Object.defineProperty(this, 'uY', {value: this.vY, writable: true, enumerable: false})
+    Object.defineProperty(this, 'nextFrame', {value: this.nextFrame.bind(this), writable: false, enumerable: false})
+    Object.defineProperty(this, 'animationFrameId', {value: null, writable: true, enumerable: false})
+    Object.defineProperty(this, 'stage', {value: null, writable: true, enumerable: false})
+    Object.defineProperty(this, 'lastFrameTime', {value: null, writable: true, enumerable: false})
     let [cX, cY] = to.nTranslate
-    this.currentX = cX
-    this.currentY = cY
+    Object.defineProperty(this, 'currentX', {value: cX, writable: true, enumerable: false})
+    Object.defineProperty(this, 'currentY', {value: cY, writable: true, enumerable: false})
+    Object.defineProperty(this, 'nTranslate', {get: function () { return [this.currentX, this.currentY] }, enumerable: true})
+    Object.defineProperty(this, 'nScale', {get: function () { return this.stage.scale }, enumerable: true})
+    Object.defineProperty(this, 'time', {value: to.time, writable: false, enumerable: true})
   }
 
   toString () {
@@ -595,13 +602,6 @@ class TransformVelocity {
       this.lastFrameTime = Date.now()
       this.nextFrame()
     })
-  }
-
-  get nTranslate () {
-    return [this.currentX, this.currentY]
-  }
-  get nScale () {
-    return this.stage.scale
   }
 
   nextFrame () {
