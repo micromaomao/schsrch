@@ -76,6 +76,7 @@ class Sidebar extends React.Component {
           {this.state.myCollectionsExpanded ?
             (
               <div className='collectionlist'>
+                <div className='deprecation'>The collection feature has be deprecated and is no longer maintained.</div>
                 {this.state.myCollectionsResult === null ?
                   (
                     <div className='loading'>Loading&hellip;</div>

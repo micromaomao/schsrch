@@ -173,10 +173,12 @@ $sidebar-width: 300px
           &.expanded
             transform: rotate(180deg) translate(0, 2.5px)
       .collectionlist
-        > .loading, > .error, > .empty
+        > .loading, > .error, > .empty, > .deprecation
           text-align: center
           font-size: 0.8rem
           padding: 0.5rem 1rem
+        > .deprecation
+          color: red
         > .loading
           color: black
         > .error
@@ -1548,7 +1550,7 @@ $feedback-top-height: 2rem + 1.3rem
                 width: 100%
                 height: 100%
                 z-index: 1
-        > .nologin
+        > .nologin, .deprecation
           text-align: center
           padding: 0.5rem
           border-bottom: $color-primary solid 1px

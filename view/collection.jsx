@@ -144,14 +144,10 @@ class Collection extends React.Component {
                 <FetchErrorPromise.ErrorDisplay error={col.error} serverErrorActionText={'get this collection'} onRetry={evt => AppState.dispatch({type: 'collection-reload'})} />
               )
             : null}
-          {!AppState.getState().authToken
-            ? (
-                <div className='nologin'>
-                  <div className='big'>Sorry. This feature isn't fully completed yet.</div>
-                  <div>You can view this collection, and if you <a onClick={evt => AppState.dispatch({type: 'login-view'})}>log in</a> you will also be able to create collections yourself.</div>
-                </div>
-              )
-            : null}
+          <div className='deprecation'>
+            <div className='big'>​The collection feature has be deprecated and is no longer maintained.</div>
+            <div>You can still view and edit your existing collection.</div>
+          </div>
           {col.content !== null && !col.loading
             ? (
                 <Editor structure={col.content.structure || []} onChange={this.handleInputChange} disabled={editDisabled} ref={f => this.editor = f} />
