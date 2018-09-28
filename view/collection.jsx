@@ -145,7 +145,7 @@ class Collection extends React.Component {
               )
             : null}
           <div className='deprecation'>
-            <div className='big'>​The collection feature has be deprecated and is no longer maintained.</div>
+            <div className='big'>The collection feature has been deprecated and is no longer maintained.</div>
             <div>You can still view and edit your existing collection.</div>
           </div>
           {col.content !== null && !col.loading
