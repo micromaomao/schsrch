@@ -129,11 +129,13 @@ class Description extends React.Component {
             <a className='helpbtn' onClick={this.handleHideHelp} href='/'>{this.state.server ? 'Back' : 'Close help'}</a>
           )}
         </div>
-        {(this.state.server ? AppState.getState().serverrender.siteOrigin : window.location.origin) === 'https://paper.sc' ? null : (
+        {(this.state.server ? AppState.getState().serverrender.siteOrigin : window.location.origin) === 'https://paper.sc' || this.props.showHelp ? null : (
           <div className='mirrornotice'>You are viewing a mirror of <a href='https://paper.sc'>paper.sc</a>.</div>
         )}
         {!this.props.showHelp ? statusInfo : null}
-        <div className='copyright'>All paper &#169; <a href='http://www.cambridgeassessment.org.uk/' target='_blank'>UCLES</a>. Content provided solely for educational purpose.</div>
+        {!this.props.showHelp ? (
+          <div className='copyright'>All paper &#169; <a href='http://www.cambridgeassessment.org.uk/' target='_blank'>UCLES</a>. Content provided solely for educational purpose.</div>
+        ) : null}
       </div>
     )
   }
