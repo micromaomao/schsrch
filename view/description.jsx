@@ -133,6 +133,7 @@ class Description extends React.Component {
           <div className='mirrornotice'>You are viewing a mirror of <a href='https://paper.sc'>paper.sc</a>.</div>
         )}
         {!this.props.showHelp ? statusInfo : null}
+        <div className='copyright'>All paper &#169; <a href='http://www.cambridgeassessment.org.uk/' target='_blank'>UCLES</a>. Content provided solely for educational purpose.</div>
       </div>
     )
   }
