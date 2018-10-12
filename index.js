@@ -236,9 +236,28 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
           }
           let fname = `${PaperUtils.setToString(doc)}_${doc.type}.${doc.fileType}`
           doc.getFileBlob().then(blob => {
+            let ranges = req.range(blob.length)
+            if (ranges === -2) {
+              res.status(400)
+              return res.end()
+            }
+            if (ranges === -1) {
+              res.status(416)
+              return res.end()
+            }
+            res.set('Accept-Ranges', 'bytes')
+            res.set('Cache-Control', 'public, max-age=8640000')
             res.set('Content-Disposition', `inline; filename=${JSON.stringify(fname)}`)
             res.type(doc.fileType)
-            res.send(blob)
+            if (!ranges) {
+              res.send(blob)
+            } else {
+              let sendBuffer = Buffer.concat(ranges.map(({start, end}) => {
+                return blob.slice(start, end + 1)
+              }))
+              res.status(206)
+              res.send(sendBuffer)
+            }
           }, err => {
             next(err)
           })

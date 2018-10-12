@@ -13,7 +13,7 @@ class PaperViewer extends React.Component {
       paperFileId: null,
       dirs: null,
       loadError: null,
-      pdfjsObjs: null,
+      pdfs: null,
       initialLoadTime: null,
       dirMenu: null
     }
@@ -32,22 +32,19 @@ class PaperViewer extends React.Component {
     this.setState({loadError: null, initialLoadTime: Date.now(), dirMenu: null})
     this.paperDirHitRegions = null
     if (this.state.paperFileId) {
-      if (this.state.pdfjsObjs) {
-        for (let t of Object.keys(this.state.pdfjsObjs)) {
-          let pdfjsobj = this.state.pdfjsObjs[t]
-          if (pdfjsobj.document) {
-            pdfjsobj.document.destroy()
+      if (this.state.pdfs) {
+        for (let t of Object.keys(this.state.pdfs)) {
+          let pdf = this.state.pdfs[t]
+          if (pdf.document) {
+            pdf.document.destroy()
           }
-          if (pdfjsobj.xhr) {
-            pdfjsobj.xhr.abort()
-          }
-          pdfjsobj = null
-          delete this.state.pdfjsObjs[t]
+          pdf = null
+          delete this.state.pdfs[t]
         }
       }
       this.setState({
         dirs: null,
-        pdfjsObjs: null
+        pdfs: null
       })
     }
 
@@ -61,7 +58,7 @@ class PaperViewer extends React.Component {
 
         try {
           let sortedTypeStrArr = Object.keys(json).sort(PaperUtils.funcSortType)
-          this.setState({pdfjsObjs: {}})
+          this.setState({pdfs: {}})
           for (let type of sortedTypeStrArr) {
             let docid = json[type].docid
             if (Array.isArray(json[type].dirs)) {
@@ -86,53 +83,50 @@ class PaperViewer extends React.Component {
     }
   }
 
+  /**
+   * @param {String} type qp, ms, er, etc...
+   * @param {String} docid /doc/$docid/
+   * @returns {Promise<undefined>} a promise that resolve iff the pdf is ready to be displayed.
+   */
   loadPDF (type, docid) {
-    if (!this.state.pdfjsObjs) throw new Error('this.state.pdfjsObjs is not an object.')
+    if (!this.state.pdfs) throw new Error('this.state.pdfs is not an object.')
     return new Promise((resolve, reject) => {
-      let obj = this.state.pdfjsObjs[type]
+      let obj = this.state.pdfs[type]
       if (!obj) {
-        let xhr = new XMLHttpRequest()
         obj = {
           document: null,
           progress: 0,
           error: null,
-          xhr
+          ready: false
         }
-        this.state.pdfjsObjs[type] = obj
-        xhr.responseType = 'arraybuffer'
-        xhr.addEventListener('progress', evt => {
-          if (evt.lengthComputable) {
-            obj.progress = evt.loaded / evt.total
-            this.forceUpdate()
+        this.state.pdfs[type] = obj
+        getDocument({
+          url: `/doc/${encodeURIComponent(docid)}/`,
+          disableRange: false,
+          rangeChunkSize: 100 * 1024
+        }, loadingTask => {
+          obj.loadingTask = loadingTask
+          obj.loadingTask.onProgress = ({loaded, total}) => {
+            if (Number.isFinite(loaded) && Number.isFinite(total) && loaded < total) {
+              obj.progress = loaded / total
+              this.forceUpdate()
+            }
           }
-        })
-        xhr.addEventListener('error', evt => {
-          obj.error = evt.error
-          reject(obj.error)
-          this.forceUpdate()
-        })
-        xhr.addEventListener('timeout', evt => {
-          obj.error = new Error('Request has timed out.')
-          reject(obj.error)
-          this.forceUpdate()
-        })
-        xhr.addEventListener('load', evt => {
-          obj.progress = 1
-          this.forceUpdate()
-          getDocument(xhr.response).then(pdf => {
-            obj.document = pdf
-            resolve()
-            this.forceUpdate()
-          }, err => {
+          obj.loadingTask.promise.catch(err => {
             obj.error = err
             reject(err)
             this.forceUpdate()
           })
+          obj.loadingTask.promise.then(pdfDocument => {
+            obj.document = pdfDocument
+            pdfDocument.getPage(1).then(() => {
+              obj.ready = true
+              this.forceUpdate()
+            }, err => {})
+            resolve()
+            this.forceUpdate()
+          })
         })
-        xhr.open('GET', '/doc/' + encodeURIComponent(docid) + '/', true)
-        xhr.setRequestHeader('Accept', 'application/pdf')
-        xhr.send()
-        this.forceUpdate()
       } else {
         resolve()
       }
@@ -208,7 +202,7 @@ class PaperViewer extends React.Component {
               )
             })()}
             {this.state.dirs ? Object.keys(this.state.dirs).sort(PaperUtils.funcSortType).map(typeStr => {
-              let obj = this.state.pdfjsObjs[typeStr]
+              let obj = this.state.pdfs[typeStr]
               let dir = this.state.dirs[typeStr]
               let current = v2viewing.tCurrentType === typeStr
               if (!obj || dir.type === 'blob') {
@@ -231,16 +225,16 @@ class PaperViewer extends React.Component {
                       pdf
                     </a>
                   ) : null}
-                  {!obj.document ? <div className='loadingfill' style={{width: (obj.progress * 100) + '%'}} /> : null}
+                  {!obj.document || !obj.document.__fullyready ? <div className='loadingfill' style={{width: (obj.progress * 100) + '%'}} /> : null}
                 </div>
               )
             }) : null}
           </div>
           {(() => {
             let tCurrentType = v2viewing.tCurrentType
-            if (this.state.pdfjsObjs && tCurrentType !== null && this.state.pdfjsObjs[tCurrentType] && this.state.dirs[tCurrentType] && this.state.dirs[tCurrentType].type !== 'blob') {
-              let obj = this.state.pdfjsObjs[tCurrentType]
-              if (!obj.document) {
+            if (this.state.pdfs && tCurrentType !== null && this.state.pdfs[tCurrentType] && this.state.dirs[tCurrentType] && this.state.dirs[tCurrentType].type !== 'blob') {
+              let obj = this.state.pdfs[tCurrentType]
+              if (!obj.document || !obj.ready) {
                 return (
                   <div className='pdfcontain loading'>
                     <div className='progressbar'>
@@ -325,6 +319,11 @@ class PaperViewer extends React.Component {
                       onDownEvent={this.handlePDFJSViewerDownEvent}
                       ref={f => this.pdfjsViewerInstance = f}
                       initToDir={v2viewing.viewDir} />
+                    {!obj.document.__fullyready ? (
+                      <div className='progressbar floating'>
+                        <div className='fill' style={{width: (obj.progress * 100) + '%'}} />
+                      </div>
+                    ) : null}
                     {menu}
                   </div>
                 )
@@ -525,7 +524,8 @@ class PaperViewer extends React.Component {
 class PDFJSViewer extends React.Component {
   // No touching AppState.dispatch in this class.
   static get NOT_READY () {return 0}
-  static get READY () {return 1}
+  static get PARTIAL_READY () {return 1}
+  static get READY () {return 2}
   constructor (props) {
     super(props)
     this.elem = null
@@ -719,9 +719,14 @@ class PDFJSViewer extends React.Component {
       let pdfjsPage = await doc.getPage(i + 1)
       if (this.pages !== pages) return
       pages[i] = new ManagedPage(pdfjsPage)
+      console.log(`Creating ManagedPage for page ${i}...`)
+      this.layoutDocument()
+      this.readyState = PDFJSViewer.PARTIAL_READY
     }
+    doc.__fullyready = true
     if (this.pages !== pages) return
     this.layoutDocument()
+    this.initStagePosAndSize()
   }
 
   layoutDocument () {
@@ -735,8 +740,12 @@ class PDFJSViewer extends React.Component {
       page.stageOffset = [maxW / 2 - page.stageWidth / 2, cY]
       cY += page.stageHeight
     }
+    let totalPages = this.pdfjsDocument.numPages
+    if (totalPages > pages.length) {
+      cY += (totalPages - pages.length) * (cY / pages.length)
+    }
     this.stage.setContentSize(maxW, cY)
-    this.initStagePosAndSize()
+    this.paint()
   }
 
   initStagePosAndSize () {
@@ -766,7 +775,7 @@ class PDFJSViewer extends React.Component {
   getInitDirPendingTransform (dd) {
     let rPage = this.pages[dd.page]
     if (!rPage) {
-      return new PendingTransform([0, 0], 1, this.stage)
+      return this.stage.animationGetFinalState()
     } else {
       if (!dd.qNRect) {
         return this.stage.putOnCenter([rPage.stageOffset[0], rPage.stageOffset[1] - 10, rPage.stageWidth, rPage.stageHeight + 20])

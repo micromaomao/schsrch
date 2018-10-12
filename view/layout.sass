@@ -1964,7 +1964,8 @@ $feedback-top-height: 2rem + 1.3rem
 
 .paperviewer
   &.loading .progressbar,
-  &.loaded .pdfcontain.loading .progressbar
+  &.loaded .pdfcontain.loading .progressbar,
+  &.loaded .pdfcontain .progressbar.floating
     background-color: lighten($color-primary, 30%)
     width: 80%
     height: 2px
@@ -1973,8 +1974,16 @@ $feedback-top-height: 2rem + 1.3rem
     .fill
       margin: 0
       background-color: $color-primary
-      height: 2px
+      height: 100%
       transition: width 100ms
+    &.floating
+      position: absolute
+      left: 0
+      width: 100%
+      top: 0
+      margin: 0
+      height: 4px
+      z-index: 10
 
 .pdfjsviewer
   width: 100%
