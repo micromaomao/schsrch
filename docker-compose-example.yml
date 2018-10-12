@@ -23,6 +23,7 @@ services:
       - mongo
       - es
     volumes:
+      - ./index.js:/usr/src/app/index.js
       - ./view:/usr/src/app/view
       - ./test:/usr/src/app/test
   mongo:
