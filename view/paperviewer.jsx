@@ -57,6 +57,7 @@ class PaperViewer extends React.Component {
         if (this.state.paperFileId !== fileId) return
 
         try {
+          let tCurrentType = AppState.getState().v2viewing.tCurrentType
           let sortedTypeStrArr = Object.keys(json).sort(PaperUtils.funcSortType)
           this.setState({pdfs: {}})
           for (let type of sortedTypeStrArr) {
@@ -65,7 +66,11 @@ class PaperViewer extends React.Component {
               json[type].dirs = json[type].dirs.map((d, i) => Object.assign(d, {i}))
             }
             if (json[type].type !== 'blob') {
-              this.loadPDF(type, docid)
+              if (tCurrentType !== null && type === tCurrentType) {
+                this.loadPDF(type, docid)
+              } else {
+                setTimeout(() => this.loadPDF(type, docid), 100)
+              }
             }
           }
           this.setState({dirs: json})
