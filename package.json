@@ -26,8 +26,8 @@
   "dependencies": {
     "bowser": "^1.9.4",
     "cheerio": "^1.0.0-rc.2",
-    "express": "^4.16.3",
-    "nan": "^2.11.0",
+    "express": "^4.16.4",
+    "nan": "^2.11.1",
     "rbush": "^2.0.2",
     "request": "^2.88.0",
     "scrypt": "^6.0.3",
@@ -40,8 +40,8 @@
     "mongoose": ">=4.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.1.0",
-    "babel-loader": "^8.0.2",
+    "@babel/core": "^7.1.2",
+    "babel-loader": "^8.0.4",
     "@babel/plugin-transform-react-jsx": "^7.0.0",
     "@babel/polyfill": "^7.0.0",
     "@babel/preset-env": "^7.1.0",
@@ -54,20 +54,20 @@
     "fullscreen-api-polyfill": "^1.1.2",
     "html-webpack-plugin": "^3.2.0",
     "mocha": "^5.2.0",
-    "mongoose": "^5.2.17",
-    "node-sass": "^4.9.3",
+    "mongoose": "^5.3.4",
+    "node-sass": "^4.9.4",
     "offline-plugin": "^5.0.5",
     "pug": "^2.0.3",
     "pug-loader": "^2.4.0",
     "raw-loader": "^0.5.1",
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
-    "redux": "^4.0.0",
+    "redux": "^4.0.1",
     "sass-loader": "^7.1.0",
-    "sharp": "^0.20.8",
+    "sharp": "^0.21.0",
     "should": "^13.2.3",
     "supertest": "^3.3.0",
-    "webpack": "^4.19.1",
-    "webpack-cli": "^3.1.1"
+    "webpack": "^4.21.0",
+    "webpack-cli": "^3.1.2"
   }
 }
