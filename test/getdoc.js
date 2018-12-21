@@ -52,7 +52,7 @@ module.exports = (schsrch, dbModel) =>
             }
             hash.on('readable', () => {
               try {
-                hash.read().toString('hex').should.equal('00a2562f321e764b70a69fa4d374f8ac5aee20731e4a788f2ce4a898f41f262b') // sha256sum test/pastpapers/0610_s17_qp_11.pdf
+                hash.read().toString('hex').should.equal('400099c8089093b0046772c78b32dbfedb75721722b1e5fa07d5d7a1489b5c6f') // sha256sum test/pastpapers/0610_s17_qp_11.pdf
                 done()
               } catch (e) {
                 done(e)
