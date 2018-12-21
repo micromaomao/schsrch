@@ -22,6 +22,9 @@ class InitResultList extends React.Component {
       <div className='initresultlist'>
         {timesets.map(timeset => {
           let subject = CIESubjects.findExactById(timeset.subject)
+          if (!subject) {
+            subject = {level: '??', name: timeset.subject, id: timeset.subject}
+          }
           return (
             <div className='timeset' key={`${timeset.subject} ${timeset.time}`}>
               <div className='time'>
