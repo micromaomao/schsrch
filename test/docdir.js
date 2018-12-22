@@ -357,7 +357,6 @@ module.exports = (schsrch, dbModel) =>
     })
     it('should work for Examiner Report (0470_s08)', function (done) {
       this.timeout(10000)
-      debugger
       supertest(schsrch)
         .get('/doc/' + er3._id + '/?as=dir')
         .expect(200)
