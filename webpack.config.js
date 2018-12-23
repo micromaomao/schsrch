@@ -15,9 +15,12 @@ baseConfig = {
           {
             loader: 'babel-loader',
             options: {
-              presets: ['@babel/preset-env'],
-              plugins: ['@babel/plugin-transform-react-jsx'],
-              targets: "> 0.25%, not dead"
+              presets: [
+                ['@babel/preset-env', {
+                  targets: "> 0.25%, not dead"
+                }]
+              ],
+              plugins: ['@babel/plugin-transform-react-jsx']
             }
           }
         ]
@@ -28,8 +31,11 @@ baseConfig = {
           {
             loader: 'babel-loader',
             options: {
-              presets: ['@babel/preset-env'],
-              targets: "> 0.25%, not dead"
+              presets: [
+                ['@babel/preset-env', {
+                  targets: "> 0.25%, not dead"
+                }]
+              ]
             }
           }
         ]
