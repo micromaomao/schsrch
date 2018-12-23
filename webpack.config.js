@@ -68,6 +68,9 @@ module.exports = [
       publicPath: '/resources/',
       filename: '[name].js'
     },
+    optimization: {
+      minimize: false
+    },
     plugins: [
       new HtmlWebpackPlugin({
         template: './view/index.pug',
