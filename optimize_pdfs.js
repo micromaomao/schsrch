@@ -38,6 +38,7 @@ db.on('open', () => {
           await dbBlobFrag.save()
         }
         doc.set('gs_optimized', true)
+        doc.markModified('gs_optimized')
         await doc.save()
       } catch (e) {
         process.stderr.write(`Error when processing ${doc._id}: ${e.toString()}\n`)
