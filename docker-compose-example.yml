@@ -11,6 +11,7 @@ services:
     ports:
       - "127.0.0.1:80:80"
       - "127.0.0.1:443:443"
+      - "127.0.0.1:9229:9229" # for debugger
     environment:
       NODE_ENV: development
       MONGODB: mongodb://mw-mongo/schsrch
@@ -26,6 +27,7 @@ services:
       - ./index.js:/usr/src/app/index.js
       - ./view:/usr/src/app/view
       - ./test:/usr/src/app/test
+      - ./lib:/usr/src/app/lib
   mongo:
     container_name: mw-mongo
     image: mongo:latest
