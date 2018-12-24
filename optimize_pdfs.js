@@ -39,6 +39,7 @@ db.on('open', () => {
         }
         doc.set('gs_optimized', true)
         doc.markModified('gs_optimized')
+        // FIXME
         await doc.save()
       } catch (e) {
         process.stderr.write(`Error when processing ${doc._id}: ${e.toString()}\n`)
