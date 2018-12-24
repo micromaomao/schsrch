@@ -17,28 +17,28 @@ db.on('error', err => {
 db.on('open', () => {
   require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperPaperBlob}) => {
     PastPaperDoc.find({}).cursor().eachAsync(async function (doc) {
-      console.log('Processing ' + doc._id)
-      let pdfBlob = await doc.getFileBlob()
-      let newBlob = null
       try {
+        console.log('Processing ' + doc._id)
+        let pdfBlob = await doc.getFileBlob()
+        let newBlob = null
         newBlob = await doOptimize(pdfBlob)
+        doc.fileBlob = null
+        await PastPaperPaperBlob.remove({docId: doc._id})
+        let chunkSize = 10 * 1024 * 1024
+        for (let off = 0; off < newBlob.length; off += chunkSize) {
+          let slice = newBlob.slice(off, off + chunkSize)
+          let dbBlobFrag = new PastPaperPaperBlob({
+            docId: doc._id,
+            offset: off,
+            data: slice
+          })
+          await dbBlobFrag.save()
+        }
+        await doc.save()
       } catch (e) {
         process.stderr.write(`Error when processing ${doc._id}: ${e.toString()}\n`)
         return
       }
-      doc.fileBlob = null
-      await PastPaperPaperBlob.remove({docId: doc._id})
-      let chunkSize = 10 * 1024 * 1024
-      for (let off = 0; off < newBlob.length; off += chunkSize) {
-        let slice = newBlob.slice(off, off + chunkSize)
-        let dbBlobFrag = new PastPaperPaperBlob({
-          docId: doc._id,
-          offset: off,
-          data: slice
-        })
-        await dbBlobFrag.save()
-      }
-      await doc.save()
     }).then(() => {
       process.exit()
     })
