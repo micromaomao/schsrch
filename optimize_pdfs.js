@@ -18,10 +18,11 @@ db.on('open', () => {
   require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperPaperBlob}) => {
     PastPaperDoc.find({}).cursor().eachAsync(async function (doc) {
       try {
-        console.log('Processing ' + doc._id)
         if (doc.gs_optimized) {
+          console.log('Skipping ' + doc._id)
           return
         }
+        console.log('Processing ' + doc._id)
         let pdfBlob = await doc.getFileBlob()
         let newBlob = null
         newBlob = await doOptimize(pdfBlob)
@@ -37,9 +38,7 @@ db.on('open', () => {
           })
           await dbBlobFrag.save()
         }
-        doc.set('gs_optimized', true)
-        doc.markModified('gs_optimized')
-        // FIXME
+        doc.gs_optimized = true
         await doc.save()
       } catch (e) {
         process.stderr.write(`Error when processing ${doc._id}: ${e.toString()}\n`)
