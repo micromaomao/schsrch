@@ -5,7 +5,8 @@ networks:
 services:
   www:
     container_name: schsrch-www
-    build: .
+    # build: .
+    image: maowtm/schsrch
     networks:
       - mw
     ports:
