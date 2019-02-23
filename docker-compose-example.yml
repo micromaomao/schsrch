@@ -12,6 +12,7 @@ services:
     ports:
       - "127.0.0.1:80:80"
       - "127.0.0.1:443:443"
+      # - "192.168.1.108:80:80"
       - "127.0.0.1:9229:9229" # for debugger
     environment:
       NODE_ENV: development
@@ -40,7 +41,7 @@ services:
     command: ["--noauth"]
   es:
     container_name: mw-es
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.6.1
     networks:
       - mw
     volumes:

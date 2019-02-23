@@ -9,9 +9,9 @@ RUN useradd --home-dir /usr/src/app -s /bin/false www && \
 USER www:www
 
 COPY --chown=www:www ./package.json .
-RUN script --return -qc "npm i" /dev/null
+RUN npm i --progress=false --loglevel=info 2>&1
 COPY --chown=www:www . .
-RUN script --return -qc "npm i" /dev/null
+RUN npm i --progress=false --loglevel=info 2>&1
 EXPOSE 80 443
 USER root
 STOPSIGNAL SIGTERM
