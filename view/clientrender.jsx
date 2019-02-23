@@ -179,7 +179,8 @@ class AppMain extends React.Component {
     super(props)
     this.state = {
       error: null,
-      errorInfo: null
+      errorInfo: null,
+      consoleOut: ""
     }
     this.handleWindowResize = this.handleWindowResize.bind(this)
     this.handleReload = this.handleReload.bind(this)
@@ -218,6 +219,34 @@ class AppMain extends React.Component {
         </div>
       )
     }
+
+    if (false) { // safari debug
+      window.console = {
+        log: s => {
+          this.state.consoleOut += s + "\n"
+          if (this.consoleOutUpdateTimeout) {
+            clearTimeout(this.consoleOutUpdateTimeout)
+          }
+          this.consoleOutUpdateTimeout = setTimeout(() => {
+            this.forceUpdate()
+          }, 100)
+        },
+        info: s => {
+          this.state.consoleOut += s + "\n"
+        },
+        debug: s => {
+          this.state.consoleOut += s + "\n"
+        },
+        error: s => {
+          this.state.consoleOut += s + "\n"
+        }
+      }
+      return <div>
+        <SchSrch ref={f => this.ss = f} />
+        <div className="consoleout">{this.state.consoleOut}</div>
+      </div>
+    }
+
     return <SchSrch ref={f => this.ss = f} />
   }
 

@@ -526,6 +526,8 @@ class PaperViewer extends React.Component {
   }
 }
 
+let PAGE_MAX_SCALE = 10
+
 class PDFJSViewer extends React.Component {
   // No touching AppState.dispatch in this class.
   static get NOT_READY () {return 0}
@@ -820,7 +822,10 @@ class PDFJSViewer extends React.Component {
         ctx.beginPath()
         ctx.rect(x, y, w, h)
         ctx.stroke()
-        p.render(this.documentRenderingScale).then(this.deferredPaint)
+        p.render(this.documentRenderingScale).then(this.deferredPaint, err => {
+          console.error(`Render error: ${err}`)
+          this.deferredPaint()
+        })
         if (this.textLayers[i]) {
           this.textLayers[i].remove()
           this.textLayers[i] = null
@@ -828,10 +833,47 @@ class PDFJSViewer extends React.Component {
       } else {
         drawnPages.push(p)
         let pageRenderredCanvasScale = p.renderedCanvas.width / p.initWidth
-        let [sx, sy, sw, sh] = p.clipRectangle.map(x => x * pageRenderredCanvasScale)
+        let [sx, sy, sw, sh] = p.clipRectangle.map(x => Math.floor(x * pageRenderredCanvasScale))
+
+        // Safari bug
+        if (sx+sw >= p.renderedCanvas.width) {
+          sw = p.renderedCanvas.width - sx - 1
+        }
+        if (sy+sh >= p.renderedCanvas.height) {
+          sh = p.renderedCanvas.height - sy - 1
+        }
+
         if (Math.abs(sw - w) <= 1) w = sw
         if (Math.abs(sh - h) <= 1) h = sh
-        ctx.drawImage(p.renderedCanvas, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh), Math.round(x), Math.round(y), Math.round(w), Math.round(h))
+
+        // drawImage on Safari may sliently fail. Check the presence of a check pixel to be sure. This pixel should have been overwritten by drawImage when success.
+        ctx.fillStyle = "#f00"
+        let checkX = Math.ceil(x) + 1
+        let checkY = Math.ceil(y) + 1
+        if (checkX < 0) {
+          checkX = 0
+        }
+        if (checkY < 0) {
+          checkY = 0
+        }
+        ctx.fillRect(checkX, checkY, 1, 1)
+
+        ctx.drawImage(p.renderedCanvas, sx, sy, sw, sh, x, y, w, h)
+        console.log(`Drawn image: sx=${sx}, sy=${sy}, sw=${sw}, sh=${sh}, x=${x}, y=${y}, w=${w}, h=${h}.`)
+
+        let checkImgData = ctx.getImageData(checkX, checkY, 1, 1).data
+        if (checkImgData[0] === 255 && checkImgData[1] === 0 && checkImgData[2] === 0) {
+          PAGE_MAX_SCALE = p.renderedScale - 0.25
+          if (PAGE_MAX_SCALE < 2) {
+            PAGE_MAX_SCALE = 2
+          }
+          if (PAGE_MAX_SCALE > 7) {
+            PAGE_MAX_SCALE = 7
+          }
+          console.error(`drawImage sliently failed. Reducing maximum resolution to ${PAGE_MAX_SCALE}`)
+          p.freeCanvas()
+        }
+
         if (!stage.currentAnimation && !stage.pressState) {
           if (p.textLayer) {
             if (this.textLayers[i] != p.textLayer) {
@@ -890,7 +932,10 @@ class PDFJSViewer extends React.Component {
     if (!this.pages) return
     for (let p of this.pages) {
       if (this.pageInView(p)) {
-        p.render(this.documentRenderingScale).then(this.deferredPaint)
+        p.render(this.documentRenderingScale).then(this.deferredPaint, err => {
+          console.error(`Rendering error: ${err}`)
+          this.deferredPaint()
+        })
       } else {
         p.freeCanvas()
       }
@@ -1101,11 +1146,11 @@ class ManagedPage {
   }
 
   render (scale) {
-    if (scale > 10) scale = 10 // avoid excessive memory usage
+    if (scale > PAGE_MAX_SCALE) scale = PAGE_MAX_SCALE // avoid excessive memory usage
     if (scale === 0) return Promise.resolve()
     if (this.renderedScale && this.renderedCanvas && Math.abs(this.renderedScale - scale) < 0.00001) return Promise.resolve()
     if (this.renderringScale && Math.abs(this.renderringScale - scale) < 0.00001) return Promise.resolve()
-    console.log('Rendering page ' + this.pdfjsPage.pageNumber)
+    console.log(`Rendering p. ${this.pdfjsPage.pageNumber} with scale=${scale}`)
     if (this.renderTask) {
       this.renderTask.cancel()
       this.renderTask = null
@@ -1113,9 +1158,14 @@ class ManagedPage {
     this.renderringScale = scale
     let nCanvas = document.createElement('canvas')
     let viewport = this.pdfjsPage.getViewport(scale)
-    nCanvas.width = viewport.width
-    nCanvas.height = viewport.height
+    nCanvas.width = Math.ceil(viewport.width)
+    nCanvas.height = Math.ceil(viewport.height)
+    console.log(`Render w=${nCanvas.width}, h=${nCanvas.height}`)
     let ctx = nCanvas.getContext('2d', {alpha: false})
+    if (!ctx) {
+      console.error(`canvas.getContext returned {ctx}.`)
+      return Promise.reject(new Error("getContext() == null"))
+    }
     let renderTask = this.pdfjsPage.render({
       enableWebGL: true,
       canvasContext: ctx,
@@ -1160,7 +1210,12 @@ class ManagedPage {
         }
         return Promise.resolve()
       }, () => Promise.resolve())
-    }, () => {})
+    }, err => {
+      if (window.pdfjsLib && err instanceof window.pdfjsLib.RenderingCancelledException) {
+        return Promise.resolve()
+      }
+      return Promise.reject(err)
+    })
   }
 
   freeCanvas () {
