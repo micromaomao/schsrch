@@ -1,7 +1,7 @@
 sudo: no
 dist: stretch
 group: edge
-language: minimal
+language: generic
 services:
   - docker
 
