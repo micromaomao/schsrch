@@ -1,43 +1,17 @@
-language: node_js
 sudo: no
 dist: stretch
 group: edge
-node_js:
-  - "8"
-  - "10"
-env:
-  - CXX=g++-6 MONGODB=mongodb://127.0.0.1/test ES=127.0.0.1:9200
-install:
-  - find /usr -name '*poppler*.so*'
-  - npm install -g npm@latest
-  - npm install
-  - npm install coveralls
-  - npm install istanbul
 services:
-  - mongodb
-  - elasticsearch
   - docker
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      - r-packages-trusty
-      - mongodb-3.0-precise
-      - elasticsearch-5.x
-    packages:
-      - g++-6
-      - libpoppler-glib-dev
-      - mongodb-org
-      - elasticsearch
+
 script:
-  - ./test/perpareDatabase.sh && npm run coverage
   - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
   - git clean dfx
   - docker build . -t maowtm/schsrch
   - >
     docker-compose -f docker-compose-example.yml up -d es mongo &&
     sleep 20 &&
-    docker run --entrypoint=bash --user=www -t --network schsrch_mw -e NODE_ENV=development -e MONGODB=mongodb://mw-mongo/schsrch -e ES=mw-es:9200 -e SITE_ORIGIN=http://localhost maowtm/schsrch -c "test/perpareDatabase.sh && npm run test"
+    docker run --entrypoint=bash --user=www -t --network schsrch_mw -e NODE_ENV=development -e MONGODB=mongodb://mw-mongo/schsrch -e ES=mw-es:9200 -e SITE_ORIGIN=http://localhost maowtm/schsrch -c "npm install coveralls && npm install istanbul && test/perpareDatabase.sh && npm run coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   - >
     docker run --entrypoint=bash -t --network schsrch_mw -p 3000:80 -e NODE_ENV=production -e MONGODB=mongodb://mw-mongo/schsrch -e ES=mw-es:9200 -e SITE_ORIGIN=http://localhost maowtm/schsrch -c "node server.js" &
     sleep 10 &&
