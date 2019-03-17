@@ -283,97 +283,66 @@ class SearchResult extends React.Component {
     }
     if (result.response === 'text' && Array.isArray(resultOrganized)) {
         let items = resultOrganized
-        if (AppState.getState().serverrender || true) {
-          return (
-            <div className='fulltextlist'>
-              {(() => {
-                  let elements = []
-                  for (let item of items) {
-                    let searchIndex = item.types[0].index._id
-                    let psKey = '!!index!' + searchIndex
-                    let previewing = this.props.previewing
-                    let v1current = previewing !== null && previewing.psKey === psKey
-                    let v2viewing = AppState.getState().v2viewing
-                    let v2current = false
-                    if (v2viewing && v2viewing.searchIndex === searchIndex) {
-                      v2current = true
-                    }
-                    elements.push(<PaperSet
-                      paperSet={item}
-                      showRelated={!v2current}
-                      key={psKey}
-                      query={query}
-                      current={v1current}
-                      onOpenFile={(id, page, type) => {
-                          let viewDir = null
-                          if (type === item.types[0].type) {
-                            viewDir = { page }
-                          }
-                          if (v2current && !viewDir) {
-                            // perserve user moving of pages
-                            AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: type, viewDir})
-                            return
-                          }
-                          if (v2current && viewDir) {
-                            AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: type, viewDir, stageTransform: null})
-                            return
-                          }
-                          AppState.dispatch({
-                            type: 'v2view',
-                            searchIndex: searchIndex,
-                            fileId: id,
-                            tCurrentType: type,
-                            viewDir
-                          })
-                        }}
-                      />)
-                    if (v1current && this.props.showSmallPreview) {
-                      elements.push(
-                        <V1FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
-                      )
-                    }
-                    if (v2current) {
-                      elements.push(
-                        <div className='paperviewercontain'>
-                          <PaperViewer key={psKey + '_v2paperviewer'} />
-                        </div>
-                      )
-                    }
+        return (
+          <div className='fulltextlist'>
+            {(() => {
+                let elements = []
+                for (let item of items) {
+                  let searchIndex = item.types[0].index._id
+                  let psKey = '!!index!' + searchIndex
+                  let previewing = this.props.previewing
+                  let v1current = previewing !== null && previewing.psKey === psKey
+                  let v2viewing = AppState.getState().v2viewing
+                  let v2current = false
+                  if (v2viewing && v2viewing.searchIndex === searchIndex) {
+                    v2current = true
                   }
-                  return elements
-              })()}
-            </div>
-          )
-        } else {
-          return (
-            <div className='v2container'>
-              <div className='v2paperlist'>
-                <div className='tsscontainer'>
-                  {result.list.map(it => {
-                    let itid = it.index._id
-                    return (
-                      <div className={'paper fulltext' + (v2viewing && v2viewing.searchIndex === itid ? ' current' : '')} key={itid}
-                          onClick={evt => AppState.dispatch({
-                                                              type: 'v2view',
-                                                              searchIndex: itid,
-                                                              fileId: it.doc._id,
-                                                              tCurrentType: it.doc.type,
-                                                              showPaperSetTitle: `${it.doc.subject} ${it.doc.time} ${it.doc.paper}${it.doc.variant}`,
-                                                              viewDir: { page: it.index.page  /*, qNRect: null*/}
-                                                            })}>
-                        {it.doc.type}
+                  elements.push(<PaperSet
+                    paperSet={item}
+                    showRelated={!v2current}
+                    key={psKey}
+                    query={query}
+                    current={v1current}
+                    onOpenFile={(id, page, type) => {
+                        let viewDir = null
+                        if (type === item.types[0].type) {
+                          viewDir = { page }
+                        }
+                        if (v2current && !viewDir) {
+                          // perserve user moving of pages
+                          AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: type, viewDir})
+                          return
+                        }
+                        if (v2current && viewDir) {
+                          AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: type, viewDir, stageTransform: null})
+                          return
+                        }
+                        AppState.dispatch({
+                          type: 'v2view',
+                          searchIndex: searchIndex,
+                          fileId: id,
+                          tCurrentType: type,
+                          viewDir
+                        })
+                      }}
+                    />)
+                  if (v1current && this.props.showSmallPreview) {
+                    elements.push(
+                      <V1FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
+                    )
+                  }
+                  if (v2current) {
+                    elements.push(
+                      <div className='paperviewercontain'>
+                        <PaperViewer key={psKey + '_v2paperviewer'} />
                       </div>
                     )
-                  })}
-                </div>
-              </div>
-              <div className='viewercontain'>
-                {!v2viewing ? <div className='null'>Choose a paper to open&hellip;</div> : null}
-                {v2viewing ? <PaperViewer key='paperviewer' /> : null}
-              </div>
-            </div>
-          )
-        }
+                  }
+                }
+                return elements
+            })()}
+          </div>
+        )
     }
     return null
   }
