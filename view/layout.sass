@@ -217,6 +217,42 @@ $sidebar-width: 300px
           text-decoration: underline
         &:active
           color: darken($color-link, 15%)
+  > .v2viewingPopup
+    position: absolute
+    top: 0
+    width: 100vw
+    bottom: 0
+    background-color: white
+    z-index: 3
+    will-change: right
+    transition: right 400ms
+    &.hide
+      right: -100vw
+    &.show
+      right: 0
+      box-shadow: -2px 0 4px rgba(black, 0.3)
+    display: flex
+    flex-direction: column
+    align-items: stretch
+    flex-wrap: nowrap
+    .topbar
+      background-color: $color-filepreview-top
+      color: white
+      flex-grow: 0
+      flex-shrink: 0
+      font-size: 1.1rem
+      a
+        color: white
+        text-decoration: none
+        cursor: pointer
+        margin: 0.5rem
+        display: inline-block
+        -webkit-tap-highlight-color: transparent
+        &:active
+          color: rgba(white, 0.8)
+    .paperviewercontain
+      flex-grow: 1
+      flex-shrink: 1
   > .content // This thing is 100%wh absolute positioned and will contain all main content. (i.e. not feedback dialog and it's back cover)
     overflow-x: hidden
     overflow-y: auto
@@ -227,6 +263,10 @@ $sidebar-width: 300px
     noscript
       flex-grow: 0
       flex-shrink: 1
+    transition: left 400ms
+    will-change: left
+    &.leftshift
+      left: -20vw
     > .viewcontain
       // Contain all views:
       //   .view-home
@@ -706,7 +746,7 @@ $sidebar-width: 300px
 
   .fulltextlist
     .paperviewer.loaded
-      height: 90vh
+      height: 50vh
     .paperviewercontain
       width: 100%
       background-color: rgba($color-primary, 0.05)

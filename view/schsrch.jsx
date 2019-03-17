@@ -16,6 +16,7 @@ const bowser = require('bowser')
 const SubjectsView = require('./subjectsview.jsx')
 const Help = require('./help.jsx')
 const SearchPrompt = require('./searchprompt.jsx')
+const PaperViewer = require('./paperviewer.jsx')
 
 class SchSrch extends React.Component {
   constructor (props) {
@@ -32,6 +33,8 @@ class SchSrch extends React.Component {
     this.handleSearchBarQuery = this.handleSearchBarQuery.bind(this)
     this.handleSearchContainScroll = this.handleSearchContainScroll.bind(this)
     this.handleBlackCoverDown = this.handleBlackCoverDown.bind(this)
+    this.handleV2viewerPopupClose = this.handleV2viewerPopupClose.bind(this)
+    this.handleV2viewerPopupToInline = this.handleV2viewerPopupToInline.bind(this)
     this.retryQuery = this.retryQuery.bind(this)
     // UI Components should support server rendering to allow javascript-disabled users to use this App.
     // The DOM produced by server and client javascript could (and should) differ.
@@ -71,7 +74,8 @@ class SchSrch extends React.Component {
   render () {
     let blackCoverStyle = {}
     let coverAnimationTime = Math.max(0, Date.now() - this.state.coverHideAnimation)
-    let showCover = this.state.showFeedback || this.state.showSidebar
+    let aState = AppState.getState()
+    let showCover = this.state.showFeedback || this.state.showSidebar || (aState.v2viewing && aState.v2viewing.asPopup && !aState.v2viewing.popupClosing)
     if (this.state.server) {
       blackCoverStyle = {opacity: 0, zIndex: 0}
     } else if (showCover) {
@@ -88,7 +92,6 @@ class SchSrch extends React.Component {
         to mark scheme or editing collections. Javascript is required also to submit feedback.
       </p>
     )
-    let aState = AppState.getState()
     let view = (() => {
       switch (aState.view) {
         case 'home':
@@ -113,7 +116,7 @@ class SchSrch extends React.Component {
         {this.state.server ? null : (
           <div className='contentblackcover' style={blackCoverStyle} onTouchStart={this.handleBlackCoverDown} onMouseDown={this.handleBlackCoverDown} />
         )}
-        <div className='content'>
+        <div className={'content' + (aState.v2viewing && aState.v2viewing.asPopup && !aState.v2viewing.popupClosing ? ' leftshift' : '')}>
           {this.state.server ? (
             aState.view !==  'home' || aState.querying || aState.showHelp ? (
               <noscript className='small'>
@@ -187,6 +190,7 @@ class SchSrch extends React.Component {
         </div>
         {this.state.server ? null : <Feedback.Frame />}
         {this.renderSidebar()}
+        {this.renderV2ViewingPopup()}
       </div>
     )
   }
@@ -231,6 +235,33 @@ class SchSrch extends React.Component {
         show={this.state.showSidebar}
         currentCollection={aState.collection ? aState.collection.id : null} />
     )
+  }
+  renderV2ViewingPopup () {
+    if (this.state.server) return null
+    let v2viewing = AppState.getState().v2viewing
+    if (!v2viewing || !v2viewing.asPopup) {
+      return (
+        <div className='v2viewingPopup hide'></div>
+      )
+    }
+    return (
+      <div className={'v2viewingPopup ' + (v2viewing.popupClosing ? 'hide' : 'show')}>
+        <div className='topbar'>
+          <a onClick={this.handleV2viewerPopupClose}>&lt; Return to search</a> <a onClick={this.handleV2viewerPopupToInline}>Change to inline viewer</a>
+        </div>
+        <div className='paperviewercontain'>
+          <PaperViewer key={'popup_v2paperviewer'} />
+        </div>
+      </div>
+    )
+  }
+
+  handleV2viewerPopupClose (evt) {
+    AppState.dispatch({type: 'v2view-popup-close'})
+  }
+
+  handleV2viewerPopupToInline (evt) {
+    AppState.dispatch({type: 'v2view-to-inline'})
   }
 
   renderSearch () {

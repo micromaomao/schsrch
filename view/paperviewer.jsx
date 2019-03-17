@@ -174,6 +174,7 @@ class PaperViewer extends React.Component {
       )
     }
     let v2viewing = AppState.getState().v2viewing
+    if (!v2viewing) return null
     if (!this.state.dirs) {
       let progress = Math.min(1, Math.log10((Date.now() - this.state.initialLoadTime + 70) / 70) / 2.17)
       requestAnimationFrame(() => this.forceUpdate())

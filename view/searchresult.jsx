@@ -294,7 +294,7 @@ class SearchResult extends React.Component {
                   let v1current = previewing !== null && previewing.psKey === psKey
                   let v2viewing = AppState.getState().v2viewing
                   let v2current = false
-                  if (v2viewing && v2viewing.searchIndex === searchIndex) {
+                  if (v2viewing && v2viewing.searchIndex === searchIndex && !v2viewing.asPopup) {
                     v2current = true
                   }
                   elements.push(<PaperSet
@@ -322,7 +322,8 @@ class SearchResult extends React.Component {
                           searchIndex: searchIndex,
                           fileId: id,
                           tCurrentType: type,
-                          viewDir
+                          viewDir,
+                          asPopup: true
                         })
                       }}
                     />)

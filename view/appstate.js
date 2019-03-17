@@ -473,7 +473,9 @@ let AppState = createStore(function (state = {}, action) {
           stageTransforms: {},
           viewDir: action.viewDir || null,
           searchIndex: action.searchIndex || null,
-          showPaperSetTitle: action.showPaperSetTitle || null
+          showPaperSetTitle: action.showPaperSetTitle || null,
+          asPopup: action.asPopup || false,
+          popupClosing: false
         }
       })
     case 'v2view-set-tCurrentType':
@@ -503,6 +505,24 @@ let AppState = createStore(function (state = {}, action) {
           })
         })
       })()
+    case 'v2view-close':
+      return Object.assign({}, state, {
+        v2viewing: null
+      })
+    case 'v2view-popup-close':
+      if (!state.v2viewing) return state
+      return Object.assign({}, state, {
+        v2viewing: Object.assign({}, state.v2viewing, {
+          popupClosing: true
+        })
+      })
+    case 'v2view-to-inline':
+      if (!state.v2viewing) return state
+      return Object.assign({}, state, {
+        v2viewing: Object.assign({}, state.v2viewing, {
+          asPopup: false
+        })
+      })
   }
 })
 
