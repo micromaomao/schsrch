@@ -43,7 +43,13 @@ body
 $sidebar-width: 300px
 
 .schsrch
+  position: absolute
+  left: 0
+  top: 0
+  width: 100vw
   min-width: 200px
+  height: 100vh
+  overflow: hidden
   > .content > noscript
     display: block
     text-align: center
@@ -221,7 +227,8 @@ $sidebar-width: 300px
     position: absolute
     top: 0
     width: 100vw
-    bottom: 0
+    height: 100vh
+    overflow: hidden
     background-color: white
     z-index: 3
     will-change: right
@@ -250,9 +257,8 @@ $sidebar-width: 300px
         -webkit-tap-highlight-color: transparent
         &:active
           color: rgba(white, 0.8)
-    .paperviewercontain
+    .paperviewer
       flex-grow: 1
-      flex-shrink: 1
   > .content // This thing is 100%wh absolute positioned and will contain all main content. (i.e. not feedback dialog and it's back cover)
     overflow-x: hidden
     overflow-y: auto

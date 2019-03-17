@@ -249,9 +249,7 @@ class SchSrch extends React.Component {
         <div className='topbar'>
           <a onClick={this.handleV2viewerPopupClose}>&lt; Return to search</a> <a onClick={this.handleV2viewerPopupToInline}>Change to inline viewer</a>
         </div>
-        <div className='paperviewercontain'>
-          <PaperViewer key={'popup_v2paperviewer'} />
-        </div>
+        <PaperViewer key={'popup_v2paperviewer'} />
       </div>
     )
   }
