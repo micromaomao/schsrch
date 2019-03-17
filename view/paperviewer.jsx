@@ -859,7 +859,6 @@ class PDFJSViewer extends React.Component {
         ctx.fillRect(checkX, checkY, 1, 1)
 
         ctx.drawImage(p.renderedCanvas, sx, sy, sw, sh, x, y, w, h)
-        console.log(`Drawn image: sx=${sx}, sy=${sy}, sw=${sw}, sh=${sh}, x=${x}, y=${y}, w=${w}, h=${h}.`)
 
         let checkImgData = ctx.getImageData(checkX, checkY, 1, 1).data
         if (checkImgData[0] === 255 && checkImgData[1] === 0 && checkImgData[2] === 0) {
