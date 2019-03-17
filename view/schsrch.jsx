@@ -256,9 +256,6 @@ class SchSrch extends React.Component {
             onRetry={this.retryQuery}
             smallerSetName={true} />
         </div>
-        {AppState.getState().serverrender ? null : (
-          <a className='fbBtn' onClick={evt => Feedback.show(query)}>Report issues/missing/errors with this search...</a>
-        )}
       </div>
     )
   }

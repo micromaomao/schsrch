@@ -61,6 +61,11 @@ class FeedbackFrame extends AnimatorReactComponent {
           Feedback
         </div>
         <div className='content'>
+          <p>
+            <b>I'm sorry.</b> I haven't had time to read and respond to all the feedbacks, and will not likely be
+            able to in the future. Your feedbacks will likely not be read for a long time, please bear in mind.
+            Thanks for your understanding.
+          </p>
           {content}
         </div>
       </div>
