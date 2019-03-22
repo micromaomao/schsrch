@@ -547,18 +547,25 @@ AppState.shouldResponseKeyboardShortcut = () => {
   return !focusingInput && !(document.activeElement && document.activeElement.contentEditable === 'true')
 }
 AppState.sspdfDecacheVersion = 2
-AppState.supportSspdfView = bowser.check({
-  msie: '11',
-  chrome: '35',
-  firefox: '50',
-  safari: '9'
-})
-AppState.supportOverall = bowser.check({
-  msie: '11',
-  chrome: '29',
-  firefox: '23',
-  safari: '9'
-})
 AppState.isSafari = bowser.safari || bowser.ios
+if (AppState.isSafari) {
+  AppState.supportSspdfView = bowser.check({
+    safari: '9'
+  })
+  AppState.supportOverall = bowser.check({
+    safari: '9'
+  })
+} else {
+  AppState.supportSspdfView = bowser.check({
+    msie: '11',
+    chrome: '35',
+    firefox: '50'
+  })
+  AppState.supportOverall = bowser.check({
+    msie: '11',
+    chrome: '29',
+    firefox: '23'
+  })
+}
 
 module.exports = AppState
