@@ -274,10 +274,11 @@ $sidebar-width: 300px
     noscript
       flex-grow: 0
       flex-shrink: 1
-    transition: left 400ms
-    will-change: left
+    transition: transform 400ms ease
+    will-change: transform
+    transform: translate(0, 0)
     &.leftshift
-      left: -20vw
+      transform: translate(-20vw, 0)
     > .viewcontain
       // Contain all views:
       //   .view-home
