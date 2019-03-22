@@ -559,5 +559,6 @@ AppState.supportOverall = bowser.check({
   firefox: '23',
   safari: '9'
 })
+AppState.isSafari = bowser.safari || bowser.ios
 
 module.exports = AppState

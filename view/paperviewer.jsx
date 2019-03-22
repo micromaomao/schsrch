@@ -861,17 +861,19 @@ class PDFJSViewer extends React.Component {
 
         ctx.drawImage(p.renderedCanvas, sx, sy, sw, sh, x, y, w, h)
 
-        let checkImgData = ctx.getImageData(checkX, checkY, 1, 1).data
-        if (checkImgData[0] === 255 && checkImgData[1] === 0 && checkImgData[2] === 0) {
-          PAGE_MAX_SCALE = p.renderedScale - 0.25
-          if (PAGE_MAX_SCALE < 2) {
-            PAGE_MAX_SCALE = 2
+        if (AppState.isSafari) {
+          let checkImgData = ctx.getImageData(checkX, checkY, 1, 1).data
+          if (checkImgData[0] === 255 && checkImgData[1] === 0 && checkImgData[2] === 0) {
+            PAGE_MAX_SCALE = p.renderedScale - 1
+            if (PAGE_MAX_SCALE < 2) {
+              PAGE_MAX_SCALE = 2
+            }
+            if (PAGE_MAX_SCALE > 7) {
+              PAGE_MAX_SCALE = 7
+            }
+            console.error(`drawImage sliently failed. Reducing maximum resolution to ${PAGE_MAX_SCALE}`)
+            p.freeCanvas()
           }
-          if (PAGE_MAX_SCALE > 7) {
-            PAGE_MAX_SCALE = 7
-          }
-          console.error(`drawImage sliently failed. Reducing maximum resolution to ${PAGE_MAX_SCALE}`)
-          p.freeCanvas()
         }
 
         if (!stage.currentAnimation && !stage.pressState) {
