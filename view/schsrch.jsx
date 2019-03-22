@@ -77,14 +77,14 @@ class SchSrch extends React.Component {
     let aState = AppState.getState()
     let showCover = this.state.showFeedback || this.state.showSidebar || (aState.v2viewing && aState.v2viewing.asPopup && !aState.v2viewing.popupClosing)
     if (this.state.server) {
-      blackCoverStyle = {opacity: 0, zIndex: 0}
+      blackCoverStyle = {opacity: 0, zIndex: '0', pointerEvents: 'none'}
     } else if (showCover) {
-      blackCoverStyle = {opacity: 1, zIndex: ''}
+      blackCoverStyle = {opacity: 1, pointerEvents: 'auto'}
     } else if (!showCover && coverAnimationTime < 600) {
-      blackCoverStyle = {opacity: 0, zIndex: ''}
+      blackCoverStyle = {opacity: 0, pointerEvents: 'none'}
       setTimeout(() => this.forceUpdate(), 600 - coverAnimationTime)
     } else {
-      blackCoverStyle = {opacity: 0, zIndex: '0'}
+      blackCoverStyle = {opacity: 0, pointerEvents: 'none'}
     }
     let noScriptFirstP = (
       <p>
