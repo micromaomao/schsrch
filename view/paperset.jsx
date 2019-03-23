@@ -1,10 +1,10 @@
-const React = require('react')
-const Subjects = require('./CIESubjects.js')
-const PaperUtils = require('./paperutils.js')
-const IndexContent = require('./indexcontent.jsx')
-const AppState = require('./appstate.js')
+import * as React from 'react'
+import * as Subjects from './CIESubjects.js'
+import PaperUtils from './paperutils.js'
+import IndexContent from './indexcontent.jsx'
+import { AppState } from './appstate.js'
 
-class PaperSet extends React.Component {
+export default class PaperSet extends React.Component {
   constructor (props) {
     super(props)
     this.state = {}
@@ -126,5 +126,3 @@ class PaperSet extends React.Component {
     return pres || 0
   }
 }
-
-module.exports = PaperSet

@@ -1,24 +1,24 @@
-const React = require('react')
-const SearchBar = require('./searchbar.jsx')
-const Description = require('./description.jsx')
-const SearchResult = require('./searchresult.jsx')
-const Feedback = require('./feedback.jsx')
-const Disclaimer = require('./disclaimer.jsx')
-const AppState = require('./appstate.js')
-const FetchErrorPromise = require('./fetcherrorpromise.jsx')
+import * as React from 'react'
+import SearchBar from './searchbar.jsx'
+import Description from './description.jsx'
+import SearchResult from './searchresult.jsx'
+import FeedbackFrame from './feedback.jsx'
+import Disclaimer from './disclaimer.jsx'
+import { AppState } from './appstate.js'
+import * as FetchErrorPromise from './fetcherrorpromise.jsx'
 const V1FilePreview = require('./v1filepreview.jsx')
-const Collection = require('./collection.jsx')
-const { LoginView } = require('./auth.jsx')
-const ChallengeReplaceView = require('./challengereplace.jsx')
-const PaperUtils = require('./paperutils.js')
-const Sidebar = require('./sidebar.jsx')
-const bowser = require('bowser')
-const SubjectsView = require('./subjectsview.jsx')
-const Help = require('./help.jsx')
-const SearchPrompt = require('./searchprompt.jsx')
-const PaperViewer = require('./paperviewer.jsx')
+import Collection from './collection.jsx'
+import LoginView from './auth.jsx'
+import ChallengeReplaceView from './challengereplace.jsx'
+import PaperUtils from './paperutils.js'
+import Sidebar from './sidebar.jsx'
+import * as bowser from 'bowser'
+import SubjectsView from './subjectsview.jsx'
+import Help from './help.jsx'
+import SearchPrompt from './searchprompt.jsx'
+import PaperViewer from './paperviewer.jsx'
 
-class SchSrch extends React.Component {
+export default class SchSrch extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -188,7 +188,7 @@ class SchSrch extends React.Component {
               )
             : null}
         </div>
-        {this.state.server ? null : <Feedback.Frame />}
+        {this.state.server ? null : <FeedbackFrame />}
         {this.renderSidebar()}
         {this.renderV2ViewingPopup()}
       </div>
@@ -368,5 +368,3 @@ class SchSrch extends React.Component {
     this.unsub = null
   }
 }
-
-module.exports = SchSrch

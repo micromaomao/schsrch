@@ -1,8 +1,8 @@
-const AppState = require('./appstate.js')
-const React = require('react')
+import { AppState } from './appstate.js'
+import * as React from 'react'
 const wordSpliter = /[^a-zA-Z]/
 
-class IndexContent extends React.Component {
+export default class IndexContent extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -124,5 +124,3 @@ class IndexContent extends React.Component {
     return results
   }
 }
-
-module.exports = IndexContent

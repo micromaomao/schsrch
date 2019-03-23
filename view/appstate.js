@@ -1,11 +1,11 @@
 const InterfaceVersion = 23
-const { createStore } = require('redux')
-const bowser = require('bowser')
+import { createStore } from 'redux'
+import * as bowser from 'bowser'
 
-const init = require('./appstateinit.js')
+import init from './appstateinit.js'
 init.version = InterfaceVersion
 
-function setPreviewPages (previewPages, doc, page) {
+export function setPreviewPages (previewPages, doc, page) {
   let newPages = Object.assign({}, previewPages)
   newPages[doc] = page
   return newPages
@@ -526,7 +526,9 @@ let AppState = createStore(function (state = {}, action) {
   }
 })
 
-AppState.browserSupportsPassiveEvents = (() => {
+export { AppState }
+
+let browserSupportsPassiveEvents = (() => {
   // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md#feature-detection
   let supportsPassive = false
   try {
@@ -539,6 +541,10 @@ AppState.browserSupportsPassiveEvents = (() => {
   } catch (e) {}
   return supportsPassive
 })()
+
+AppState.browserSupportsPassiveEvents = browserSupportsPassiveEvents
+
+export { browserSupportsPassiveEvents }
 
 AppState.focusingInput = null
 
@@ -567,5 +573,3 @@ if (AppState.isSafari) {
     firefox: '23'
   })
 }
-
-module.exports = AppState

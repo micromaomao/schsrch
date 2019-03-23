@@ -1,4 +1,4 @@
-module.exports = function (text) {
+export default function (text) {
   let ta = document.createElement('textarea')
   Object.assign(ta.style, {
     position: 'fixed',

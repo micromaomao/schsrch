@@ -1,7 +1,7 @@
-const AppState = require('./appstate.js')
-const React = require('react')
+import { AppState } from './appstate.js'
+import * as React from 'react'
 
-class ErrorDisplay extends React.Component {
+export class ErrorDisplay extends React.Component {
   constructor (props) {
     super(props)
     this.state = {}
@@ -78,8 +78,8 @@ class ErrorDisplay extends React.Component {
   }
 }
 
-module.exports = {
-  then: res => new Promise((resolve, reject) => {
+export function then (res) {
+  return new Promise((resolve, reject) => {
     if (!res.ok) {
       res.text().then(rspText => {
         reject({
@@ -94,12 +94,14 @@ module.exports = {
     } else {
       resolve(res)
     }
-  }),
-  error: err => new Promise((resolve, reject) => {
+  })
+}
+
+export function error (err) {
+  return new Promise((resolve, reject) => {
     reject({
       type: 'network',
       message: 'Unable to reach the server'
     })
-  }),
-  ErrorDisplay
+  })
 }

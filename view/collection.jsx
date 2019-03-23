@@ -1,9 +1,9 @@
-const React = require('react')
-const AppState = require('./appstate.js')
-const FetchErrorPromise = require('./fetcherrorpromise.jsx')
-const { Editor } = require('./collectioneditor.jsx')
+import * as React from 'react'
+import { AppState } from './appstate.js'
+import * as FetchErrorPromise from './fetcherrorpromise.jsx'
+import Editor from './collectioneditor.jsx'
 
-class Collection extends React.Component {
+export default class Collection extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -438,5 +438,3 @@ class Collection extends React.Component {
     })
   }
 }
-
-module.exports = Collection

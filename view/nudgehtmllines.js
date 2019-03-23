@@ -2,7 +2,7 @@ function getHeight (nudger) {
   return parseFloat(window.getComputedStyle(nudger).height)
 }
 
-module.exports = function (html, nudger) {
+export default function (html, nudger) {
   html = html.trim()
   if (html.length === 0) return []
   let lines = []

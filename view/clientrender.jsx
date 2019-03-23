@@ -1,12 +1,9 @@
 'use strict'
 
-require('@babel/polyfill')
-require('fetch-polyfill')
+import '@babel/polyfill';
+import 'fetch-polyfill';
 require('offline-plugin/runtime').install()
-require('fullscreen-api-polyfill')
-
-const { removeClientOffsetCache } = require('./pointutils.js')
-removeClientOffsetCache()
+import 'fullscreen-api-polyfill';
 
 if (/^https:\/\/(beta\.)?schsrch\.xyz\//.test(window.location.href)) {
   setTimeout(function () {
@@ -39,12 +36,12 @@ if (/^https:\/\/(beta\.)?schsrch\.xyz\//.test(window.location.href)) {
 // States include things like current query, current previewing documents, etc.
 // This also make sure that the App won't "reset" once user switch to other Apps and switch back.
 require('./lpdfjs.js')
-const AppState = require('./appstate.js')
+import { AppState } from './appstate.js'
 
-const React = require('react')
-const ReactDOM = require('react-dom')
-const SchSrch = require('./schsrch.jsx')
-const state2meta = require('./state2meta.js')
+import * as React from 'react';
+import { render } from 'react-dom';
+import SchSrch from './schsrch.jsx';
+import state2meta from './state2meta.js';
 
 // Polyfill
 window.requestIdleCallback = window.requestIdleCallback || (func => setTimeout(func, 1000))
@@ -264,7 +261,7 @@ class AppMain extends React.Component {
     }, 100)
   }
 }
-ReactDOM.render(
+render(
   <AppMain />,
   reactRootElement
 )

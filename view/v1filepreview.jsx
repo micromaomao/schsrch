@@ -1,10 +1,10 @@
 const React = require('react')
 const PaperUtils = require('./paperutils.js')
 const SsPdfView = require('./sspdfview.jsx')
-const AppState = require('./appstate.js')
+const { AppState } = require('./appstate.js')
 const DocDirList = require('./docdirlist.jsx')
 const FetchErrorPromise = require('./fetcherrorpromise.jsx')
-const {view2client} = require('./pointutils.js')
+const { view2client } = require('transformationstage/dist/PointUtils.js')
 
 class V1FilePreview extends React.Component {
   constructor (props) {

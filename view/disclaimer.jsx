@@ -1,7 +1,7 @@
-const React = require('react')
-const AppState = require('./appstate.js')
+import * as React from 'react'
+import { AppState } from './appstate.js'
 
-class Disclaimer extends React.Component {
+export default class Disclaimer extends React.Component {
   constructor (props) {
     super(props)
     this.state = {}
@@ -40,5 +40,3 @@ class Disclaimer extends React.Component {
     )
   }
 }
-
-module.exports = Disclaimer

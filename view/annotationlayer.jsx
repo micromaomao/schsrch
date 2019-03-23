@@ -1,10 +1,10 @@
-const React = require('react')
-const AppState = require('./appstate.js')
-const { assertValidPoint, client2view, pointDistance } = require('./pointutils.js')
+import * as React from 'react';
+import { browserSupportsPassiveEvents } from './appstate.js';
+import { client2view, pointDistance } from 'transformationstage/dist/PointUtils.js';
 
 const etAttr = 'data-event-bind'
 
-class AnnotationLayer extends React.Component {
+export default class AnnotationLayer extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -186,7 +186,7 @@ class AnnotationLayer extends React.Component {
     let et = this.eventTarget
     if (!et) return
     if (et.getAttribute(etAttr) === 'true') return
-    let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
+    let noPassiveEventsArgument = browserSupportsPassiveEvents ? {passive: false} : false
     et.addEventListener('touchstart', this.handleDown, noPassiveEventsArgument)
     et.addEventListener('mousedown', this.handleDown, noPassiveEventsArgument)
     et.setAttribute(etAttr, 'true')
@@ -201,7 +201,7 @@ class AnnotationLayer extends React.Component {
   }
 
   handleDown (evt) {
-    let noPassiveEventsArgument = AppState.browserSupportsPassiveEvents ? {passive: false} : false
+    let noPassiveEventsArgument = browserSupportsPassiveEvents ? {passive: false} : false
 
     evt.preventDefault()
     if (!evt.touches) {
@@ -492,14 +492,12 @@ class AnnotationLayer extends React.Component {
     return client2view(point, this.eventTarget)
   }
   view2doc (point) {
-    assertValidPoint(point)
     let [x, y] = point
     let [offX, offY] = this.props.viewOffset
     let scale = this.props.viewScale
     return [(x - offX) / scale, (y - offY) / scale]
   }
   doc2view (point) {
-    assertValidPoint(point)
     let [x, y] = point
     let [offX, offY] = this.props.viewOffset
     let scale = this.props.viewScale
@@ -608,5 +606,3 @@ class AnnotationLayer extends React.Component {
     return Object.assign({}, ano)
   }
 }
-
-module.exports = AnnotationLayer

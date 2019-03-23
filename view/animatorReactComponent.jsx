@@ -1,6 +1,6 @@
-const React = require('react')
+import * as React from 'react';
 
-class AnimatorReactComponent extends React.Component {
+export default class AnimatorReactComponent extends React.Component {
   constructor (props) {
     super(props)
     this.nextFrameForceUpdateAnimationFrameRequest = null
@@ -14,5 +14,3 @@ class AnimatorReactComponent extends React.Component {
     })
   }
 }
-
-module.exports = AnimatorReactComponent

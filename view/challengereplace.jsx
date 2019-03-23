@@ -1,8 +1,8 @@
-const React = require('react')
-const AppState = require('./appstate.js')
-const FetchErrorPromise = require('./fetcherrorpromise.jsx')
+import * as React from 'react'
+import { AppState } from './appstate.js'
+import * as FetchErrorPromise from './fetcherrorpromise.jsx'
 
-class ChallengeReplaceView extends React.Component {
+export default class ChallengeReplaceView extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -92,5 +92,3 @@ class ChallengeReplaceView extends React.Component {
     AppState.dispatch({type: 'close-challenge-replace'})
   }
 }
-
-module.exports = ChallengeReplaceView

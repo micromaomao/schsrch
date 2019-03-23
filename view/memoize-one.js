@@ -1,4 +1,4 @@
-module.exports = function (fn) {
+export default function (fn) {
   let lastCallArg = null
   let lastCallResult = null
 

@@ -1,6 +1,6 @@
-const React = require('react')
-const FetchErrorPromise = require('./fetcherrorpromise.jsx')
-const AppState = require('./appstate.js')
+import * as React from 'react'
+import * as FetchErrorPromise from './fetcherrorpromise.jsx'
+import { AppState } from './appstate.js'
 
 class LoginView extends React.Component {
   constructor (props) {
@@ -171,7 +171,7 @@ class LoginView extends React.Component {
       })
     })
   }
-  
+
   handleUsernameInput (evt) {
     let username = evt.target.value.replace(/\s/g, '')
     this.setState({usernameInput: username, usernameCheckState: 'checking', lastError: null})
@@ -332,4 +332,4 @@ class LoginView extends React.Component {
   })
 })()
 
-module.exports = { LoginView }
+export default LoginView

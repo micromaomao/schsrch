@@ -1,13 +1,13 @@
-const Set = require('es6-set')
-const Map = require('es6-map')
-const React = require('react')
-const ReactDOM = require('react-dom')
-const AppState = require('./appstate.js')
-const FetchErrorPromise = require('./fetcherrorpromise.jsx')
+import Set from 'es6-set'
+import Map from 'es6-map'
+import * as React from 'react'
+import * as ReactDOM from 'react-dom'
+import { AppState } from './appstate.js'
+import * as FetchErrorPromise from './fetcherrorpromise.jsx'
 const SsPdfView = require('./sspdfview.jsx')
-const PaperUtils = require('./paperutils.js')
-const AnnotationLayer = require('./annotationlayer.jsx')
-const nudgeHTMLLines = require('./nudgehtmllines.js')
+import PaperUtils from './paperutils.js'
+import AnnotationLayer from './annotationlayer.jsx'
+import nudgeHTMLLines from './nudgehtmllines.js'
 
 const AllowedFormattingNodes = /^([bius])$/i // <b>, <i>, <s>, <u>
 let editorNodeTypeNameTable = {}
@@ -401,7 +401,7 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
       boundary: clip.boundary
     }))
   }
-  
+
   openDoc () {
     if (!this.state.docMeta || !this.props.structure.doc) return
     AppState.dispatch({type: 'home'})
@@ -473,7 +473,7 @@ class PaperCropEditorNode extends BaseEditorNodeComponent {
 }
 editorNodeTypeNameTable.paperCrop = PaperCropEditorNode
 
-class Editor extends React.Component {
+export default class Editor extends React.Component {
   constructor (props) {
     super(props)
     this.btnStateInterval = null
@@ -944,5 +944,3 @@ class Editor extends React.Component {
     return fragments
   }
 }
-
-module.exports = { Editor }

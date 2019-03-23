@@ -1,10 +1,9 @@
-const React = require('react')
-const CIESubjects = require('./CIESubjects.js')
-const PaperUtils = require('./paperutils.js')
-const Feedback = require('./feedback.jsx')
-const AppState = require('./appstate.js')
+import * as React from 'react'
+import CIESubjects from './CIESubjects.js'
+import PaperUtils from './paperutils.js'
+import { AppState } from './appstate.js'
 
-class SearchPrompt extends React.Component {
+export default class SearchPrompt extends React.Component {
   render () {
     let query = this.props.query.toLowerCase().trim()
     let prompt = null
@@ -17,7 +16,7 @@ class SearchPrompt extends React.Component {
       if (!subj) {
         let requestFeedback = null
         if (!AppState.getState().serverrender) {
-          requestFeedback = (<a onClick={evt => Feedback.show(querySubj + ' << unsupported syllabus')}>Request to add</a>)
+          requestFeedback = (<a onClick={evt => AppState.dispatch({type: 'showFeedback', search: querySubj + ' << unsupported syllabus'})}>Request to add</a>)
         }
         prompt = (<div className='error'>Syllabus {querySubj} isn't supported. {requestFeedback}</div>)
       } else if (query.match(/^\d{4}$/)) {
@@ -31,5 +30,3 @@ class SearchPrompt extends React.Component {
     )
   }
 }
-
-module.exports = SearchPrompt

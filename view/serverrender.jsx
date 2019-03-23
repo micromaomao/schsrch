@@ -1,12 +1,13 @@
 'use strict'
 
-const AppState = require('./appstate.js')
-const SchSrch = require('./schsrch.jsx')
-const React = require('react')
+import { AppState } from './appstate.js'
+import SchSrch from './schsrch.jsx'
+import * as React from 'react'
 const { renderToString } = require('react-dom/server')
 const style = require('./layout.sass')
 
-global.serverRender = module.exports = state => {
+export default function serverRender (state) {
   AppState.dispatch({type: 'init-server', serverrender: state})
   return renderToString(<SchSrch />)
 }
+global.serverRender = serverRender

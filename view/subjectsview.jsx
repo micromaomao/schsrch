@@ -1,10 +1,9 @@
-const React = require('react')
-const AppState = require('./appstate.js')
-const SubjectData = require('./CIESubjects.data.js')
-const Feedback = require('./feedback.jsx')
-const FetchErrorPromise = require('./fetcherrorpromise.jsx')
+import * as React from 'react'
+import { AppState } from './appstate.js'
+import SubjectData from './CIESubjects.data.js'
+import * as FetchErrorPromise from './fetcherrorpromise.jsx'
 
-class SubjectsView extends React.Component {
+export default class SubjectsView extends React.Component {
   constructor (props) {
     super(props)
     this.state = {}
@@ -69,7 +68,7 @@ class SubjectsView extends React.Component {
           {AppState.getState().serverrender ? (
             'enable JavaScript and request to add it with feedback, or contact the site owner in person if you know them'
           ) : (
-            <a onClick={evt => Feedback.show('/subjects/')}>request to add it</a>
+            <a onClick={evt => AppState.dispatch({type: 'showFeedback', search: '/subjects/'})}>request to add it</a>
           )}.
         </p>
         <h2>IGCSE</h2>
@@ -98,5 +97,3 @@ class SubjectsView extends React.Component {
     AppState.dispatch({type: 'home'})
   }
 }
-
-module.exports = SubjectsView

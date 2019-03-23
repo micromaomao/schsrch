@@ -1,9 +1,8 @@
-const React = require('react')
-const FetchErrorPromise = require('./fetcherrorpromise.jsx')
-const AppState = require('./appstate.js')
-const Feedback = require('./feedback.jsx')
+import * as React from 'react'
+import * as FetchErrorPromise from './fetcherrorpromise.jsx'
+import { AppState } from './appstate.js'
 
-class Sidebar extends React.Component {
+export default class Sidebar extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -120,7 +119,7 @@ class Sidebar extends React.Component {
             ) : null}
         </div>
         <div className='bottom'>
-          <a onClick={evt => Feedback.show()}>Feedback</a>
+          <a onClick={evt => AppState.dispatch({type: 'showFeedback'})}>Feedback</a>
           <a onClick={evt => AppState.dispatch({type: 'disclaim'})}>Disclaimer</a>
           <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
         </div>
@@ -274,5 +273,3 @@ class Sidebar extends React.Component {
     })
   }
 }
-
-module.exports = Sidebar

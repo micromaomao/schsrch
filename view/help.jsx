@@ -1,5 +1,5 @@
-const React = require('react')
-const AppState = require('./appstate.js')
+import * as React from 'react'
+import { AppState } from './appstate.js'
 
 class SearchLink extends React.Component {
   constructor (props) {
@@ -26,7 +26,7 @@ class SearchLink extends React.Component {
   }
 }
 
-class Help extends React.Component {
+export default class Help extends React.Component {
   constructor (props) {
     super(props)
   }
@@ -102,5 +102,3 @@ class Help extends React.Component {
     )
   }
 }
-
-module.exports = Help

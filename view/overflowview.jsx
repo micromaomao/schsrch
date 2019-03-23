@@ -1,11 +1,11 @@
-const React = require('react')
-const CIESubjects = require('./CIESubjects.js')
-const PaperUtils = require('./paperutils.js')
-const AppState = require('./appstate.js')
-const PaperSet = require('./paperset.jsx')
+import * as React from 'react'
+import CIESubjects from './CIESubjects.js'
+import PaperUtils from './paperutils.js'
+import { AppState } from './appstate.js'
+import PaperSet from './paperset.jsx'
 const V1FilePreview = require('./v1filepreview.jsx')
 
-class OverflowView extends React.Component {
+export default class OverflowView extends React.Component {
   constructor (props) {
     super(props)
     this.handleSyClick = this.handleSyClick.bind(this)
@@ -150,5 +150,3 @@ class OverflowView extends React.Component {
     this.props.onChangeQuery && this.props.onChangeQuery(this.props.query + ' ' + time)
   }
 }
-
-module.exports = OverflowView

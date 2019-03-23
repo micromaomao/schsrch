@@ -1,8 +1,8 @@
-const React = require('react')
-const { createStore } = require('redux')
-const AppState = require('./appstate.js')
-const FetchErrorPromise = require('./fetcherrorpromise.jsx')
-const CIESubjects = require('./CIESubjects.js')
+import * as React from 'react'
+import { createStore } from 'redux'
+import { AppState } from './appstate.js'
+import * as FetchErrorPromise from './fetcherrorpromise.jsx'
+import CIESubjects from './CIESubjects.js'
 
 let statusInfoState = createStore(function (state = {}, action) {
   switch (action.type) {
@@ -37,7 +37,7 @@ function fetchStatusInfo () {
   }
 }
 
-class Description extends React.Component {
+export default class Description extends React.Component {
   constructor (props) {
     super(props)
     this.state = {}
@@ -149,5 +149,3 @@ class Description extends React.Component {
     AppState.dispatch({type: 'hide-help'})
   }
 }
-
-module.exports = Description

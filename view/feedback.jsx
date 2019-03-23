@@ -1,8 +1,8 @@
-const React = require('react')
-const AppState = require('./appstate.js')
-const AnimatorReactComponent = require('./animatorReactComponent.jsx')
+import * as React from 'react'
+import { AppState } from './appstate.js'
+import AnimatorReactComponent from './animatorReactComponent.jsx'
 
-class FeedbackFrame extends AnimatorReactComponent {
+export default class FeedbackFrame extends AnimatorReactComponent {
   constructor (props) {
     super(props)
     this.state = {
@@ -160,10 +160,3 @@ class FeedbackFrame extends AnimatorReactComponent {
     })
   }
 }
-
-let Feedback = {
-  Frame: FeedbackFrame,
-  show: search => AppState.dispatch({type: 'showFeedback', search: search || null})
-}
-
-module.exports = Feedback

@@ -1,7 +1,7 @@
 const React = require('react')
 const rbush = require('rbush')
 const copyStuff = require('./copystuff.js')
-const { client2view, pointDistance } = require('./pointutils.js')
+const { client2view, pointDistance } = require('transformationstage/dist/PointUtils.js')
 const bowser = require('bowser')
 const AppState = require('./appstate.js')
 

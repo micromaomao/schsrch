@@ -1,15 +1,14 @@
-const React = require('react')
-const PaperUtils = require('./paperutils.js')
-const PaperSet = require('./paperset.jsx')
-const Feedback = require('./feedback.jsx')
-const AppState = require('./appstate.js')
-const OverflowView = require('./overflowview.jsx')
-const CIESubjects = require('./CIESubjects.js')
-const SearchPrompt = require('./searchprompt.jsx')
+import * as React from 'react'
+import PaperUtils from './paperutils.js'
+import PaperSet from './paperset.jsx'
+import { AppState } from './appstate.js'
+import OverflowView from './overflowview.jsx'
+import CIESubjects from './CIESubjects.js'
+import SearchPrompt from './searchprompt.jsx'
 const V1FilePreview = require('./v1filepreview.jsx')
-const FetchErrorPromise = require('./fetcherrorpromise.jsx')
-const PaperViewer = require('./paperviewer.jsx')
-const memoizeOne = require('./memoize-one.js')
+import * as FetchErrorPromise from './fetcherrorpromise.jsx'
+import PaperViewer from './paperviewer.jsx'
+import memoizeOne from './memoize-one.js'
 
 class InitResultList extends React.Component {
   constructor (props) {
@@ -67,7 +66,7 @@ class InitResultList extends React.Component {
   }
 }
 
-class SearchResult extends React.Component {
+export default class SearchResult extends React.Component {
   constructor (props) {
     super(props)
     this.handleOverflowChangeQuery = this.handleOverflowChangeQuery.bind(this)
@@ -352,5 +351,3 @@ class SearchResult extends React.Component {
     AppState.dispatch({type: 'query', query: nQuery})
   }
 }
-
-module.exports = SearchResult

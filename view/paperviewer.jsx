@@ -1,12 +1,12 @@
-const React = require('react')
+import * as React from 'react'
 const getDocument = require('./lpdfjs.js')
-const AppState = require('./appstate.js')
-const FetchErrorPromise = require('./fetcherrorpromise.jsx')
-const PaperUtils = require('./paperutils.js')
-const { client2view } = require('./pointutils.js')
-const { TransformationStage, PendingTransform } = require('./transformationstage.js')
+import { AppState } from './appstate.js'
+import * as FetchErrorPromise from './fetcherrorpromise.jsx'
+import PaperUtils from './paperutils.js'
+import { client2view } from 'transformationstage/dist/PointUtils.js'
+import { TransformationStage, PendingTransform } from 'transformationstage'
 
-class PaperViewer extends React.Component {
+export default class PaperViewer extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -1239,5 +1239,3 @@ class ManagedPage {
     this.textContent = null
   }
 }
-
-module.exports = PaperViewer
