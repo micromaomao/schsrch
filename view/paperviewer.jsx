@@ -161,7 +161,11 @@ export default class PaperViewer extends React.Component {
   }
 
   handlePDFUserMove (nTransform) {
-    AppState.dispatch({type: 'v2view-user-move-page', stageTransform: nTransform})
+    AppState.dispatch({type: 'v2view-user-move-page', stageTransform: {
+      nTranslate: nTransform.nTranslate,
+      nScale: nTransform.nScale,
+      time: nTransform.time
+    }})
   }
 
   render () {
@@ -574,7 +578,7 @@ class PDFJSViewer extends React.Component {
     this.elem.appendChild(this.textLayersContain)
     this.measureViewDim()
     this.startSizeMeasurementAFrame()
-    this.stage.bindTouchEvents(this.textLayersContain)
+    this.stage.bindEvents(this.textLayersContain)
     this.scrollbar = document.createElement('div')
     this.scrollbar.className = 'scrollbar'
     this.elem.appendChild(this.scrollbar)
@@ -627,6 +631,7 @@ class PDFJSViewer extends React.Component {
   checkPropStageTransform () {
     let currentTransform = this.stage.animationGetFinalState()
     let targetTransform = this.props.stageTransform
+    targetTransform = new PendingTransform(targetTransform.nTranslate, targetTransform.nScale, this.stage, targetTransform.time)
     if (targetTransform.time <= currentTransform.time) return
     if (!currentTransform.simillarTo(targetTransform) && !this.stage.pressState) {
       targetTransform.startAnimation(400)
@@ -687,7 +692,7 @@ class PDFJSViewer extends React.Component {
       this.aframeMeasureSize = null
     }
     this.setDocument(null)
-    this.stage.removeTouchEvents(this.textLayersContain)
+    this.stage.removeEvents(this.textLayersContain)
     this.stage.destroy()
     this.stage = null
     this.paintCanvas.width = this.paintCanvas.height = 0
@@ -791,7 +796,7 @@ class PDFJSViewer extends React.Component {
         let stageY = rPage.stageOffset[1] + dd.qNRect.y1 - 5 - rPage.clipRectangle[1]
         let centerPendingT = this.stage.putOnCenter([rPage.stageOffset[0] + dd.qNRect.x1 - 5 - rPage.clipRectangle[0], stageY,
                                 rPage.stageWidth - dd.qNRect.x1 + rPage.clipRectangle[0], rPage.stageHeight / 2])
-        return centerPendingT.setTranslate([null, -stageY * centerPendingT.nScale])
+        return new PendingTransform([centerPendingT.nTranslate[0], -stageY * centerPendingT.nScale], centerPendingT.nScale, this.stage, centerPendingT.time)
       }
     }
   }
