@@ -3,7 +3,7 @@ const rbush = require('rbush')
 const copyStuff = require('./copystuff.js')
 const { client2view, pointDistance } = require('transformationstage/dist/PointUtils.js')
 const bowser = require('bowser')
-const AppState = require('./appstate.js')
+const { AppState } = require('./appstate.js')
 
 const noCacheCanvas = bowser.safari && !bowser.check({safari: '10'})
 
