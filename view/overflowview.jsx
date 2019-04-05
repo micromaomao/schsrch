@@ -91,7 +91,12 @@ export default class OverflowView extends React.Component {
                       })}
                       current={false}
                       onOpenFile={(id, page) => {
-                        AppState.dispatch({type: 'previewFile', fileId: id, page, psKey: doc._id})
+                        AppState.dispatch({
+                          type: 'v2view',
+                          fileId: id,
+                          tCurrentType: doc.type,
+                          asPopup: true
+                        })
                       }}
                       mini={true} />,
                       (

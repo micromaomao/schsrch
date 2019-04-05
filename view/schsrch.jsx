@@ -247,7 +247,8 @@ export default class SchSrch extends React.Component {
     return (
       <div className={'v2viewingPopup ' + (v2viewing.popupClosing ? 'hide' : 'show')}>
         <div className='topbar'>
-          <a onClick={this.handleV2viewerPopupClose}>&lt; Return to search</a> <a onClick={this.handleV2viewerPopupToInline}>Change to inline viewer</a>
+          <a onClick={this.handleV2viewerPopupClose}>&lt; Return to search</a>&nbsp;
+          {v2viewing.searchIndex ? (<a onClick={this.handleV2viewerPopupToInline}>Change to inline viewer</a>) : null}
         </div>
         <PaperViewer key={'popup_v2paperviewer'} />
       </div>
