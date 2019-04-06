@@ -1,6 +1,7 @@
 import * as React from 'react'
 import * as FetchErrorPromise from './fetcherrorpromise.jsx'
 import { AppState } from './appstate.js'
+const base64js = require('base64-js')
 
 class LoginView extends React.Component {
   constructor (props) {
@@ -13,7 +14,10 @@ class LoginView extends React.Component {
       usernameCheckState: null,
       requestState: null,
       lastError: null,
-      regNewToken: null
+      regNewToken: null,
+      userAuthMethods: [],
+      fido2loadingServerChallenge: false,
+      fidoCredId: null
     }
     this.handleUsernameInput = this.handleUsernameInput.bind(this)
     this.handlePasswordInput = this.handlePasswordInput.bind(this)
@@ -22,6 +26,7 @@ class LoginView extends React.Component {
     this.handleSetPassword = this.handleSetPassword.bind(this)
     this.handleTokenInput = this.handleTokenInput.bind(this)
     this.handleTryToken = this.handleTryToken.bind(this)
+    this.handleStartFido2 = this.handleStartFido2.bind(this)
   }
   render () {
     return (
@@ -59,13 +64,35 @@ class LoginView extends React.Component {
                             <p>
                               Welcome back, {this.state.usernameInput}.
                             </p>
-                            <input type='password' placeholder='Password' className='passwordInput' value={this.state.passwordInput} onChange={this.handlePasswordInput}/>
-                            <div className='btn'>
-                              <a onClick={this.handleTryPassword}>Login</a>
-                            </div>
-                            <p>
-                              Sorry, there is no "forget password" yet.
-                            </p>
+                            {this.state.userAuthMethods.includes('fido2') ? (
+                              <div className='btn'>
+                                {this.state.fido2loadingServerChallenge ? (
+                                  'loading challenge from server\u2026'
+                                ) : (
+                                  <a onClick={this.handleStartFido2}>Login with Webauthn</a>
+                                )}
+                              </div>
+                            ) : null}
+                            {this.state.userAuthMethods.includes('fido2') && this.state.userAuthMethods.includes('scrypt') ? (
+                              <div>or</div>
+                            ) : null}
+                            {this.state.userAuthMethods.includes('scrypt') ? (
+                              <input type='password' placeholder='Password' className='passwordInput' value={this.state.passwordInput} onChange={this.handlePasswordInput}/>
+                            ) : null}
+                            {this.state.userAuthMethods.includes('scrypt') ? (
+                              <div className='btn'>
+                                <a onClick={this.handleTryPassword}>Login</a>
+                              </div>
+                            ) : null}
+                            {this.state.userAuthMethods.includes('scrypt') ? (
+                              <p>
+                                Sorry, there is no "forget password" yet.
+                              </p>
+                            ) : (
+                              <p>
+                                You can't use password to login because you haven't set a password.
+                              </p>
+                            )}
                           </div>
                         )
                       } else if (checkState === 'notexist') {
@@ -179,9 +206,13 @@ class LoginView extends React.Component {
       this.setState({usernameCheckState: null})
       return
     }
-    fetch(`/auth/${encodeURIComponent(username)}/`, {method: 'HEAD'}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => {
+    fetch(`/auth/${encodeURIComponent(username)}/`, {method: 'GET'}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(res => {
       if (this.state.usernameInput !== username) return
-      this.setState({usernameCheckState: 'exist'})
+      this.setState({usernameCheckState: 'exist', userAuthMethods: res.map(x => x.type)})
+      let fido2 = res.find(x => x.type === 'fido2')
+      if (fido2) {
+        this.setState({fidoCredId: fido2.credId})
+      }
     }, err => {
       if (this.state.usernameInput !== username) return
       if (err.status === '404') {
@@ -268,6 +299,49 @@ class LoginView extends React.Component {
         requestState: null,
         lastError: err
       })
+    })
+  }
+
+  handleStartFido2 (evt) {
+    let { usernameInput: username } = this.state
+    this.setState({fido2loadingServerChallenge: true, lastError: null})
+    fetch('/auths/signingchallenge/', {method: 'GET'}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.text()).then(chg => {
+      if (this.state.usernameInput !== username) return
+      this.setState({fido2loadingServerChallenge: false, requestState: {
+        progressText: 'Check browser prompt\u2026'
+      }, lastError: null})
+      window.navigator.credentials.get({
+        publicKey: {
+          challenge: base64js.toByteArray(chg),
+          timeout: 60 * 4 * 1000,
+          rpId: window.location.hostname,
+          allowCredentials: [
+            {type: 'public-key', id: base64js.toByteArray(this.state.fidoCredId)}
+          ]
+        }
+      }).then(cred => {
+        let ctHeaders = new Headers()
+        ctHeaders.append('Content-Type', 'application/json')
+        fetch(`/auth/${encodeURIComponent(username)}/newSession/`, {method: 'POST', headers: ctHeaders, body: JSON.stringify({
+          type: 'fido2',
+          clientDataJSON: String.fromCharCode.apply(null, new Uint8Array(cred.response.clientDataJSON)),
+          authenticatorData: base64js.fromByteArray(new Uint8Array(cred.response.authenticatorData)),
+          signature: base64js.fromByteArray(new Uint8Array(cred.response.signature)),
+          userHandle: base64js.fromByteArray(new Uint8Array(cred.response.userHandle))
+        })}).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(json => {
+          let token = json.authToken
+          AppState.dispatch({type: 'finish-login', token})
+        }, err => {
+          this.setState({
+            requestState: null, lastError: err
+          })
+        })
+      }, err => {
+        this.setState({requestState: null, lastError: err})
+      })
+    }, err => {
+      if (this.state.usernameInput !== username) return
+      this.setState({fido2loadingServerChallenge: false, lastError: err})
     })
   }
 

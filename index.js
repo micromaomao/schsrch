@@ -37,7 +37,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
   const siteName = siteOrigin.match(/^https?:\/\/(.+)$/)[1]
   let rMain = express.Router()
 
-  require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord, PastPaperCollection, PastPaperId}) => {
+  require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord, PastPaperCollection, PastPaperId, PastPaperFidoChallenge}) => {
     function statusInfo () {
       return Promise.all([PastPaperDoc.count({}), PastPaperIndex.count({}), PastPaperRequestRecord.count({})])
         .then(([docCount, indexCount, requestCount]) => {
@@ -393,7 +393,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
       res.send(req.authId)
     })
 
-    rMain.head('/auth/:username', function (req, res, next) {
+    rMain.head('/auth/:username/', function (req, res, next) {
       let username = req.params.username.toString().trim()
       PastPaperId.count({username}).then(ct => {
         if (ct === 0) {
@@ -403,8 +403,30 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
           res.status(200)
           res.end()
         }
-      })
+      }, err => next(err))
     })
+
+    rMain.get('/auth/:username/', function (req, res, next) {
+      let username = req.params.username.toString().trim()
+      PastPaperId.findOne({username}).then(usr => {
+        if (!usr) {
+          res.status(404)
+          res.type('text/plain')
+          res.send('User not found.')
+          return
+        }
+        PastPaperSessionGranter.find({userId: usr._id}).then(sgs => {
+          res.send(sgs.map(sg => {
+            if (sg.type === 'fido2') {
+              return {type: 'fido2', credId: sg.fido2.credId.toString('base64')}
+            } else {
+              return {type: sg.type}
+            }
+          }))
+        }, err => next(err))
+      }, err => next(err))
+    })
+
     rMain.post('/auth/:username/', function (req, res, next) {
       let username = req.params.username.toString().trim()
       if (!/^[^\s]{1,}$/.test(username)) {
@@ -494,6 +516,16 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
         res.status(200)
         res.end()
       }, err => next(err))
+    })
+
+    rMain.get('/auths/signingchallenge/', function (req, res, next) {
+      PastPaperFidoChallenge.generate().then(chg => {
+        res.type('text/plain')
+        res.send(chg.toString('base64'))
+      }, err => {
+        res.status(500)
+        res.send(err.message)
+      })
     })
 
     rMain.post('/collections/new', requireAuthentication, function (req, res, next) {

@@ -12,7 +12,7 @@ services:
     ports:
       - "127.0.0.1:80:80"
       - "127.0.0.1:443:443"
-      - "192.168.0.113:80:80"
+      # - "192.168.0.113:80:80"
       - "127.0.0.1:9229:9229" # for debugger
     environment:
       NODE_ENV: development
@@ -30,7 +30,7 @@ services:
       - ./view:/usr/src/app/view
       - ./test:/usr/src/app/test
       - ./lib:/usr/src/app/lib
-      - /home/mao/active-projects/TransformationStage:/usr/src/app/node_modules/transformationstage
+      # - ./node_modules:/usr/src/app/node_modules
   mongo:
     container_name: mw-mongo
     image: mongo:latest
