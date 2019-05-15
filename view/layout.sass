@@ -679,19 +679,20 @@ $sidebar-width: 300px
           text-decoration: inherit
   .empty
     padding: 3rem 5rem
-  .set, .filepreview
+  .set
     margin-top: 0.5rem
     margin-bottom: 0.3rem
-  .set
     padding: 0 0 0.5rem 0
+    .setname
     background-color: rgba($color-primary, 0.05)
     .setname
       padding: 0.5rem 1rem
       background-color: rgba($color-primary, 0.1)
-      font-size: 1rem
+      font-size: 0.9rem
       color: $color-secondary-text
       .time, .paper, .variant
         color: $color-primary
+        font-size: 0.9rem
         display: inline-block
       .paper.meta
         color: $color-secondary-text !important
@@ -720,7 +721,6 @@ $sidebar-width: 300px
       cursor: pointer
       .typename
         color: $color-link
-        font-size: 110%
         margin-right: 1rem
       .desc
         font-size: 90%
@@ -734,9 +734,6 @@ $sidebar-width: 300px
         color: $color-secondary-text
         .highlight
           color: $color-primary
-  .filepreview
-    width: 100%
-    height: 80vh
   .searchprompt
     padding-left: 0.5rem
     padding-right: 0.5rem
@@ -858,34 +855,19 @@ $sidebar-width: 300px
                 cursor: pointer
                 margin-right: 1rem
 
-.searchresult.smallsetname .set, .set.small, .set.mini
-  .setname
-    font-size: 0.9rem
-    .time, .paper, .variant
-      color: $color-primary
-      font-size: 0.9rem
-      display: inline-block
+.set.mini
+  background-color: transparent
+  margin: 0
+  .setname, .files, .files > .file:first-child
+    display: inline-block
+    margin-top: 0
+    margin-bottom: 0
+  .files
+    padding: 0
   .typename
-    font-size: 1rem
-  &.mini
-    background-color: transparent
-    margin: 0
-    .setname, .files, .files > .file:first-child
-      display: inline-block
-      margin-top: 0
-      margin-bottom: 0
-    .files
-      padding: 0
-    .typename
-      font-size: 0.9rem
-    .subject
-      display: none
-  .related
-    padding-top: 0.5rem
-    padding-left: 1rem
     font-size: 0.9rem
-    .file
-      padding: 0.1rem 0.5rem
+  .subject
+    display: none
 
 .searchprompt
   color: $color-primary
@@ -900,11 +882,6 @@ $sidebar-width: 300px
     cursor: pointer
     &:hover
       color: lighten($color-link, 20%)
-
-.sidepane .view-search .searchresult
-  .set.current-previewing
-    background-color: rgba(#aaa, 0.1)
-    border-right: solid 2px $color-primary
 
 $feedback-top-height: 2rem + 1.3rem
 .feedback.hide

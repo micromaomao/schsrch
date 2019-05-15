@@ -6,11 +6,9 @@ import FeedbackFrame from './feedback.jsx'
 import Disclaimer from './disclaimer.jsx'
 import { AppState } from './appstate.js'
 import * as FetchErrorPromise from './fetcherrorpromise.jsx'
-const V1FilePreview = require('./v1filepreview.jsx')
 import Collection from './collection.jsx'
 import LoginView from './auth.jsx'
 import ChallengeReplaceView from './challengereplace.jsx'
-import PaperUtils from './paperutils.js'
 import Sidebar from './sidebar.jsx'
 import * as bowser from 'bowser'
 import SubjectsView from './subjectsview.jsx'
@@ -109,8 +107,6 @@ export default class SchSrch extends React.Component {
           return this.renderViewSubjects()
       }
     })()
-    let { previewing, collection, paperCropClipboard } = aState
-    let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
       <div className='schsrch'>
         {this.state.server ? null : (
@@ -139,63 +135,15 @@ export default class SchSrch extends React.Component {
               </div>
             </div>
           ) : null}
-          <div className={'viewcontain' + (displayingBigPreview ? ' sidepane' : '')}>
+          <div className={'viewcontain'}>
             {view}
-            {displayingBigPreview ? (
-              <V1FilePreview doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} />
-            ) : null }
           </div>
-          {!paperCropClipboard && collection && collection.homeFromCollection
-            ? (
-                <div className='bottom'>
-                  No paper crop selected. <a
-                    onClick={evt => AppState.dispatch({type: 'view-collection', collectionId: collection.id})}>
-                    return to collection</a>
-                  &nbsp;
-                  <a onClick={evt => AppState.dispatch({type: 'clear-home-from-collection'})}>close</a>
-                </div>
-              )
-            : null}
-          {paperCropClipboard
-            ? (
-                <div className='bottom'>
-                  Paper&nbsp;
-                  <span className='paperName'>
-                    {paperCropClipboard.docMeta
-                      ? (
-                          <a onClick={evt => {
-                              AppState.dispatch({type: 'query', query: PaperUtils.setToString(paperCropClipboard.docMeta)})
-                              AppState.dispatch({type: 'home'})
-                            }}>
-                            {PaperUtils.setToString(paperCropClipboard.docMeta)}_{paperCropClipboard.docMeta.type}
-                          </a>
-                        )
-                      : (
-                          <a>{paperCropClipboard.doc}</a>
-                        )}
-                  </span>
-                  &nbsp;selected.&nbsp;
-                  <a onClick={evt => AppState.dispatch({type: 'set-paper-crop-clipboard', doc: null})}>clear</a>
-                  &nbsp;
-                  {collection && collection.homeFromCollection
-                    ? (
-                        <a onClick={evt => AppState.dispatch({type: 'view-collection', collectionId: collection.id})}>
-                          return to collection
-                        </a>
-                      )
-                    : null}
-                </div>
-              )
-            : null}
         </div>
         {this.state.server ? null : <FeedbackFrame />}
         {this.renderSidebar()}
         {this.renderV2ViewingPopup()}
       </div>
     )
-  }
-  shouldShowBigPreview () {
-    return this.state.server ? false : window.innerWidth >= 1100
   }
   handleBlackCoverDown (evt) {
     if (this.state.showSidebar) {
@@ -267,7 +215,6 @@ export default class SchSrch extends React.Component {
     let query = AppState.getState().querying || {}
     query = query.query
     let previewing = AppState.getState().previewing
-    let displayingBigPreview = this.shouldShowBigPreview() && previewing !== null
     return (
       <div className='view view-search'>
         <div key='searchbarcontain' className='searchbarcontain'>
@@ -281,10 +228,7 @@ export default class SchSrch extends React.Component {
         <div className='searchcontain' onScroll={this.handleSearchContainScroll}>
           <SearchResult
             querying={AppState.getState().querying}
-            previewing={previewing}
-            showSmallPreview={!this.shouldShowBigPreview()}
-            onRetry={this.retryQuery}
-            smallerSetName={true} />
+            onRetry={this.retryQuery} />
         </div>
       </div>
     )

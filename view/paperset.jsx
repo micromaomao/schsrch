@@ -24,7 +24,7 @@ export default class PaperSet extends React.Component {
     // sortedTypes is all the document in this set *except* the one that gets displayed its content in full text search.
     sortedTypes = set.types.slice(firstDoc !== null ? 1 : 0).sort((a, b) => PaperUtils.funcSortType(a.type, b.type))
     return (
-      <div className={'set' + (this.props.current ? ' current-previewing' : '') + (this.props.small ? ' small' : '') + (this.props.mini ? ' mini' : '')}>
+      <div className={'set' + (this.props.mini ? ' mini' : '')}>
         <div className='setname'>
           {subject
             ? <span className='subject'>
@@ -78,7 +78,7 @@ export default class PaperSet extends React.Component {
           )
           : null}
         <div className={firstDoc !== null ? 'related' : 'files'}>
-          {firstDoc ? 'Related: ' : null}
+          {firstDoc && sortedTypes.length > 0 ? 'Related: ' : null}
           {sortedTypes.map(file => {
             let pt = (
               <span>
@@ -108,7 +108,6 @@ export default class PaperSet extends React.Component {
 
   shouldComponentUpdate (nextProps, nextState) {
     if (nextState.server || this.state.server) return true
-    if (nextProps.current || this.props.current) return true
     if (nextProps.paperSet !== this.props.paperSet || nextProps.query !== this.props.query) return true
     return false
   }
@@ -116,6 +115,8 @@ export default class PaperSet extends React.Component {
   openFile (id, page = 0, type = null) {
     if (this.props.onOpenFile) {
       this.props.onOpenFile(id, page, type)
+    } else {
+      window.open(this.fileUrl(id))
     }
   }
   fileUrl (id) {

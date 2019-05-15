@@ -83,7 +83,7 @@ export default class OverflowView extends React.Component {
               <p>Additional resources for {thisSubject}:</p>
               <div>
                 {metaDocs.map(doc => {
-                  return [
+                  return (
                     <PaperSet
                       key={doc._id}
                       paperSet={Object.assign({}, doc, {
@@ -98,18 +98,7 @@ export default class OverflowView extends React.Component {
                           asPopup: true
                         })
                       }}
-                      mini={true} />,
-                      (
-                        (previewing !== null && previewing.psKey === doc._id && this.props.showSmallPreview) ? (
-                          <V1FilePreview
-                            key={doc._id + '_preview'}
-                            doc={previewing.id}
-                            page={previewing.page}
-                            highlightingDirIndex={previewing.highlightingDirIndex}
-                            shouldUseFixedTop={true} />
-                        ) : null
-                      )
-                  ]
+                      mini={true} /> )
                 })}
               </div>
             </div>

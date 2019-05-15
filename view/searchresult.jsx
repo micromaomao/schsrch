@@ -5,7 +5,6 @@ import { AppState } from './appstate.js'
 import OverflowView from './overflowview.jsx'
 import CIESubjects from './CIESubjects.js'
 import SearchPrompt from './searchprompt.jsx'
-const V1FilePreview = require('./v1filepreview.jsx')
 import * as FetchErrorPromise from './fetcherrorpromise.jsx'
 import PaperViewer from './paperviewer.jsx'
 import memoizeOne from './memoize-one.js'
@@ -142,7 +141,7 @@ export default class SearchResult extends React.Component {
     let v2 = resultOrganized && resultOrganized.v === 2
     if (querying.result && querying.result.response === 'text' && !AppState.getState().serverrender && false) v2 = true
     return (
-      <div className={'searchresult' + (querying.loading ? ' loading' : '') + (this.props.smallerSetName ? ' smallsetname' : '') + (v2 ? ' v2' : '')}>
+      <div className={'searchresult' + (querying.loading ? ' loading' : '') + (v2 ? ' v2' : '')}>
         {!v2 ? <SearchPrompt query={querying.query} /> : null}
         {querying.error
           ? <FetchErrorPromise.ErrorDisplay error={querying.error} serverErrorActionText={'handle your query'} onRetry={this.props.onRetry} />
@@ -208,7 +207,7 @@ export default class SearchResult extends React.Component {
       switch (result.response) {
         case 'overflow':
           return (
-            <OverflowView query={query} response={result} onChangeQuery={this.handleOverflowChangeQuery} showSmallPreview={this.props.showSmallPreview} previewing={this.props.previewing} />
+            <OverflowView query={query} response={result} onChangeQuery={this.handleOverflowChangeQuery} />
           )
         case 'empty':
         default:
@@ -258,21 +257,10 @@ export default class SearchResult extends React.Component {
               let elements = []
               for (let set of bucket) {
                 let psKey = PaperUtils.setToString(set)
-                let previewing = this.props.previewing
-                let current = previewing !== null && previewing.psKey === psKey
                 elements.push(<PaperSet
                     paperSet={set}
                     key={psKey}
-                    current={current}
-                    onOpenFile={(id, page) => {
-                        AppState.dispatch({type: 'previewFile', fileId: id, page, psKey})
-                      }}
                     />)
-                if (current && this.props.showSmallPreview) {
-                  elements.push(
-                    <V1FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
-                  )
-                }
               }
               return elements
             })()}
@@ -288,9 +276,6 @@ export default class SearchResult extends React.Component {
                 let elements = []
                 for (let item of items) {
                   let searchIndex = item.types[0].index._id
-                  let psKey = '!!index!' + searchIndex
-                  let previewing = this.props.previewing
-                  let v1current = previewing !== null && previewing.psKey === psKey
                   let v2viewing = AppState.getState().v2viewing
                   let v2current = false
                   if (v2viewing && v2viewing.searchIndex === searchIndex && !v2viewing.asPopup) {
@@ -298,10 +283,8 @@ export default class SearchResult extends React.Component {
                   }
                   elements.push(<PaperSet
                     paperSet={item}
-                    showRelated={!v2current}
-                    key={psKey}
+                    key={searchIndex}
                     query={query}
-                    current={v1current}
                     onOpenFile={(id, page, type) => {
                         let viewDir = null
                         if (type === item.types[0].type) {
@@ -326,11 +309,6 @@ export default class SearchResult extends React.Component {
                         })
                       }}
                     />)
-                  if (v1current && this.props.showSmallPreview) {
-                    elements.push(
-                      <V1FilePreview key={psKey + '_preview'} doc={previewing.id} page={previewing.page} highlightingDirIndex={previewing.highlightingDirIndex} shouldUseFixedTop={true} />
-                    )
-                  }
                   if (v2current) {
                     elements.push(
                       <div className='paperviewercontain'>
