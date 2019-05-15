@@ -7,3 +7,4 @@ bootstrapPapers.dbdump.*
 package-lock.json
 extract
 tags
+.vscode
