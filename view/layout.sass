@@ -683,8 +683,11 @@ $sidebar-width: 300px
     margin-top: 0.5rem
     margin-bottom: 0.3rem
     padding: 0 0 0.5rem 0
-    .setname
     background-color: rgba($color-primary, 0.05)
+    transition: background-color 1000ms
+    &.current
+      background-color: #c3bcba
+      transition: background-color 400ms
     .setname
       padding: 0.5rem 1rem
       background-color: rgba($color-primary, 0.1)

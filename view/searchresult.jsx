@@ -278,13 +278,14 @@ export default class SearchResult extends React.Component {
                   let searchIndex = item.types[0].index._id
                   let v2viewing = AppState.getState().v2viewing
                   let v2current = false
-                  if (v2viewing && v2viewing.searchIndex === searchIndex && !v2viewing.asPopup) {
+                  if (v2viewing && v2viewing.searchIndex === searchIndex && !v2viewing.popupClosing) {
                     v2current = true
                   }
                   elements.push(<PaperSet
                     paperSet={item}
                     key={searchIndex}
                     query={query}
+                    current={v2current && v2viewing.asPopup}
                     onOpenFile={(id, page, type) => {
                         let viewDir = null
                         if (type === item.types[0].type) {
@@ -309,10 +310,10 @@ export default class SearchResult extends React.Component {
                         })
                       }}
                     />)
-                  if (v2current) {
+                  if (v2current && !v2viewing.asPopup) {
                     elements.push(
                       <div className='paperviewercontain'>
-                        <PaperViewer key={psKey + '_v2paperviewer'} />
+                        <PaperViewer key={searchIndex + '_v2paperviewer'} />
                       </div>
                     )
                   }
