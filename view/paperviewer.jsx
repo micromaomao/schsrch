@@ -18,7 +18,7 @@ export default class PaperViewer extends React.Component {
       dirMenu: null
     }
 
-    this.paperDirHitRegions = null // [{y1, y2, dir}, ...]
+    this.paperDirHitRegions = []
     this.pdfjsViewerInstance = null
 
     this.handleAppStateUpdate = this.handleAppStateUpdate.bind(this)
@@ -30,7 +30,7 @@ export default class PaperViewer extends React.Component {
   loadPaper (fileId) {
     if (this.state.paperFileId === fileId && !this.state.loadError) return
     this.setState({loadError: null, initialLoadTime: Date.now(), dirMenu: null})
-    this.paperDirHitRegions = null
+    this.paperDirHitRegions.length = 0
     if (this.state.paperFileId) {
       if (this.state.pdfs) {
         for (let t of Object.keys(this.state.pdfs)) {
@@ -440,20 +440,21 @@ export default class PaperViewer extends React.Component {
   }
 
   tSwitchTo (typeStr) {
-    this.paperDirHitRegions = null
+    this.paperDirHitRegions.length = 0
     this.setState({dirMenu: null})
     AppState.dispatch({type: 'v2view-set-tCurrentType', tCurrentType: typeStr})
   }
 
   handlePDFJSViewerPostDraw (drawnPages, ctx, stage, dpr) {
-    this.paperDirHitRegions = null
+    this.paperDirHitRegions.length = 0
     let v2viewing = AppState.getState().v2viewing
     let cDir = this.state.dirs[v2viewing.tCurrentType]
     if (cDir && cDir.type === 'questions') {
-      this.paperDirHitRegions = []
       for (let p of drawnPages) {
-        let pDirs = cDir.dirs.filter(x => x.page === p.pageIndex)
-        for (let d of pDirs) {
+        for (let d of cDir.dirs) {
+          if (d.page !== p.pageIndex) {
+            continue
+          }
           if (d.qNRect) {
             let r = d.qNRect
             let pagePoint1 = [r.x1, r.y1]
@@ -483,7 +484,7 @@ export default class PaperViewer extends React.Component {
   }
 
   handlePDFJSViewerDownEvent (evt) {
-    if (!this.paperDirHitRegions || !this.pdfjsViewerInstance) return true
+    if (this.paperDirHitRegions.length == 0 || !this.pdfjsViewerInstance) return true
     this.setState({dirMenu: null})
     let y = null
     let canvasPoint = null
@@ -853,20 +854,18 @@ class PDFJSViewer extends React.Component {
         if (Math.abs(sh - h) <= 1) h = sh
 
         // drawImage on Safari may sliently fail. Check the presence of a check pixel to be sure. This pixel should have been overwritten by drawImage when success.
-        ctx.fillStyle = "#f00"
-        let checkX = Math.ceil(x) + 1
-        let checkY = Math.ceil(y) + 1
-        if (checkX < 0) {
-          checkX = 0
-        }
-        if (checkY < 0) {
-          checkY = 0
-        }
-        ctx.fillRect(checkX, checkY, 1, 1)
-
-        ctx.drawImage(p.renderedCanvas, sx, sy, sw, sh, x, y, w, h)
-
         if (AppState.isSafari) {
+          ctx.fillStyle = "#f00"
+          let checkX = Math.ceil(x) + 1
+          let checkY = Math.ceil(y) + 1
+          if (checkX < 0) {
+            checkX = 0
+          }
+          if (checkY < 0) {
+            checkY = 0
+          }
+          ctx.fillRect(checkX, checkY, 1, 1)
+          ctx.drawImage(p.renderedCanvas, sx, sy, sw, sh, x, y, w, h)
           let checkImgData = ctx.getImageData(checkX, checkY, 1, 1).data
           if (checkImgData[0] === 255 && checkImgData[1] === 0 && checkImgData[2] === 0) {
             PAGE_MAX_SCALE = p.renderedScale - 1
@@ -879,6 +878,8 @@ class PDFJSViewer extends React.Component {
             console.error(`drawImage sliently failed. Reducing maximum resolution to ${PAGE_MAX_SCALE}`)
             p.freeCanvas()
           }
+        } else {
+          ctx.drawImage(p.renderedCanvas, sx, sy, sw, sh, x, y, w, h)
         }
 
         if (!stage.currentAnimation && !stage.pressState) {
