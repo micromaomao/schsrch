@@ -95,7 +95,7 @@ function doOptimize (pdfBlob) {
     //   }
     // })
     let cp = child_process.spawn('gs',
-                                 ['-sDEVICE=pdfwrite', '-dFastWebView', '-dNOPAUSE', '-dBATCH', '-sOutputFile=/tmp/optimize_pdfjs_tmpout.pdf', '-'],
+                                 ['-sDEVICE=pdfwrite', '-dFastWebView', '-dNOPAUSE', '-dBATCH', '-dPrinted=false', '-sOutputFile=/tmp/optimize_pdfjs_tmpout.pdf', '-'],
                                  {
                                    cwd: '/tmp/',
                                    stdio: [
