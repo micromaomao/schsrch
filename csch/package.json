@@ -1,0 +1,26 @@
+{
+  "name": "csch",
+  "version": "0.0.0",
+  "description": "A command line SchSrch client",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/micromaomao/csch.git"
+  },
+  "keywords": [
+    "SchSrch",
+    "cli"
+  ],
+  "author": "Mao Wtm <m@maowtm.org>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/micromaomao/csch/issues"
+  },
+  "homepage": "https://github.com/micromaomao/csch#readme",
+  "dependencies": {
+    "request": "^2.85.0"
+  }
+}
