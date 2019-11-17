@@ -1,4 +1,4 @@
-FROM node:lts-stretch
+FROM node:10
 
 WORKDIR /usr/src/app/
 RUN useradd --home-dir /usr/src/app -s /bin/false www && \
