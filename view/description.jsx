@@ -137,7 +137,7 @@ export default class Description extends React.Component {
             <div className='inner'>
               We are abandoning alias domains! <br /><br />
               After October 2020, f**kcie.com and schsrch.xyz will no longer redirect to this site and the domain will not be renewed anymore.
-              If you happens to rely on any of those URLs, please update your links. <br /><br />
+              If you happen to rely on any of those URLs, please update your links. <br /><br />
               This is done simply to not waste any more money, and have nothing to do with the potentially inappropriate joke itself :).
             </div>
           </div>
