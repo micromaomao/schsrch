@@ -117,11 +117,6 @@ export default class PaperViewer extends React.Component {
               this.forceUpdate()
             }
           }
-          obj.loadingTask.promise.catch(err => {
-            obj.error = err
-            reject(err)
-            this.forceUpdate()
-          })
           obj.loadingTask.promise.then(pdfDocument => {
             obj.document = pdfDocument
             pdfDocument.getPage(1).then(() => {
@@ -129,6 +124,10 @@ export default class PaperViewer extends React.Component {
               this.forceUpdate()
             }, err => {})
             resolve()
+            this.forceUpdate()
+          }, err => {
+            obj.error = err
+            reject(err)
             this.forceUpdate()
           })
         })
@@ -1127,7 +1126,7 @@ class PDFJSViewer extends React.Component {
 class ManagedPage {
   constructor (pdfjsPage) {
     this.pdfjsPage = pdfjsPage
-    this.unitViewport = pdfjsPage.getViewport(1)
+    this.unitViewport = pdfjsPage.getViewport({scale: 1})
     this.initWidth = this.unitViewport.width
     this.initHeight = this.unitViewport.height
     this.stageOffset = [0, 0]
@@ -1165,7 +1164,7 @@ class ManagedPage {
     }
     this.renderringScale = scale
     let nCanvas = document.createElement('canvas')
-    let viewport = this.pdfjsPage.getViewport(scale)
+    let viewport = this.pdfjsPage.getViewport({scale})
     nCanvas.width = Math.ceil(viewport.width)
     nCanvas.height = Math.ceil(viewport.height)
     console.log(`Render w=${nCanvas.width}, h=${nCanvas.height}`)
@@ -1181,7 +1180,7 @@ class ManagedPage {
       renderInteractiveForms: false
     })
     this.renderTask = renderTask
-    return renderTask.then(() => {
+    return renderTask.promise.then(() => {
       if (this.renderTask !== renderTask) {
         ctx = null
         nCanvas.width = nCanvas.height = 0

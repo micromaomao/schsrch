@@ -22,7 +22,7 @@ if (typeof window !== 'undefined' && window.document) {
       if (onLoadTaskReceived) {
         onLoadTaskReceived(loadTask)
       }
-      return loadTask
+      return loadTask.promise
     })
   }
 } else {
