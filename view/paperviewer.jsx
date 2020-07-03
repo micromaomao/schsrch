@@ -1131,7 +1131,7 @@ class ManagedPage {
     this.initHeight = this.unitViewport.height
     this.stageOffset = [0, 0]
     this.clipRectangle = [0, 0, this.initWidth, this.initHeight] // [x, y, w, h]
-    this.pageIndex = pdfjsPage.pageIndex
+    this.pageIndex = pdfjsPage.pageNumber - 1
     this.renderedCanvas = null
     this.textContent = null
     this.textLayer = null
