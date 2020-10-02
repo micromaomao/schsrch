@@ -3,7 +3,6 @@ import CIESubjects from './CIESubjects.js'
 import PaperUtils from './paperutils.js'
 import { AppState } from './appstate.js'
 import PaperSet from './paperset.jsx'
-const V1FilePreview = require('./v1filepreview.jsx')
 
 export default class OverflowView extends React.Component {
   constructor (props) {

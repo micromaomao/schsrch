@@ -6,9 +6,6 @@ import FeedbackFrame from './feedback.jsx'
 import Disclaimer from './disclaimer.jsx'
 import { AppState } from './appstate.js'
 import * as FetchErrorPromise from './fetcherrorpromise.jsx'
-import Collection from './collection.jsx'
-import LoginView from './auth.jsx'
-import ChallengeReplaceView from './challengereplace.jsx'
 import Sidebar from './sidebar.jsx'
 import * as bowser from 'bowser'
 import SubjectsView from './subjectsview.jsx'
@@ -99,10 +96,6 @@ export default class SchSrch extends React.Component {
           return this.renderDisclaim()
         case 'collection':
           return this.renderViewCollection()
-        case 'login':
-          return this.renderViewLogin()
-        case 'challenge-replace':
-          return this.renderViewChallengeReplace()
         case 'subjects':
           return this.renderViewSubjects()
       }
@@ -177,11 +170,8 @@ export default class SchSrch extends React.Component {
     let aState = AppState.getState()
     return (
       <Sidebar
-        loginInfo={aState.loginInfo}
-        authToken={aState.authToken}
         currentView={aState.view}
-        show={this.state.showSidebar}
-        currentCollection={aState.collection ? aState.collection.id : null} />
+        show={this.state.showSidebar} />
     )
   }
   renderV2ViewingPopup () {
@@ -277,20 +267,6 @@ export default class SchSrch extends React.Component {
     return (
       <div className='view view-collection'>
         <Collection collection={AppState.getState().collection} />
-      </div>
-    )
-  }
-  renderViewLogin () {
-    return (
-      <div className='view view-login'>
-        <LoginView />
-      </div>
-    )
-  }
-  renderViewChallengeReplace () {
-    return (
-      <div className='view view-challenge-replace'>
-        <ChallengeReplaceView authToken={AppState.getState().authToken} />
       </div>
     )
   }

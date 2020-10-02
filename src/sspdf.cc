@@ -361,12 +361,13 @@ NAN_METHOD(getPDFContentAll) {
 }
 
 NAN_MODULE_INIT(Init) {
+  auto context = Isolate::GetCurrent()->GetCurrentContext();
   Set(target
     , New<v8::String>("getPage").ToLocalChecked()
-    , New<v8::FunctionTemplate>(getPage)->GetFunction());
+    , New<v8::FunctionTemplate>(getPage)->GetFunction(context).ToLocalChecked());
   Set(target
     , New<v8::String>("getPDFContentAll").ToLocalChecked()
-    , New<v8::FunctionTemplate>(getPDFContentAll)->GetFunction());
+    , New<v8::FunctionTemplate>(getPDFContentAll)->GetFunction(context).ToLocalChecked());
 }
 
 NODE_MODULE(sspdf, Init)

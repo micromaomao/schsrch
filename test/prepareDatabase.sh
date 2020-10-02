@@ -4,7 +4,7 @@ paperbin=pastpapers.bin
 password=schsrch
 
 # Drop database and elasticsearch index.
-mongo --host $MONGODB --eval "db.getSiblingDB('test').dropDatabase()"
+mongo --host $MONGODB --eval "db.dropDatabase()"
 curl -X DELETE 'http://'$ES'/pastpaper'
 echo # last command don't have \n
 

@@ -52,13 +52,13 @@ db.on('open', function () {
     const {PastPaperRequestRecord, PastPaperDoc} = dbModel
     PastPaperRequestRecord.count().then(ct => {
       if (ct !== 0) {
-        console.error('Unclean database. Run test/perpareDatabase.sh before testing.')
+        console.error('Unclean database. Run test/prepareDatabase.sh before testing.')
         process.exit(1)
         return
       }
       PastPaperDoc.count().then(ct => {
         if (ct === 0) {
-          console.error('No testing paper present. Run test/perpareDatabase.sh before testing.')
+          console.error('No testing paper present. Run test/prepareDatabase.sh before testing.')
           process.exit(1)
           return
         }
@@ -80,8 +80,6 @@ function doTests () {
   require('./feedback.js')(schsrch, dbModel)
   require('./ciesubjects.js')()
   require('./paperutils.js')()
-  require('./auth.js')(schsrch, dbModel)
-  require('./collections.js')(schsrch, dbModel)
   require('./dirsbatch.js')(schsrch, dbModel)
   run()
 }
