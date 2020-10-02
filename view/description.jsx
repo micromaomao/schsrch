@@ -132,16 +132,6 @@ export default class Description extends React.Component {
         {(this.state.server ? AppState.getState().serverrender.siteOrigin : window.location.origin) === 'https://paper.sc' || this.props.showHelp ? null : (
           <div className='mirrornotice'>You are viewing a mirror of <a href='https://paper.sc'>paper.sc</a>.</div>
         )}
-        {Date.now() < 1605830399000 ? (
-          <div className='notification'>
-            <div className='inner'>
-              We are abandoning alias domains! <br /><br />
-              After October 2020, f**kcie.com and schsrch.xyz will no longer redirect to this site and the domain will not be renewed anymore.
-              If you happen to rely on any of those URLs, please update your links. <br /><br />
-              This is done simply to not waste any more money, and have nothing to do with the potentially inappropriate joke itself :).
-            </div>
-          </div>
-        ) : null}
         {!this.props.showHelp ? statusInfo : null}
         {!this.props.showHelp ? (
           <div className='copyright'>All paper &#169; <a href='http://www.cambridgeassessment.org.uk/' target='_blank'>UCLES</a>. Content provided solely for educational purpose.</div>
