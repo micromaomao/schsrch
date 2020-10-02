@@ -32,7 +32,7 @@ let es = new elasticsearch.Client({
   host: ES
 })
 es.ping({
-  requestTimeout: 1000
+  requestTimeout: 5000
 }, err => {
   if (err) {
     console.error(err)
@@ -49,9 +49,4 @@ db.on('open', function () {
     res.send('The server encountered an unexpected error - ' + err.message)
   })
   http.createServer(app).listen(80, BIND_ADDR)
-  setTimeout(() => {
-    process.setgid('www')
-    process.setuid('www')
-    console.log('set uid and gid to www.')
-  }, 100)
 })

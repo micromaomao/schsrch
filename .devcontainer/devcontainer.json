@@ -1,0 +1,15 @@
+{
+	"name": "schsrch docker-compose",
+	"dockerComposeFile": "../docker-compose-example.yml",
+	"service": "vscode-dev",
+	"runServices": ["vscode-dev"],
+	"workspaceFolder": "/usr/src/app",
+	"extensions": [
+		"eamodio.gitlens",
+		"visualstudioexptteam.vscodeintellicode"
+	],
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/bash"
+	},
+	"remoteUser": "1000:1000"
+}

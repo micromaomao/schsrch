@@ -12,8 +12,23 @@ services:
     ports:
       - "127.0.0.1:80:80"
       - "127.0.0.1:443:443"
-      # - "192.168.0.113:80:80"
-      - "127.0.0.1:9229:9229" # for debugger
+    environment:
+      NODE_ENV: development
+      MONGODB: mongodb://mw-mongo/schsrch
+      ES: mw-es:9200
+      SITE_ORIGIN: http://localhost
+    stdin_open: true
+    user: node:node
+    tty: true
+    depends_on:
+      - mongo
+      - es
+  vscode-dev:
+    container_name: schsrch-www-vscode
+    # build: .
+    image: maowtm/schsrch-dev
+    networks:
+      - mw
     environment:
       NODE_ENV: development
       MONGODB: mongodb://mw-mongo/schsrch
@@ -21,16 +36,13 @@ services:
       SITE_ORIGIN: http://localhost
     stdin_open: true
     tty: true
-    command: bash # After running "docker-compose -f docker-compose-example.yml up -d", run "docker attach schsrch-www" to get a shell and run "npm run webpack-dev &" and/or node server.js .
+    command: bash
+    user: node:node
     depends_on:
       - mongo
       - es
     volumes:
-      - ./index.js:/usr/src/app/index.js
-      - ./view:/usr/src/app/view
-      - ./test:/usr/src/app/test
-      - ./lib:/usr/src/app/lib
-      # - ./node_modules:/usr/src/app/node_modules
+      - .:/usr/src/app
   mongo:
     container_name: mw-mongo
     image: mongo:latest
