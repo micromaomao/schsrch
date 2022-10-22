@@ -39,7 +39,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
 
   require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord, PastPaperCollection, PastPaperId, PastPaperFidoChallenge}) => {
     function statusInfo () {
-      return Promise.all([PastPaperDoc.count({}), PastPaperIndex.count({}), PastPaperRequestRecord.count({})])
+      return Promise.all([PastPaperDoc.estimatedDocumentCount(), PastPaperIndex.estimatedDocumentCount(), PastPaperRequestRecord.estimatedDocumentCount()])
         .then(([docCount, indexCount, requestCount]) => {
           return Promise.resolve({docCount, indexCount, requestCount})
         }, err => Promise.reject(err))
