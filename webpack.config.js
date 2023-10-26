@@ -1,6 +1,5 @@
 const path = require('path')
 const webpack = require('webpack')
-const OfflinePlugin = require('offline-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const dev = process.env.NODE_ENV !== 'production'
 
@@ -78,23 +77,10 @@ module.exports = [
         chunks: [ 'clientrender' ],
         inject: false
       }),
-      new OfflinePlugin({
-        caches: {
-          main: [':rest:', '/resources/pdfjs/pdf.min.js', '/resources/pdfjs/pdf.worker.min.js']
-        },
-        responseStrategy: 'cache-first',
-        ServiceWorker: {
-          scope: '/',
-          publicPath: '/sw.js',
-          minify: !dev
-        },
-        AppCache: null,
-        rewrites: {
-          'index.html': '/'
-        },
-        autoUpdate: true
+      new webpack.DefinePlugin({
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
       })
-    ].filter(x => x !== null)
+    ]
   }),
   Object.assign({}, baseConfig, {
     module: Object.assign({}, baseConfig.module, {
@@ -138,7 +124,7 @@ module.exports = [
     },
     target: 'node',
     optimization: {
-      minimize: false
+      minimize: !dev
     },
     output: {
       path: path.join(__dirname, './dist-server'),
@@ -146,6 +132,9 @@ module.exports = [
       filename: '[name].js'
     },
     plugins: [
+      new webpack.DefinePlugin({
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+      })
     ]
   })
 ]

@@ -1,8 +1,13 @@
 'use strict'
 
+if ('serviceWorker' in window.navigator) {
+  navigator.serviceWorker.getRegistrations().then(rs => {
+    return Promise.all(rs.map(r => r.unregister()))
+  });
+}
+
 import '@babel/polyfill';
 import 'fetch-polyfill';
-require('offline-plugin/runtime').install()
 import 'fullscreen-api-polyfill';
 
 if (/^https:\/\/(beta\.)?schsrch\.xyz\//.test(window.location.href)) {

@@ -55,7 +55,7 @@ class PdfssWorker : public AsyncWorker {
         this->error = new char[strlen(MSG_EXCEPTION_ZEROLEN) + 1];
         strcpy(this->error, MSG_EXCEPTION_ZEROLEN);
       } else {
-        char* pdfData = (((char*)(*(*hPdf)->Buffer())->GetContents().Data())) + (*hPdf)->ByteOffset();
+        char* pdfData = (((char*)(*(*hPdf)->Buffer())->GetBackingStore()->Data())) + (*hPdf)->ByteOffset();
         this->pdfData = new char[this->pdfLen];
         memcpy(this->pdfData, pdfData, this->pdfLen);
       }
@@ -192,7 +192,7 @@ class pdfContentAllWorker : public AsyncWorker {
         this->error = new char[strlen(MSG_EXCEPTION_ZEROLEN) + 1];
         strcpy(this->error, MSG_EXCEPTION_ZEROLEN);
       } else {
-        char* pdfData = ((char*) (*(*hPdf)->Buffer())->GetContents().Data()) + (*hPdf)->ByteOffset();
+        char* pdfData = ((char*) (*(*hPdf)->Buffer())->GetBackingStore()->Data()) + (*hPdf)->ByteOffset();
         this->pdfData = new char[this->pdfLen];
         memcpy(this->pdfData, pdfData, this->pdfLen);
       }
