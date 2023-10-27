@@ -23,7 +23,6 @@ export default class Sidebar extends React.Component {
           <div className={'menuitem' + (view === 'home' ? ' current' : '')} onClick={evt => AppState.dispatch({type: 'home'})}>Home</div>
         </div>
         <div className='bottom'>
-          <a onClick={evt => AppState.dispatch({type: 'showFeedback'})}>Feedback</a>
           <a onClick={evt => AppState.dispatch({type: 'disclaim'})}>Disclaimer</a>
           <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
         </div>

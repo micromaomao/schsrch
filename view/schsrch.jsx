@@ -2,7 +2,6 @@ import * as React from 'react'
 import SearchBar from './searchbar.jsx'
 import Description from './description.jsx'
 import SearchResult from './searchresult.jsx'
-import FeedbackFrame from './feedback.jsx'
 import Disclaimer from './disclaimer.jsx'
 import { AppState } from './appstate.js'
 import * as FetchErrorPromise from './fetcherrorpromise.jsx'
@@ -84,7 +83,7 @@ export default class SchSrch extends React.Component {
     let noScriptFirstP = (
       <p>
         <a href='http://www.enable-javascript.com/'>Enable javascript</a> to enjoy a better and faster experience, and to use features like jumping from question paper
-        to mark scheme or editing collections. Javascript is required also to submit feedback.
+        to mark scheme or editing collections.
       </p>
     )
     let view = (() => {
@@ -132,7 +131,6 @@ export default class SchSrch extends React.Component {
             {view}
           </div>
         </div>
-        {this.state.server ? null : <FeedbackFrame />}
         {this.renderSidebar()}
         {this.renderV2ViewingPopup()}
       </div>
