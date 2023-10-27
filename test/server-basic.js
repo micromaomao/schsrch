@@ -58,15 +58,10 @@ module.exports = schsrch =>
         .end(done)
     })
     it('/sw.js', function (done) {
-      fs.readFile(path.join(__dirname, '../dist/sw.js'), {encoding: 'utf-8'}, (err, data) => {
-        if (err) return done(err)
-        supertest(schsrch)
-          .get('/sw.js')
-          .expect(200)
-          .expect('Content-Type', /javascript/)
-          .expect(res => res.text.should.equal(data))
-          .end(done)
-      })
+      supertest(schsrch)
+        .get('/sw.js')
+        .expect(404)
+        .end(done)
     })
     it('/opensearch.xml', function (done) {
       fs.readFile(path.join(__dirname, '../view/opensearch.xml'), {encoding: 'utf-8'}, (err, data) => {
