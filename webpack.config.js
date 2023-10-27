@@ -7,7 +7,18 @@ baseConfig = {
   mode: dev ? 'development' : 'production',
   module: {
     rules: [
-      { test: /\.sass$/, use: ['css-loader', 'sass-loader'] },
+      {
+        test: /\.sass$/, use: [
+          {
+            loader: 'css-loader',
+            options: {
+              exportType: 'string'
+            }
+          }, {
+            loader: 'sass-loader'
+          }
+        ]
+      },
       {
         test: /\.jsx$/,
         use: [
@@ -73,8 +84,8 @@ module.exports = [
     plugins: [
       new HtmlWebpackPlugin({
         template: './view/index.pug',
-        minify: dev ? false : {removeComments: true, useShortDoctype: true, sortClassName: true, sortAttributes: true},
-        chunks: [ 'clientrender' ],
+        minify: dev ? false : { removeComments: true, useShortDoctype: true, sortClassName: true, sortAttributes: true },
+        chunks: ['clientrender'],
         inject: false
       }),
       new webpack.DefinePlugin({
@@ -85,16 +96,18 @@ module.exports = [
   Object.assign({}, baseConfig, {
     module: Object.assign({}, baseConfig.module, {
       rules: [
-        { test: /\.sass$/, use: [
-          {
-            loader: 'css-loader',
-            options: {
-              exportType: 'string'
+        {
+          test: /\.sass$/, use: [
+            {
+              loader: 'css-loader',
+              options: {
+                exportType: 'string'
+              }
+            }, {
+              loader: 'sass-loader'
             }
-          }, {
-            loader: 'sass-loader'
-          }
-        ]},
+          ]
+        },
         {
           test: /\.jsx$/,
           use: [
