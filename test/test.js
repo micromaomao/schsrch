@@ -49,24 +49,14 @@ db.on('open', function () {
   })
   require('../lib/dbModel.js')(db, es).then(_dbModel => {
     dbModel = _dbModel
-    const {PastPaperRequestRecord, PastPaperDoc} = dbModel
-    PastPaperRequestRecord.count().then(ct => {
-      if (ct !== 0) {
-        console.error('Unclean database. Run test/prepareDatabase.sh before testing.')
+    const {PastPaperDoc} = dbModel
+    PastPaperDoc.count().then(ct => {
+      if (ct === 0) {
+        console.error('No testing paper present. Run test/prepareDatabase.sh before testing.')
         process.exit(1)
         return
       }
-      PastPaperDoc.count().then(ct => {
-        if (ct === 0) {
-          console.error('No testing paper present. Run test/prepareDatabase.sh before testing.')
-          process.exit(1)
-          return
-        }
-        doTests()
-      })
-    }, err => {
-      console.error(err)
-      process.exit(1)
+      doTests()
     })
   })
 })

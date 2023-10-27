@@ -37,9 +37,9 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
   const siteName = siteOrigin.match(/^https?:\/\/(.+)$/)[1]
   let rMain = express.Router()
 
-  require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord, PastPaperCollection, PastPaperId, PastPaperFidoChallenge}) => {
+  require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperCollection, PastPaperId, PastPaperFidoChallenge}) => {
     function statusInfo () {
-      return Promise.all([PastPaperDoc.estimatedDocumentCount(), PastPaperIndex.estimatedDocumentCount(), PastPaperRequestRecord.estimatedDocumentCount()])
+      return Promise.all([PastPaperDoc.estimatedDocumentCount(), PastPaperIndex.estimatedDocumentCount(), Promise.resolve(0)])
         .then(([docCount, indexCount, requestCount]) => {
           return Promise.resolve({docCount, indexCount, requestCount})
         }, err => Promise.reject(err))
@@ -108,8 +108,6 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
 
     rMain.get('/', function (req, res) {
       renderView({}, res)
-      let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/'})
-      saveRecord(rec)
     })
     rMain.use('/resources', express.static(path.join(__dirname, 'dist')))
     rMain.use('/resources/pdfjs', express.static(path.join(__dirname, 'node_modules/pdfjs-dist/build')))
@@ -130,7 +128,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
       statusInfo().then(rst => res.send(rst), err => next(err))
     })
 
-    let doSearch = require('./lib/doSearch.js')({PastPaperDoc, PastPaperIndex, PastPaperFeedback, PastPaperRequestRecord})
+    let doSearch = require('./lib/doSearch.js')({PastPaperDoc, PastPaperIndex, PastPaperFeedback})
 
     rMain.get('/search/', function (req, res, next) {
       let query = (req.query.query || '').toString().trim()
@@ -139,8 +137,6 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
         res.redirect('/')
         return
       }
-      let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/search/', search: query, format})
-      saveRecord(rec)
       if (format === 'raw') {
         let queryParse = ParseQuery(query)
         if (!queryParse) {
@@ -210,8 +206,6 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
       let page = parseInt(req.query.page || 'NaN')
       if (!Number.isSafeInteger(page)) page = null
       PastPaperDoc.findOne({_id: docId}).then(doc => {
-        let rec = new PastPaperRequestRecord({ip: req.ip, time: Date.now(), requestType: '/doc/', targetId: req.params.id, targetPage: page, targetFormat: format})
-        saveRecord(rec)
         if (!doc) {
           return void next()
         }
