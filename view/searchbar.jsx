@@ -2,8 +2,8 @@ import * as React from 'react'
 import CIESubjects from './CIESubjects.js'
 import { AppState } from './appstate.js'
 import AnimatorReactComponent from './animatorReactComponent.jsx'
-const IconData = require('raw-loader!./icon.svg')
-const BannerDrawing = require('raw-loader!./banner.svg')
+const IconData = require('raw-loader!./icon.svg').default.toString()
+const BannerDrawing = require('raw-loader!./banner.svg').default.toString()
 
 export default class SearchBar extends AnimatorReactComponent {
   constructor (props) {

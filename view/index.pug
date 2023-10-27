@@ -20,11 +20,11 @@ html
     meta(property="og:type", content="website")
     meta(property="og:locale", content="en_GB")
     meta(property="fb:app_id", content="384579331936515")
-    style!= require('./layout.sass').toString()
+    style!= require('./layout.sass').default.toString()
   body
     .react-root
     script.
       (document.getElementsByClassName('querybox')[0] || {}).placeholder = 'Still loading...'
     each js in htmlWebpackPlugin.files.js
       script(src=js, async)
-    != require('raw-loader!./index.svg')
+    != require('raw-loader!./index.svg').default.toString()
