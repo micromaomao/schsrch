@@ -7,8 +7,7 @@ const expectedDirs2 = require('./data/expecteddirs-9699.json')
 const expectedDirs3 = require('./data/expecteddirs-0450.json')
 
 module.exports = (schsrch, dbModel) =>
-  // Dirs code needs fixing
-  describe.skip('Getting the dir of the document', function () {
+  describe('Getting the dir of the document', function () {
     const {PastPaperDoc} = dbModel
     let paper1
     let ms1
