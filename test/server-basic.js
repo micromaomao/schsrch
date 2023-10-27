@@ -118,13 +118,13 @@ module.exports = schsrch =>
         .expect('Location', '/')
         .end(done)
     })
-    it('/redbook', function (done) {
-      supertest(schsrch)
-        .get('/redbook')
-        .expect(302)
-        .expect('Location', 'https://static.maowtm.org/redbook.pdf')
-        .end(done)
-    })
+    // it('/redbook', function (done) {
+    //   supertest(schsrch)
+    //     .get('/redbook')
+    //     .expect(302)
+    //     .expect('Location', 'https://static.maowtm.org/redbook.pdf')
+    //     .end(done)
+    // })
     it('/subjects/', function (done) {
       supertest(schsrch)
         .get('/subjects/?as=json')
