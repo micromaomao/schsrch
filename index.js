@@ -111,6 +111,10 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
     })
     rMain.use('/resources', express.static(path.join(__dirname, 'dist')))
     rMain.use('/resources/pdfjs', express.static(path.join(__dirname, 'node_modules/pdfjs-dist/build')))
+    rMain.get('/sw.js', function (req, res) {
+      res.set('cache-control', 'max-age=0')
+      res.sendFile(path.join(__dirname, 'sw-selfdestroy.js'))
+    })
     rMain.get('/opensearch.xml', function (req, res) {
       res.set('cache-control', 'max-age=0')
       res.sendFile(path.join(__dirname, 'view/opensearch.xml'), {
