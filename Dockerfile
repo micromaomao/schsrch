@@ -9,7 +9,7 @@ RUN chown -R node:node /usr/src/app && \
 USER node:node
 
 COPY --chown=node:node . .
-RUN npm ci
+RUN npm i --progress=false --loglevel=warn
 EXPOSE 80 443
 STOPSIGNAL SIGTERM
 HEALTHCHECK --timeout=2s CMD curl -f https://localhost/
