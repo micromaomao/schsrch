@@ -19,7 +19,7 @@ jobs:
           docker build . -t $IMAGE_TAG --no-cache &&
           docker-compose -f docker-compose-example.yml up -d es mongo &&
           sleep 40 &&
-          docker run --entrypoint=bash --user=www -t --network schsrch_mw -e NODE_ENV=development -e MONGODB=mongodb://mw-mongo/schsrch -e ES=mw-es:9200 -e SITE_ORIGIN=http://localhost -v $(pwd)/.git:/usr/src/app/.git $IMAGE_TAG -c "npm install coveralls && npm install istanbul && test/prepareDatabase.sh && npm run coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js";
+          docker run --entrypoint=bash -t --network schsrch_mw -e NODE_ENV=development -e MONGODB=mongodb://mw-mongo/schsrch -e ES=mw-es:9200 -e SITE_ORIGIN=http://localhost -v $(pwd)/.git:/usr/src/app/.git $IMAGE_TAG -c "test/prepareDatabase.sh && npm run test";
           if [ $? -ne 0 ]; then
             exit 1;
           fi;
