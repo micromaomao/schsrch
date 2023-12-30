@@ -2,8 +2,6 @@
 
 ![demo video](readme_video.gif)
 
-[![Build Status](https://travis-ci.org/micromaomao/schsrch.svg?branch=master)](https://travis-ci.org/micromaomao/schsrch)
-[![Coverage Status](https://coveralls.io/repos/github/micromaomao/schsrch/badge.svg?branch=dev)](https://coveralls.io/github/micromaomao/schsrch?branch=dev)
 [![Dependencies](https://david-dm.org/micromaomao/schsrch.svg)](https://david-dm.org/micromaomao/schsrch)
 [![devDependencies Status](https://david-dm.org/micromaomao/schsrch/dev-status.svg)](https://david-dm.org/micromaomao/schsrch?type=dev)
 [![Known Vulnerabilities](https://snyk.io/test/github/micromaomao/schsrch/badge.svg)](https://snyk.io/test/github/micromaomao/schsrch)
@@ -13,7 +11,7 @@
 
 ## Ready-to-run docker image
 
-[![](https://images.microbadger.com/badges/image/maowtm/schsrch.svg) maowtm/schsrch](https://hub.docker.com/r/maowtm/schsrch/)
+[![](https://images.microbadger.com/badges/image/ghcr.io/micromaomao/schsrch.svg) ghcr.io/micromaomao/schsrch](ghcr.io/micromaomao/schsrch)
 
 Environment variables needed: (i.e. docker run -e xxx=xxx -e&hellip; maowtm/schsrch)
 

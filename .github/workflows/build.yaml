@@ -1,0 +1,37 @@
+name: Build docker image
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Export variables
+        run: echo "IMAGE_TAG=ghcr.io/micromaomao/schsrch" >> $GITHUB_ENV
+      - name: Build script
+        run: >
+          git clean -dfx &&
+          chmod u=rwX,go=rX . -R &&
+          docker build . -t $IMAGE_TAG --no-cache &&
+          docker-compose -f docker-compose-example.yml up -d es mongo &&
+          sleep 40 &&
+          docker run --entrypoint=bash --user=www -t --network schsrch_mw -e NODE_ENV=development -e MONGODB=mongodb://mw-mongo/schsrch -e ES=mw-es:9200 -e SITE_ORIGIN=http://localhost -v $(pwd)/.git:/usr/src/app/.git $IMAGE_TAG -c "npm install coveralls && npm install istanbul && test/prepareDatabase.sh && npm run coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js";
+          if [ $? -ne 0 ]; then
+            exit 1;
+          fi;
+          docker run --entrypoint=bash -t --network schsrch_mw -p 3000:80 -e NODE_ENV=production -e MONGODB=mongodb://mw-mongo/schsrch -e ES=mw-es:9200 -e SITE_ORIGIN=http://localhost $IMAGE_TAG -c "node server.js" &
+          sleep 10 &&
+          curl -vI 'http://127.0.0.1:3000'
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push
+        run: >
+          docker push $IMAGE_TAG
