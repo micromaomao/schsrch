@@ -2,8 +2,6 @@
 
 ![demo video](readme_video.gif)
 
-[![Dependencies](https://david-dm.org/micromaomao/schsrch.svg)](https://david-dm.org/micromaomao/schsrch)
-[![devDependencies Status](https://david-dm.org/micromaomao/schsrch/dev-status.svg)](https://david-dm.org/micromaomao/schsrch?type=dev)
 [![Known Vulnerabilities](https://snyk.io/test/github/micromaomao/schsrch/badge.svg)](https://snyk.io/test/github/micromaomao/schsrch)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 
@@ -11,7 +9,7 @@
 
 ## Ready-to-run docker image
 
-[![](https://images.microbadger.com/badges/image/ghcr.io/micromaomao/schsrch.svg) ghcr.io/micromaomao/schsrch](ghcr.io/micromaomao/schsrch)
+`docker pull ghcr.io/micromaomao/schsrch`
 
 Environment variables needed: (i.e. docker run -e xxx=xxx -e&hellip; maowtm/schsrch)
 
