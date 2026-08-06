@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const, object-curly-spacing, no-cond-assign */
 import * as React from 'react'
 import CIESubjects from './CIESubjects.js'
 import PaperUtils from './paperutils.js'

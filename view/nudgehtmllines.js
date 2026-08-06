@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const, space-unary-ops */
 function getHeight (nudger) {
   return parseFloat(window.getComputedStyle(nudger).height)
 }

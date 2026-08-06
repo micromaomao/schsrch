@@ -1,10 +1,11 @@
 #!/usr/bin/env node
+/* eslint-disable prefer-const, object-curly-spacing */
 const express = require('express')
 const mongoose = require('mongoose')
 const elasticsearch = require('elasticsearch')
 const http = require('http')
 
-let { MONGODB: DB, ES, SITE_ORIGIN: siteOrigin, BIND_ADDR } = process.env
+let { MONGODB: DB, ES, SITE_ORIGIN: siteOrigin, BIND_ADDR, PORT } = process.env
 
 try {
   if (!DB || !ES) throw new Error()
@@ -20,7 +21,12 @@ try {
 }
 
 let db = mongoose.createConnection()
-db.openUri(DB).catch(err => {
+db.openUri(DB, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: false
+}).catch(err => {
   console.error(err)
   process.exit(1)
 })
@@ -42,11 +48,23 @@ es.ping({
 db.on('open', function () {
   let SchSrch = require('./index')({mongodb: db, elasticsearch: es, siteOrigin})
   let app = express()
+  const helmet = require('helmet')
+  const morgan = require('morgan')
+  const compression = require('compression')
+  app.use(helmet({
+    contentSecurityPolicy: false,
+    frameguard: { action: 'deny' }
+  }))
+  app.use(morgan('combined'))
+  app.use(compression())
   app.use(SchSrch)
   app.use(function (err, req, res, next) {
     console.error(err)
     res.status(500)
     res.send('The server encountered an unexpected error - ' + err.message)
   })
-  http.createServer(app).listen(80, BIND_ADDR)
+  let port = parseInt(PORT, 10) || 3000
+  http.createServer(app).listen(port, BIND_ADDR, () => {
+    console.log(`Server listening on ${BIND_ADDR || '0.0.0.0'}:${port}`)
+  })
 })

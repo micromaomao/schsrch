@@ -1,3 +1,4 @@
+/* eslint-disable semi, no-undef */
 import * as React from 'react';
 
 export default class AnimatorReactComponent extends React.Component {

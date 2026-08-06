@@ -1,3 +1,4 @@
+/* eslint-disable object-curly-spacing, prefer-const, lines-between-class-members, react/jsx-indent, no-return-assign, react/jsx-first-prop-new-line, react/jsx-closing-bracket-location, indent, react/jsx-closing-tag-location, object-curly-newline, object-property-newline, no-mixed-operators, no-unneeded-ternary, space-unary-ops, react/no-deprecated, object-shorthand, no-undef, no-unused-vars */
 const React = require('react')
 const rbush = require('rbush')
 const copyStuff = require('./copystuff.js')

@@ -8,3 +8,6 @@ package-lock.json
 extract
 tags
 .vscode
+papers_download/
+test_papers/
+test/papers_download_test/

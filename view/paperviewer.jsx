@@ -1,3 +1,4 @@
+/* eslint-disable import/first, object-curly-spacing, prefer-const, react/no-direct-mutation-state, n/handle-callback-err, object-curly-newline, object-property-newline, react/jsx-curly-brace-presence, no-undef, multiline-ternary, react/jsx-first-prop-new-line, react/jsx-indent-props, react/jsx-closing-bracket-location, react/jsx-no-target-blank, space-unary-ops, react/jsx-handler-names, no-return-assign, no-unreachable, eqeqeq, block-spacing, lines-between-class-members, indent, space-infix-ops, quotes, curly, comma-dangle */
 import * as React from 'react'
 const getDocument = require('./lpdfjs.js')
 import { AppState } from './appstate.js'
@@ -106,7 +107,7 @@ export default class PaperViewer extends React.Component {
         }
         this.state.pdfs[type] = obj
         getDocument({
-          url: `/doc/${encodeURIComponent(docid)}/`,
+          url: this.state.dirs[type].fileUrl || `/doc/${encodeURIComponent(docid)}/`,
           disableRange: false,
           rangeChunkSize: 100 * 1024
         }, loadingTask => {
@@ -229,7 +230,7 @@ export default class PaperViewer extends React.Component {
                   {current ? (
                     <a
                       className='download'
-                      href={'/doc/' + encodeURIComponent(this.state.dirs[v2viewing.tCurrentType].docid) + '/'}
+                      href={this.state.dirs[v2viewing.tCurrentType].fileUrl || ('/doc/' + encodeURIComponent(this.state.dirs[v2viewing.tCurrentType].docid) + '/')}
                       target='_blank'>
                       pdf
                     </a>
@@ -238,196 +239,44 @@ export default class PaperViewer extends React.Component {
                 </div>
               )
             }) : null}
+            <div className='split-toggle' style={{marginLeft: 'auto', padding: '0 10px', display: 'flex', alignItems: 'center'}}>
+              <button onClick={() => AppState.dispatch({type: 'v2view-toggle-split'})} style={{background: 'var(--color-primary)', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer'}}>
+                {v2viewing.splitMode ? 'Close Split View' : 'Split View'}
+              </button>
+            </div>
           </div>
-          {(() => {
-            let tCurrentType = v2viewing.tCurrentType
-            if (this.state.pdfs && tCurrentType !== null && this.state.pdfs[tCurrentType] && this.state.dirs[tCurrentType] && this.state.dirs[tCurrentType].type !== 'blob') {
-              let obj = this.state.pdfs[tCurrentType]
-              if (!obj.document || !obj.ready) {
-                return (
-                  <div className='pdfcontain loading'>
-                    <div className='progressbar'>
-                      <div className='fill' style={{width: (obj.progress * 100) + '%'}} />
-                    </div>
-                  </div>
-                )
-              } else {
-                let menu = null
-                if (this.state.dirMenu && this.pdfjsViewerInstance) {
-                  let [aX, aY] = this.state.dirMenu.appearsMenuAt
-                  aX = Math.max(0, Math.min(this.pdfjsViewerInstance.viewDim[0] - 80, aX))
-                  aY = Math.max(0, aY)
-                  let types = Object.keys(this.state.dirs).sort(PaperUtils.funcSortType)
-                  let typeDisplayed = 0
-                  menu = (
-                    <div className='dirmenu' style={{
-                      left: aX + 'px',
-                      top: aY + 'px'
-                    }}>
-                      {types.map(typeStr => {
-                        if (typeStr === tCurrentType) return null
-                        if ((typeStr === 'ms' || typeStr === 'qp') && this.state.dirs[typeStr] && (this.state.dirs[typeStr].type === 'questions' || this.state.dirs[typeStr].type === 'mcqMs')) {
-                          let dd = null
-                          let isMcq = false
-                          if (this.state.dirs[typeStr].type === 'questions') {
-                            dd = this.state.dirs[typeStr].dirs.find(x => x.i === this.state.dirMenu.dir.i)
-                          } else {
-                            isMcq = true
-                            dd = this.state.dirs[typeStr].dirs.find(x => x.qN === this.state.dirMenu.dir.qN)
-                          }
-                          if (!dd) return null
-                          let go = evt => {
-                            this.setState({dirMenu: null})
-                            AppState.dispatch({
-                              type: 'v2view-set-tCurrentType',
-                              tCurrentType: typeStr,
-                              viewDir: dd,
-                              stageTransform: null
-                            })
-                          }
-                          typeDisplayed ++
-                          return (
-                            <div className='item' key={typeStr} onClick={go}>{isMcq ? dd.qT : typeStr}</div>
-                          )
-                        }
-                        if (typeStr === 'er' && this.state.dirs[typeStr].type === 'er-flattened') {
-                          let dd = this.state.dirs[typeStr].dirs.find(x => x.qNs.includes(this.state.dirMenu.dir.qN))
-                          if (!dd) return null
-                          let go = evt => {
-                            this.setState({dirMenu: null})
-                            AppState.dispatch({
-                              type: 'v2view-set-tCurrentType',
-                              tCurrentType: typeStr,
-                              viewDir: dd,
-                              stageTransform: null
-                            })
-                          }
-                          typeDisplayed ++
-                          return (
-                            <div className='item' key={typeStr} onClick={go}>{typeStr}</div>
-                          )
-                        }
-                        return null
-                      })}
-                      {typeDisplayed === 0 ? (
-                        <div className='item nothing'>
-                          {'(///ᴗ///)'}
+          <div style={{display: 'flex', flexDirection: 'row', width: '100%', height: 'calc(100% - 40px)'}}>
+            {(() => {
+              let tCurrentType = v2viewing.tCurrentType
+              return this.renderViewerArea(tCurrentType, false)
+            })()}
+            {v2viewing.splitMode ? (
+              <div style={{width: '50%', borderLeft: '2px solid var(--border-color)', display: 'flex', flexDirection: 'column'}}>
+                <div className='typebar secondary-typebar' style={{backgroundColor: 'var(--card-bg)'}}>
+                  {this.state.dirs ? Object.keys(this.state.dirs).sort(PaperUtils.funcSortType).map(typeStr => {
+                    let obj = this.state.pdfs[typeStr]
+                    let dir = this.state.dirs[typeStr]
+                    let current = v2viewing.tSplitType === typeStr
+                    if (!obj || dir.type === 'blob') {
+                      return (
+                        <div className={'item' + (current ? ' current' : '')} key={typeStr}
+                            onClick={evt => AppState.dispatch({type: 'v2view-set-split-type', tSplitType: typeStr})}>
+                          {typeStr}
                         </div>
-                      ) : null}
-                    </div>
-                  )
-                }
-                return (
-                  <div className='pdfcontain'>
-                    <PDFJSViewer
-                      doc={obj.document}
-                      dir={this.state.dirs[tCurrentType]}
-                      onUserMove={this.handlePDFUserMove}
-                      stageTransform={v2viewing.stageTransforms[tCurrentType]}
-                      postDrawCanvas={this.handlePDFJSViewerPostDraw}
-                      onDownEvent={this.handlePDFJSViewerDownEvent}
-                      ref={f => this.pdfjsViewerInstance = f}
-                      initToDir={v2viewing.viewDir} />
-                    {!obj.document.__fullyready ? (
-                      <div className='progressbar floating'>
-                        <div className='fill' style={{width: (obj.progress * 100) + '%'}} />
-                      </div>
-                    ) : null}
-                    {menu}
-                  </div>
-                )
-              }
-            } else if (tCurrentType === null) {
-              let qdirs = this.state.dirs.qp
-              let sortedTypeStrArr = Object.keys(this.state.dirs).sort(PaperUtils.funcSortType)
-              if (!qdirs || qdirs.type !== 'questions') return null
-              return (
-                <div className='pdfcontain ques'>
-                  <div className='h'>This paper contains {qdirs.dirs.length} questions.</div>
-                  {qdirs.dirs.map(d => {
-                    let qOnClick = evt => {
-                      if (this.state.dirs.qp) {
-                        let rDir = this.state.dirs.qp
-                        if (rDir.type === 'questions' && rDir.dirs.length > d.i) {
-                          let tDir = rDir.dirs[d.i]
-                          AppState.dispatch({
-                            type: 'v2view-set-tCurrentType',
-                            tCurrentType: 'qp',
-                            viewDir: tDir,
-                            stageTransform: null
-                          })
-                        }
-                      }
+                      )
                     }
                     return (
-                      <div className='question' key={d.i} onClick={qOnClick}>
-                        <div className='left'>
-                          <div className='num'>
-                            {d.qN}
-                          </div>
-                        </div>
-                        <div className='body'>
-                          <div className='title'>
-                            {d.qT}
-                          </div>
-                          <div className='jump'>
-                            Goto:
-                            {sortedTypeStrArr.map(ts => {
-                              let rDir = this.state.dirs[ts]
-                              if (rDir) {
-                                let tDir = null
-                                if (rDir.type === 'questions' && d.i < rDir.dirs.length) {
-                                  tDir = rDir.dirs[d.i]
-                                } else if (rDir.type === 'mcqMs') {
-                                  tDir = rDir.dirs.find(x => x.qN === d.qN)
-                                } else if (rDir.type === 'er-flattened') {
-                                  tDir = rDir.dirs.find(x => x.qNs.includes(d.qN))
-                                }
-                                if (tDir) {
-                                  let onClick = evt => {
-                                    evt.stopPropagation()
-                                    AppState.dispatch({
-                                      type: 'v2view-set-tCurrentType',
-                                      tCurrentType: ts,
-                                      viewDir: tDir,
-                                      stageTransform: null
-                                    })
-                                  }
-                                  return (
-                                    <a onClick={onClick} key={ts}>
-                                      {ts}
-                                    </a>
-                                  )
-                                }
-                              }
-                              return (
-                                <a className='disabled' onClick={e => e.stopPropagation()} key={ts}>
-                                  {ts}
-                                </a>
-                              )
-                            })}
-                          </div>
-                        </div>
+                      <div className={'item' + (current ? ' current' : '')} key={typeStr}
+                        onClick={evt => AppState.dispatch({type: 'v2view-set-split-type', tSplitType: typeStr})}>
+                        {typeStr}{!obj.document ? '\u2026' : null}
                       </div>
                     )
-                  })}
+                  }) : null}
                 </div>
-              )
-            } else if (this.state.dirs[tCurrentType] && this.state.dirs[tCurrentType].type === 'blob') {
-              let fileType = this.state.dirs[tCurrentType].fileType
-              return (
-                <div className='pdfcontain blob'>
-                  <div className='h'>Download this {PaperUtils.getTypeString(tCurrentType)}&hellip;</div>
-                  <div className='dl'>
-                    <a href={`/doc/${this.state.dirs[tCurrentType].docid}`} target='_blank'>Big download link</a>
-                  </div>
-                  (Opens in new window, this is a file with type {fileType})
-                </div>
-              )
-            } else {
-              return null
-            }
-          })()}
+                {this.renderViewerArea(v2viewing.tSplitType, true)}
+              </div>
+            ) : null}
+          </div>
         </div>
       )
     }
@@ -436,6 +285,89 @@ export default class PaperViewer extends React.Component {
         Stub!
       </div>
     )
+  }
+
+  renderViewerArea (tCurrentType, isSecondary) {
+    let v2viewing = AppState.getState().v2viewing
+    if (this.state.pdfs && tCurrentType !== null && this.state.pdfs[tCurrentType] && this.state.dirs[tCurrentType] && this.state.dirs[tCurrentType].type !== 'blob') {
+      let obj = this.state.pdfs[tCurrentType]
+      if (!obj.document || !obj.ready) {
+        return (
+          <div className='pdfcontain loading' style={isSecondary ? {width: '100%'} : (v2viewing.splitMode ? {width: '50%'} : {})}>
+            <div className='progressbar'>
+              <div className='fill' style={{width: (obj.progress * 100) + '%'}} />
+            </div>
+          </div>
+        )
+      } else {
+        return (
+          <div className='pdfcontain' style={isSecondary ? {width: '100%'} : (v2viewing.splitMode ? {width: '50%'} : {})}>
+            <PDFJSViewer
+              doc={obj.document}
+              dir={this.state.dirs[tCurrentType]}
+              onUserMove={isSecondary ? () => {} : this.handlePDFUserMove}
+              stageTransform={v2viewing.stageTransforms[tCurrentType]}
+              postDrawCanvas={isSecondary ? () => {} : this.handlePDFJSViewerPostDraw}
+              onDownEvent={isSecondary ? () => {} : this.handlePDFJSViewerDownEvent}
+              ref={f => { if (!isSecondary) this.pdfjsViewerInstance = f }}
+              initToDir={isSecondary ? null : v2viewing.viewDir} />
+            {!obj.document.__fullyready ? (
+              <div className='progressbar floating'>
+                <div className='fill' style={{width: (obj.progress * 100) + '%'}} />
+              </div>
+            ) : null}
+          </div>
+        )
+      }
+    } else if (tCurrentType === null && !isSecondary) {
+      let qdirs = this.state.dirs.qp
+
+      if (!qdirs || qdirs.type !== 'questions') return null
+      return (
+        <div className='pdfcontain ques' style={v2viewing.splitMode ? {width: '50%'} : {}}>
+          <div className='h'>This paper contains {qdirs.dirs.length} questions.</div>
+          {qdirs.dirs.map(d => {
+            let qOnClick = evt => {
+              if (this.state.dirs.qp) {
+                let rDir = this.state.dirs.qp
+                if (rDir.type === 'questions' && rDir.dirs.length > d.i) {
+                  let tDir = rDir.dirs[d.i]
+                  AppState.dispatch({
+                    type: 'v2view-set-tCurrentType',
+                    tCurrentType: 'qp',
+                    viewDir: tDir,
+                    stageTransform: null
+                  })
+                }
+              }
+            }
+            return (
+              <div className='question' key={d.i} onClick={qOnClick}>
+                <div className='left'>
+                  <div className='num'>{d.qN}</div>
+                </div>
+                <div className='body'>
+                  <div className='title'>{d.qT}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )
+    } else if (this.state.dirs[tCurrentType] && this.state.dirs[tCurrentType].type === 'blob') {
+      let fileType = this.state.dirs[tCurrentType].fileType
+      return (
+        <div className='pdfcontain blob' style={isSecondary ? {width: '100%'} : (v2viewing.splitMode ? {width: '50%'} : {})}>
+          <div className='h'>Download this {PaperUtils.getTypeString(tCurrentType)}&hellip;</div>
+          <div className='dl'>
+            <a href={this.state.dirs[tCurrentType].fileUrl || `/doc/${this.state.dirs[tCurrentType].docid}`} target='_blank'>Big download link</a>
+          </div>
+          (Opens in new window, this is a file with type {fileType})
+        </div>
+      )
+    } else {
+      return null
+    }
   }
 
   tSwitchTo (typeStr) {

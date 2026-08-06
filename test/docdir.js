@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-undef, object-curly-spacing, prefer-const, no-return-assign, space-unary-ops, indent, space-infix-ops, comma-spacing */
 const supertest = require('supertest')
 const should = require('should')
 const crypto = require('crypto')
@@ -224,7 +225,7 @@ module.exports = (schsrch, dbModel) =>
           .end(done)
     })
     it('should cache dir result', function (done) {
-      PastPaperDoc.findOne({_id: paper1}, {fileBlob: false}).then(doc => {
+      PastPaperDoc.findOne({_id: paper1}).then(doc => {
         if (!doc) return Promise.reject(new Error('No doc found in database.'))
         try {
           doc.dir.should.be.an.Object()

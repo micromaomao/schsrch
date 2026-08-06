@@ -1,14 +1,13 @@
+/* eslint-disable no-unused-vars, prefer-const, object-curly-spacing, indent, no-extra-parens, no-void, quotes, object-curly-newline, prefer-promise-reject-errors, block-spacing, n/handle-callback-err */
 const express = require.main.require('express')
+const storage = require('./storage/index.js')
 const path = require('path')
-const os = require('os')
 const PaperUtils = require('./view/paperutils')
 const CIESubjects = require('./view/CIESubjects.js')
 const sspdf = require('./lib/sspdf')
 const fs = require('fs')
 const cheerio = require('cheerio')
-const crypto = require('crypto')
 const assert = require('assert')
-const postJsonReceiver = require('./lib/post-json-receiver.js')
 require('./dist-server/serverrender')
 const serverRender = global.serverRender
 global.serverRender = null
@@ -109,8 +108,21 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
     rMain.get('/', function (req, res) {
       renderView({}, res)
     })
-    rMain.use('/resources', express.static(path.join(__dirname, 'dist')))
-    rMain.use('/resources/pdfjs', express.static(path.join(__dirname, 'node_modules/pdfjs-dist/build')))
+    rMain.use('/resources', express.static(path.join(__dirname, 'dist'), {
+      maxAge: '1y',
+      etag: true,
+      immutable: true
+    }))
+    rMain.use('/resources/pdfjs', express.static(path.join(__dirname, 'node_modules/pdfjs-dist/build'), {
+      maxAge: '1y',
+      etag: true,
+      immutable: true
+    }))
+    rMain.use('/papers', express.static(storage.root, {
+      maxAge: '100d',
+      etag: true,
+      lastModified: true
+    }))
     rMain.get('/sw.js', function (req, res) {
       res.set('cache-control', 'max-age=0')
       res.sendFile(path.join(__dirname, 'sw-selfdestroy.js'))
@@ -133,7 +145,14 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
     rMain.get('/search/', function (req, res, next) {
       let query = (req.query.query || '').toString().trim()
       let format = req.query.as || 'json'
-      if (query === '' && format === 'page') {
+      let filters = null
+      let sort = req.query.sort || 'relevance'
+      try {
+        if (req.query.filters) {
+          filters = JSON.parse(req.query.filters)
+        }
+      } catch (e) {}
+      if (query === '' && format === 'page' && !filters) {
         res.redirect('/')
         return
       }
@@ -178,7 +197,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
         })
         return
       }
-      doSearch(query).then(rst => {
+      doSearch(query, filters, sort).then(rst => {
         if (format === 'json') {
           res.send(rst)
         } else if (format === 'page') {
@@ -228,33 +247,12 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
             res.send("Page should not be specified for download request.")
             return
           }
-          let fname = `${PaperUtils.setToString(doc)}_${doc.type}.${doc.fileType}`
-          doc.getFileBlob().then(blob => {
-            let ranges = req.range(blob.length)
-            if (ranges === -2) {
-              res.status(400)
-              return res.end()
-            }
-            if (ranges === -1) {
-              res.status(416)
-              return res.end()
-            }
-            res.set('Accept-Ranges', 'bytes')
-            res.set('Cache-Control', 'public, max-age=8640000')
-            res.set('Content-Disposition', `inline; filename=${JSON.stringify(fname)}`)
-            res.type(doc.fileType)
-            if (!ranges) {
-              res.send(blob)
-            } else {
-              let sendBuffer = Buffer.concat(ranges.map(({start, end}) => {
-                return blob.slice(start, end + 1)
-              }))
-              res.status(206)
-              res.send(sendBuffer)
-            }
-          }, err => {
-            next(err)
-          })
+          if (doc.relativePath) {
+            res.sendFile(doc.relativePath, { root: storage.root })
+          } else {
+            res.status(404)
+            res.send("Document not migrated or not found.")
+          }
         } else if (format === 'sspdf') {
           if (doc.fileType !== 'pdf') {
             res.status(406)
@@ -301,6 +299,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
           initDoc.ensureDir().then(dir => {
             obj[initDoc.type] = dir
             obj[initDoc.type].docid = initDoc._id.toString()
+            obj[initDoc.type].fileUrl = initDoc.fileUrl
             res.send(obj)
           }, err => next(err))
         } else {
@@ -313,7 +312,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
               variant: 0
             }
           ]}).then(docs => Promise.all(docs.map(doc => {
-            return doc.ensureDir().then(dir => Promise.resolve({type: doc.type, dir, docid: doc._id.toString()}))
+            return doc.ensureDir().then(dir => Promise.resolve({type: doc.type, dir, docid: doc._id.toString(), fileUrl: doc.fileUrl}))
           }))).then(tds => {
             let obj = {}
             for (let td of tds) {
@@ -331,6 +330,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
                 }
               }
               obj[td.type].docid = td.docid
+              obj[td.type].fileUrl = td.fileUrl
             }
             res.send(obj)
           }).catch(err => next(err))
@@ -346,7 +346,6 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
         function postCache (stuff) {
           let result = stuff
           result.doc = doc
-          result.doc.fileBlob = null
           result.doc.dir = null
           return result
         }
@@ -362,7 +361,7 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
             resolve(postCache(ppIdx.sspdfCache))
           } else {
             console.log(`Building sspdf for ${doc._id}::${pn} (idx//${ppIdx._id})`)
-            doc.getFileBlob().then(buff => {
+            storage.read(doc.relativePath).then(buff => {
               sspdf.getPage(buff, pn, function (err, result) {
                 if (err) {
                   reject(err)

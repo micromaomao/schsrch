@@ -10,8 +10,11 @@ html
       link(rel='icon', size=icon.sizes, type=icon.type, href=icon.src)
     link(rel="apple-touch-icon", href=require('./icon-apple.png'))
     link(rel="search", type="application/opensearchdescription+xml", title="papersc", href="/opensearch.xml")
+    link(rel="preconnect", href="https://fonts.googleapis.com")
+    link(rel="preconnect", href="https://fonts.gstatic.com", crossorigin)
+    link(rel="preload", href="https://fonts.googleapis.com/css?family=Lato:300", as="style")
     meta(name="apple-mobile-web-app-title", content="Paper.sc")
-    meta(name="apple-mobile-web-app-capable", content="yes")
+    meta(name="mobile-web-app-capable", content="yes")
     meta(property="og:image", content=(`SITE_ORIGIN${mf.icons[0].src}`))
     meta(property="og:image:type", content=mf.icons[0].type)
     -let ogSz = mf.icons[0].sizes.split('x')
@@ -21,10 +24,20 @@ html
     meta(property="og:locale", content="en_GB")
     meta(property="fb:app_id", content="384579331936515")
     style!= require('./layout.sass').default.toString()
+    script.
+      (function() {
+        try {
+          var theme = localStorage.getItem('schsrch-theme');
+          if (!theme) {
+            theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
   body
     .react-root
     script.
       (document.getElementsByClassName('querybox')[0] || {}).placeholder = 'Still loading...'
     each js in htmlWebpackPlugin.files.js
-      script(src=js, async)
+      script(src=js, defer)
     != require('raw-loader!./index.svg').default.toString()

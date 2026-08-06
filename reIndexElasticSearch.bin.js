@@ -1,11 +1,17 @@
 #!/usr/bin/env node
+/* eslint-disable no-unused-vars, prefer-const, object-curly-spacing */
 const { MONGODB: DB, ES, QUICK, DEBUG } = process.env
 let noCacheSSPDF = QUICK === '1'
 let debug = DEBUG === '1'
 
 const mongoose = require('mongoose')
 mongoose.Promise = global.Promise
-let db = mongoose.createConnection(DB)
+let db = mongoose.createConnection(DB, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: false
+})
 
 const elasticsearch = require('elasticsearch')
 

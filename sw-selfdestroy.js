@@ -1,3 +1,4 @@
+/* eslint-disable no-undef, space-before-function-paren, semi */
 // https://github.com/NekR/self-destroying-sw
 
 self.addEventListener('install', function(e) {

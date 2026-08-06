@@ -1,3 +1,4 @@
+/* eslint-disable quotes, prefer-const, object-curly-spacing, multiline-ternary */
 const CIESubjects = require('./CIESubjects.js')
 const PaperUtils = require('./paperutils.js')
 const AppStateInit = require('./appstateinit.js')

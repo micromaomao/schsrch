@@ -1,0 +1,8 @@
+Run started: 2026-08-03T16:53:24.683Z
+Run finished: 2026-08-03T16:53:31.490Z
+Duration: 6.81s
+Files per second: 129.13
+Peak memory: 196.00 MB
+Slowest PDF parse: papers_download/Biology/2022/2022 Specimen Paper/554304-2022-specimen-paper-4.pdf (115.53ms)
+Longest metadata parse: papers_download/Biology/2025/2025 Oct-Nov/9700_w25_qp_54.pdf (0.45ms)
+PDF Text Extraction Fallbacks: 5

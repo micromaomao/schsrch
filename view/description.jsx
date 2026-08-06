@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const, object-curly-spacing, lines-between-class-members, jsx-quotes, react/jsx-curly-brace-presence, multiline-ternary, react/jsx-no-target-blank */
 import * as React from 'react'
 import { createStore } from 'redux'
 import { AppState } from './appstate.js'
@@ -72,8 +73,13 @@ export default class Description extends React.Component {
   render () {
     let statusInfo = null
     let reloadBtn = (
-      <div className="reload">
-        <span onClick={fetchStatusInfo}>Refresh</span>
+      <div className="reload" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', flexWrap: 'wrap', marginTop: '10px'}}>
+        <a onClick={fetchStatusInfo} style={{cursor: 'pointer', color: 'var(--color-link)'}}>Refresh</a>
+        <a style={{cursor: 'pointer', color: 'var(--color-link)'}} onClick={() => AppState.dispatch({type: 'subjects'})}>Subjects</a>
+        <a style={{cursor: 'pointer', color: 'var(--color-link)'}} onClick={() => AppState.dispatch({type: 'disclaim'})}>Disclaimer</a>
+        {!this.props.showHelp ? (
+          <a className='helpbtn' onClick={this.handleShowHelp} href='/help/'>Help</a>
+        ) : null}
       </div>
     )
     if (this.state.server) {
@@ -116,19 +122,11 @@ export default class Description extends React.Component {
     return (
       <div className='home-desc'>
         {this.state.server && !this.props.showHelp ? (
-          <div className='links'>
+          <div className='links' style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap'}}>
             <a href='/disclaim/'>Disclaimer</a>
-            &nbsp;
             <a href='https://github.com/micromaomao/schsrch/blob/master/index.js' target='_blank'>API</a>
           </div>
         ) : null}
-        <div className='help'>
-          {!this.props.showHelp ? (
-            <a className='helpbtn' onClick={this.handleShowHelp} href='/help/'>Show help&hellip;</a>
-          ) : (
-            <a className='helpbtn' onClick={this.handleHideHelp} href='/'>{this.state.server ? 'Back' : 'Close help'}</a>
-          )}
-        </div>
         {(this.state.server ? AppState.getState().serverrender.siteOrigin : window.location.origin) === 'https://paper.sc' || this.props.showHelp ? null : (
           <div className='mirrornotice'>You are viewing a mirror of <a href='https://paper.sc'>paper.sc</a>.</div>
         )}

@@ -1,3 +1,4 @@
+/* eslint-disable lines-between-class-members, react/no-deprecated, object-curly-spacing, no-control-regex, curly, prefer-const, space-unary-ops */
 import { AppState } from './appstate.js'
 import * as React from 'react'
 const wordSpliter = /[^a-zA-Z]/

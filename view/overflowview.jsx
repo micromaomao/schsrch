@@ -1,3 +1,4 @@
+/* eslint-disable lines-between-class-members, prefer-const, no-unused-vars, multiline-ternary, react/jsx-indent, react/jsx-wrap-multilines, react/jsx-boolean-value, react/jsx-closing-bracket-location, space-in-parens */
 import * as React from 'react'
 import CIESubjects from './CIESubjects.js'
 import PaperUtils from './paperutils.js'

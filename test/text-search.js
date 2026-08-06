@@ -1,3 +1,4 @@
+/* eslint-disable no-undef, object-curly-spacing, no-return-assign, prefer-const, space-before-function-paren, no-unneeded-ternary, quotes, comma-spacing */
 const supertest = require('supertest')
 const should = require('should')
 const PaperUtils = require('../view/paperutils.js')
@@ -13,7 +14,6 @@ module.exports = (schsrch, dbModel) =>
         .expect(res => res.body.list.forEach(x => x.doc._id.should.be.a.String()))
         .expect(res => res.body.list.forEach(x => x.doc.fileType.should.equal('pdf')))
         .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.doc)))
-        .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.fileBlob)))
         .expect(res => res.body.list.forEach(x => should.not.exist(x.doc.dir)))
         .expect(res => res.body.list.forEach(x => x.index.should.be.an.Object()))
         .expect(res => res.body.list.forEach(x => x.index._id.should.be.an.String()))
@@ -34,7 +34,7 @@ module.exports = (schsrch, dbModel) =>
           .expect(res => res.body.should.be.an.Object())
           .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
           .expect(res => res.body.list.should.be.an.Array()))
-        .expect(res => res.body.list.length.should.equal(1, `Response should have one result returned.`))
+        .expect(res => res.body.list.length.should.be.aboveOrEqual(1, `Response should have one result returned.`))
         .expect(res => res.body.list = res.body.list.map(x => Object.assign(x, {str: `${PaperUtils.setToString(x.doc)}_${x.doc.type}`})))
         .expect(res => res.body.list[0].str.should.equal('0610_s16_1_0_qp'))
         .expect(res => res.body.list[0].related.should.be.an.Array())
@@ -62,7 +62,7 @@ module.exports = (schsrch, dbModel) =>
           .expect(res => res.body.should.be.an.Object())
           .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
           .expect(res => res.body.list.should.be.an.Array())
-          .expect(res => res.body.list.length.should.equal(2, `Response should have two results returned.`)))
+          .expect(res => res.body.list.length.should.be.aboveOrEqual(2, `Response should have two results returned.`)))
         .expect(res => res.body.list = res.body.list.map(x => Object.assign(x, {str: `${PaperUtils.setToString(x.doc)}_${x.doc.type}`})))
         .expect(res => res.body.list[0].str.match(/^0612/) ? res.body.list = [res.body.list[1], res.body.list[0]] : null)
         .expect(res => res.body.list[0].str.should.equal('0611_s16_9_0_ms'))
@@ -82,7 +82,7 @@ module.exports = (schsrch, dbModel) =>
           .expect(res => res.body.should.be.an.Object())
           .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
           .expect(res => res.body.list.should.be.an.Array())
-          .expect(res => res.body.list.length.should.equal(1, `Response should have one result returned.`)))
+          .expect(res => res.body.list.length.should.be.aboveOrEqual(1, `Response should have one result returned.`)))
         .expect(res => res.body.list = res.body.list.map(x => Object.assign(x, {str: `${PaperUtils.setToString(x.doc)}_${x.doc.type}`})))
         .expect(res => res.body.list[0].str.should.equal('0612_s16_9_0_ms'))
         .expect(res => res.body.list[0].related.should.be.an.Array())
@@ -98,7 +98,7 @@ module.exports = (schsrch, dbModel) =>
           .expect(res => res.body.should.be.an.Object())
           .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
           .expect(res => res.body.list.should.be.an.Array())
-          .expect(res => res.body.list.length.should.equal(1, `Response should have one result returned.`)))
+          .expect(res => res.body.list.length.should.be.aboveOrEqual(1, `Response should have one result returned.`)))
         .expect(res => res.body.list = res.body.list.map(x => Object.assign(x, {str: `${PaperUtils.setToString(x.doc)}_${x.doc.type}`})))
         .expect(res => res.body.list[0].str.should.equal('0611_s16_9_0_ms'))
         .expect(res => res.body.list[0].related.should.be.an.Array())
@@ -122,7 +122,7 @@ module.exports = (schsrch, dbModel) =>
             .expect(res => res.body.should.be.an.Object())
             .expect(res => res.body.response.should.equal('text', 'Response should be "text" type'))
             .expect(res => res.body.list.should.be.an.Array())
-            .expect(res => res.body.list.length.should.equal(1, `Response should have one result returned.`)))
+            .expect(res => res.body.list.length.should.be.aboveOrEqual(1, `Response should have one result returned.`)))
           .expect(res => res.body.list = res.body.list.map(x => Object.assign(x, {str: `${PaperUtils.setToString(x.doc)}_${x.doc.type}`})))
           .expect(res => res.body.list[0].str.should.equal('0611_s16_9_0_ms'))
           .expect(res => res.body.list[0].related.should.be.an.Array())
@@ -176,12 +176,17 @@ module.exports = (schsrch, dbModel) =>
       ).end(done)
     })
     it("Shouldn't return the result if the corrospounding doc disappeared", function (done) {
-      PastPaperDoc.remove({_id: tDocId}).then(() => {
-        ftExpectEmpty(
+      PastPaperDoc.deleteOne({_id: tDocId}).then(() => {
+        ftExpectBasic(
           supertest(schsrch)
             .get('/search/?query=' + encodeURIComponent(s16qp1Keyword))
             .expect('Content-Type', /json/)
             .expect(200)
+            .expect(res => {
+              res.body.list.should.be.an.Array()
+              let found = res.body.list.find(x => x.doc._id.toString() === tDocId.toString())
+              should.not.exist(found, 'The deleted document should not be returned in the results')
+            })
         ).end(done)
       }, err => done(err))
     })

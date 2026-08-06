@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 if (typeof window !== 'undefined' && window.document) {
   const pdfjsUrl = '/resources/pdfjs/pdf.min.js'
 
