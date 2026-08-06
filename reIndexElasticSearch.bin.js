@@ -32,7 +32,7 @@ db.on('open', () => {
     process.stderr.write('Index deleted.\n')
     require('./lib/dbModel.js')(db, es).then(({PastPaperIndex, PastPaperDoc}) => {
       let i = 0
-      PastPaperIndex.count().then(t => {
+      PastPaperIndex.countDocuments().then(t => {
         if (t === 0) {
           process.exit(0)
         }

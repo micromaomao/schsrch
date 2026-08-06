@@ -121,7 +121,12 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
     rMain.use('/papers', express.static(storage.root, {
       maxAge: '100d',
       etag: true,
-      lastModified: true
+      lastModified: true,
+      setHeaders: (res, path, stat) => {
+        if (path.endsWith('.pdf')) {
+          res.set('Content-Disposition', 'inline')
+        }
+      }
     }))
     rMain.get('/sw.js', function (req, res) {
       res.set('cache-control', 'max-age=0')
@@ -248,7 +253,13 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
             return
           }
           if (doc.relativePath) {
-            res.sendFile(doc.relativePath, { root: storage.root })
+            let fname = `${PaperUtils.setToString(doc)}_${doc.type}.${doc.fileType}`
+            res.sendFile(doc.relativePath, {
+              root: storage.root,
+              headers: {
+                'Content-Disposition': `inline; filename=${JSON.stringify(fname)}`
+              }
+            })
           } else {
             res.status(404)
             res.send("Document not migrated or not found.")

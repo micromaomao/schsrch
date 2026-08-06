@@ -68,9 +68,9 @@ export default class PaperViewer extends React.Component {
             }
             if (json[type].type !== 'blob') {
               if (tCurrentType !== null && type === tCurrentType) {
-                this.loadPDF(type, docid)
+                this.loadPDF(type, docid, json[type].fileUrl)
               } else {
-                setTimeout(() => this.loadPDF(type, docid), 100)
+                setTimeout(() => this.loadPDF(type, docid, json[type].fileUrl), 100)
               }
             }
           }
@@ -94,7 +94,7 @@ export default class PaperViewer extends React.Component {
    * @param {String} docid /doc/$docid/
    * @returns {Promise<undefined>} a promise that resolve iff the pdf is ready to be displayed.
    */
-  loadPDF (type, docid) {
+  loadPDF (type, docid, fileUrl) {
     if (!this.state.pdfs) throw new Error('this.state.pdfs is not an object.')
     return new Promise((resolve, reject) => {
       let obj = this.state.pdfs[type]
@@ -107,7 +107,7 @@ export default class PaperViewer extends React.Component {
         }
         this.state.pdfs[type] = obj
         getDocument({
-          url: this.state.dirs[type].fileUrl || `/doc/${encodeURIComponent(docid)}/`,
+          url: fileUrl || (this.state.dirs && this.state.dirs[type] ? this.state.dirs[type].fileUrl : null) || `/doc/${encodeURIComponent(docid)}/`,
           disableRange: false,
           rangeChunkSize: 100 * 1024
         }, loadingTask => {
