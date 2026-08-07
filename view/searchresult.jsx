@@ -398,6 +398,22 @@ export default class SearchResult extends React.Component {
                 key={searchIndex}
                 query={query}
                 current={v2current && v2viewing.asPopup}
+                previewOpen={v2current && !v2viewing.asPopup}
+                onTogglePreview={(id, page, type) => {
+                  let viewDir = { page }
+                  if (v2current && !v2viewing.asPopup) {
+                    AppState.dispatch({ type: 'v2view-popup-close' })
+                  } else {
+                    AppState.dispatch({
+                      type: 'v2view',
+                      searchIndex: searchIndex,
+                      fileId: id,
+                      tCurrentType: type,
+                      viewDir,
+                      asPopup: false
+                    })
+                  }
+                }}
                 onOpenFile={(id, page, type) => {
                   let viewDir = null
                   if (type === item.types[0].type) {
@@ -405,11 +421,11 @@ export default class SearchResult extends React.Component {
                   }
                   if (v2current && !viewDir) {
                     // perserve user moving of pages
-                    AppState.dispatch({ type: 'v2view-set-tCurrentType', tCurrentType: type, viewDir })
+                    AppState.dispatch({ type: 'v2view-set-tCurrentType', tCurrentType: type, viewDir, asPopup: true })
                     return
                   }
                   if (v2current && viewDir) {
-                    AppState.dispatch({ type: 'v2view-set-tCurrentType', tCurrentType: type, viewDir, stageTransform: null })
+                    AppState.dispatch({ type: 'v2view-set-tCurrentType', tCurrentType: type, viewDir, stageTransform: null, asPopup: true })
                     return
                   }
                   AppState.dispatch({
@@ -424,7 +440,7 @@ export default class SearchResult extends React.Component {
               />)
               if (v2current && !v2viewing.asPopup) {
                 elements.push(
-                  <div className='paperviewercontain'>
+                  <div className='paperviewercontain' key={searchIndex + '_inline_viewer'}>
                     <PaperViewer key={searchIndex + '_v2paperviewer'} />
                   </div>
                 )

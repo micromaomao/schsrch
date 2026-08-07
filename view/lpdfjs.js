@@ -1,21 +1,10 @@
 /* eslint-disable prefer-const */
 if (typeof window !== 'undefined' && window.document) {
-  const pdfjsUrl = '/resources/pdfjs/pdf.min.js'
-
-  let pPdfjsLib = new Promise((resolve, reject) => {
-    let scriptTag = document.createElement('script')
-    scriptTag.src = pdfjsUrl
-    scriptTag.addEventListener('load', function (evt) {
-      let p = window['pdfjs-dist/build/pdf']
-
-      if (!p) {
-        reject(new Error('pdfjs failed to load.'))
-      } else {
-        resolve(p)
-      }
-    })
-    document.body.appendChild(scriptTag)
-  })
+  let pPdfjsLib = import('pdfjs-dist/build/pdf.mjs').then(pdfjsLib => {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/resources/pdfjs/pdf.worker.mjs';
+    window.pdfjsLib = pdfjsLib;
+    return pdfjsLib;
+  });
 
   module.exports = (src, onLoadTaskReceived = null) => {
     return pPdfjsLib.then(pdfjsLib => {

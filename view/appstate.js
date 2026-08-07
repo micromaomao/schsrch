@@ -280,6 +280,7 @@ let AppState = createStore(function (state = {}, action) {
         v2viewing: Object.assign({}, state.v2viewing, {
           tCurrentType: action.tCurrentType,
           viewDir: action.viewDir || null,
+          asPopup: action.asPopup !== undefined ? action.asPopup : state.v2viewing.asPopup,
           stageTransforms: Object.assign({}, state.v2viewing.stageTransforms, {
             [action.tCurrentType]: action.stageTransform !== undefined ? action.stageTransform : state.v2viewing.stageTransforms[action.tCurrentType]
           })

@@ -36,18 +36,15 @@ export default class PaperSet extends React.Component {
     }
 
     let scoreText = null
-    if (firstDoc !== null && firstDoc.index && firstDoc.index.score) {
-      let score = firstDoc.index.score
-      let perc = Math.min(99, Math.round(50 + score * 1.5))
-      scoreText = `${perc}% Match`
-    }
+    // Relevance score text removed to avoid exposing raw internal values
 
     return (
       <div
         className={'set' + (this.props.mini ? ' mini' : '') + (this.props.current ? ' current' : '')}
         onClick={evt => {
           if (firstDoc !== null) {
-            this.openFile(firstDoc._id, firstDoc.index.page, firstDoc.type)
+            let page = firstDoc.index.pages ? firstDoc.index.pages[0].page : firstDoc.index.page
+            this.openFile(firstDoc._id, page, firstDoc.type)
           }
         }}
         style={{ cursor: firstDoc !== null ? 'pointer' : 'default' }}
@@ -67,25 +64,62 @@ export default class PaperSet extends React.Component {
                </div>
             )}
           </div>
-          {scoreText ? (
-            <div className='score' style={{ color: 'var(--color-primary)', fontWeight: 'bold', fontSize: '0.85rem' }}>{scoreText}</div>
-          ) : null}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {scoreText ? (
+              <div className='score' style={{ color: 'var(--color-secondary-text)', fontWeight: 'normal', fontSize: '0.85rem', opacity: 0.8 }}>{scoreText}</div>
+            ) : null}
+            {firstDoc !== null && this.props.onTogglePreview ? (
+              <button
+                className='preview-btn'
+                onClick={evt => {
+                  evt.stopPropagation()
+                  let page = firstDoc.index.pages ? firstDoc.index.pages[0].page : firstDoc.index.page
+                  this.props.onTogglePreview(firstDoc._id, page, firstDoc.type)
+                }}
+              >
+                {this.props.previewOpen ? 'Close Preview' : 'Preview'}
+              </button>
+            ) : null}
+          </div>
         </div>
         <div className='chips-row' style={{ marginTop: '0px' }}>
-          <div className='chip'>{PaperUtils.myTimeToHumanTime(set.time)}</div>
-          {set.paper !== 0 ? <div className='chip'>Paper {set.paper}</div> : null}
-          {set.variant !== 0 ? <div className='chip'>Variant {set.variant}</div> : null}
+          <div className='chip' style={{ color: 'var(--color-secondary-text, #888)' }}>{PaperUtils.myTimeToHumanTime(set.time)}</div>
+          {set.paper !== 0 ? <div className='chip' style={{ color: 'var(--color-secondary-text, #888)' }}>Paper {set.paper}</div> : null}
+          {set.variant !== 0 ? <div className='chip' style={{ color: 'var(--color-secondary-text, #888)' }}>Variant {set.variant}</div> : null}
         </div>
-        {firstDoc !== null
+        {firstDoc !== null && firstDoc.index.pages
           ? (
+            <div className='file first' key={firstDoc._id}>
+              {firstDoc.index.pages.map((p, index) => {
+                let pt = (
+                  <span>
+                    <span className='desc'>
+                      <span className='pagenum' style={{ fontWeight: '600', color: 'var(--color-secondary-text)' }}>Page <span className='foundon'>{p.page + 1}</span></span>
+                    </span>
+                  </span>
+                )
+                return (
+                  <div className='snippet-page' key={index} style={{ marginBottom: index < firstDoc.index.pages.length - 1 ? '16px' : '0' }}>
+                    <div onClick={(e) => { e.stopPropagation(); this.openFile(firstDoc._id, p.page, firstDoc.type) }} style={{ cursor: 'pointer' }}>
+                      {!this.state.server ? pt : (
+                        <a href={this.fileUrl(firstDoc._id)} target='_blank' style={{textDecoration: 'none', color: 'inherit'}}>
+                          {pt}
+                        </a>
+                      )}
+                    </div>
+                    <IndexContent highlights={p.highlight} />
+                  </div>
+                )
+              })}
+            </div>
+          )
+          : firstDoc !== null ? (
             <div className='file first' key={firstDoc._id}>
               {(() => {
                 let pt = (
                   <span>
                     <span className='desc'>
-                      <span className='pagenum'>Match on page <span className='foundon'>{firstDoc.index.page + 1}</span> of {firstDoc.numPages}</span>
-                      <span style={{ margin: '0 6px', opacity: 0.5 }}>•</span>
-                      <span className='filetype'>{firstDoc.fileType}</span>
+                      <span className='pagenum' style={{ color: 'var(--color-secondary-text)' }}>Match on page <span className='foundon'>{firstDoc.index.page + 1}</span> of {firstDoc.numPages}</span>
                     </span>
                   </span>
                 )
@@ -104,7 +138,7 @@ export default class PaperSet extends React.Component {
           )
           : null}
         <div className={firstDoc !== null ? 'related' : 'files'} style={{ marginTop: '8px' }}>
-          {firstDoc && sortedTypes.length > 0 ? <div style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--text-color)' }}>Related Documents</div> : null}
+          {firstDoc && sortedTypes.length > 0 ? <div style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--color-secondary-text)', opacity: 0.6 }}>Related Documents</div> : null}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {sortedTypes.map(file => {
               let pt = (
@@ -113,6 +147,7 @@ export default class PaperSet extends React.Component {
                   cursor: 'pointer',
                   background: 'transparent',
                   border: '1px solid var(--border-color)',
+                  color: 'var(--color-secondary-text)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
@@ -143,7 +178,7 @@ export default class PaperSet extends React.Component {
 
   shouldComponentUpdate (nextProps, nextState) {
     if (nextState.server || this.state.server) return true
-    if (nextProps.paperSet !== this.props.paperSet || nextProps.query !== this.props.query || nextProps.current != this.props.current) return true
+    if (nextProps.paperSet !== this.props.paperSet || nextProps.query !== this.props.query || nextProps.current !== this.props.current || nextProps.previewOpen !== this.props.previewOpen) return true
     return false
   }
 

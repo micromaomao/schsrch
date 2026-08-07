@@ -116,7 +116,12 @@ module.exports = ({mongodb: db, elasticsearch: es, siteOrigin}) => {
     rMain.use('/resources/pdfjs', express.static(path.join(__dirname, 'node_modules/pdfjs-dist/build'), {
       maxAge: '1y',
       etag: true,
-      immutable: true
+      immutable: true,
+      setHeaders: (res, path, stat) => {
+        if (path.endsWith('.mjs')) {
+          res.set('Content-Type', 'application/javascript')
+        }
+      }
     }))
     rMain.use('/papers', express.static(storage.root, {
       maxAge: '100d',

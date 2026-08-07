@@ -57,7 +57,7 @@ function extractMetadataFromPath (filePath) {
 
     let dirs = dirName.split(path.sep)
     for (let dir of dirs) {
-      let subjMatch = CIESubjects.find(s => s.name === dir)
+      let subjMatch = CIESubjects.find(s => s.name === dir || s.id === dir)
       if (subjMatch) {
         subject = subjMatch.id
         break

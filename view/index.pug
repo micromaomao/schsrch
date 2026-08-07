@@ -39,5 +39,5 @@ html
     script.
       (document.getElementsByClassName('querybox')[0] || {}).placeholder = 'Still loading...'
     each js in htmlWebpackPlugin.files.js
-      script(src=js, defer)
+      script(src=js + '?v=' + Date.now(), defer)
     != require('raw-loader!./index.svg').default.toString()

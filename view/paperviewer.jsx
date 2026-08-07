@@ -37,7 +37,14 @@ export default class PaperViewer extends React.Component {
         for (let t of Object.keys(this.state.pdfs)) {
           let pdf = this.state.pdfs[t]
           if (pdf.document) {
-            pdf.document.destroy()
+            if (typeof pdf.document.destroy === 'function') {
+              pdf.document.destroy()
+            } else if (typeof pdf.document.cleanup === 'function') {
+              pdf.document.cleanup()
+            }
+          }
+          if (pdf.loadingTask && typeof pdf.loadingTask.destroy === 'function') {
+            pdf.loadingTask.destroy()
           }
           pdf = null
           delete this.state.pdfs[t]
@@ -207,7 +214,7 @@ export default class PaperViewer extends React.Component {
               let current = v2viewing.tCurrentType === null
               return (
                 <div className={'item' + (current ? ' current' : '')} onClick={evt => this.tSwitchTo(null)}>
-                  ques
+                  Questions
                 </div>
               )
             })()}
@@ -219,27 +226,28 @@ export default class PaperViewer extends React.Component {
                 return (
                   <div className={'item' + (current ? ' current' : '')} key={typeStr}
                       onClick={evt => this.tSwitchTo(typeStr)}>
-                    {typeStr}
+                    {PaperUtils.capitalizeFirst(PaperUtils.getTypeString(typeStr))}
                   </div>
                 )
               }
               return (
                 <div className={'item' + (current ? ' current' : '')} key={typeStr}
                   onClick={evt => this.tSwitchTo(typeStr)}>
-                  {typeStr}{!obj.document ? '\u2026' : null}{current ? ':' : null}
+                  {PaperUtils.capitalizeFirst(PaperUtils.getTypeString(typeStr))}{!obj.document ? '\u2026' : null}
                   {current ? (
                     <a
                       className='download'
                       href={this.state.dirs[v2viewing.tCurrentType].fileUrl || ('/doc/' + encodeURIComponent(this.state.dirs[v2viewing.tCurrentType].docid) + '/')}
-                      target='_blank'>
-                      pdf
+                      target='_blank'
+                      style={{ marginLeft: '8px', fontSize: '0.85em', fontWeight: 'normal' }}>
+                      (Download PDF)
                     </a>
                   ) : null}
-                  {!obj.document || !obj.document.__fullyready ? <div className='loadingfill' style={{width: (obj.progress * 100) + '%'}} /> : null}
+                  {!obj.document || !obj.document.__fullyready ? <div className='loadingfill' style={{width: (obj.progress * 100) + '%', display: !obj.progress ? 'none' : 'block'}} /> : null}
                 </div>
               )
             }) : null}
-            <div className='split-toggle' style={{marginLeft: 'auto', padding: '0 10px', display: 'flex', alignItems: 'center'}}>
+            <div className='split-toggle' style={{marginLeft: 'auto', padding: '0 10px', display: 'flex', alignItems: 'center', flexShrink: 0}}>
               <button onClick={() => AppState.dispatch({type: 'v2view-toggle-split'})} style={{background: 'var(--color-primary)', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer'}}>
                 {v2viewing.splitMode ? 'Close Split View' : 'Split View'}
               </button>
@@ -261,14 +269,14 @@ export default class PaperViewer extends React.Component {
                       return (
                         <div className={'item' + (current ? ' current' : '')} key={typeStr}
                             onClick={evt => AppState.dispatch({type: 'v2view-set-split-type', tSplitType: typeStr})}>
-                          {typeStr}
+                          {PaperUtils.capitalizeFirst(PaperUtils.getTypeString(typeStr))}
                         </div>
                       )
                     }
                     return (
                       <div className={'item' + (current ? ' current' : '')} key={typeStr}
                         onClick={evt => AppState.dispatch({type: 'v2view-set-split-type', tSplitType: typeStr})}>
-                        {typeStr}{!obj.document ? '\u2026' : null}
+                        {PaperUtils.capitalizeFirst(PaperUtils.getTypeString(typeStr))}{!obj.document ? '\u2026' : null}
                       </div>
                     )
                   }) : null}
@@ -1080,8 +1088,14 @@ class ManagedPage {
   }
 
   destroy () {
-    this.pdfjsPage.cleanup()
-    this.pdfjsPage = null
+    if (this.renderTask) {
+      this.renderTask.cancel()
+      this.renderTask = null
+    }
+    if (this.pdfjsPage) {
+      this.pdfjsPage.cleanup()
+      this.pdfjsPage = null
+    }
   }
 
   render (scale) {
@@ -1124,6 +1138,7 @@ class ManagedPage {
       this.renderedCanvas = nCanvas
       this.textContent = null
       this.textLayer = null
+      if (!this.pdfjsPage) return Promise.resolve()
       return this.pdfjsPage.getTextContent({
         disableCombineTextItems: false
       }).then(tc => {
@@ -1137,12 +1152,21 @@ class ManagedPage {
           nViewport.offsetX = viewport.offsetX - this.clipRectangle[0] * scale
           nViewport.offsetY = viewport.offsetY - this.clipRectangle[1] * scale
           nViewport = nViewport.clone() // to recalculate transformation matrix and stuff
-          pdfjsLib.renderTextLayer({
-            textContent: tc,
-            container: this.textLayer,
-            viewport: nViewport,
-            enhanceTextSelection: true,
-          })
+          if (pdfjsLib.TextLayer) {
+            let tl = new pdfjsLib.TextLayer({
+              textContentSource: tc,
+              container: this.textLayer,
+              viewport: nViewport,
+            })
+            tl.render()
+          } else {
+            pdfjsLib.renderTextLayer({
+              textContent: tc,
+              container: this.textLayer,
+              viewport: nViewport,
+              enhanceTextSelection: true,
+            })
+          }
           this.textLayer.style.width = (this.clipRectangle[2] * scale) + 'px'
           this.textLayer.style.height = (this.clipRectangle[3] * scale) + 'px'
           this.textLayer.style.overflow = 'hidden'

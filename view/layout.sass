@@ -1,4 +1,5 @@
 :root, [data-theme="light"]
+  color-scheme: light
   --color-primary: #FF5722
   --color-primary-rgb: 255, 87, 34
   --color-link: #0969da
@@ -11,22 +12,23 @@
   --card-bg: #ffffff
   --border-color: #d0d7de
   --chip-bg: #ebf0f4
-  --highlight-bg: rgba(255, 87, 34, 0.1)
+  --highlight-bg: rgba(var(--color-primary-rgb), 0.1)
 
 [data-theme="dark"]
-  --color-primary: #f78166
-  --color-primary-rgb: 247, 129, 102
-  --color-link: #58a6ff
-  --color-link-rgb: 88, 166, 255
-  --color-secondary-text: #8b949e
-  --color-secondary-text-rgb: 139, 148, 158
-  --color-filepreview-top: #1f2428
-  --bg-color: #0d1117
-  --text-color: #e6edf3
-  --card-bg: #161b22
-  --border-color: #30363d
-  --chip-bg: #21262d
-  --highlight-bg: rgba(247, 129, 102, 0.15)
+  color-scheme: dark
+  --color-primary: #dd7855
+  --color-primary-rgb: 221, 120, 85
+  --color-link: #8eb5d9
+  --color-link-rgb: 142, 181, 217
+  --color-secondary-text: #a0a0a0
+  --color-secondary-text-rgb: 160, 160, 160
+  --color-filepreview-top: #252525
+  --bg-color: #121212
+  --text-color: #e0e0e0
+  --card-bg: #1e1e1e
+  --border-color: #333333
+  --chip-bg: #2a2a2a
+  --highlight-bg: rgba(221, 120, 85, 0.2)
 
 $color-primary: var(--color-primary)
 $color-link: var(--color-link)
@@ -66,7 +68,7 @@ body
 body
   background-color: var(--bg-color)
   font-size: 16px
-  color: #212121
+  color: var(--text-color)
   cursor: default
   min-width: 200px
   margin: 0
@@ -90,7 +92,7 @@ $sidebar-width: 300px
     display: block
     text-align: center
     padding: 2rem
-    background-color: #FF5722
+    background-color: var(--color-primary)
     color: white
     a
       color: white
@@ -142,20 +144,26 @@ $sidebar-width: 300px
     align-items: stretch
     flex-wrap: nowrap
     .topbar
-      background-color: $color-filepreview-top
-      color: white
+      display: flex
+      align-items: center
+      gap: 1rem
+      padding: 0.5rem 1rem
+      background-color: var(--card-bg)
+      border-bottom: 1px solid var(--border-color)
       flex-grow: 0
       flex-shrink: 0
-      font-size: 1.1rem
-      a
-        color: white
-        text-decoration: none
+      .nav-btn
+        background: transparent
+        border: none
+        color: var(--color-primary)
         cursor: pointer
-        margin: 0.5rem
-        display: inline-block
+        font-size: 1rem
+        padding: 0.5rem 0.75rem
+        border-radius: 4px
+        transition: background-color 0.2s
         -webkit-tap-highlight-color: transparent
-        &:active
-          color: rgba(white, 0.8)
+        &:hover
+          background-color: var(--highlight-bg)
     .paperviewer
       flex-grow: 1
   > .content // This thing is 100%wh absolute positioned and will contain all main content. (i.e. not feedback dialog and it's back cover)
@@ -209,7 +217,7 @@ $sidebar-width: 300px
     > .bottom
       flex-grow: 0
       flex-shrink: 1
-      border-top: solid 1px #aaa
+      border-top: solid 1px var(--border-color)
       padding: 0.5rem 1rem
       background-color: var(--card-bg)
       > a
@@ -221,7 +229,7 @@ $sidebar-width: 300px
           cursor: pointer
           &:hover
             color: var(--color-link)
-            border-bottom: solid 1px #aaa
+            border-bottom: solid 1px var(--border-color)
 
 .contentblackcover
   z-index: 2
@@ -246,7 +254,7 @@ $sidebar-width: 300px
   &:hover
     background-color: rgba(black, 0.05)
   &:active
-    background-color: rgba(255, 87, 34, 0.2)
+    background-color: rgba(var(--color-primary-rgb), 0.2)
   .icon
     width: 1em
     height: 1em
@@ -326,7 +334,7 @@ $sidebar-width: 300px
       box-shadow: 0 2px 4px rgba(0,0,0,0.05)
       padding: 0 16px
       &:focus-within
-        box-shadow: 0 0 0 4px rgba(255, 87, 34, 0.2)
+        box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.2)
       .querybox
         flex-grow: 1
         flex-shrink: 1
@@ -603,16 +611,29 @@ $sidebar-width: 300px
   .empty
     padding: 3rem 5rem
   .set
+    position: relative
+    .preview-btn
+      background: transparent
+      border: 1px solid var(--color-primary)
+      color: var(--color-primary)
+      padding: 4px 12px
+      border-radius: 4px
+      font-size: 0.85rem
+      cursor: pointer
+      transition: all 0.2s
+      &:hover
+        background: var(--color-primary)
+        color: white
     margin-top: 1rem
     margin-bottom: 1rem
     padding: 2rem
     background-color: var(--card-bg)
-    border: 1px solid rgba(255, 87, 34, 0.3)
+    border: 1px solid rgba(var(--color-primary-rgb), 0.3)
     border-radius: 12px
     transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease
     &:hover
       box-shadow: 0 6px 16px rgba(0,0,0,0.06)
-      border-color: rgba(255, 87, 34, 0.6)
+      border-color: rgba(var(--color-primary-rgb), 0.6)
     &.current
       background-color: var(--border-color)
       transition: background-color 400ms
@@ -684,12 +705,12 @@ $sidebar-width: 300px
         color: var(--color-secondary-text)
         line-height: 1.5
         .highlight
-          background-color: #fff59d
-          color: var(--text-color)
+          background-color: var(--highlight-bg)
+          color: var(--color-primary)
           border-radius: 4px
           font-weight: 600
-          padding: 2px 4px
-          border: 1px solid #fbc02d
+          padding: 0 4px
+          border: none
   .searchprompt
     padding-left: 0.5rem
     padding-right: 0.5rem
@@ -714,7 +735,7 @@ $sidebar-width: 300px
       height: 50vh
     .paperviewercontain
       width: 100%
-      background-color: rgba(255, 87, 34, 0.05)
+      background-color: rgba(var(--color-primary-rgb), 0.05)
       padding-right: 14px
 
 
@@ -1015,10 +1036,10 @@ $feedback-top-height: 2rem + 1.3rem
   .sspdfview
     position: absolute
     .questionln
-      background-color: rgba(255, 87, 34, 0.1)
+      background-color: rgba(var(--color-primary-rgb), 0.1)
       cursor: pointer
     .questionln.highlight
-      background-color: rgba(9, 105, 218, 0.2)
+      background-color: rgba(var(--color-link-rgb), 0.2)
     .erbtn
       background-color: rgba(red, 0.1)
       cursor: pointer
@@ -1107,7 +1128,7 @@ $feedback-top-height: 2rem + 1.3rem
         position: absolute
         z-index: 1
     .wordsel
-      background-color: rgba(255, 87, 34, 0.2)
+      background-color: rgba(var(--color-primary-rgb), 0.2)
       cursor: text
     .wordsel-border
       border: dashed 1px $color-primary
@@ -1129,7 +1150,7 @@ $feedback-top-height: 2rem + 1.3rem
         span
           display: inline-block
           padding: 0.3rem 1rem
-          border-right: solid 1px #aaa
+          border-right: solid 1px var(--border-color)
           &:last-child
             border-right: none
           cursor: pointer
@@ -1144,7 +1165,7 @@ $feedback-top-height: 2rem + 1.3rem
     background-color: transparent
     transition: background-color 200ms
     &:active
-      background-color: rgba(255, 87, 34, 0.2)
+      background-color: rgba(var(--color-primary-rgb), 0.2)
   a
     color: $color-link
     text-decoration: underline
@@ -1199,13 +1220,13 @@ $feedback-top-height: 2rem + 1.3rem
         display: inline-block
         padding-right: 0.25rem
         margin-right: 0.5rem
-        border-right: solid 1px #aaa
+        border-right: solid 1px var(--border-color)
         color: $color-primary
         span
-          color: #aaa
+          color: var(--color-secondary-text)
           font-size: 75%
       .page
-        color: #aaa
+        color: var(--color-secondary-text)
         font-size: 75%
     li.erdir-paper
       cursor: default
@@ -1250,7 +1271,7 @@ $feedback-top-height: 2rem + 1.3rem
     flex-wrap: nowrap
 
     &.doc
-      $color-divider: #ccc
+      $color-divider: var(--border-color)
       > .top
         flex-shrink: 0
         flex-grow: 0
@@ -1398,7 +1419,7 @@ $feedback-top-height: 2rem + 1.3rem
                   padding-left: 0.5rem
                   padding-right: 0.5rem
             .enHider
-              background-color: lighten($color-divider, 15%)
+              background-color: var(--chip-bg)
               .menu
                 .show
                   margin-left: auto
@@ -1423,7 +1444,7 @@ $feedback-top-height: 2rem + 1.3rem
                   transition: color 200ms
                   &:hover
                     color: $color-link
-                    border-bottom: solid 1px #aaa
+                    border-bottom: solid 1px var(--border-color)
                 > span:last-child
                   margin-right: auto
               .prompt
@@ -1441,7 +1462,7 @@ $feedback-top-height: 2rem + 1.3rem
                     display: inline-block
                     margin: 0.5rem
                     padding: 1rem
-                    border: solid 1px rgba(255, 87, 34, 0.2)
+                    border: solid 1px rgba(var(--color-primary-rgb), 0.2)
               .doccontain
                 position: relative
                 .sspdfview
@@ -1497,7 +1518,7 @@ $feedback-top-height: 2rem + 1.3rem
                 bottom: 0
                 width: auto
                 height: auto
-                background-color: rgba(255, 87, 34, 0.8)
+                background-color: rgba(var(--color-primary-rgb), 0.8)
                 color: white
                 border-radius: 5px 0 0 0
                 padding: 0.5rem 1rem
@@ -1896,50 +1917,60 @@ $feedback-top-height: 2rem + 1.3rem
       width: 100%
       flex-grow: 0
       flex-shrink: 0
-      height: 30px
-      background-color: $color-filepreview-top
+      background-color: var(--card-bg)
+      border-bottom: 1px solid var(--border-color)
       display: flex
       flex-direction: row
       flex-wrap: nowrap
       overflow-x: auto
-      align-items: flex-end
+      align-items: stretch
       padding-left: 0.5rem
       padding-right: 0.5rem
+      &::-webkit-scrollbar
+        height: 4px
+      &::-webkit-scrollbar-thumb
+        background-color: var(--border-color)
+        border-radius: 4px
 
       > .item
-        height: 22px
-        width: 6rem
-        overflow: hidden
-        font-size: 1rem
-        text-align: center
-        color: white
-        position: relative
+        flex: 0 0 auto
+        font-size: 0.95rem
+        color: var(--color-secondary-text)
+        padding: 0.5rem 1rem
         cursor: pointer
+        border-bottom: 2px solid transparent
+        transition: all 0.2s
+        position: relative
+        white-space: nowrap
         .loadingfill
           position: absolute
-          background-color: rgba(white, 0.2)
-          top: 0
+          background-color: var(--color-primary)
+          opacity: 1
+          height: 3px
           bottom: 0
           left: 0
           pointer-events: none
 
-        &.current
-          width: 12rem
-          height: 26px
-          background-color: var(--card-bg)
-          border-top: solid 2px $color-primary
+        &:hover
           color: var(--text-color)
+          background-color: var(--chip-bg)
+
+        &.current
+          color: var(--color-primary)
+          border-bottom-color: var(--color-primary)
+          font-weight: 500
           cursor: default
+          background-color: transparent
           .loadingfill
-            background-color: rgba(255, 87, 34, 0.2)
+            background-color: rgba(var(--color-primary-rgb), 0.2)
+            opacity: 1
           .download
             display: inline-block
-            padding: 0.2rem 0.5rem
-            margin-top: -0.2rem
-            margin-bottom: -0.2rem
-            color: $color-link
+            color: var(--color-link)
             cursor: pointer
             text-decoration: none
+            &:hover
+              text-decoration: underline
 
     .pdfcontain
       flex-grow: 1
@@ -2088,7 +2119,7 @@ $feedback-top-height: 2rem + 1.3rem
   .textlayercontain > * > *
     cursor: text
     &::selection
-      background-color: rgba(255, 87, 34, 0.3)
+      background-color: rgba(var(--color-primary-rgb), 0.3)
       color: rgba(black, 0)
   .textlayercontain
     overflow: hidden
@@ -2113,7 +2144,7 @@ $feedback-top-height: 2rem + 1.3rem
     .line
       top: 20px
       bottom: 20px
-      background-color: rgba(87, 96, 106, 0.5)
+      background-color: rgba(var(--color-secondary-text-rgb), 0.5)
     .floating
       background-color: $color-primary
     .indicator
@@ -2201,8 +2232,8 @@ $feedback-top-height: 2rem + 1.3rem
       font-size: 0.7rem
       color: var(--color-secondary-text)
     &.active
-      background: rgba(9, 105, 218, 0.1)
-      border-color: rgba(9, 105, 218, 0.3)
+      background: rgba(var(--color-link-rgb), 0.1)
+      border-color: rgba(var(--color-link-rgb), 0.3)
       .subj-name, .subj-code
         color: var(--color-link)
     &:hover:not(.active)
@@ -2231,7 +2262,7 @@ $feedback-top-height: 2rem + 1.3rem
     height: 22px
     line-height: 22px
     &.active
-      background: rgba(9, 105, 218, 0.1)
+      background: rgba(var(--color-link-rgb), 0.1)
       color: var(--color-link)
       font-weight: 500
     &:hover:not(.active)
@@ -2259,9 +2290,9 @@ $feedback-top-height: 2rem + 1.3rem
     user-select: none
     transition: all 150ms ease
     &.active
-      background: rgba(9, 105, 218, 0.1)
+      background: rgba(var(--color-link-rgb), 0.1)
       color: var(--color-link)
-      border-color: rgba(9, 105, 218, 0.2)
+      border-color: rgba(var(--color-link-rgb), 0.2)
       font-weight: 500
     &:hover:not(.active)
       background: var(--border-color)
@@ -2308,7 +2339,7 @@ $feedback-top-height: 2rem + 1.3rem
       border-color: var(--color-secondary-text)
     &:focus
       border-color: var(--color-link)
-      box-shadow: 0 0 0 2px rgba(9,105,218,0.2)
+      box-shadow: 0 0 0 2px rgba(var(--color-link-rgb),0.2)
 
   .filter-btn-reset
     background: transparent
@@ -2574,7 +2605,7 @@ $feedback-top-height: 2rem + 1.3rem
     transition: box-shadow 200ms, border-color 200ms
     &:focus
       border-color: var(--color-primary)
-      box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.1)
+      box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1)
 
 .level-filters
   display: flex
