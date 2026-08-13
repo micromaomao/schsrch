@@ -11,3 +11,8 @@ tags
 papers_download/
 test_papers/
 test/papers_download_test/
+
+# Migration-generated reports
+migration-report.json
+migration-report.csv
+cleanup-report.json
