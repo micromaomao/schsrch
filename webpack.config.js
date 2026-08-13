@@ -1,3 +1,4 @@
+/* eslint-disable no-undef, object-property-newline, quotes, quote-props, comma-dangle */
 const path = require('path')
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')

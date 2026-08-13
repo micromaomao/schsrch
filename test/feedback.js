@@ -1,3 +1,4 @@
+/* eslint-disable no-undef, object-curly-spacing */
 const supertest = require('supertest')
 const should = require('should')
 
@@ -5,7 +6,7 @@ module.exports = (schsrch, dbModel) =>
   describe('Feedback collector', function () {
     const {PastPaperFeedback} = dbModel
     before(function (done) {
-      PastPaperFeedback.count({}).then(ct => {
+      PastPaperFeedback.countDocuments({}).then(ct => {
         if (ct !== 0) {
           done(new Error(`There are ${ct} existing feedback items.`))
         } else {

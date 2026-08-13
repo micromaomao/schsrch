@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, prefer-const, object-curly-spacing, no-undef */
 const supertest = require('supertest')
 const should = require('should')
 const _schsrch = require('../index')
@@ -25,7 +26,12 @@ try {
 }
 
 let db = mongoose.createConnection()
-db.openUri(DB).catch(err => {
+db.openUri(DB, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: false
+}).catch(err => {
   console.error(err)
   process.exit(1)
 })
@@ -50,7 +56,7 @@ db.on('open', function () {
   require('../lib/dbModel.js')(db, es).then(_dbModel => {
     dbModel = _dbModel
     const {PastPaperDoc} = dbModel
-    PastPaperDoc.count().then(ct => {
+    PastPaperDoc.countDocuments().then(ct => {
       if (ct === 0) {
         console.error('No testing paper present. Run test/prepareDatabase.sh before testing.')
         process.exit(1)
@@ -71,5 +77,6 @@ function doTests () {
   require('./ciesubjects.js')()
   require('./paperutils.js')()
   require('./dirsbatch.js')(schsrch, dbModel)
+  require('./downloader.js')()
   run()
 }

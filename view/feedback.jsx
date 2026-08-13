@@ -1,3 +1,4 @@
+/* eslint-disable lines-between-class-members, prefer-const, object-curly-spacing, react/jsx-first-prop-new-line, react/jsx-closing-bracket-location, react/jsx-closing-tag-location, indent, no-unused-vars, object-curly-newline, object-property-newline, n/handle-callback-err */
 import * as React from 'react'
 import { AppState } from './appstate.js'
 import AnimatorReactComponent from './animatorReactComponent.jsx'

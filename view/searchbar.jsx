@@ -1,7 +1,9 @@
+/* eslint-disable import/no-webpack-loader-syntax, prefer-const, curly, lines-between-class-members, object-curly-spacing, object-curly-newline, object-property-newline, quotes, react/jsx-indent, react/jsx-first-prop-new-line, react/jsx-closing-bracket-location, indent, no-return-assign, multiline-ternary, jsx-quotes, react/self-closing-comp */
 import * as React from 'react'
 import CIESubjects from './CIESubjects.js'
 import { AppState } from './appstate.js'
 import AnimatorReactComponent from './animatorReactComponent.jsx'
+import AdvancedFilters from './advancedfilters.jsx'
 const IconData = require('raw-loader!./icon.svg').default.toString()
 const BannerDrawing = require('raw-loader!./banner.svg').default.toString()
 
@@ -15,7 +17,8 @@ export default class SearchBar extends AnimatorReactComponent {
       lastTimeout: null, // return of setTimeout
       lastQuerySubmited: '',
       focus: true,
-      subjectHintSelect: null
+      subjectHintSelect: null,
+      showFilters: false
     }
     if (AppState.getState().serverrender) {
       this.state.server = true
@@ -44,6 +47,18 @@ export default class SearchBar extends AnimatorReactComponent {
     }
     this.setState({loadingStart: this.shouldShowLoading() ? Date.now() : null})
     this.unsub = AppState.subscribe(this.handleAppStateUpdate)
+    document.addEventListener('mousedown', this.handleClickOutside)
+  }
+  componentWillUnmount () {
+    if (this.unsub) this.unsub()
+    document.removeEventListener('mousedown', this.handleClickOutside)
+  }
+  handleClickOutside = (event) => {
+    if (this.container && !this.container.contains(event.target)) {
+      if (this.state.showFilters) {
+        this.setState({ showFilters: false })
+      }
+    }
   }
   handleAppStateUpdate () {
     let showLoading = this.shouldShowLoading()
@@ -193,13 +208,15 @@ export default class SearchBar extends AnimatorReactComponent {
         </div>
       )
     }
+
+    let querying = AppState.getState().querying || {}
     let renderT = (
       <div className={this.props.big ? 'searchbar big' : 'searchbar small'}>
         <div className={'bannerContain' + (hideBanner ? ' hide' : '')} key='bannerContain'>
           <img className='icon' src={'data:image/svg+xml,' + encodeURIComponent(IconData)} alt='SchSrch' />
           <img className='banner' key='banner' src={'data:image/svg+xml,' + encodeURIComponent(BannerDrawing)} alt='SchSrch' />
         </div>
-        <div className={'inputContain' + (hideBanner ? ' hidebanner' : '')}>
+        <div className={'inputContain' + (hideBanner ? ' hidebanner' : '')} ref={f => this.container = f}>
           <div className='inputPositionWrap'>
             <input
               className={'querybox' + (this.state.server ? ' border' : '')}
@@ -212,11 +229,7 @@ export default class SearchBar extends AnimatorReactComponent {
               onKeyDown={this.handleKey}
               name='query'
               autoComplete='off' />
-            {this.state.server ? null : (
-              <div className='stroke'>
-                <div className='fill' style={strokeFillStyle} />
-              </div>
-            )}
+            {this.state.server ? null : null}
             <div className='rightWrap'>
               {this.state.server ? (
                 <button className='formsubmit' type='submit'>Search</button>
@@ -228,7 +241,35 @@ export default class SearchBar extends AnimatorReactComponent {
                   </div>
                 )
                 : null}
+              <button
+                type="button"
+                onClick={e => { e.preventDefault(); this.setState({showFilters: !this.state.showFilters}) }}
+                style={{
+                  background: this.state.showFilters ? 'var(--card-bg)' : 'transparent',
+                  border: '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  padding: '4px 12px',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginLeft: '8px',
+                  color: 'var(--text-color)',
+                  fontSize: '0.85rem',
+                  fontWeight: '500',
+                  boxShadow: this.state.showFilters ? '0 0 5px rgba(0,0,0,0.1)' : 'none'
+                }}
+                title="Filters"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}>
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                Filters
+              </button>
             </div>
+          </div>
+          <div className={'filter-dropdown ' + (this.state.showFilters ? 'is-open' : '')}>
+            <AdvancedFilters />
           </div>
           {subjectHint}
         </div>

@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const, space-unary-ops */
 const fs = require('fs')
 
 function parseArguments (args) {

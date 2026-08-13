@@ -1,37 +1,41 @@
 {
   "name": "schsrch",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "MONGODB=mongodb://127.0.0.1/schsrch ES=127.0.0.1:9200 node server.js",
     "install": "if [ -e binding.gyp ]; then node-gyp rebuild; fi",
     "prepare": "if [ -e webpack.config.js ]; then npm run webpack; fi",
     "webpack-dev": "NODE_ENV=development webpack --progress --colors --watch",
     "webpack": "NODE_ENV=production webpack --progress; if [ $? -eq 0 ]; then echo OK.; else echo Failed && exit 1.; fi",
-    "test": "mocha --delay --exit",
-    "coverage": "node_modules/.bin/istanbul cover -x \"**/dist-server/**\" --report lcovonly node_modules/.bin/_mocha -- --delay --exit -R spec",
+    "test": "bash test/prepareDatabase.sh && STORAGE_ROOT=test/papers_download_test/pastpapers mocha --delay --exit",
+    "coverage": "STORAGE_ROOT=test/papers_download_test/pastpapers node_modules/.bin/istanbul cover -x \"**/dist-server/**\" --report lcovonly node_modules/.bin/_mocha -- --delay --exit -R spec",
     "coverage-html": "node_modules/.bin/istanbul cover -x \"**/dist-server/**\" node_modules/.bin/_mocha -- --delay --exit"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/micromaomao/schsrch.git"
+    "url": "git+https://github.com/MiskaWasTaken/schsrch.git"
   },
-  "author": "Mao Wtm <micromaomao@gmail.com>",
+  "author": "Aarya Mungli <aaryamungli@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/micromaomao/schsrch/issues"
+    "url": "https://github.com/MiskaWasTaken/schsrch/issues"
   },
-  "homepage": "https://github.com/micromaomao/schsrch#readme",
+  "homepage": "https://github.com/MiskaWasTaken/schsrch#readme",
   "dependencies": {
     "bowser": "^1.9.4",
     "cheerio": "^1.0.0-rc.2",
-    "express": "^4.16.4",
+    "compression": "^1.8.1",
+    "express": ">=4.0.0",
+    "helmet": "^8.3.0",
+    "morgan": "^1.11.0",
     "nan": "^2.18.0",
+    "pdfjs-dist": "^6.2.108",
     "rbush": "^2.0.2",
     "request": "^2.88.0",
-    "svgo": "^1.1.1",
-    "pdfjs-dist": "^2.0.943"
+    "svgo": "^1.1.1"
   },
   "peerDependencies": {
     "elasticsearch": ">=13.0.0",
@@ -40,10 +44,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.2.2",
-    "babel-loader": "^8.0.4",
     "@babel/plugin-transform-react-jsx": "^7.2.0",
     "@babel/polyfill": "^7.0.0",
     "@babel/preset-env": "^7.2.0",
+    "babel-loader": "^8.0.4",
     "base64-js": "^1.3.0",
     "css-loader": "^6.8.1",
     "elasticsearch": "^15.2.0",
@@ -63,7 +67,7 @@
     "redux": "^4.0.1",
     "sass": "^1.69.5",
     "sass-loader": "^13.3.2",
-    "sharp": "^0.26.1",
+    "sharp": "^0.32.6",
     "should": "^13.2.3",
     "supertest": "^3.3.0",
     "transformationstage": "*",

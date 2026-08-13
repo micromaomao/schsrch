@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable camelcase, prefer-const, object-curly-spacing, no-useless-return, indent */
 const { MONGODB: DB, ES } = process.env
 const child_process = require('child_process')
 const fs = require('fs')
@@ -8,14 +9,19 @@ const elasticsearch = require('elasticsearch')
 let es = new elasticsearch.Client({
   host: ES
 })
-let db = mongoose.createConnection(DB)
+let db = mongoose.createConnection(DB, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: false
+})
 
 db.on('error', err => {
   console.error(err)
   process.exit(1)
 })
 db.on('open', () => {
-  require('./lib/dbModel.js')(db, es).then(({PastPaperDoc, PastPaperPaperBlob}) => {
+  require('./lib/dbModel.js')(db, es).then(({PastPaperDoc}) => {
     PastPaperDoc.find({}).cursor().eachAsync(async function (doc) {
       try {
         if (doc.gs_optimized) {
@@ -23,21 +29,12 @@ db.on('open', () => {
           return
         }
         console.log('Processing ' + doc._id)
-        let pdfBlob = await doc.getFileBlob()
+        const storage = require('./storage/index.js')
+        let pdfBlob = await storage.read(doc.relativePath)
         let newBlob = null
         newBlob = await doOptimize(pdfBlob)
-        doc.fileBlob = null
-        await PastPaperPaperBlob.remove({docId: doc._id})
-        let chunkSize = 10 * 1024 * 1024
-        for (let off = 0; off < newBlob.length; off += chunkSize) {
-          let slice = newBlob.slice(off, off + chunkSize)
-          let dbBlobFrag = new PastPaperPaperBlob({
-            docId: doc._id,
-            offset: off,
-            data: slice
-          })
-          await dbBlobFrag.save()
-        }
+        await storage.save(doc.relativePath, newBlob)
+
         doc.gs_optimized = true
         await doc.save()
       } catch (e) {

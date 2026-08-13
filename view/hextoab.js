@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 export default function (hex) {
   let a = new Uint8Array(hex.length / 2)
   for (let i = 0; i < hex.length; i += 2) {

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, prefer-const, operator-linebreak, indent, multiline-ternary, object-curly-spacing, react/jsx-no-target-blank */
 import * as React from 'react'
 import * as FetchErrorPromise from './fetcherrorpromise.jsx'
 import { AppState } from './appstate.js'

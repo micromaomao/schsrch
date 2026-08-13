@@ -1,3 +1,4 @@
+/* eslint-disable quotes, object-property-newline, prefer-const, object-curly-spacing */
 const shortTypes = ['qp', 'ms', 'in', 'sin', 'er', 'gt', 'ci', 'sp', 'sm', 'sci', 'rb', 'srb', 'srbi', 'un', 'dc', 'tc', 'tn', 'stc', 'stn', 'ts', 'sts', 'sb', 'ab', 'gn', 'su', 'pl', 'rlg', 'rls', 'ecr', 'lg']
 const subjectMetaTypes = ['pl', 'rlg', 'rls', 'ecr', 'lg']
 const longTypes = [

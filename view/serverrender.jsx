@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, object-curly-spacing */
 'use strict'
 
 import { AppState } from './appstate.js'

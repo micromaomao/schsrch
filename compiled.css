@@ -1,0 +1,2472 @@
+@charset "UTF-8";
+@import url("https://fonts.googleapis.com/css?family=Lato:300");
+:root, [data-theme=light] {
+  --color-primary: #FF5722;
+  --color-primary-rgb: 255, 87, 34;
+  --color-link: #0969da;
+  --color-link-rgb: 9, 105, 218;
+  --color-secondary-text: #57606a;
+  --color-secondary-text-rgb: 87, 96, 106;
+  --color-filepreview-top: #E64A19;
+  --bg-color: #f6f8fa;
+  --text-color: #24292f;
+  --card-bg: #ffffff;
+  --border-color: #d0d7de;
+  --chip-bg: #ebf0f4;
+  --highlight-bg: rgba(255, 87, 34, 0.1);
+}
+
+[data-theme=dark] {
+  --color-primary: #f78166;
+  --color-primary-rgb: 247, 129, 102;
+  --color-link: #58a6ff;
+  --color-link-rgb: 88, 166, 255;
+  --color-secondary-text: #8b949e;
+  --color-secondary-text-rgb: 139, 148, 158;
+  --color-filepreview-top: #1f2428;
+  --bg-color: #0d1117;
+  --text-color: #e6edf3;
+  --card-bg: #161b22;
+  --border-color: #30363d;
+  --chip-bg: #21262d;
+  --highlight-bg: rgba(247, 129, 102, 0.15);
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  stroke-width: 0;
+  stroke: currentColor;
+  fill: currentColor;
+}
+
+.material_button, .error-display .heading .retry, .schsrch-main-crash .reload-btn-contain .reload-btn, .filepreview .selectprompt a, .feedback > .content .submit, .schsrch > .content > .bottom > a {
+  background-color: var(--color-primary);
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  color: white;
+  cursor: pointer;
+  transition: background-color 200ms, box-shadow 200ms;
+  -webkit-tap-highlight-color: transparent;
+}
+.material_button:hover, .error-display .heading .retry:hover, .schsrch-main-crash .reload-btn-contain .reload-btn:hover, .filepreview .selectprompt a:hover, .feedback > .content .submit:hover, .schsrch > .content > .bottom > a:hover {
+  background-color: var(--color-link);
+  box-shadow: 0 -2px 0 rgba(0, 0, 0, 0.4) inset;
+}
+.material_button:active, .error-display .heading .retry:active, .schsrch-main-crash .reload-btn-contain .reload-btn:active, .filepreview .selectprompt a:active, .feedback > .content .submit:active, .schsrch > .content > .bottom > a:active {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4) inset;
+}
+
+body {
+  background-color: var(--bg-color);
+  font-size: 16px;
+  color: #212121;
+  cursor: default;
+  min-width: 200px;
+  margin: 0;
+  font-family: sans-serif;
+}
+body * {
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.schsrch {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  min-width: 200px;
+  height: 100vh;
+  overflow: hidden;
+}
+.schsrch > .content > noscript {
+  display: block;
+  text-align: center;
+  padding: 2rem;
+  background-color: #FF5722;
+  color: white;
+}
+.schsrch > .content > noscript a {
+  color: white;
+  font-weight: bold;
+}
+.schsrch noscript.small {
+  padding: 0.5rem;
+}
+.schsrch > .content,
+.schsrch > .contentblackcover,
+.schsrch > .feedback {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 200px;
+}
+.schsrch > .content > .unsupported {
+  color: white;
+  background-color: var(--color-filepreview-top);
+  text-align: center;
+  font-size: 1.1rem;
+  padding: 1rem;
+  border-bottom: solid red 2px;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+.schsrch > .content > .unsupported > .considerupgrade {
+  margin-top: 0.2rem;
+  font-size: 0.9rem;
+}
+.schsrch > .v2viewingPopup {
+  position: absolute;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--card-bg);
+  z-index: 3;
+  transition: transform 400ms ease;
+  will-change: transform;
+}
+.schsrch > .v2viewingPopup.hide {
+  transform: translate(100%, 0);
+  pointer-events: none;
+}
+.schsrch > .v2viewingPopup.show {
+  transform: translate(0, 0);
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.3);
+}
+.schsrch > .v2viewingPopup {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-wrap: nowrap;
+}
+.schsrch > .v2viewingPopup .topbar {
+  background-color: var(--color-filepreview-top);
+  color: white;
+  flex-grow: 0;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+.schsrch > .v2viewingPopup .topbar a {
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+  margin: 0.5rem;
+  display: inline-block;
+  -webkit-tap-highlight-color: transparent;
+}
+.schsrch > .v2viewingPopup .topbar a:active {
+  color: rgba(255, 255, 255, 0.8);
+}
+.schsrch > .v2viewingPopup .paperviewer {
+  flex-grow: 1;
+}
+.schsrch > .content {
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+}
+.schsrch > .content noscript {
+  flex-grow: 0;
+  flex-shrink: 1;
+}
+.schsrch > .content {
+  transition: transform 400ms ease;
+  will-change: transform;
+  transform: translate(0, 0);
+}
+.schsrch > .content.leftshift {
+  transform: translate(-20vw, 0);
+}
+.schsrch > .content > .viewcontain {
+  flex-grow: 1;
+  flex-shrink: 1;
+  max-height: 100vh;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  align-items: stretch;
+  overflow: hidden;
+}
+.schsrch > .content > .viewcontain > .view {
+  flex-grow: 1;
+  flex-shrink: 1;
+  max-width: 100%;
+  overflow: hidden;
+}
+.schsrch > .content > .viewcontain > .view > .prepare-shadow {
+  transition: box-shadow 200ms;
+  will-change: box-shadow;
+}
+.schsrch > .content > .viewcontain > .view > .shadow {
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+.schsrch > .content > .viewcontain > .filepreview {
+  flex-grow: 1;
+  flex-shrink: 1;
+  border-left: solid 2px var(--color-primary);
+}
+.schsrch > .content > .viewcontain.sidepane > .view {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 500px;
+}
+.schsrch > .content > .bottom {
+  flex-grow: 0;
+  flex-shrink: 1;
+  border-top: solid 1px #aaa;
+  padding: 0.5rem 1rem;
+  background-color: var(--card-bg);
+}
+.schsrch > .content > .bottom .paperName a {
+  color: var(--color-link);
+  transition: color 200ms;
+  cursor: pointer;
+}
+.schsrch > .content > .bottom .paperName a:hover {
+  color: var(--color-link);
+  border-bottom: solid 1px #aaa;
+}
+
+.contentblackcover {
+  z-index: 2;
+  background-color: rgba(0, 0, 0, 0.5);
+  transition: opacity 600ms;
+  will-change: opacity;
+  opacity: 0;
+}
+
+.sidebarbtn {
+  font-size: 1.5rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  color: var(--color-primary);
+  background-color: transparent;
+  transition: background-color 200ms;
+  -webkit-tap-highlight-color: transparent;
+}
+.sidebarbtn > * {
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+.sidebarbtn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.sidebarbtn:active {
+  background-color: rgba(var(--color-primary-rgb), 0.2);
+}
+.sidebarbtn .icon {
+  width: 1em;
+  height: 1em;
+}
+
+.schsrch .view-home {
+  overflow-y: auto !important;
+}
+.schsrch .view-home .sidebarbtn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: auto;
+  height: auto;
+}
+.schsrch .view-home .helph1 {
+  margin-top: 14px;
+  font-size: 1.7rem;
+  line-height: 40px;
+  color: var(--color-primary);
+  text-align: center;
+  font-family: "Lato", sans-serif;
+  font-weight: 300;
+}
+.schsrch .view-home .searchbarcontain.helping {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  max-width: 90vw;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.view-search .searchbarcontain {
+  background-color: var(--bg-color);
+  padding-bottom: 20px;
+}
+
+.searchbarcontain {
+  width: 1100px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0 10px;
+  margin: 0 auto;
+  transition: all 0.5s ease 0s;
+}
+
+.searchbar .bannerContain {
+  transition: all 100ms;
+  text-align: center;
+  display: flex;
+  color: var(--color-primary);
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+}
+.searchbar .bannerContain .icon {
+  transition: width 200ms, height 200ms;
+}
+.searchbar .bannerContain.hide {
+  display: none;
+}
+.searchbar .inputContain {
+  position: relative;
+  transition: all 100ms;
+}
+.searchbar .inputContain .querybox {
+  border: none;
+  outline: none;
+}
+.searchbar .inputContain .querybox, .searchbar .inputContain .stroke, .searchbar .inputContain .inputPositionWrap {
+  transition: all 100ms;
+}
+.searchbar .inputContain .inputPositionWrap {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 56px;
+  border: 1px solid var(--border-color);
+  border-radius: 28px;
+  background-color: var(--card-bg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0 16px;
+}
+.searchbar .inputContain .inputPositionWrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.2);
+}
+.searchbar .inputContain .inputPositionWrap .querybox {
+  flex-grow: 1;
+  flex-shrink: 1;
+  background: transparent;
+}
+.searchbar .inputContain .inputPositionWrap .stroke {
+  position: absolute;
+  z-index: 2;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: transparent;
+  overflow: hidden;
+}
+.searchbar .inputContain .inputPositionWrap .stroke .fill {
+  height: 2px;
+  background-color: var(--color-primary);
+}
+.searchbar .inputContain .inputPositionWrap .rightWrap {
+  padding-top: 0;
+  padding-left: 0.5rem;
+  padding-right: 0;
+  background-color: transparent;
+  z-index: 1;
+  flex-grow: 0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.searchbar .inputContain .inputPositionWrap .rightWrap .clearInput {
+  display: inline-block;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+.searchbar .inputContain .inputPositionWrap .rightWrap .clearInput .icon {
+  vertical-align: middle;
+  line-height: 0;
+  color: var(--color-secondary-text);
+}
+.searchbar .inputContain .querybox {
+  color: var(--text-color);
+  display: inline-block;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+.searchbar .inputContain .querybox::placeholder, .searchbar .inputContain .querybox::-webkit-input-placeholder, .searchbar .inputContain .querybox::-moz-placeholder, .searchbar .inputContain .querybox:-ms-input-placeholder {
+  color: var(--color-secondary-text);
+}
+.searchbar .inputContain .querybox.border {
+  border: none;
+}
+.searchbar .inputContain .subjecthints {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-top: 4px;
+  overflow: hidden;
+  z-index: 4;
+}
+.searchbar .inputContain .subjecthints .subject {
+  background-color: var(--card-bg);
+  transition: background-color 200ms;
+  padding: 0.3rem 1rem;
+}
+.searchbar .inputContain .subjecthints .subject .level, .searchbar .inputContain .subjecthints .subject .id {
+  font-size: 50%;
+  color: var(--color-secondary-text);
+}
+.searchbar .inputContain .subjecthints .subject:hover, .searchbar .inputContain .subjecthints .subject.select {
+  background-color: var(--border-color);
+}
+
+.searchbar.big .bannerContain {
+  margin-top: 20vh;
+  height: 160px;
+}
+.searchbar.big .bannerContain .icon {
+  display: none;
+}
+.searchbar.big .bannerContain .banner {
+  height: 135px;
+}
+.searchbar.big .inputContain {
+  display: block;
+  text-align: center;
+  margin-top: 1rem;
+  background-color: rgba(var(--color-primary-rgb), 0.05);
+}
+.searchbar.big .inputContain .inputPositionWrap, .searchbar.big .inputContain .subjecthints {
+  width: 90%;
+}
+.searchbar.big .inputContain .querybox {
+  text-align: center;
+  background-color: transparent;
+}
+.searchbar.big .inputContain .subjecthints {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.searchbar.small {
+  flex-shrink: 0;
+  margin: 0;
+  padding-top: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+.searchbar.small .bannerContain {
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
+.searchbar.small .bannerContain .icon {
+  width: 2rem;
+  height: 2rem;
+}
+.searchbar.small .bannerContain .banner {
+  width: 0;
+}
+.searchbar.small .inputContain {
+  flex-grow: 1;
+  margin-left: 0.5rem;
+}
+.searchbar.small .inputContain .querybox {
+  text-align: left;
+}
+.searchbar.small .inputContain .inputPositionWrap, .searchbar.small .inputContain .subjecthints {
+  width: 100%;
+}
+.searchbar.small .inputContain .subjecthints {
+  position: absolute;
+}
+.searchbar.small .inputContain.hidebanner {
+  margin-left: 0;
+}
+
+.schsrch .home-desc {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 1rem;
+}
+.schsrch .home-desc .links {
+  margin-bottom: 2rem;
+}
+.schsrch .home-desc .links a {
+  color: var(--color-link);
+  margin-left: 1rem;
+  margin-right: 1rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  line-height: 1.5;
+}
+.schsrch .home-desc .status {
+  font-size: 0.8rem;
+  color: var(--color-primary);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.schsrch .home-desc .status .large {
+  font-size: 1rem;
+  color: var(--color-primary);
+}
+.schsrch .home-desc .status .error-display {
+  max-width: 40rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+.schsrch .home-desc .status .reload span {
+  color: var(--color-link);
+  line-height: 2;
+  padding: 0.5rem 2rem;
+  cursor: pointer;
+  font-size: 0.7rem;
+}
+.schsrch .home-desc .status .error, .schsrch .home-desc .status .reload {
+  font-size: 0.75rem;
+}
+.schsrch .home-desc .status div {
+  margin-bottom: 0.6rem;
+}
+.schsrch .home-desc .status a {
+  color: var(--color-link);
+  transition: color 200ms;
+  text-decoration: none;
+  cursor: pointer;
+}
+.schsrch .home-desc .status a:hover {
+  color: var(--color-link);
+}
+.schsrch .home-desc .status.loading {
+  opacity: 0.5;
+}
+.schsrch .home-desc .cieinprog, .schsrch .home-desc .mirrornotice {
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+.schsrch .home-desc .cieinprog a, .schsrch .home-desc .mirrornotice a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+.schsrch .home-desc .copyright {
+  margin-top: 3em;
+  font-size: 0.8rem;
+  color: var(--color-primary);
+}
+.schsrch .home-desc .copyright a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+.schsrch .home-desc .help {
+  margin-bottom: 1rem;
+}
+.schsrch .home-desc .help .helpbtn {
+  display: block;
+  color: var(--color-link);
+  text-decoration: none;
+  cursor: pointer;
+  padding: 1rem;
+  margin: -1rem;
+}
+.schsrch .home-desc .notification {
+  background-color: var(--color-primary);
+  color: var(--color-primary);
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+  border-top: var(--color-link) solid 3px;
+}
+.schsrch .home-desc .notification .inner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.schsrch .view-search {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+.schsrch .view-search .searchbarcontain {
+  flex-grow: 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  width: 1100px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0 10px;
+  margin: 0 auto;
+}
+.schsrch .view-search .searchbarcontain > .sidebarbtn {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 38px;
+  transition: transform 100ms;
+}
+.schsrch .view-search .searchbarcontain > .searchbar {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+.schsrch .view-search .searchbarcontain.noshadow > .sidebarbtn {
+  transform: translate(0, 0.25rem);
+}
+.schsrch .view-search .searchcontain {
+  flex-grow: 1;
+  flex-shrink: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.searchresult.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.searchresult {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+.searchresult .overflow {
+  padding: 1rem 0;
+  cursor: auto;
+}
+.searchresult .overflow .subject {
+  color: var(--color-secondary-text);
+  font-size: 80%;
+}
+.searchresult .overflow .sy a {
+  color: var(--color-link);
+  cursor: pointer;
+  transition: color 100ms;
+  text-decoration: none;
+}
+.searchresult .overflow .sy a:active {
+  color: var(--color-link);
+}
+.searchresult .overflow pre, .searchresult .overflow p {
+  margin: 0.5rem 0;
+  padding: 0;
+}
+.searchresult .overflow .time, .searchresult .overflow pre {
+  color: var(--color-primary);
+}
+.searchresult .overflow ul li.noinstance {
+  opacity: 0.8;
+}
+.searchresult .overflow ul.timeslist {
+  list-style-type: none;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: baseline;
+  max-width: 25rem;
+  padding: 0;
+  margin-left: 1rem;
+}
+.searchresult .overflow ul.timeslist li {
+  cursor: pointer;
+  padding: 0.25rem 0;
+  margin: 0;
+  color: var(--color-primary);
+  flex-grow: 1;
+  flex-shrink: 1;
+  width: 100%;
+  max-width: 8rem;
+}
+.searchresult .overflow ul.timeslist li .count {
+  color: var(--color-secondary-text);
+  font-size: 75%;
+}
+.searchresult .overflow ul.timeslist li a {
+  color: inherit;
+  text-decoration: inherit;
+}
+.searchresult .empty {
+  padding: 3rem 5rem;
+}
+.searchresult .set {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding: 2rem;
+  background-color: var(--card-bg);
+  border: 1px solid rgba(255, 87, 34, 0.3);
+  border-radius: 12px;
+  transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+}
+.searchresult .set:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  border-color: rgba(var(--color-primary-rgb), 0.6);
+}
+.searchresult .set.current {
+  background-color: var(--border-color);
+  transition: background-color 400ms;
+}
+.searchresult .set .setname {
+  padding: 0 0 1rem 0;
+  background-color: transparent;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-color);
+  line-height: 1.3;
+}
+.searchresult .set .setname .time, .searchresult .set .setname .paper, .searchresult .set .setname .variant {
+  display: none;
+}
+.searchresult .set .setname .paper.meta {
+  display: none;
+}
+.searchresult .set .setname .subject .level {
+  font-size: 80%;
+  opacity: 0.8;
+}
+.searchresult .set .chips-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+.searchresult .set .chips-row .chip {
+  background: var(--chip-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-color);
+  line-height: 1.5;
+  overflow: visible;
+  display: inline-block;
+}
+.searchresult .set .chips-row .chip.score {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.searchresult .set a {
+  color: inherit;
+}
+.searchresult .set .files {
+  padding-top: 1rem;
+}
+.searchresult .set .files .file {
+  padding: 0.3rem 1rem;
+}
+.searchresult .set .related {
+  padding-top: 0.5rem;
+  padding-left: 0.5rem;
+  padding-right: 2rem;
+}
+.searchresult .set .related .file {
+  padding: 0.1rem 0.5rem 0.1rem 1.5rem;
+}
+.searchresult .set .files, .searchresult .set .related {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  color: var(--color-secondary-text);
+}
+.searchresult .set .file {
+  cursor: pointer;
+}
+.searchresult .set .file .typename {
+  color: var(--color-link);
+  margin-right: 1rem;
+}
+.searchresult .set .file .desc {
+  font-size: 90%;
+}
+.searchresult .set .file.first {
+  padding: 0;
+}
+.searchresult .set .file.first .foundon {
+  color: var(--color-primary);
+}
+.searchresult .set .file.first .indexcontent {
+  font-size: 1rem;
+  margin-top: 0.75rem;
+  margin-left: 0;
+  color: var(--color-secondary-text);
+  line-height: 1.5;
+}
+.searchresult .set .file.first .indexcontent .highlight {
+  background-color: var(--chip-bg);
+  border-radius: 4px;
+  font-weight: 600;
+  padding: 2px 4px;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+.searchresult .searchprompt {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.searchresult .warning {
+  border-top: 2px solid var(--color-link);
+  background-color: var(--color-primary);
+  text-align: left;
+  padding: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.searchresult .warning a {
+  color: var(--color-link);
+  cursor: pointer;
+  transition: color 200ms;
+}
+.searchresult .warning a:hover {
+  color: var(--color-link);
+  border-bottom: solid 1px rgba(var(--color-secondary-text-rgb), 0.2);
+}
+.searchresult .fulltextlist .paperviewer.loaded {
+  height: 50vh;
+}
+.searchresult .fulltextlist .paperviewercontain {
+  width: 100%;
+  background-color: rgba(var(--color-primary-rgb), 0.05);
+  padding-right: 14px;
+}
+
+.searchresult.v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+.searchresult.v2 .v2container {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+.searchresult.v2 .v2container .v2paperlist {
+  flex-shrink: 0;
+  flex-grow: 0;
+  width: 40px;
+  overflow-y: auto;
+}
+.searchresult.v2 .v2container .v2paperlist .tsscontainer {
+  width: 100%;
+  min-height: 100%;
+  border-right: 2px var(--color-primary) solid;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  overflow-x: visible;
+}
+.searchresult.v2 .v2container .v2paperlist .ts {
+  overflow-x: visible;
+}
+.searchresult.v2 .v2container .v2paperlist .ts .tit {
+  border-bottom: var(--color-primary) dashed 2px;
+  font-size: 0.7rem;
+  color: var(--color-primary);
+  padding-top: 1rem;
+  text-align: right;
+}
+.searchresult.v2 .v2container .v2paperlist .paper {
+  cursor: pointer;
+  color: var(--color-link);
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 0.7rem 0;
+  border-left: rgba(1, 1, 1, 0) solid 2px;
+  border-top: rgba(1, 1, 1, 0) solid 2px;
+  border-bottom: rgba(1, 1, 1, 0) solid 2px;
+}
+.searchresult.v2 .v2container .v2paperlist .paper.current {
+  border-left: var(--color-primary) solid 2px;
+  border-top: var(--color-primary) solid 2px;
+  border-bottom: var(--color-primary) solid 2px;
+  color: var(--color-primary);
+  margin-right: -2px;
+  background-color: var(--card-bg);
+}
+.searchresult.v2 .v2container .viewercontain {
+  flex-shrink: 1;
+  flex-grow: 1;
+  overflow: hidden;
+}
+.searchresult.v2 .v2container .viewercontain .null {
+  text-align: center;
+  margin-top: 2rem;
+  color: var(--color-secondary-text);
+}
+.searchresult.v2 .v2container .viewercontain .initresultlist {
+  overflow: auto;
+}
+.searchresult.v2 .v2container .viewercontain .initresultlist .timeset {
+  margin-bottom: 1rem;
+}
+.searchresult.v2 .v2container .viewercontain .initresultlist .timeset .time {
+  border-bottom: dashed 2px var(--color-primary);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  color: var(--color-primary);
+  font-size: 1.2rem;
+}
+.searchresult.v2 .v2container .viewercontain .initresultlist .timeset .time .subjname {
+  font-size: 1rem;
+  color: var(--color-secondary-text);
+}
+.searchresult.v2 .v2container .viewercontain .initresultlist .timeset .paper {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.searchresult.v2 .v2container .viewercontain .initresultlist .timeset .paper .pv {
+  font-size: 1.1rem;
+  margin-right: 1rem;
+}
+.searchresult.v2 .v2container .viewercontain .initresultlist .timeset .paper .typelist > a {
+  display: inline-block;
+  color: var(--color-link);
+  cursor: pointer;
+  margin-right: 1rem;
+}
+
+.set.mini {
+  background-color: transparent;
+  margin: 0;
+}
+.set.mini .setname, .set.mini .files, .set.mini .files > .file:first-child {
+  display: inline-block;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.set.mini .files {
+  padding: 0;
+}
+.set.mini .typename {
+  font-size: 0.9rem;
+}
+.set.mini .subject {
+  display: none;
+}
+
+.searchprompt {
+  color: var(--color-primary);
+  line-height: 1.5;
+  font-size: 0.8rem;
+}
+.searchprompt.center {
+  text-align: center;
+}
+.searchprompt .error {
+  color: red;
+}
+.searchprompt a {
+  color: var(--color-link);
+  cursor: pointer;
+}
+.searchprompt a:hover {
+  color: var(--card-bg);
+}
+
+.feedback.hide {
+  visibility: hidden;
+}
+
+.feedback {
+  z-index: 3;
+  background-color: var(--card-bg);
+  padding: 0;
+}
+.feedback .top {
+  background-color: var(--color-primary);
+  color: white;
+  font-size: 1.3rem;
+  line-height: 1.3rem;
+  height: 3.3rem;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  padding: 1rem 2rem;
+  box-shadow: 0 0 4px #000;
+}
+.feedback .top .close {
+  vertical-align: middle;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  transition: background-color 200ms;
+  padding: 0.5rem;
+}
+.feedback .top .close:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.feedback > .content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 3.3rem;
+  bottom: 0;
+  padding: 2.3rem;
+  overflow: auto;
+}
+.feedback > .content h2 {
+  font-size: 1.3rem;
+  margin: 0;
+  line-height: 1.3;
+  font-weight: normal;
+  color: var(--color-primary);
+}
+.feedback > .content .email, .feedback > .content textarea {
+  width: 100%;
+  outline: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-size: 0.9rem;
+}
+.feedback > .content textarea {
+  height: 4rem;
+  resize: vertical;
+  max-height: 50vh;
+  border-bottom: solid 2px var(--color-primary);
+}
+.feedback > .content textarea:disabled {
+  opacity: 0.5;
+  background: none;
+}
+.feedback > .content .email {
+  border-bottom: solid 1px var(--color-primary);
+}
+.feedback > .content .submit {
+  margin: 0.5rem 0;
+}
+.feedback > .content .submitting, .feedback > .content .error {
+  font-size: 0.8rem;
+  margin: 0.5rem 0;
+}
+.feedback > .content .submitting {
+  color: var(--color-primary);
+}
+.feedback > .content .error {
+  color: red;
+}
+.feedback > .content .searchReport {
+  color: var(--color-primary);
+  font-size: 1.2rem;
+}
+
+.filepreview {
+  color: white;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  background-color: var(--card-bg);
+}
+.filepreview.fullscreen {
+  width: 100%;
+  height: 100%;
+}
+.filepreview .loading, .filepreview .error {
+  padding: 1rem 2rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+.filepreview .loading, .filepreview .top {
+  background-color: var(--color-filepreview-top);
+}
+.filepreview .top {
+  text-align: center;
+  font-size: 1rem;
+  line-height: 2;
+  flex-grow: 0;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+}
+.filepreview .top.fixed {
+  position: fixed;
+  z-index: 11;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  border-left: solid 2px white;
+  background-color: var(--color-primary);
+}
+.filepreview .top > * {
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+.filepreview .top .page {
+  display: inline-block;
+}
+.filepreview .top .page .icon {
+  vertical-align: middle;
+  line-height: 0;
+}
+.filepreview .top .page .input {
+  display: inline;
+  text-align: center;
+  width: 2rem;
+  background-color: transparent;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: solid 1px white;
+  outline: none;
+}
+.filepreview .top .page .input::-webkit-inner-spin-button {
+  appearance: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+}
+.filepreview .top .page .input {
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  vertical-align: middle;
+}
+.filepreview .top .dir, .filepreview .top .crop, .filepreview .top .download, .filepreview .top .fullscreen, .filepreview .top .close, .filepreview .top .prev, .filepreview .top .next {
+  margin-left: 0.5rem;
+  cursor: pointer;
+  vertical-align: middle;
+  line-height: 0;
+}
+.filepreview .top a {
+  text-decoration: none;
+  color: inherit;
+}
+.filepreview .top a.doc {
+  text-decoration: underline;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+}
+.filepreview .top .dir, .filepreview .top .crop, .filepreview .top .download, .filepreview .top .fullscreen, .filepreview .top .close {
+  font-size: 1.2rem;
+}
+.filepreview .top .prev.disabled, .filepreview .top .next.disabled {
+  opacity: 0.5;
+}
+.filepreview .top .prev {
+  margin-right: 1rem;
+}
+.filepreview .pdfview {
+  flex-grow: 1;
+  flex-shrink: 1;
+  background-color: var(--card-bg);
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  background-color: var(--card-bg);
+}
+.filepreview .pdfview > .hide {
+  display: none;
+}
+.filepreview .pdfview > .show {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+.filepreview .pdfview > .dircontain {
+  flex-grow: 1;
+  flex-shrink: 1;
+  overflow: auto;
+}
+.filepreview .pdfview.dirty {
+  opacity: 0.3;
+}
+.filepreview .sspdfview {
+  position: absolute;
+}
+.filepreview .sspdfview .questionln {
+  background-color: rgba(var(--color-primary-rgb), 0.1);
+  cursor: pointer;
+}
+.filepreview .sspdfview .questionln.highlight {
+  background-color: rgba(var(--color-link-rgb), 0.2);
+}
+.filepreview .sspdfview .erbtn {
+  background-color: rgba(255, 0, 0, 0.1);
+  cursor: pointer;
+}
+.filepreview .sspdfview .diroverlayerror {
+  overflow: hidden;
+  padding: 0;
+}
+.filepreview .sspdfview .diroverlayerror div {
+  background-color: rgba(255, 0, 0, 0.8);
+  color: white;
+  font-size: 1rem;
+  text-align: center;
+  margin: 0;
+  padding: 0.5rem;
+}
+.sspdfview {
+  background-color: var(--card-bg);
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+.sspdfview.textsel {
+  cursor: text;
+}
+.sspdfview.textsel .questionln {
+  display: none;
+}
+.sspdfview .unsupported {
+  color: var(--color-primary);
+  font-size: 1.2rem;
+  text-align: center;
+  margin: 1rem;
+}
+.sspdfview .svglayer, .sspdfview .selectlayer, .sspdfview .dirtylayer, .sspdfview .pointereventcover, .sspdfview .msref, .sspdfview .pointereventcover > .cropoverlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+.sspdfview .svglayer {
+  z-index: 2;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  will-change: background-size, background-position;
+}
+.sspdfview .dirtylayer {
+  z-index: 1;
+  pointer-events: none;
+}
+.sspdfview .selectlayer {
+  z-index: 0;
+}
+.sspdfview .pointereventcover {
+  z-index: 3;
+  color: black;
+  font-size: 1.2rem;
+}
+.sspdfview .pointereventcover .cropoverlay > div {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  cursor: move;
+  z-index: 2;
+}
+.sspdfview .pointereventcover .cropoverlay .lt {
+  border-bottom: solid 3px var(--color-primary);
+  border-right: solid 3px var(--color-primary);
+}
+.sspdfview .pointereventcover .cropoverlay .t {
+  border-bottom: solid 3px var(--color-primary);
+}
+.sspdfview .pointereventcover .cropoverlay .rt {
+  border-left: solid 3px var(--color-primary);
+  border-bottom: solid 3px var(--color-primary);
+}
+.sspdfview .pointereventcover .cropoverlay .rb {
+  border-top: solid 3px var(--color-primary);
+  border-left: solid 3px var(--color-primary);
+}
+.sspdfview .pointereventcover .cropoverlay .r {
+  border-left: solid 3px var(--color-primary);
+}
+.sspdfview .pointereventcover .cropoverlay .b {
+  border-top: solid 3px var(--color-primary);
+}
+.sspdfview .pointereventcover .cropoverlay .lb {
+  border-top: solid 3px var(--color-primary);
+  border-right: solid 3px var(--color-primary);
+}
+.sspdfview .pointereventcover .cropoverlay .l {
+  border-right: solid 3px var(--color-primary);
+}
+.sspdfview .pointereventcover .cropmask {
+  pointer-events: none;
+}
+.sspdfview .pointereventcover .cropmask > div {
+  background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  z-index: 1;
+}
+.sspdfview .pointereventcover .wordsel {
+  background-color: rgba(var(--color-primary-rgb), 0.2);
+  cursor: text;
+}
+.sspdfview .pointereventcover .wordsel-border {
+  border: dashed 1px var(--color-primary);
+  pointer-events: none;
+}
+.sspdfview .pointereventcover .textmenu {
+  overflow: visible;
+}
+.sspdfview .pointereventcover .textmenu div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+  background-color: var(--card-bg);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
+  font-size: 0.8rem;
+  font-weight: lighter;
+  padding: 0.8rem;
+}
+.sspdfview .pointereventcover .textmenu div span {
+  display: inline-block;
+  padding: 0.3rem 1rem;
+  border-right: solid 1px #aaa;
+}
+.sspdfview .pointereventcover .textmenu div span:last-child {
+  border-right: none;
+}
+.sspdfview .pointereventcover .textmenu div span {
+  cursor: pointer;
+}
+
+.disclaimer {
+  padding: 1.5rem;
+}
+.disclaimer .back {
+  display: inline-block;
+  padding: 0.5rem 0.7rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  background-color: transparent;
+  transition: background-color 200ms;
+}
+.disclaimer .back:active {
+  background-color: rgba(var(--color-primary-rgb), 0.2);
+}
+.disclaimer a {
+  color: var(--color-link);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.disclaimer a.back {
+  color: inherit;
+}
+.disclaimer h1 {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 1.3rem;
+  margin: 0;
+  padding: 0;
+  line-height: 1.3;
+  font-weight: normal;
+  color: var(--color-primary);
+}
+.disclaimer .tldr {
+  font-size: 1rem;
+  color: var(--color-primary);
+  margin-top: 0.5rem;
+  padding: 0 1rem;
+}
+.disclaimer ul {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  cursor: auto;
+  list-style-type: none;
+}
+.disclaimer ul li {
+  margin: 0.5rem 0;
+}
+.disclaimer ul li::before {
+  content: "・";
+  margin-left: -1em;
+  color: var(--color-primary);
+}
+
+.docdirlist {
+  color: black;
+}
+.docdirlist .msg {
+  padding: 0.5rem 1rem;
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+.docdirlist ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.docdirlist ul li {
+  cursor: pointer;
+  margin: 0;
+  padding: 0.5rem;
+  line-height: 1.2;
+  font-size: 1rem;
+}
+.docdirlist ul li .qn {
+  text-align: right;
+  min-width: 3rem;
+  display: inline-block;
+  padding-right: 0.25rem;
+  margin-right: 0.5rem;
+  border-right: solid 1px #aaa;
+  color: var(--color-primary);
+}
+.docdirlist ul li .qn span {
+  color: #aaa;
+  font-size: 75%;
+}
+.docdirlist ul li .page {
+  color: #aaa;
+  font-size: 75%;
+}
+.docdirlist ul li.erdir-paper {
+  cursor: default;
+  color: var(--color-primary);
+  padding: 0.5rem;
+  margin: 0;
+}
+.docdirlist ul li.erdir-paper ul {
+  list-style-type: none;
+  margin: 0 0 0 1rem;
+  padding: 0;
+  vertical-align: middle;
+}
+.docdirlist ul li.erdir-paper ul li {
+  margin: 0 0;
+  padding: 0 0.5rem;
+  cursor: pointer;
+  color: black;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.schsrch .view.view-collection {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.schsrch .view.view-collection noscript {
+  flex-shrink: 0;
+  flex-grow: 0;
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 1rem;
+  display: block;
+}
+.schsrch .view.view-collection noscript .small {
+  font-size: 0.8rem;
+  color: var(--color-secondary-text);
+}
+.schsrch .view.view-collection > div {
+  flex-shrink: 0;
+  flex-grow: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+.schsrch .view.view-collection > div.doc > .top {
+  flex-shrink: 0;
+  flex-grow: 0;
+  height: 3rem;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+  overflow: hidden;
+}
+.schsrch .view.view-collection > div.doc > .top > .sidebarbtn, .schsrch .view.view-collection > div.doc > .top .undo, .schsrch .view.view-collection > div.doc > .top .redo, .schsrch .view.view-collection > div.doc > .top .menu {
+  flex-shrink: 0;
+  flex-grow: 0;
+  color: var(--color-primary);
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+.schsrch .view.view-collection > div.doc > .top > .sidebarbtn.disabled, .schsrch .view.view-collection > div.doc > .top .undo.disabled, .schsrch .view.view-collection > div.doc > .top .redo.disabled, .schsrch .view.view-collection > div.doc > .top .menu.disabled {
+  opacity: 0.5;
+}
+.schsrch .view.view-collection > div.doc > .top > .menu {
+  font-weight: bold;
+}
+.schsrch .view.view-collection > div.doc > .top > h1 {
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding: 0;
+  margin: 0;
+  font-weight: normal;
+  font-size: 1.5rem;
+  text-align: center;
+}
+.schsrch .view.view-collection > div.doc > .top > h1 > input {
+  width: 100%;
+  height: 2rem;
+  border: hidden;
+  outline: none;
+  text-align: center;
+  font-size: 1.5rem;
+  min-width: 50px;
+}
+.schsrch .view.view-collection > div.doc > .top > h1 > input.untitled {
+  border-bottom: dashed 1px #ccc;
+}
+.schsrch .view.view-collection > div.doc > .top > h1 > input:disabled {
+  background-color: transparent;
+}
+.schsrch .view.view-collection > div.doc > .menu {
+  flex-grow: 0;
+  flex-shrink: 0;
+  border-bottom: 1px solid #ccc;
+  background-color: var(--color-primary);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  padding-right: 0.5rem;
+}
+.schsrch .view.view-collection > div.doc > .menu > span {
+  flex-shrink: 0;
+  flex-grow: 0;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.schsrch .view.view-collection > div.doc > .menu > span.menuitem {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  cursor: pointer;
+  color: var(--color-primary);
+}
+.schsrch .view.view-collection > div.doc > .menu > span.menuitem.delete {
+  color: red;
+}
+.schsrch .view.view-collection > div.doc > .menu > .printingProgress {
+  margin: 0;
+  align-self: flex-end;
+  width: 100%;
+  height: 2px;
+}
+.schsrch .view.view-collection > div.doc > .menu > .printingProgress .fill {
+  background-color: var(--color-primary);
+  height: 2px;
+  margin: 0;
+}
+.schsrch .view.view-collection > div.doc > .menu > .error {
+  color: red;
+}
+.schsrch .view.view-collection > div.doc > .bottom {
+  flex-shrink: 0;
+  flex-grow: 0;
+  height: 1.4rem;
+  line-height: 1.4rem;
+  font-size: 0.8rem;
+  color: var(--color-secondary-text);
+  border-top: 1px solid #ccc;
+  padding: 0 0.5rem;
+}
+.schsrch .view.view-collection > div.doc > .bottom.error {
+  color: red;
+  background-color: #ffcccc;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain {
+  flex-grow: 1;
+  flex-shrink: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  overflow: hidden;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain > .loading, .schsrch .view.view-collection > div.doc > .editorcontain .error-display {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain > .loading {
+  text-align: center;
+  font-size: 1.2rem;
+  line-height: 2;
+  color: var(--color-secondary-text);
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor {
+  flex-grow: 1;
+  flex-shrink: 1;
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  flex-direction: row;
+  overflow: hidden;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content {
+  flex-shrink: 1;
+  flex-grow: 1;
+  overflow: auto;
+  cursor: text;
+  outline: none;
+  padding: 0.5rem 1rem;
+  max-height: 100%;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content p {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 800px;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enHider, .schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop {
+  margin-left: auto;
+  margin-right: auto;
+  cursor: default;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enHider .menu, .schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .menu {
+  background-color: var(--border-color);
+  border-bottom: solid 2px var(--color-primary);
+  font-size: 1rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  display: flex;
+  flex-direction: row;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enHider .menu > span, .schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .menu > span {
+  cursor: pointer;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enHider .menu > a, .schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .menu > a {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enHider {
+  background-color: rgb(95%, 95%, 95%);
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enHider .menu .show {
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  color: var(--color-primary);
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enHider .hiddeneditor {
+  display: none;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enHider .editorcontain {
+  margin: 0;
+  padding: 0;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .menu {
+  flex-wrap: wrap;
+  border-bottom: solid 2px var(--color-filepreview-top);
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .menu > .doc {
+  margin-left: auto;
+  margin-right: auto;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: color 200ms;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .menu > .doc:hover {
+  color: var(--color-link);
+  border-bottom: solid 1px #aaa;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .menu > span:last-child {
+  margin-right: auto;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .prompt {
+  text-align: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .prompt span {
+  font-size: 1.2rem;
+  vertical-align: middle;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .prompt a {
+  cursor: pointer;
+  color: var(--color-link);
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .prompt.apply a {
+  display: inline-block;
+  margin: 0.5rem;
+  padding: 1rem;
+  border: solid 1px rgba(var(--color-primary-rgb), 0.2);
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .doccontain {
+  position: relative;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .doccontain .sspdfview {
+  margin-left: auto;
+  margin-right: auto;
+  z-index: 1;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .enPaperCrop .doccontain .annotations {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations {
+  overflow: hidden;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations .placeholder {
+  color: var(--color-primary);
+  font-size: 1.2rem;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 1rem;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations .placeholder .pen {
+  font-size: 3rem;
+  color: var(--color-primary);
+  opacity: 0.7;
+  margin: 0.5rem;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations .creationPrompt, .schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations .selectionMenu {
+  position: absolute;
+  background-color: var(--color-primary);
+  color: white;
+  font-size: 1rem;
+  overflow: hidden;
+  z-index: 2;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations .creationPrompt span, .schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations .selectionMenu span {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  cursor: pointer;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations .creationPrompt {
+  border-radius: 10px;
+  border: solid 2px var(--color-filepreview-top);
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations .selectionMenu {
+  border-top: solid 1px var(--color-filepreview-top);
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations .selectionMenu .move {
+  cursor: move;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations .sketchCreate {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  height: auto;
+  background-color: rgba(var(--color-primary-rgb), 0.8);
+  color: white;
+  border-radius: 5px 0 0 0;
+  padding: 0.5rem 1rem;
+  z-index: 2;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain .collectionEditor > .content .annotations .ano.sketch {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain > .nologin, .schsrch .view.view-collection > div.doc > .editorcontain .deprecation {
+  text-align: center;
+  padding: 0.5rem;
+  border-bottom: var(--color-primary) solid 1px;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+.schsrch .view.view-collection > div.doc > .editorcontain > .nologin .big, .schsrch .view.view-collection > div.doc > .editorcontain .deprecation .big {
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+.schsrch .view.view-collection > div.doc > .editorcontain > .nologin a, .schsrch .view.view-collection > div.doc > .editorcontain .deprecation a {
+  color: var(--color-link);
+  cursor: pointer;
+}
+
+.schsrch .view.view-login,
+.schsrch .view.view-challenge-replace {
+  text-align: center;
+}
+.schsrch .view.view-login > .contain,
+.schsrch .view.view-challenge-replace > .contain {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.schsrch .view.view-login > .contain h1,
+.schsrch .view.view-challenge-replace > .contain h1 {
+  border-bottom: solid 1px var(--color-primary);
+  padding: 1rem 2rem;
+  display: inline-block;
+  font-size: 1.5rem;
+  font-weight: normal;
+}
+.schsrch .view.view-login > .contain .btn,
+.schsrch .view.view-challenge-replace > .contain .btn {
+  padding: 1rem 0;
+}
+.schsrch .view.view-login > .contain .btn a,
+.schsrch .view.view-challenge-replace > .contain .btn a {
+  color: var(--color-link);
+  padding: 0.5rem;
+  cursor: pointer;
+}
+.schsrch .view.view-login > .contain .tokenInput, .schsrch .view.view-login > .contain .usernameInput, .schsrch .view.view-login > .contain .passwordInput,
+.schsrch .view.view-challenge-replace > .contain .tokenInput,
+.schsrch .view.view-challenge-replace > .contain .usernameInput,
+.schsrch .view.view-challenge-replace > .contain .passwordInput {
+  border-top: none;
+  border-right: none;
+  border-bottom: solid 2px var(--color-primary);
+  border-left: none;
+  background-color: transparent;
+  font-size: 1rem;
+  text-align: left;
+  width: 100%;
+  outline: none;
+}
+.schsrch .view.view-login > .contain .progress,
+.schsrch .view.view-challenge-replace > .contain .progress {
+  color: var(--color-primary);
+}
+.schsrch .view.view-login.view-login > .contain .stage > .back, .schsrch .view.view-login.view-challenge-replace > .contain > .back,
+.schsrch .view.view-challenge-replace.view-login > .contain .stage > .back,
+.schsrch .view.view-challenge-replace.view-challenge-replace > .contain > .back {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  color: var(--color-link);
+  border-bottom: var(--color-link) solid 1px;
+  cursor: pointer;
+}
+.schsrch .view.view-login.view-login > .contain .stage > .back.bmargin, .schsrch .view.view-login.view-challenge-replace > .contain > .back.bmargin,
+.schsrch .view.view-challenge-replace.view-login > .contain .stage > .back.bmargin,
+.schsrch .view.view-challenge-replace.view-challenge-replace > .contain > .back.bmargin {
+  margin-bottom: 1rem;
+}
+.schsrch .view.view-login.view-login > .contain .stage .cstate.loading, .schsrch .view.view-login.view-challenge-replace > .contain > .loading,
+.schsrch .view.view-challenge-replace.view-login > .contain .stage .cstate.loading,
+.schsrch .view.view-challenge-replace.view-challenge-replace > .contain > .loading {
+  color: var(--color-primary);
+  font-size: 1rem;
+  padding: 0.5rem;
+  border-top: solid 1px var(--color-primary);
+  border-bottom: solid 1px var(--color-primary);
+}
+
+.schsrch .view.view-login > .contain .stage .cstate.notexist .license {
+  font-weight: bold;
+}
+.schsrch .view.view-login > .contain .stage.username .usernameInput, .schsrch .view.view-login > .contain .stage.username .passwordInput, .schsrch .view.view-login > .contain .stage.setPassword .usernameInput, .schsrch .view.view-login > .contain .stage.setPassword .passwordInput {
+  text-align: center;
+}
+
+.schsrch .view.view-challenge-replace .main {
+  margin-top: 1rem;
+}
+
+.schsrch .view.view-subjects {
+  padding: 1rem 2rem;
+  overflow: auto !important;
+}
+.schsrch .view.view-subjects a {
+  color: var(--color-link);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 200ms;
+}
+.schsrch .view.view-subjects a:hover {
+  color: var(--color-link);
+}
+.schsrch .view.view-subjects .return a {
+  color: var(--color-link);
+  text-decoration: none;
+  padding: 0.5rem;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+  display: inline;
+  cursor: pointer;
+}
+.schsrch .view.view-subjects .return a:hover {
+  color: var(--color-link);
+}
+.schsrch .view.view-subjects h2 {
+  color: var(--color-primary);
+  margin: 0;
+  padding: 1rem 0;
+  font-size: 1.5rem;
+  font-weight: normal;
+}
+.schsrch .view.view-subjects ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+.schsrch .view.view-subjects ul li {
+  padding: 0 0.5rem;
+  margin: 0;
+}
+.schsrch .view.view-subjects ul li a {
+  color: inherit;
+}
+.schsrch .view.view-subjects ul li a:hover {
+  color: var(--color-link);
+}
+.schsrch .view.view-subjects ul li .count {
+  font-size: 50%;
+  color: var(--color-primary);
+}
+.schsrch .view.view-subjects ul li .times {
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+.schsrch .view.view-subjects ul li .times a {
+  color: var(--color-primary);
+}
+.schsrch .view.view-subjects ul li .times a:hover {
+  color: var(--color-primary);
+}
+
+.schsrch-help {
+  cursor: auto !important;
+  padding: 0 2rem;
+}
+.schsrch-help a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+.schsrch-help p {
+  margin: 0.5rem 0;
+  padding: 0;
+  line-height: 1.5;
+}
+.schsrch-help h2 {
+  color: var(--color-primary);
+  margin: 1rem 0;
+  padding: 0;
+  font-weight: normal;
+}
+.schsrch-help h3 {
+  margin: 0.5rem 0;
+  font: 120%;
+  font-weight: normal;
+  padding: 0;
+}
+.schsrch-help .searchlink {
+  display: block;
+  color: var(--color-primary);
+  margin: 0.3rem 0.7rem;
+}
+.schsrch-help .searchlink .q {
+  display: block;
+  border-bottom: solid 2px var(--color-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+.schsrch-help .searchlink .e {
+  font-size: 0.7rem;
+  line-height: 1.2;
+  display: block;
+}
+
+.schsrch-main-crash {
+  margin: 0;
+  padding: 0 1rem;
+  border-top: red solid 2px;
+}
+.schsrch-main-crash h1, .schsrch-main-crash h2 {
+  font-weight: normal;
+  margin: 0;
+}
+.schsrch-main-crash h1 {
+  font-size: 4rem;
+  text-align: center;
+  color: var(--color-secondary-text);
+  padding: 1rem;
+}
+.schsrch-main-crash h2 {
+  text-align: center;
+  font-size: 1.2rem;
+  padding: 0.5rem;
+  color: red;
+  border-top: var(--color-primary) solid 1px;
+  border-bottom: var(--color-primary) solid 1px;
+}
+.schsrch-main-crash h2, .schsrch-main-crash p, .schsrch-main-crash pre, .schsrch-main-crash .reload-btn-contain {
+  max-width: 50rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+.schsrch-main-crash p, .schsrch-main-crash pre {
+  padding-left: 0;
+  padding-right: 0;
+}
+.schsrch-main-crash pre {
+  overflow-x: auto;
+  font-size: 0.7rem;
+}
+.schsrch-main-crash .reload-btn-contain {
+  text-align: center;
+}
+.error-display {
+  text-align: left;
+  color: black;
+}
+.error-display .heading {
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 0.8rem;
+  text-align: center;
+}
+.error-display .heading .retry {
+  margin-left: 0.5rem;
+}
+.error-display .message {
+  color: red;
+  border-top: solid 1px red;
+  border-bottom: solid 1px red;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  text-align: center;
+}
+.error-display .message.bmargin {
+  margin-bottom: 1rem;
+}
+.error-display .submessage {
+  margin-top: 1rem;
+}
+.error-display .submessage, .error-display .message {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.error-display .submessage a, .error-display .message a {
+  cursor: pointer;
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+.paperviewer {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.paperviewer.loading {
+  text-align: center;
+  padding-top: 1rem;
+}
+.paperviewer.loading .loadingtitle {
+  font-size: 1.1rem;
+  color: var(--color-primary);
+}
+.paperviewer.loading .loadingdesc {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: var(--color-secondary-text);
+}
+.paperviewer.loaded {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+.paperviewer.loaded .papersetindicate {
+  width: 100%;
+  flex-grow: 0;
+  flex-shrink: 0;
+  background-color: var(--color-filepreview-top);
+  font-size: 1rem;
+  padding: 0.5rem 0.5rem 0 0.5rem;
+  color: white;
+}
+.paperviewer.loaded .typebar {
+  width: 100%;
+  flex-grow: 0;
+  flex-shrink: 0;
+  height: 30px;
+  background-color: var(--color-filepreview-top);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  align-items: flex-end;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.paperviewer.loaded .typebar > .item {
+  height: 22px;
+  width: 6rem;
+  overflow: hidden;
+  font-size: 1rem;
+  text-align: center;
+  color: white;
+  position: relative;
+  cursor: pointer;
+}
+.paperviewer.loaded .typebar > .item .loadingfill {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.2);
+  top: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+}
+.paperviewer.loaded .typebar > .item.current {
+  width: 12rem;
+  height: 26px;
+  background-color: var(--card-bg);
+  border-top: solid 2px var(--color-primary);
+  color: black;
+  cursor: default;
+}
+.paperviewer.loaded .typebar > .item.current .loadingfill {
+  background-color: rgba(var(--color-primary-rgb), 0.2);
+}
+.paperviewer.loaded .typebar > .item.current .download {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  margin-top: -0.2rem;
+  margin-bottom: -0.2rem;
+  color: var(--color-link);
+  cursor: pointer;
+  text-decoration: none;
+}
+.paperviewer.loaded .pdfcontain {
+  flex-grow: 1;
+  flex-shrink: 1;
+  position: relative;
+  width: 100%;
+}
+.paperviewer.loaded .pdfcontain .pdfjsviewer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+.paperviewer.loaded .pdfcontain .dirmenu {
+  position: absolute;
+  background-color: var(--color-primary);
+  color: var(--color-primary);
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  width: 80px;
+  z-index: 2;
+  box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+}
+.paperviewer.loaded .pdfcontain .dirmenu > .item {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 80px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+.paperviewer.loaded .pdfcontain .dirmenu > .item.nothing {
+  cursor: default;
+  font-size: 0.7rem;
+}
+.paperviewer.loaded .ques {
+  overflow-y: auto;
+}
+.paperviewer.loaded .ques .h {
+  padding: 0.5rem 1rem;
+}
+.paperviewer.loaded .ques .question {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  max-width: 100%;
+  padding: 1px 0;
+  border-bottom: var(--color-secondary-text) solid 1px;
+  cursor: pointer;
+}
+.paperviewer.loaded .ques .question .left {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 3rem;
+  border-right: var(--color-primary) solid 1px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+}
+.paperviewer.loaded .ques .question .left .num {
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+.paperviewer.loaded .ques .question .body {
+  flex-grow: 1;
+  flex-shrink: 1;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: stretch;
+  overflow: hidden;
+  padding-left: 0.5rem;
+}
+.paperviewer.loaded .ques .question .body .title {
+  font-size: 1rem;
+  height: 1.5rem;
+  line-height: 1.5rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.paperviewer.loaded .ques .question .body .jump {
+  font-size: 0.8rem;
+  color: var(--color-secondary-text);
+}
+.paperviewer.loaded .ques .question .body .jump a {
+  margin: -0.5rem 0;
+  padding: 0.5rem 0.5rem;
+  display: inline-block;
+  color: var(--color-link);
+  cursor: pointer;
+}
+.paperviewer.loaded .ques .question .body .jump a.disabled {
+  cursor: default;
+  color: var(--color-secondary-text);
+  text-decoration: line-through;
+}
+.paperviewer.loaded .pdfcontain.blob {
+  text-align: center;
+}
+.paperviewer.loaded .pdfcontain.blob .h {
+  color: var(--color-primary);
+}
+.paperviewer.loaded .pdfcontain.blob .dl a {
+  color: var(--color-link);
+  text-decoration: none;
+  font-size: 2rem;
+  padding: 1rem;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.paperviewer.loading .progressbar, .paperviewer.loaded .pdfcontain.loading .progressbar, .paperviewer.loaded .pdfcontain .progressbar.floating {
+  background-color: var(--color-primary);
+  width: 80%;
+  height: 2px;
+  margin: 1rem auto;
+  padding: 0;
+}
+.paperviewer.loading .progressbar .fill, .paperviewer.loaded .pdfcontain.loading .progressbar .fill, .paperviewer.loaded .pdfcontain .progressbar.floating .fill {
+  margin: 0;
+  background-color: var(--color-primary);
+  height: 100%;
+  transition: width 100ms;
+}
+.paperviewer.loading .progressbar.floating, .paperviewer.loaded .pdfcontain.loading .progressbar.floating, .paperviewer.loaded .pdfcontain .progressbar.floating.floating {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  top: 0;
+  margin: 0;
+  height: 4px;
+  z-index: 10;
+}
+
+.pdfjsviewer {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+.pdfjsviewer canvas {
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+.pdfjsviewer .textlayercontain, .pdfjsviewer .textlayercontain > *, .pdfjsviewer .textlayercontain > * > * {
+  position: absolute;
+  white-space: pre;
+  transform-origin: top left;
+  color: rgba(0, 0, 0, 0);
+}
+.pdfjsviewer .textlayercontain > * > * {
+  cursor: text;
+}
+.pdfjsviewer .textlayercontain > * > *::selection {
+  background-color: rgba(var(--color-primary-rgb), 0.3);
+  color: rgba(0, 0, 0, 0);
+}
+.pdfjsviewer .textlayercontain {
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+}
+.pdfjsviewer .scrollbar {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  z-index: 3;
+  overflow: visible;
+}
+.pdfjsviewer .scrollbar .line, .pdfjsviewer .scrollbar .floating {
+  position: absolute;
+  right: 8px;
+  width: 4px;
+  border-radius: 2px;
+}
+.pdfjsviewer .scrollbar .line {
+  top: 20px;
+  bottom: 20px;
+  background-color: rgba(var(--color-secondary-text-rgb), 0.5);
+}
+.pdfjsviewer .scrollbar .floating {
+  background-color: var(--color-primary);
+}
+.pdfjsviewer .scrollbar .indicator {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #999;
+  font-size: 1rem;
+  width: auto;
+  height: auto;
+  padding: 10px;
+  border-radius: 4px;
+  line-height: 20px;
+  right: 50px;
+  transform: translate(0, -20px);
+  text-align: center;
+  white-space: nowrap;
+}
+.pdfjsviewer .scrollbar .indicator b {
+  color: white;
+}
+
+.consoleout {
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  text-align: left;
+  white-space: pre;
+  overflow-x: auto;
+  height: auto;
+  position: absolute;
+  top: 100%;
+}
+
+.advanced-filters {
+  display: flex;
+  gap: 2rem;
+  padding: 1.5rem;
+  flex-wrap: wrap;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+  align-items: flex-start;
+}
+.advanced-filters .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 140px;
+}
+.advanced-filters .filter-group .filter-title {
+  font-weight: 600;
+  font-size: 0.9em;
+  color: var(--text-color);
+}
+.advanced-filters .filter-group .filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.advanced-filters .filter-group .filter-options .filter-chip {
+  background: var(--chip-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 0.85em;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: all 150ms ease;
+  user-select: none;
+}
+.advanced-filters .filter-group .filter-options .filter-chip.active {
+  background: rgba(var(--color-link-rgb), 0.15);
+  border-color: var(--color-link);
+  color: var(--color-link);
+  font-weight: 500;
+}
+.advanced-filters .filter-group .filter-options .filter-chip:hover:not(.active) {
+  border-color: var(--color-secondary-text);
+}
+.advanced-filters select {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+.filter-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--card-bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+@media (max-width: 768px) {
+  .filter-dropdown {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+    border: none;
+    border-top: 1px solid var(--border-color);
+  }
+}

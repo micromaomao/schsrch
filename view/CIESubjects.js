@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const, object-curly-spacing */
 const subjects = require('./CIESubjects.data.js')
 let idIndex = {}
 let formerIndex = {}
