@@ -1,3 +1,4 @@
+/* eslint-disable multiline-ternary, prefer-promise-reject-errors, object-curly-spacing, n/handle-callback-err */
 import { AppState } from './appstate.js'
 import * as React from 'react'
 

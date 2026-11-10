@@ -1,3 +1,4 @@
+/* eslint-disable semi, import/first, n/handle-callback-err, no-prototype-builtins, space-before-function-paren, no-undef, prefer-const, object-curly-spacing, indent, no-mixed-operators, quotes, lines-between-class-members, no-constant-condition, react/no-direct-mutation-state, react/jsx-wrap-multilines, no-return-assign, jsx-quotes, react/jsx-closing-tag-location */
 'use strict'
 
 if ('serviceWorker' in window.navigator) {

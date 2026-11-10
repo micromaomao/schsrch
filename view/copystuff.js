@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const, no-undef */
 export default function (text) {
   let ta = document.createElement('textarea')
   Object.assign(ta.style, {

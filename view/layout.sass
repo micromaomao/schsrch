@@ -1,7 +1,45 @@
-$color-primary: #FF5722
-$color-link: #E91E63
-$color-secondary-text: #727272
-$color-filepreview-top: darken($color-primary, 20%)
+:root, [data-theme="light"]
+  color-scheme: light
+  --color-primary: #FF5722
+  --color-primary-rgb: 255, 87, 34
+  --color-link: #0969da
+  --color-link-rgb: 9, 105, 218
+  --color-secondary-text: #57606a
+  --color-secondary-text-rgb: 87, 96, 106
+  --color-filepreview-top: #E64A19
+  --bg-color: #f6f8fa
+  --text-color: #24292f
+  --card-bg: #ffffff
+  --border-color: #d0d7de
+  --chip-bg: #ebf0f4
+  --highlight-bg: rgba(var(--color-primary-rgb), 0.1)
+
+[data-theme="dark"]
+  color-scheme: dark
+  --color-primary: #dd7855
+  --color-primary-rgb: 221, 120, 85
+  --color-link: #8eb5d9
+  --color-link-rgb: 142, 181, 217
+  --color-secondary-text: #a0a0a0
+  --color-secondary-text-rgb: 160, 160, 160
+  --color-filepreview-top: #252525
+  --bg-color: #121212
+  --text-color: #e0e0e0
+  --card-bg: #1e1e1e
+  --border-color: #333333
+  --chip-bg: #2a2a2a
+  --highlight-bg: rgba(221, 120, 85, 0.2)
+
+$color-primary: var(--color-primary)
+$color-link: var(--color-link)
+$color-secondary-text: var(--color-secondary-text)
+$color-filepreview-top: var(--color-filepreview-top)
+
+// Overwrite background and color in body
+body
+  background-color: var(--bg-color)
+  color: var(--text-color)
+
 
 @import url('https://fonts.googleapis.com/css?family=Lato:300')
 
@@ -28,9 +66,9 @@ $color-filepreview-top: darken($color-primary, 20%)
     box-shadow: 0 2px 0 rgba(black, 0.4) inset
 
 body
-  background-color: white
+  background-color: var(--bg-color)
   font-size: 16px
-  color: #212121
+  color: var(--text-color)
   cursor: default
   min-width: 200px
   margin: 0
@@ -54,7 +92,7 @@ $sidebar-width: 300px
     display: block
     text-align: center
     padding: 2rem
-    background-color: #FF5722
+    background-color: var(--color-primary)
     color: white
     a
       color: white
@@ -82,79 +120,13 @@ $sidebar-width: 300px
     > .considerupgrade
       margin-top: 0.2rem
       font-size: 0.9rem
-  > .sidebar
-    position: absolute
-    top: 0
-    width: $sidebar-width
-    bottom: 0
-    background-color: white
-    box-shadow: 2px 0 4px rgba(black, 0.3)
-    z-index: 3
-    transition: transform 400ms ease
-    will-change: transform
-    &.hide
-      transform: translate(-($sidebar-width)-10px, 0)
-      pointer-events: none
-    &.show
-      transform: translate(0, 0)
-    display: flex
-    flex-direction: column
-    align-items: stretch
-    flex-wrap: nowrap
-    overflow: auto
-    .menu
-      flex-grow: 0
-      flex-shrink: 1
-      overflow: auto
-      .menuitem
-        padding: 0.5rem 1rem
-        cursor: pointer
-        -webkit-tap-highlight-color: transparent
-        background-color: transparent
-        transition: background-color 100ms
-        &:hover, &.current
-          background-color: rgba(black, 0.1)
-        &:active
-          background-color: rgba(black, 0.2)
-      .menuitem.mycollections
-        display: flex
-        flex-direction: row
-        justify-content: space-between
-        align-items: center
-        flex-wrap: nowrap
-        > *
-          flex-shrink: 0
-          flex-grow: 0
-        > .iconcontain
-          font-size: 110%
-          will-change: transform
-          transform: rotate(0) translate(0, 2.5px)
-          transition: transform 100ms
-          &.expanded
-            transform: rotate(180deg) translate(0, 2.5px)
-    .bottom
-      margin-top: auto
-      text-align: center
-      font-size: 0.9rem
-      a
-        color: $color-link
-        transition: color 100ms
-        text-decoration: none
-        padding: 0.5rem
-        display: inline-block
-        cursor: pointer
-        &:hover
-          color: $color-link
-          text-decoration: underline
-        &:active
-          color: darken($color-link, 15%)
   > .v2viewingPopup
     position: absolute
     top: 0
     width: 100vw
     height: 100vh
     overflow: hidden
-    background-color: white
+    background-color: var(--card-bg)
     z-index: 3
     // transition: right 400ms
     transition: transform 400ms ease
@@ -172,20 +144,26 @@ $sidebar-width: 300px
     align-items: stretch
     flex-wrap: nowrap
     .topbar
-      background-color: $color-filepreview-top
-      color: white
+      display: flex
+      align-items: center
+      gap: 1rem
+      padding: 0.5rem 1rem
+      background-color: var(--card-bg)
+      border-bottom: 1px solid var(--border-color)
       flex-grow: 0
       flex-shrink: 0
-      font-size: 1.1rem
-      a
-        color: white
-        text-decoration: none
+      .nav-btn
+        background: transparent
+        border: none
+        color: var(--color-primary)
         cursor: pointer
-        margin: 0.5rem
-        display: inline-block
+        font-size: 1rem
+        padding: 0.5rem 0.75rem
+        border-radius: 4px
+        transition: background-color 0.2s
         -webkit-tap-highlight-color: transparent
-        &:active
-          color: rgba(white, 0.8)
+        &:hover
+          background-color: var(--highlight-bg)
     .paperviewer
       flex-grow: 1
   > .content // This thing is 100%wh absolute positioned and will contain all main content. (i.e. not feedback dialog and it's back cover)
@@ -239,9 +217,9 @@ $sidebar-width: 300px
     > .bottom
       flex-grow: 0
       flex-shrink: 1
-      border-top: solid 1px #aaa
+      border-top: solid 1px var(--border-color)
       padding: 0.5rem 1rem
-      background-color: lighten($color-link, 40%)
+      background-color: var(--card-bg)
       > a
         @extend .material_button
       .paperName
@@ -250,8 +228,8 @@ $sidebar-width: 300px
           transition: color 200ms
           cursor: pointer
           &:hover
-            color: darken($color-link, 10%)
-            border-bottom: solid 1px #aaa
+            color: var(--color-link)
+            border-bottom: solid 1px var(--border-color)
 
 .contentblackcover
   z-index: 2
@@ -276,7 +254,10 @@ $sidebar-width: 300px
   &:hover
     background-color: rgba(black, 0.05)
   &:active
-    background-color: rgba($color-primary, 0.2)
+    background-color: rgba(var(--color-primary-rgb), 0.2)
+  .icon
+    width: 1em
+    height: 1em
 
 .schsrch .view-home
   overflow-y: auto !important
@@ -301,6 +282,19 @@ $sidebar-width: 300px
     margin-left: auto
     margin-right: auto
 
+.view-search
+  .searchbarcontain
+    background-color: var(--bg-color)
+    padding-bottom: 20px
+
+.searchbarcontain
+  width: 1100px
+  max-width: 100%
+  box-sizing: border-box
+  padding: 0 10px
+  margin: 0 auto
+  transition: all 0.5s ease 0s
+
 .searchbar
   .bannerContain
     transition: all 100ms
@@ -316,8 +310,8 @@ $sidebar-width: 300px
   .bannerContain.hide
     display: none
   .inputContain
-    $inputFontSize: 1.3rem
-    $inputLineHeight: 1.8
+    $inputFontSize: 1.1rem
+    $inputLineHeight: 1.5
     position: relative
     transition: all 100ms
     .querybox
@@ -330,49 +324,54 @@ $sidebar-width: 300px
       display: flex
       flex-direction: row
       flex-wrap: nowrap
-      align-items: flex-end
+      align-items: center
       margin-left: auto
       margin-right: auto
-      height: $inputFontSize * $inputLineHeight
+      min-height: 56px
+      border: 2px solid var(--color-primary)
+      border-radius: 28px
+      background-color: var(--card-bg)
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05)
+      padding: 0 16px
+      &:focus-within
+        box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.2)
       .querybox
         flex-grow: 1
         flex-shrink: 1
+        background: transparent
       .stroke
+        display: none
         position: absolute
         z-index: 2
         height: 2px
         bottom: 0
         left: 0
         right: 0
-        background-color: lighten($color-primary, 30%)
+        background-color: transparent
         overflow: hidden
         .fill
           height: 2px
           background-color: $color-primary
       .rightWrap
-        padding-top: 0.3rem
+        padding-top: 0
         padding-left: 0.5rem
-        padding-right: 0.5rem
-        background-color: rgba(white, 0.7)
+        padding-right: 0
+        background-color: transparent
         z-index: 1
         flex-grow: 0
         flex-shrink: 0
+        display: flex
+        align-items: center
         .clearInput
           display: inline-block
           cursor: pointer
-          margin-top: -0.3rem
-          margin-left: -0.5rem
-          margin-right: -0.5rem
-          padding-top: 0.3rem
-          padding-left: 0.5rem
-          padding-right: 0.5rem
-          padding-bottom: 0.5rem
+          padding: 0.5rem
           .icon
             vertical-align: middle
             line-height: 0
-            color: $color-primary
+            color: $color-secondary-text
     .querybox
-      color: $color-primary
+      color: var(--text-color)
       display: inline-block
       font-size: $inputFontSize
       line-height: $inputLineHeight
@@ -383,21 +382,26 @@ $sidebar-width: 300px
       &::-webkit-input-placeholder,
       &::-moz-placeholder,
       &:-ms-input-placeholder
-        color: $color-primary
+        color: $color-secondary-text
     .querybox.border
-      border-bottom: 2px $color-primary solid
+      border: none
     .subjecthints
-      background-color: white
+      background-color: var(--card-bg)
+      border: 1px solid var(--border-color)
+      border-radius: 6px
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1)
+      margin-top: 4px
+      overflow: hidden
       z-index: 4
       .subject
-        background-color: white
+        background-color: var(--card-bg)
         transition: background-color 200ms
         padding: 0.3rem 1rem
         .level, .id
           font-size: 50%
           color: $color-secondary-text
       .subject:hover, .subject.select
-        background-color: darken(white, 10%)
+        background-color: var(--border-color)
 
 .searchbar.big
   .bannerContain
@@ -411,7 +415,7 @@ $sidebar-width: 300px
     display: block
     text-align: center
     margin-top: 1rem
-    background-color: rgba($color-primary, 0.05)
+    background-color: transparent
     .inputPositionWrap, .subjecthints
       width: 90%
     .querybox
@@ -464,22 +468,17 @@ $sidebar-width: 300px
       line-height: 1.5
   .status
     font-size: 0.8rem
-    color: lighten($color-primary, 10%)
+    color: var(--color-primary)
     padding-left: 0.5rem
     padding-right: 0.5rem
     .large
       font-size: 1rem
-      color: lighten($color-primary, 5%)
+      color: var(--color-primary)
     .error-display
       max-width: 40rem
       margin-left: auto
       margin-right: auto
-    .reload span
-      color: $color-link
-      line-height: 2
-      padding: 0.5rem 2rem
-      cursor: pointer
-      font-size: 0.7rem
+
     .error, .reload
       font-size: 0.75rem
     div
@@ -490,7 +489,7 @@ $sidebar-width: 300px
       text-decoration: none
       cursor: pointer
       &:hover
-        color: darken($color-link, 20%)
+        color: var(--color-link)
   .status.loading
     opacity: 0.5
   .cieinprog, .mirrornotice
@@ -516,7 +515,7 @@ $sidebar-width: 300px
       padding: 1rem
       margin: -1rem
   .notification
-    background-color: lighten($color-primary, 42%)
+    background-color: var(--color-primary)
     color: $color-primary
     padding: 0.5rem 1rem
     margin-bottom: 0.5rem
@@ -526,9 +525,8 @@ $sidebar-width: 300px
       margin: 0 auto
 
 .schsrch .view-search
-  display: flex
-  flex-direction: column
-  flex-wrap: nowrap
+  display: block
+  overflow-y: auto !important
   .searchbarcontain
     flex-grow: 0
     flex-shrink: 0
@@ -536,6 +534,11 @@ $sidebar-width: 300px
     flex-direction: row
     flex-wrap: nowrap
     align-items: stretch
+    width: 1100px
+    max-width: 100%
+    box-sizing: border-box
+    padding: 0 10px
+    margin: 0 auto
     > .sidebarbtn
       flex-grow: 0
       flex-shrink: 0
@@ -548,17 +551,18 @@ $sidebar-width: 300px
       > .sidebarbtn
         transform: translate(0, 0.25rem)
   .searchcontain
-    flex-grow: 1
-    flex-shrink: 1
-    overflow-y: auto
     position: relative
 
 .searchresult.loading
   opacity: 0.5
   pointer-events: none
 .searchresult
+  max-width: 1100px
+  margin: 0 auto
+  padding: 0 10px
+  box-sizing: border-box
   .overflow
-    padding: 1rem 2rem
+    padding: 1rem 0
     cursor: auto
     .subject
       color: $color-secondary-text
@@ -570,7 +574,7 @@ $sidebar-width: 300px
         transition: color 100ms
         text-decoration: none
         &:active
-          color: darken($color-link, 10%)
+          color: var(--color-link)
     pre, p
       margin: 0.5rem 0
       padding: 0
@@ -607,30 +611,66 @@ $sidebar-width: 300px
   .empty
     padding: 3rem 5rem
   .set
-    margin-top: 0.5rem
-    margin-bottom: 0.3rem
-    padding: 0 0 0.5rem 0
-    background-color: rgba($color-primary, 0.05)
-    transition: background-color 1000ms
+    position: relative
+    .preview-btn
+      background: transparent
+      border: 1px solid var(--color-primary)
+      color: var(--color-primary)
+      padding: 4px 12px
+      border-radius: 4px
+      font-size: 0.85rem
+      cursor: pointer
+      transition: all 0.2s
+      &:hover
+        background: var(--color-primary)
+        color: white
+    margin-top: 1rem
+    margin-bottom: 1rem
+    padding: 2rem
+    background-color: var(--card-bg)
+    border: 1px solid rgba(var(--color-primary-rgb), 0.3)
+    border-radius: 12px
+    transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease
+    &:hover
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06)
+      border-color: rgba(var(--color-primary-rgb), 0.6)
     &.current
-      background-color: #c3bcba
+      background-color: var(--border-color)
       transition: background-color 400ms
     .setname
-      padding: 0.5rem 1rem
-      background-color: rgba($color-primary, 0.1)
-      font-size: 0.9rem
-      color: $color-secondary-text
+      padding: 0 0 0.5rem 0
+      background-color: transparent
+      font-size: 1.35rem
+      font-weight: 600
+      color: var(--text-color)
+      line-height: 1.3
       .time, .paper, .variant
-        color: $color-primary
-        font-size: 0.9rem
-        display: inline-block
+        display: none
       .paper.meta
-        color: $color-secondary-text !important
-        font-size: 1rem !important
+        display: none
       .subject
         .level
-          font-size: 60%
-          vertical-align: middle
+          font-size: 80%
+          opacity: 0.8
+    .chips-row
+      display: flex
+      gap: 10px
+      flex-wrap: wrap
+      margin-bottom: 0.5rem
+      .chip
+        background: var(--chip-bg)
+        border: 1px solid var(--border-color)
+        border-radius: 16px
+        padding: 4px 12px
+        font-size: 0.8rem
+        font-weight: 500
+        color: var(--text-color)
+        line-height: 1.5
+        overflow: visible
+        display: inline-block
+        &.score
+          border-color: var(--color-primary)
+          color: var(--color-primary)
     a
       color: inherit
     .files
@@ -639,13 +679,13 @@ $sidebar-width: 300px
         padding: 0.3rem 1rem
     .related
       padding-top: 0.5rem
-      padding-left: 2rem
+      padding-left: 0.5rem
       padding-right: 2rem
       .file
-        padding: 0.1rem 0.5rem
+        padding: 0.1rem 0.5rem 0.1rem 1.5rem
     .files, .related
-      padding-left: 1rem
-      padding-right: 1rem
+      padding-left: 0
+      padding-right: 0
       color: $color-secondary-text
     .file
       cursor: pointer
@@ -655,22 +695,29 @@ $sidebar-width: 300px
       .desc
         font-size: 90%
     .file.first
-      padding: 1rem 1rem 0.5rem 1rem
+      padding: 0
       .foundon
-        color: $color-primary
+        color: var(--color-primary)
       .indexcontent
-        font-size: 80%
-        margin-top: 0.5rem
-        color: $color-secondary-text
+        font-size: 1rem
+        margin-top: 0.75rem
+        margin-left: 0
+        color: var(--color-secondary-text)
+        line-height: 1.5
         .highlight
-          color: $color-primary
+          background-color: var(--highlight-bg)
+          color: var(--color-primary)
+          border-radius: 4px
+          font-weight: 600
+          padding: 0 4px
+          border: none
   .searchprompt
     padding-left: 0.5rem
     padding-right: 0.5rem
 
   .warning
     border-top: 2px solid $color-link
-    background-color: lighten($color-primary, 40%)
+    background-color: var(--color-primary)
     text-align: left
     padding: 0.5rem 1rem
     margin-top: 0.5rem
@@ -680,15 +727,15 @@ $sidebar-width: 300px
       cursor: pointer
       transition: color 200ms
       &:hover
-        color: darken($color-link, 20%)
-        border-bottom: solid 1px rgba($color-secondary-text, 0.2)
+        color: var(--color-link)
+        border-bottom: solid 1px rgba(87, 96, 106, 0.2)
 
   .fulltextlist
     .paperviewer.loaded
       height: 50vh
     .paperviewercontain
       width: 100%
-      background-color: rgba($color-primary, 0.05)
+      background-color: rgba(var(--color-primary-rgb), 0.05)
       padding-right: 14px
 
 
@@ -747,7 +794,7 @@ $sidebar-width: 300px
           border-bottom: $b
           color: $color-primary
           margin-right: -2px
-          background-color: white
+          background-color: var(--card-bg)
 
     .viewercontain
       flex-shrink: 1
@@ -811,14 +858,14 @@ $sidebar-width: 300px
     color: $color-link
     cursor: pointer
     &:hover
-      color: lighten($color-link, 20%)
+      color: var(--card-bg)
 
 $feedback-top-height: 2rem + 1.3rem
 .feedback.hide
   visibility: hidden
 .feedback
   z-index: 3
-  background-color: white
+  background-color: var(--card-bg)
   padding: 0
   .top
     background-color: $color-primary
@@ -890,7 +937,7 @@ $feedback-top-height: 2rem + 1.3rem
   display: flex
   flex-direction: column
   flex-wrap: nowrap
-  background-color: white
+  background-color: var(--card-bg)
   &.fullscreen
     width: 100%
     height: 100%
@@ -918,8 +965,7 @@ $feedback-top-height: 2rem + 1.3rem
       right: 0
       height: 50px
       border-left: solid 2px white
-      background-color: rgba(lighten($color-filepreview-top, 10%), 0.9)
-      box-shadow: 2px 2px 5px rgba(black, 0.3)
+      background-color: var(--color-primary)
     > *
       flex-shrink: 0
       flex-grow: 0
@@ -969,13 +1015,13 @@ $feedback-top-height: 2rem + 1.3rem
   .pdfview
     flex-grow: 1
     flex-shrink: 1
-    background-color: white
+    background-color: var(--card-bg)
     display: flex
     position: relative
     flex-direction: column
     flex-wrap: nowrap
     overflow: hidden
-    background-color: white
+    background-color: var(--card-bg)
     > .hide
       display: none
     > .show
@@ -990,10 +1036,10 @@ $feedback-top-height: 2rem + 1.3rem
   .sspdfview
     position: absolute
     .questionln
-      background-color: rgba($color-primary, 0.1)
+      background-color: rgba(var(--color-primary-rgb), 0.1)
       cursor: pointer
     .questionln.highlight
-      background-color: rgba($color-link, 0.2)
+      background-color: rgba(var(--color-link-rgb), 0.2)
     .erbtn
       background-color: rgba(red, 0.1)
       cursor: pointer
@@ -1012,7 +1058,7 @@ $feedback-top-height: 2rem + 1.3rem
       @extend .material_button
 
 .sspdfview
-  background-color: white
+  background-color: var(--card-bg)
   overflow: hidden
   width: 100%
   position: relative
@@ -1044,7 +1090,7 @@ $feedback-top-height: 2rem + 1.3rem
     z-index: 0
   .pointereventcover
     z-index: 3
-    color: black
+    color: var(--text-color)
     font-size: 1.2rem
 
     .cropoverlay
@@ -1082,7 +1128,7 @@ $feedback-top-height: 2rem + 1.3rem
         position: absolute
         z-index: 1
     .wordsel
-      background-color: rgba($color-primary, 0.2)
+      background-color: rgba(var(--color-primary-rgb), 0.2)
       cursor: text
     .wordsel-border
       border: dashed 1px $color-primary
@@ -1095,7 +1141,7 @@ $feedback-top-height: 2rem + 1.3rem
         left: 0
         width: auto
         height: auto
-        background-color: white
+        background-color: var(--card-bg)
         box-shadow: 2px 2px 5px rgba(black, 0.3)
         opacity: 0.9
         font-size: 0.8rem
@@ -1104,7 +1150,7 @@ $feedback-top-height: 2rem + 1.3rem
         span
           display: inline-block
           padding: 0.3rem 1rem
-          border-right: solid 1px #aaa
+          border-right: solid 1px var(--border-color)
           &:last-child
             border-right: none
           cursor: pointer
@@ -1119,7 +1165,7 @@ $feedback-top-height: 2rem + 1.3rem
     background-color: transparent
     transition: background-color 200ms
     &:active
-      background-color: rgba($color-primary, 0.2)
+      background-color: rgba(var(--color-primary-rgb), 0.2)
   a
     color: $color-link
     text-decoration: underline
@@ -1153,7 +1199,7 @@ $feedback-top-height: 2rem + 1.3rem
         color: $color-primary
 
 .docdirlist
-  color: black
+  color: var(--text-color)
   .msg
     padding: 0.5rem 1rem
     color: $color-primary
@@ -1174,13 +1220,13 @@ $feedback-top-height: 2rem + 1.3rem
         display: inline-block
         padding-right: 0.25rem
         margin-right: 0.5rem
-        border-right: solid 1px #aaa
+        border-right: solid 1px var(--border-color)
         color: $color-primary
         span
-          color: #aaa
+          color: var(--color-secondary-text)
           font-size: 75%
       .page
-        color: #aaa
+        color: var(--color-secondary-text)
         font-size: 75%
     li.erdir-paper
       cursor: default
@@ -1196,7 +1242,7 @@ $feedback-top-height: 2rem + 1.3rem
           margin: 0 0
           padding: 0 0.5rem
           cursor: pointer
-          color: black
+          color: var(--text-color)
           display: inline-block
           vertical-align: middle
 
@@ -1225,7 +1271,7 @@ $feedback-top-height: 2rem + 1.3rem
     flex-wrap: nowrap
 
     &.doc
-      $color-divider: #ccc
+      $color-divider: var(--border-color)
       > .top
         flex-shrink: 0
         flex-grow: 0
@@ -1273,7 +1319,7 @@ $feedback-top-height: 2rem + 1.3rem
         flex-grow: 0
         flex-shrink: 0
         border-bottom: 1px solid $color-divider
-        background-color: lighten($color-primary, 40%)
+        background-color: var(--color-primary)
         display: flex
         flex-direction: row
         flex-wrap: wrap
@@ -1339,26 +1385,6 @@ $feedback-top-height: 2rem + 1.3rem
           align-items: stretch
           flex-direction: row
           overflow: hidden // .
-          > .sidebar
-            flex-shrink: 0
-            flex-grow: 0
-            width: 3rem
-            text-align: center
-            border-right: 1px solid $color-divider
-            overflow: auto
-            > div
-              margin: 0
-              padding: 0.75rem 0
-              font-size: 1rem
-              cursor: pointer
-              &.description
-                padding: 0.25rem 0
-                font-size: 0.7rem
-                color: $color-secondary-text
-                cursor: default
-              &.disabled
-                opacity: 0.6
-                cursor: default
           > .content
             flex-shrink: 1
             flex-grow: 1
@@ -1376,7 +1402,7 @@ $feedback-top-height: 2rem + 1.3rem
               margin-right: auto
               cursor: default
               .menu
-                background-color: darken(white, 3%)
+                background-color: var(--border-color)
                 border-bottom: solid 2px $color-primary
                 font-size: 1rem
                 padding-top: 0.25rem
@@ -1393,7 +1419,7 @@ $feedback-top-height: 2rem + 1.3rem
                   padding-left: 0.5rem
                   padding-right: 0.5rem
             .enHider
-              background-color: lighten($color-divider, 15%)
+              background-color: var(--chip-bg)
               .menu
                 .show
                   margin-left: auto
@@ -1418,7 +1444,7 @@ $feedback-top-height: 2rem + 1.3rem
                   transition: color 200ms
                   &:hover
                     color: $color-link
-                    border-bottom: solid 1px #aaa
+                    border-bottom: solid 1px var(--border-color)
                 > span:last-child
                   margin-right: auto
               .prompt
@@ -1436,7 +1462,7 @@ $feedback-top-height: 2rem + 1.3rem
                     display: inline-block
                     margin: 0.5rem
                     padding: 1rem
-                    border: solid 1px rgba($color-primary, 0.2)
+                    border: solid 1px rgba(var(--color-primary-rgb), 0.2)
               .doccontain
                 position: relative
                 .sspdfview
@@ -1492,7 +1518,7 @@ $feedback-top-height: 2rem + 1.3rem
                 bottom: 0
                 width: auto
                 height: auto
-                background-color: rgba($color-primary, 0.8)
+                background-color: rgba(var(--color-primary-rgb), 0.8)
                 color: white
                 border-radius: 5px 0 0 0
                 padding: 0.5rem 1rem
@@ -1588,7 +1614,7 @@ $feedback-top-height: 2rem + 1.3rem
     cursor: pointer
     transition: color 200ms
     &:hover
-      color: darken($color-link, 20%)
+      color: var(--color-link)
   .return
     a
       color: $color-link
@@ -1599,7 +1625,7 @@ $feedback-top-height: 2rem + 1.3rem
       display: inline
       cursor: pointer
       &:hover
-        color: darken($color-link, 10%)
+        color: var(--color-link)
   h2
     color: $color-primary
     margin: 0
@@ -1616,7 +1642,7 @@ $feedback-top-height: 2rem + 1.3rem
       a
         color: inherit
         &:hover
-          color: darken($color-link, 20%)
+          color: var(--color-link)
       .count
         font-size: 50%
         color: $color-primary
@@ -1626,44 +1652,173 @@ $feedback-top-height: 2rem + 1.3rem
         a
           color: $color-primary
           &:hover
-            color: darken($color-primary, 15%)
+            color: var(--color-primary)
 
-.schsrch-help
-  cursor: auto !important
-  padding: 0 2rem
-  a
-    color: $color-link
-    text-decoration: none
-  p
-    margin: 0.5rem 0
-    padding: 0
-    line-height: 1.5
+// ---- Help Page Redesign ----
+.help-page-container
+  max-width: 900px
+  margin: 0 auto
+  padding: 2rem 1rem
+  color: var(--text-color)
+
+  h1
+    font-size: 2.5rem
+    font-weight: 600
+    margin-bottom: 0.5rem
+    color: var(--text-color)
+
+  .subtitle
+    font-size: 1.2rem
+    color: var(--color-secondary-text)
+    margin-bottom: 2rem
+
   h2
-    color: $color-primary
-    margin: 1rem 0
-    padding: 0
-    font-weight: normal
-  h3
-    margin: 0.5rem 0
-    font: 120%
-    font-weight: normal
-    padding: 0
-  .searchlink
-    display: block
-    color: $color-primary
-    margin: 0.3rem 0.7rem
-    .q
-      display: block
-      border-bottom: solid 2px $color-primary
-      font-size: 1rem
-      cursor: pointer
-      color: $color-primary
-      text-decoration: none
-    .e
-      font-size: 0.7rem
-      line-height: 1.2
-      display: block
+    font-size: 1.5rem
+    font-weight: 500
+    margin: 2.5rem 0 1rem 0
+    padding-bottom: 0.5rem
+    border-bottom: 1px solid var(--border-color)
+    color: var(--text-color)
+    scroll-margin-top: 80px
 
+  h3
+    font-size: 1.1rem
+    font-weight: 500
+    margin: 1.5rem 0 0.75rem 0
+    color: var(--text-color)
+
+  p
+    line-height: 1.6
+    margin-bottom: 1rem
+    color: var(--text-color)
+
+  a
+    color: var(--color-link)
+    text-decoration: none
+    &:hover
+      text-decoration: underline
+
+  .quick-examples
+    display: flex
+    gap: 0.5rem
+    flex-wrap: wrap
+    margin-top: 1rem
+    margin-bottom: 2rem
+
+    .example-chip
+      background: var(--chip-bg)
+      border: 1px solid var(--border-color)
+      padding: 0.4rem 0.8rem
+      border-radius: 20px
+      font-family: monospace
+      font-size: 0.9rem
+      color: var(--text-color)
+      cursor: pointer
+      transition: all 150ms ease
+      &:hover
+        border-color: var(--color-link)
+        color: var(--color-link)
+
+  .grid-2
+    display: grid
+    grid-template-columns: 1fr 1fr
+    gap: 1.5rem
+    margin-bottom: 2rem
+    @media (max-width: 768px)
+      grid-template-columns: 1fr
+
+  .card
+    background: var(--card-bg)
+    border: 1px solid var(--border-color)
+    border-radius: 8px
+    padding: 1.5rem
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05)
+    
+    .card-title
+      font-weight: 600
+      margin-bottom: 0.5rem
+      display: flex
+      align-items: center
+      gap: 0.5rem
+    .card-desc
+      color: var(--color-secondary-text)
+      font-size: 0.9rem
+      margin-bottom: 1rem
+    
+  .syntax-block
+    background: var(--bg-color)
+    border: 1px solid var(--border-color)
+    border-radius: 6px
+    padding: 1rem
+    margin-bottom: 1rem
+    position: relative
+    .code
+      font-family: monospace
+      font-size: 1.1rem
+      color: var(--color-link)
+      margin-bottom: 0.5rem
+      display: block
+    .desc
+      font-size: 0.9rem
+      color: var(--color-secondary-text)
+      margin: 0
+    .copy-btn
+      position: absolute
+      top: 0.75rem
+      right: 0.75rem
+      background: transparent
+      border: none
+      color: var(--color-secondary-text)
+      cursor: pointer
+      padding: 0.25rem
+      border-radius: 4px
+      &:hover
+        background: var(--chip-bg)
+        color: var(--text-color)
+
+  .example-table
+    width: 100%
+    border-collapse: collapse
+    margin: 1.5rem 0
+    th, td
+      padding: 0.75rem 1rem
+      border: 1px solid var(--border-color)
+      text-align: left
+    th
+      background: var(--bg-color)
+      font-weight: 600
+      color: var(--color-secondary-text)
+    td.code-col
+      font-family: monospace
+      color: var(--color-link)
+
+  .tips-section
+    .card
+      display: flex
+      align-items: flex-start
+      gap: 1rem
+      padding: 1rem
+      margin-bottom: 1rem
+      .icon
+        font-size: 1.5rem
+      .content
+        margin: 0
+
+  details.advanced-search
+    margin: 2rem 0
+    padding: 1rem
+    border: 1px solid var(--border-color)
+    border-radius: 8px
+    background: var(--bg-color)
+    summary
+      font-weight: 600
+      cursor: pointer
+      outline: none
+      color: var(--text-color)
+      &:hover
+        color: var(--color-link)
+
+// Legacy styles to be removed eventually
 .schsrch-main-crash
   margin: 0
   padding: 0 1rem
@@ -1701,7 +1856,7 @@ $feedback-top-height: 2rem + 1.3rem
 
 .error-display
   text-align: left
-  color: black
+  color: var(--text-color)
   .heading
     color: rgba(black, 0.5)
     font-size: 0.8rem
@@ -1762,50 +1917,60 @@ $feedback-top-height: 2rem + 1.3rem
       width: 100%
       flex-grow: 0
       flex-shrink: 0
-      height: 30px
-      background-color: $color-filepreview-top
+      background-color: var(--card-bg)
+      border-bottom: 1px solid var(--border-color)
       display: flex
       flex-direction: row
       flex-wrap: nowrap
       overflow-x: auto
-      align-items: flex-end
+      align-items: stretch
       padding-left: 0.5rem
       padding-right: 0.5rem
+      &::-webkit-scrollbar
+        height: 4px
+      &::-webkit-scrollbar-thumb
+        background-color: var(--border-color)
+        border-radius: 4px
 
       > .item
-        height: 22px
-        width: 6rem
-        overflow: hidden
-        font-size: 1rem
-        text-align: center
-        color: white
-        position: relative
+        flex: 0 0 auto
+        font-size: 0.95rem
+        color: var(--color-secondary-text)
+        padding: 0.5rem 1rem
         cursor: pointer
+        border-bottom: 2px solid transparent
+        transition: all 0.2s
+        position: relative
+        white-space: nowrap
         .loadingfill
           position: absolute
-          background-color: rgba(white, 0.2)
-          top: 0
+          background-color: var(--color-primary)
+          opacity: 1
+          height: 3px
           bottom: 0
           left: 0
           pointer-events: none
 
+        &:hover
+          color: var(--text-color)
+          background-color: var(--chip-bg)
+
         &.current
-          width: 12rem
-          height: 26px
-          background-color: white
-          border-top: solid 2px $color-primary
-          color: black
+          color: var(--color-primary)
+          border-bottom-color: var(--color-primary)
+          font-weight: 500
           cursor: default
+          background-color: transparent
           .loadingfill
-            background-color: rgba($color-primary, 0.2)
+            background-color: rgba(var(--color-primary-rgb), 0.2)
+            opacity: 1
           .download
             display: inline-block
-            padding: 0.2rem 0.5rem
-            margin-top: -0.2rem
-            margin-bottom: -0.2rem
-            color: $color-link
+            color: var(--color-link)
             cursor: pointer
             text-decoration: none
+            &:hover
+              text-decoration: underline
 
     .pdfcontain
       flex-grow: 1
@@ -1821,7 +1986,7 @@ $feedback-top-height: 2rem + 1.3rem
         z-index: 1
       .dirmenu
         position: absolute
-        background-color: lighten($color-primary, 40%)
+        background-color: var(--color-primary)
         color: $color-primary
         display: flex
         flex-direction: column
@@ -1913,7 +2078,7 @@ $feedback-top-height: 2rem + 1.3rem
   &.loading .progressbar,
   &.loaded .pdfcontain.loading .progressbar,
   &.loaded .pdfcontain .progressbar.floating
-    background-color: lighten($color-primary, 30%)
+    background-color: var(--color-primary)
     width: 80%
     height: 2px
     margin: 1rem auto
@@ -1954,7 +2119,7 @@ $feedback-top-height: 2rem + 1.3rem
   .textlayercontain > * > *
     cursor: text
     &::selection
-      background-color: rgba($color-primary, 0.3)
+      background-color: rgba(var(--color-primary-rgb), 0.3)
       color: rgba(black, 0)
   .textlayercontain
     overflow: hidden
@@ -1979,7 +2144,7 @@ $feedback-top-height: 2rem + 1.3rem
     .line
       top: 20px
       bottom: 20px
-      background-color: rgba($color-secondary-text, 0.5)
+      background-color: rgba(var(--color-secondary-text-rgb), 0.5)
     .floating
       background-color: $color-primary
     .indicator
@@ -2008,3 +2173,534 @@ $feedback-top-height: 2rem + 1.3rem
   height: auto
   position: absolute
   top: 100%
+
+.advanced-filters-container
+  display: flex
+  flex-direction: column
+  padding: 1rem
+  gap: 0.75rem
+  background: var(--card-bg)
+  border-bottom: 1px solid var(--border-color)
+
+  .filter-row
+    display: flex
+    gap: 1.5rem
+    align-items: flex-start
+    justify-content: center
+    flex-wrap: wrap
+    @media (max-width: 768px)
+      gap: 1rem
+      flex-direction: column
+      align-items: center
+
+  .filter-group
+    display: flex
+    flex-direction: column
+    align-items: center
+    gap: 0.4rem
+
+  .filter-group-title
+    font-size: 0.75rem
+    font-weight: 500
+    color: var(--color-secondary-text)
+    text-align: center
+
+  // Subject Chips
+  .subject-chip-group
+    display: flex
+    flex-wrap: wrap
+    justify-content: center
+    gap: 0.5rem
+
+  .subject-chip
+    display: inline-flex
+    align-items: center
+    height: 28px
+    padding: 0 0.5rem
+    border: 1px solid var(--border-color)
+    border-radius: 6px
+    background: var(--bg-color)
+    font-size: 0.8rem
+    color: var(--text-color)
+    cursor: pointer
+    user-select: none
+    transition: all 150ms ease
+    .subj-name
+      font-weight: 500
+      margin-right: 0.3rem
+    .subj-code
+      font-size: 0.7rem
+      color: var(--color-secondary-text)
+    &.active
+      background: rgba(var(--color-link-rgb), 0.1)
+      border-color: rgba(var(--color-link-rgb), 0.3)
+      .subj-name, .subj-code
+        color: var(--color-link)
+    &:hover:not(.active)
+      border-color: var(--color-secondary-text)
+    
+  // Segmented Control
+  .segmented-control
+    display: flex
+    background: transparent
+    border-radius: 6px
+    padding: 2px
+    border: 1px solid var(--border-color)
+    height: 28px
+    align-items: center
+    
+  .segment
+    min-width: 36px
+    text-align: center
+    padding: 0 0.5rem
+    font-size: 0.8rem
+    color: var(--color-secondary-text)
+    border-radius: 4px
+    cursor: pointer
+    user-select: none
+    transition: all 150ms ease
+    height: 22px
+    line-height: 22px
+    &.active
+      background: rgba(var(--color-link-rgb), 0.1)
+      color: var(--color-link)
+      font-weight: 500
+    &:hover:not(.active)
+      color: var(--text-color)
+      background: var(--chip-bg)
+
+  // Minimal Toggles
+  .minimal-toggle-group
+    display: flex
+    flex-wrap: wrap
+    justify-content: center
+    gap: 0.4rem
+
+  .minimal-toggle
+    display: inline-flex
+    align-items: center
+    height: 28px
+    padding: 0 0.5rem
+    font-size: 0.8rem
+    border-radius: 6px
+    border: 1px solid transparent
+    background: var(--chip-bg)
+    color: var(--color-secondary-text)
+    cursor: pointer
+    user-select: none
+    transition: all 150ms ease
+    &.active
+      background: rgba(var(--color-link-rgb), 0.1)
+      color: var(--color-link)
+      border-color: rgba(var(--color-link-rgb), 0.2)
+      font-weight: 500
+    &:hover:not(.active)
+      background: var(--border-color)
+      color: var(--text-color)
+
+  // Footer Actions
+  .filter-footer
+    display: flex
+    justify-content: flex-end
+    align-items: center
+    margin-top: 0.5rem
+    padding-top: 0.75rem
+    border-top: 1px solid var(--border-color)
+    
+  .footer-controls
+    display: flex
+    align-items: center
+    gap: 1.5rem
+  
+  .sort-container-inline
+    display: flex
+    align-items: center
+    gap: 0.5rem
+
+  .sort-select
+    appearance: none
+    -webkit-appearance: none
+    height: 28px
+    padding: 0 2rem 0 0.5rem
+    border-radius: 6px
+    border: 1px solid var(--border-color)
+    background-color: var(--bg-color)
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"></polyline></svg>')
+    background-repeat: no-repeat
+    background-position: right 0.5rem center
+    background-size: 1rem
+    color: var(--text-color)
+    font-size: 0.8rem
+    font-weight: 500
+    cursor: pointer
+    outline: none
+    transition: all 150ms ease
+    &:hover
+      border-color: var(--color-secondary-text)
+    &:focus
+      border-color: var(--color-link)
+      box-shadow: 0 0 0 2px rgba(var(--color-link-rgb),0.2)
+
+  .filter-btn-reset
+    background: transparent
+    border: none
+    color: var(--color-secondary-text)
+    height: 28px
+    padding: 0 0.5rem
+    border-radius: 6px
+    font-size: 0.8rem
+    cursor: pointer
+    transition: all 150ms ease
+    &:hover
+      color: var(--text-color)
+      background: var(--chip-bg)
+
+.filter-dropdown
+  position: absolute
+  top: calc(100% + 10px)
+  left: 0
+  right: 0
+  z-index: 100
+  background: var(--card-bg)
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15)
+  border-radius: 8px
+  border: 1px solid var(--border-color)
+  overflow: hidden
+  
+  // Animation rules
+  opacity: 0
+  visibility: hidden
+  transform: translateY(-10px)
+  pointer-events: none
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1)
+
+  &.is-open
+    opacity: 1
+    visibility: visible
+    transform: translateY(0)
+    pointer-events: auto
+  
+  @media (max-width: 768px)
+    position: fixed
+    top: auto
+    bottom: 0
+    left: 0
+    right: 0
+    max-height: 80vh
+    overflow-y: auto
+    border-radius: 16px 16px 0 0
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.2)
+    border: none
+    border-top: 1px solid var(--border-color)
+
+.escape-home-btn
+  position: fixed
+  top: 20px
+  left: 20px
+  background: var(--card-bg)
+  border: 1px solid var(--border-color)
+  color: var(--text-color)
+  width: 40px !important
+  height: 40px !important
+  border-radius: 50%
+  cursor: pointer
+  display: flex
+  align-items: center
+  justify-content: center
+  padding: 0
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1)
+  z-index: 1000
+  transition: all 150ms ease
+  &:hover
+    background: var(--chip-bg)
+    transform: scale(1.05)
+
+
+.theme-toggle-btn
+  position: fixed
+  bottom: 20px
+  right: 20px
+  background: var(--card-bg)
+  border: 1px solid var(--border-color)
+  color: var(--text-color)
+  width: 40px
+  height: 40px
+  border-radius: 50%
+  cursor: pointer
+  display: flex
+  align-items: center
+  justify-content: center
+  padding: 0
+  font-size: 20px
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1)
+  z-index: 1000
+  transition: all 150ms ease
+  &:hover
+    background: var(--chip-bg)
+    transform: scale(1.05)
+
+.theme-icon
+  display: inline-block
+  animation: theme-spin 400ms cubic-bezier(0.4, 0.0, 0.2, 1)
+
+@keyframes theme-spin
+  0%
+    transform: rotate(-180deg) scale(0.2)
+    opacity: 0
+  100%
+    transform: rotate(0) scale(1)
+    opacity: 1
+
+.searchprompt
+  margin-top: 1.5rem
+  color: var(--color-secondary-text)
+  &.center
+    text-align: center
+
+// ---- Modern Pages (Disclaimer & Subjects) ----
+.modern-page-container
+  width: 100%
+  height: 100%
+  overflow-y: auto
+  box-sizing: border-box
+  padding: 2rem 1.5rem
+  color: var(--text-color)
+  display: flex
+  flex-direction: column
+  align-items: center
+  > *
+    width: 100%
+    max-width: 1000px
+
+.modern-hero
+  text-align: center
+  margin-bottom: 3rem
+  margin-top: 1rem
+  h1
+    font-size: 2.5rem
+    font-weight: 600
+    margin: 0.5rem 0
+    color: var(--text-color)
+  .hero-description
+    font-size: 1.2rem
+    color: var(--color-secondary-text)
+    max-width: 600px
+    margin: 0 auto
+  .hero-badges
+    margin-top: 1rem
+    display: flex
+    gap: 0.5rem
+    justify-content: center
+
+.breadcrumb
+  font-size: 0.9rem
+  color: var(--color-secondary-text)
+  margin-bottom: 1.5rem
+  span
+    cursor: pointer
+    &:hover
+      color: var(--color-link)
+  .separator
+    margin: 0 0.5rem
+    color: var(--border-color)
+    cursor: default
+  .current
+    color: var(--text-color)
+    cursor: default
+    &:hover
+      color: var(--text-color)
+
+.modern-card
+  background: var(--card-bg)
+  border: 1px solid var(--border-color)
+  border-radius: 12px
+  padding: 1.5rem
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03)
+  transition: transform 200ms ease, box-shadow 200ms ease
+  &:hover
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06)
+
+.summary-card
+  margin-bottom: 2rem
+  text-align: left
+  h2
+    margin-top: 0
+    font-size: 1.5rem
+    margin-bottom: 1rem
+  .checklist
+    list-style: none
+    padding: 0
+    margin: 0
+    display: grid
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))
+    gap: 1rem
+    li
+      display: flex
+      align-items: center
+      gap: 0.5rem
+      color: var(--text-color)
+      .icon
+        color: var(--color-primary)
+        width: 20px
+        height: 20px
+        flex-shrink: 0
+
+.cards-grid
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))
+  gap: 1.5rem
+  margin-bottom: 2rem
+  .modern-card
+    display: flex
+    flex-direction: column
+    .card-header
+      display: flex
+      align-items: center
+      gap: 0.75rem
+      margin-bottom: 1rem
+      .card-icon
+        font-size: 1.5rem
+      h3
+        margin: 0
+        font-size: 1.25rem
+    p
+      margin: 0
+      color: var(--color-secondary-text)
+      line-height: 1.6
+      a
+        color: var(--color-link)
+        text-decoration: none
+        &:hover
+          text-decoration: underline
+
+.subject-browser-controls
+  display: flex
+  flex-direction: column
+  gap: 1rem
+  margin-bottom: 2rem
+  align-items: center
+
+.search-bar-wrapper
+  position: relative
+  width: 100%
+  max-width: 600px
+  .search-icon
+    position: absolute
+    left: 1rem
+    top: 50%
+    transform: translateY(-50%)
+    width: 20px
+    height: 20px
+    color: var(--color-secondary-text)
+  .subject-search-input
+    width: 100%
+    box-sizing: border-box
+    padding: 0.75rem 1rem 0.75rem 3rem
+    font-size: 1rem
+    border: 1px solid var(--border-color)
+    border-radius: 24px
+    background: var(--bg-color)
+    color: var(--text-color)
+    outline: none
+    transition: box-shadow 200ms, border-color 200ms
+    &:focus
+      border-color: var(--color-primary)
+      box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1)
+
+.level-filters
+  display: flex
+  gap: 0.5rem
+  flex-wrap: wrap
+  justify-content: center
+  .filter-btn
+    background: var(--card-bg)
+    border: 1px solid var(--border-color)
+    color: var(--text-color)
+    padding: 0.5rem 1rem
+    border-radius: 20px
+    cursor: pointer
+    transition: all 150ms
+    &:hover
+      background: var(--chip-bg)
+    &.active
+      background: var(--color-primary)
+      color: white
+      border-color: var(--color-primary)
+
+.subject-section
+  margin-bottom: 3rem
+  h2
+    font-size: 1.5rem
+    margin-bottom: 1rem
+    color: var(--text-color)
+    font-weight: 600
+
+.subject-grid
+  display: grid
+  grid-template-columns: repeat(4, 1fr)
+  gap: 1rem
+  @media (max-width: 900px)
+    grid-template-columns: repeat(3, 1fr)
+  @media (max-width: 600px)
+    grid-template-columns: repeat(1, 1fr)
+
+.subject-card
+  text-decoration: none
+  display: flex
+  flex-direction: column
+  gap: 0.5rem
+  color: var(--text-color)
+  &:hover
+    transform: translateY(-2px)
+  .subj-icon
+    font-size: 2rem
+    margin-bottom: 0.25rem
+  .subj-details
+    display: flex
+    flex-direction: column
+    gap: 0.25rem
+    .subj-name
+      margin: 0
+      font-size: 1.1rem
+      font-weight: 500
+    .subj-id
+      font-size: 0.9rem
+      color: var(--color-secondary-text)
+  .subj-meta
+    margin-top: auto
+    padding-top: 0.5rem
+    .badge
+      font-size: 0.8rem
+
+.badge
+  display: inline-block
+  background: var(--chip-bg)
+  color: var(--color-secondary-text)
+  padding: 0.25rem 0.6rem
+  border-radius: 12px
+  font-size: 0.85rem
+  border: 1px solid var(--border-color)
+
+.request-callout
+  text-align: center
+  margin-top: 4rem
+  margin-bottom: 2rem
+  h3
+    margin-top: 0
+    font-size: 1.3rem
+  p
+    margin-bottom: 0
+    color: var(--color-secondary-text)
+    a
+      color: var(--color-primary)
+      text-decoration: none
+      font-weight: 500
+      cursor: pointer
+      &:hover
+        text-decoration: underline
+
+.no-results
+  text-align: center
+  padding: 3rem 1rem
+  color: var(--color-secondary-text)
+  font-size: 1.1rem

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-undef, object-curly-spacing, prefer-const, camelcase, space-unary-ops, object-shorthand, object-property-newline, no-void */
 const supertest = require('supertest')
 const should = require('should')
 
@@ -8,7 +9,7 @@ module.exports = (schsrch, dbModel) =>
     before(function (done) {
       function trySubjectNumber () {
         subjectNumber = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
-        PastPaperDoc.count({subject: subjectNumber}).then(ct => {
+        PastPaperDoc.countDocuments({subject: subjectNumber}).then(ct => {
           if (ct === 0) {
             console.log(`Using syllabus number ${subjectNumber} for testing...`)
             done()
@@ -58,7 +59,6 @@ module.exports = (schsrch, dbModel) =>
               type,
               paper: paper,
               variant: variant,
-              fileBlob: Buffer.from(''),
               fileType: 'pdf',
               numPages: 0,
               dir: {
@@ -83,7 +83,6 @@ module.exports = (schsrch, dbModel) =>
         type: 'er',
         paper: 0,
         variant: 0,
-        fileBlob: Buffer.from(''),
         fileType: 'pdf',
         numPages: 0,
         dir: {
@@ -108,16 +107,16 @@ module.exports = (schsrch, dbModel) =>
               .expect(res => {
                 Object.keys(res.body).sort().should.deepEqual(['qp', 'ms', 'er'].sort())
                 res.body.qp.should.deepEqual({
-                  type: 'testing', docType: 'qp', paper: qp.paper, variant: qp.variant, docid: qp._id.toString()
+                  type: 'testing', docType: 'qp', paper: qp.paper, variant: qp.variant, docid: qp._id.toString(), fileUrl: qp.fileUrl || null
                 })
                 res.body.ms.should.deepEqual({
-                  type: 'testing', docType: 'ms', paper: qp.paper, variant: qp.variant, docid: ms._id.toString()
+                  type: 'testing', docType: 'ms', paper: qp.paper, variant: qp.variant, docid: ms._id.toString(), fileUrl: ms.fileUrl || null
                 })
                 if (!flattenEr) {
                   assertErDir(res.body.er)
                 } else {
                   res.body.er.should.deepEqual({
-                    type: 'er-flattened', docid: er._id.toString(), dirs: ['testing-er', qp.paper, qp.variant]
+                    type: 'er-flattened', docid: er._id.toString(), dirs: ['testing-er', qp.paper, qp.variant], fileUrl: er.fileUrl || null
                   })
                 }
               })
@@ -144,6 +143,7 @@ module.exports = (schsrch, dbModel) =>
       erDir.type.should.equal('er')
       erDir.docType.should.equal('er')
       erDir.docid.should.equal(er._id.toString())
+      should(erDir.fileUrl).equal(er.fileUrl || null)
       erDir.papers.should.be.an.Array()
       for (let i = 1; i <= 2; i ++) {
         let { qp } = docs[i]
@@ -190,7 +190,8 @@ module.exports = (schsrch, dbModel) =>
             res.body.df.should.deepEqual({
               type: 'blob',
               fileType: 'df',
-              docid: deSet[1]._id.toString()
+              docid: deSet[1]._id.toString(),
+              fileUrl: deSet[1].fileUrl || null
             })
             res.body.qp.should.be.an.Object()
             res.body.qp.docid.should.equal(deSet[0]._id.toString())

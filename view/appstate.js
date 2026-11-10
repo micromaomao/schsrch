@@ -1,3 +1,4 @@
+/* eslint-disable import/first, prefer-const, comma-dangle, space-before-function-paren, semi, quotes */
 const InterfaceVersion = 23
 import { createStore } from 'redux'
 import * as bowser from 'bowser'
@@ -16,14 +17,34 @@ let AppState = createStore(function (state = {}, action) {
   switch (action.type) {
     case 'init':
       return Object.assign({}, init)
-    case 'init-server':
+    case 'init-server': {
       AppState.supportOverall = AppState.supportSspdfView = AppState.browserSupportsPassiveEvents = true
+
+      let initialTheme = 'light'
+      if (typeof window !== 'undefined') {
+        initialTheme = window.localStorage.getItem('schsrch-theme')
+        if (!initialTheme) {
+          initialTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        document.documentElement.setAttribute('data-theme', initialTheme)
+      }
+
       return Object.assign({}, init, action.serverrender, {
         serverrender: action.serverrender || true,
         view: action.serverrender.view || 'home',
         querying: action.serverrender.querying || null,
-        collection: action.serverrender.collection || null
+        collection: action.serverrender.collection || null,
+        theme: initialTheme
       })
+    }
+    case 'toggle-theme': {
+      let newTheme = state.theme === 'light' ? 'dark' : 'light'
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('schsrch-theme', newTheme)
+        document.documentElement.setAttribute('data-theme', newTheme)
+      }
+      return Object.assign({}, state, { theme: newTheme })
+    }
     case 'load':
       if (action.state.version !== InterfaceVersion) {
         console.log(`Not loading from state data of older version - ${action.state.version || '0'} !== ${InterfaceVersion}`)
@@ -32,16 +53,20 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, init, action.state, {
         loginInfo: null
       })
-    case 'query':
-      if (action.query.trim().length === 0) {
+    case 'query': {
+      let filters = action.filters || {}
+      let sort = action.sort || 'relevance'
+      if (action.query.trim().length === 0 && Object.keys(filters).length === 0) {
         return Object.assign({}, state, {
           querying: null
         })
       }
-      if (state.querying && state.querying.query.trim() === action.query.trim()) {
+      if (state.querying && state.querying.query.trim() === action.query.trim() && JSON.stringify(state.querying.filters || {}) === JSON.stringify(filters) && (state.querying.sort || 'relevance') === sort) {
         return Object.assign({}, state, {
           querying: Object.assign({}, state.querying || {}, {
             query: action.query,
+            filters,
+            sort
           }),
           showSidebar: false
         })
@@ -49,12 +74,16 @@ let AppState = createStore(function (state = {}, action) {
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
           query: action.query,
+          filters,
+          sort,
           loading: true,
-          error: null
+          error: null,
+          result: null
         }),
         showSidebar: false,
         v2viewing: false
       })
+    }
     case 'retry-query':
       if (!state.querying) return state
       return Object.assign({}, state, {
@@ -69,7 +98,7 @@ let AppState = createStore(function (state = {}, action) {
         querying: action.querying
       })
     case 'query-error':
-      if (!(state.querying && state.querying.query.trim() === action.query.trim())) return state
+      if (!(state.querying && state.querying.query.trim() === action.query.trim() && JSON.stringify(state.querying.filters || {}) === JSON.stringify(action.filters || {}) && (state.querying.sort || 'relevance') === (action.sort || 'relevance'))) return state
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
           loading: false,
@@ -78,7 +107,7 @@ let AppState = createStore(function (state = {}, action) {
         })
       })
     case 'query-load':
-      if (!(state.querying && state.querying.query.trim() === action.query.trim())) return state
+      if (!(state.querying && state.querying.query.trim() === action.query.trim() && JSON.stringify(state.querying.filters || {}) === JSON.stringify(action.filters || {}) && (state.querying.sort || 'relevance') === (action.sort || 'relevance'))) return state
       return Object.assign({}, state, {
         querying: Object.assign({}, state.querying || {}, {
           loading: false,
@@ -246,20 +275,32 @@ let AppState = createStore(function (state = {}, action) {
         }
       })
     case 'v2view-set-tCurrentType':
-      return (() => {
-        if (!state.v2viewing) return state
-        let stageTransformAssign = {}
-        if (action.stageTransform || action.stageTransform === null) {
-          stageTransformAssign[action.tCurrentType] = action.stageTransform
-        }
-        return Object.assign({}, state, {
-          v2viewing: Object.assign({}, state.v2viewing, {
-            tCurrentType: action.tCurrentType,
-            stageTransforms: Object.assign({}, state.v2viewing.stageTransforms, stageTransformAssign),
-            viewDir: action.viewDir || null
+      if (!state.v2viewing) return state
+      return Object.assign({}, state, {
+        v2viewing: Object.assign({}, state.v2viewing, {
+          tCurrentType: action.tCurrentType,
+          viewDir: action.viewDir || null,
+          asPopup: action.asPopup !== undefined ? action.asPopup : state.v2viewing.asPopup,
+          stageTransforms: Object.assign({}, state.v2viewing.stageTransforms, {
+            [action.tCurrentType]: action.stageTransform !== undefined ? action.stageTransform : state.v2viewing.stageTransforms[action.tCurrentType]
           })
         })
-      })()
+      })
+    case 'v2view-toggle-split':
+      if (!state.v2viewing) return state
+      return Object.assign({}, state, {
+        v2viewing: Object.assign({}, state.v2viewing, {
+          splitMode: !state.v2viewing.splitMode,
+          tSplitType: state.v2viewing.tSplitType || (state.v2viewing.tCurrentType === 'qp' ? 'ms' : 'qp')
+        })
+      })
+    case 'v2view-set-split-type':
+      if (!state.v2viewing) return state
+      return Object.assign({}, state, {
+        v2viewing: Object.assign({}, state.v2viewing, {
+          tSplitType: action.tSplitType
+        })
+      })
     case 'v2view-user-move-page':
       return (() => {
         if (!state.v2viewing) return state

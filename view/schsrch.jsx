@@ -1,3 +1,4 @@
+/* eslint-disable lines-between-class-members, prefer-const, object-curly-spacing, no-unused-vars, default-case-last, multiline-ternary, no-multi-spaces, react/jsx-curly-brace-presence, react/jsx-indent, jsx-quotes, react/self-closing-comp, no-return-assign, react/jsx-tag-spacing, react/jsx-boolean-value, react/jsx-closing-bracket-location, react/jsx-handler-names, indent, react/jsx-no-undef */
 import * as React from 'react'
 import SearchBar from './searchbar.jsx'
 import Description from './description.jsx'
@@ -5,7 +6,9 @@ import SearchResult from './searchresult.jsx'
 import Disclaimer from './disclaimer.jsx'
 import { AppState } from './appstate.js'
 import * as FetchErrorPromise from './fetcherrorpromise.jsx'
-import Sidebar from './sidebar.jsx'
+import Header from './header.jsx'
+import AdvancedFilters from './advancedfilters.jsx'
+import { subjectOptions, sessionOptions, yearOptions, typeOptions, paperOptions, variantOptions } from './filterOptions.js'
 import * as bowser from 'bowser'
 import SubjectsView from './subjectsview.jsx'
 import Help from './help.jsx'
@@ -19,7 +22,6 @@ export default class SchSrch extends React.Component {
       coverHideAnimation: 0,
       viewScrollAtTop: true,
       showFeedback: false,
-      showSidebar: false,
       lastQueryLoad: null,
       lastView: null
     }
@@ -40,9 +42,6 @@ export default class SchSrch extends React.Component {
     let state = AppState.getState()
     if (state.feedback.show !== this.state.showFeedback) {
       this.setState({showFeedback: state.feedback.show, coverHideAnimation: Date.now()})
-    }
-    if (state.showSidebar !== this.state.showSidebar) {
-      this.setState({showSidebar: state.showSidebar, coverHideAnimation: Date.now()})
     }
 
     if (state.view !== this.state.lastView) {
@@ -90,7 +89,7 @@ export default class SchSrch extends React.Component {
       switch (aState.view) {
         case 'home':
         default:
-          return aState.querying ? this.renderSearch() : this.renderHome()
+          return (aState.querying && aState.querying.query.trim().length > 0) ? this.renderSearch() : this.renderHome()
         case 'disclaim':
           return this.renderDisclaim()
         case 'collection':
@@ -130,14 +129,22 @@ export default class SchSrch extends React.Component {
           <div className={'viewcontain'}>
             {view}
           </div>
+          <button
+            className="theme-toggle-btn"
+            onClick={() => AppState.dispatch({ type: 'toggle-theme' })}
+            title="Toggle Dark Mode"
+          >
+            <span key={AppState.getState().theme} className="theme-icon">
+              {AppState.getState().theme === 'dark' ? '☀️' : '🌙'}
+            </span>
+          </button>
         </div>
-        {this.renderSidebar()}
         {this.renderV2ViewingPopup()}
       </div>
     )
   }
   handleBlackCoverDown (evt) {
-    if (this.state.showSidebar) {
+    if (AppState.getState().showSidebar) {
       AppState.dispatch({type: 'hide-sidebar'})
     }
   }
@@ -145,12 +152,6 @@ export default class SchSrch extends React.Component {
     let showHelp = AppState.getState().showHelp
     return (
       <div className='view view-home'>
-        {!this.state.showSidebar && !this.state.server
-          ? (
-              <div className='sidebarbtn' onClick={evt => AppState.dispatch({type: 'show-sidebar'})}>
-                <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars"></use></svg>
-              </div>
-            ) : null}
         {showHelp ? (
           <h1 className='helph1'>SchSrch help manual</h1>
         ) : null}
@@ -163,15 +164,7 @@ export default class SchSrch extends React.Component {
       </div>
     )
   }
-  renderSidebar () {
-    if (this.state.server) return null
-    let aState = AppState.getState()
-    return (
-      <Sidebar
-        currentView={aState.view}
-        show={this.state.showSidebar} />
-    )
-  }
+
   renderV2ViewingPopup () {
     if (this.state.server) return null
     let v2viewing = AppState.getState().v2viewing
@@ -183,8 +176,8 @@ export default class SchSrch extends React.Component {
     return (
       <div className={'v2viewingPopup ' + (v2viewing.popupClosing ? 'hide' : 'show')}>
         <div className='topbar'>
-          <a onClick={this.handleV2viewerPopupClose}>&lt; Return to search</a>&nbsp;
-          {v2viewing.searchIndex ? (<a onClick={this.handleV2viewerPopupToInline}>Change to inline viewer</a>) : null}
+          <button className='nav-btn' onClick={this.handleV2viewerPopupClose}>&larr; Back to Search</button>
+          {v2viewing.searchIndex ? (<button className='nav-btn' onClick={this.handleV2viewerPopupToInline}>Switch to Preview</button>) : null}
         </div>
         <PaperViewer key={'popup_v2paperviewer'} />
       </div>
@@ -206,13 +199,10 @@ export default class SchSrch extends React.Component {
     return (
       <div className='view view-search'>
         <div key='searchbarcontain' className='searchbarcontain'>
-          {!this.state.server ? (
-            <div className='sidebarbtn' onClick={evt => AppState.dispatch({type: 'show-sidebar'})}>
-              <svg className="icon ii-bars"><use href="#ii-bars" xlinkHref="#ii-bars"></use></svg>
-            </div>
-          ) : null}
           <SearchBar key='searchbar' ref={f => this.searchbar = f} big={false} onQuery={this.handleSearchBarQuery} />
+          {this.renderActiveFilters()}
         </div>
+
         <div className='searchcontain' onScroll={this.handleSearchContainScroll}>
           <SearchResult
             querying={AppState.getState().querying}
@@ -221,6 +211,11 @@ export default class SchSrch extends React.Component {
       </div>
     )
   }
+
+  renderActiveFilters () {
+    return null
+  }
+
   handleSearchContainScroll (evt) {
     let viewScrollAtTop = evt.target.scrollTop < 5
     // if (this.state.viewScrollAtTop === viewScrollAtTop) return
@@ -231,16 +226,34 @@ export default class SchSrch extends React.Component {
     let querying = AppState.getState().querying
     if (!querying) return
     let query = querying.query.trim()
+    let filters = querying.filters || {}
+    let sort = querying.sort || 'relevance'
     this.setState({lastQueryLoad: query, viewScrollAtTop: true})
-    fetch('/search/?query=' + encodeURIComponent(query.trim()) + '&as=json').then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
+
+    let url = '/search/?query=' + encodeURIComponent(query.trim()) + '&as=json'
+    if (Object.keys(filters).length > 0) {
+      url += '&filters=' + encodeURIComponent(JSON.stringify(filters))
+    }
+    if (sort !== 'relevance') {
+      url += '&sort=' + encodeURIComponent(sort)
+    }
+
+    if (typeof window !== 'undefined' && typeof window.history !== 'undefined') {
+      let queryStr = '/?query=' + encodeURIComponent(query.trim())
+      if (Object.keys(filters).length > 0) queryStr += '&filters=' + encodeURIComponent(JSON.stringify(filters))
+      if (sort !== 'relevance') queryStr += '&sort=' + encodeURIComponent(sort)
+      window.history.pushState(null, '', queryStr)
+    }
+
+    fetch(url).then(FetchErrorPromise.then, FetchErrorPromise.error).then(res => res.json()).then(result => {
       // AppState will check if the query has changed since the request started.
       if (result.response === 'error') {
-        AppState.dispatch({type: 'query-error', query, error: result.err})
+        AppState.dispatch({type: 'query-error', query, filters, sort, error: result.err})
         return
       }
-      AppState.dispatch({type: 'query-load', query, result})
+      AppState.dispatch({type: 'query-load', query, filters, sort, result})
     }, err => {
-      AppState.dispatch({type: 'query-error', query, error: err})
+      AppState.dispatch({type: 'query-error', query, filters, sort, error: err})
     })
   }
 

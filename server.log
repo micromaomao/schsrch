@@ -1,0 +1,1 @@
+You need to provide env MONGODB and ES. E.g. MONGODB=mongodb://127.0.0.1/ ES=127.0.0.1

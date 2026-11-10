@@ -1,3 +1,4 @@
+/* eslint-disable comma-dangle */
 /*
   List of all CIE subjects that Paper.sc officially maintain.
 

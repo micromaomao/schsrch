@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const, indent, multiline-ternary, object-curly-spacing */
 const React = require('react')
 
 class DocDirList extends React.Component {

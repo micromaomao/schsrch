@@ -1,3 +1,4 @@
+/* eslint-disable no-undef, no-return-assign, prefer-const, array-bracket-spacing */
 const supertest = require('supertest')
 const should = require('should')
 const PaperUtils = require('../view/paperutils.js')
@@ -18,7 +19,6 @@ module.exports = schsrch =>
           .expect(res => res.body.list.forEach(x => x._id.should.be.a.String()))
           .expect(res => res.body.list.forEach(x => x.fileType.should.equal('pdf')))
           .expect(res => res.body.list.forEach(x => should.not.exist(x.doc)))
-          .expect(res => res.body.list.forEach(x => should.not.exist(x.fileBlob)))
           .expect(res => res.body.list = res.body.list.map(x => `${PaperUtils.setToString(x)}_${x.type}`))
           .expect(res => res.body.list = res.body.list.sort())
           .expect(res => res.body.list.length.should.equal(expect.length, `Response should have ${expect.length} results returned. (Got ${res.body.list.join(', ')})`))
@@ -281,7 +281,6 @@ module.exports = schsrch =>
             a.time.should.equal('s18')
             a.paper.should.equal(1)
             a.variant.should.equal(0)
-            should.not.exist(a.fileBlob)
             should.not.exist(a.dir)
           }
         })

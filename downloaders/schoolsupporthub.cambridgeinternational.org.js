@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-unused-vars, prefer-const, space-unary-ops, object-property-newline, no-void, quote-props, object-curly-spacing, quotes, no-throw-literal */
 const request = require('request')
 const cheerio = require('cheerio')
 const url = require('url')

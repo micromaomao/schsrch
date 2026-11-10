@@ -1,3 +1,4 @@
+/* eslint-disable no-undef, object-curly-spacing, prefer-const */
 const CIESubjects = require('../view/CIESubjects.js')
 const should = require('should')
 

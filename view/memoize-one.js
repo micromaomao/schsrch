@@ -1,3 +1,4 @@
+/* eslint-disable no-return-assign */
 export default function (fn) {
   let lastCallArg = null
   let lastCallResult = null

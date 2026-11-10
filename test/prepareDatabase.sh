@@ -4,12 +4,13 @@ paperbin=pastpapers.bin
 password=schsrch
 
 # Drop database and elasticsearch index.
-mongo --host $MONGODB --eval "db.dropDatabase()"
+mongosh $MONGODB --eval "db.dropDatabase()"
 curl -X DELETE 'http://'$ES'/pastpaper'
 echo # last command don't have \n
 
 # Extract papers
-tmpdir=$(mktemp -d)
+tmpdir=./papers_download_test
+mkdir -p $tmpdir
 openssl aes-256-cbc -d -in $paperbin -pass pass:$password -md sha256 -out $tmpdir/decrypt
 if [ $? -ne 0 ]; then
   echo "Unable to decrypt $paperbin"
@@ -28,6 +29,7 @@ if [ ! -f $tmpdir/pastpapers/0611_s16_qp_74.pdf ]; then
   exit 1
 fi
 
-QUICK=1 ../doIndex.bin.js $tmpdir/pastpapers
+STORAGE_ROOT=$tmpdir/pastpapers QUICK=1 ../doIndex.bin.js $tmpdir/pastpapers
 
-rm -rf $tmpdir
+# Keep the extracted files for tests to use
+rm -f $tmpdir/decrypt

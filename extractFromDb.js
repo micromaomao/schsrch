@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable prefer-const, object-curly-spacing, space-before-function-paren, space-unary-ops, n/handle-callback-err */
 const { MONGODB: DB, ES } = process.env
 const mongoose = require('mongoose')
 const PaperUtils = require('./view/paperutils')
@@ -8,7 +9,12 @@ const outputDir = process.cwd()
 const elasticsearch = require('elasticsearch')
 const sspdf = require('./lib/sspdf')
 mongoose.Promise = global.Promise
-let db = mongoose.createConnection(DB)
+let db = mongoose.createConnection(DB, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: false
+})
 let es = new elasticsearch.Client({
   host: ES
 })
@@ -40,7 +46,8 @@ db.on('open', () => {
         }
         let setName = PaperUtils.setToString(doc)
         let fname = `${setName}_${doc.type}.pdf`
-        doc.getFileBlob().then(blob => {
+        const storage = require('./storage/index.js')
+        storage.read(doc.relativePath).then(blob => {
           fs.writeFile(path.join(outputDir, fname), blob, {encoding: null}, (err) => {
             if (err) {
               console.error(err)

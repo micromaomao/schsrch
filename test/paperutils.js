@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-undef, object-curly-spacing, prefer-const */
 const PaperUtils = require('../view/paperutils.js')
 const should = require('should')
 

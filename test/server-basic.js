@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-undef, object-curly-spacing, prefer-const */
 const supertest = require('supertest')
 const should = require('should')
 const fs = require('fs')

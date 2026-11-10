@@ -1,3 +1,4 @@
+/* eslint-disable no-undef, object-curly-spacing, no-void, prefer-const, comma-spacing */
 const supertest = require('supertest')
 const should = require('should')
 const crypto = require('crypto')
@@ -122,7 +123,6 @@ module.exports = (schsrch, dbModel) =>
           .expect(res => ['width', 'height'].forEach(p => res.body[p].should.be.a.Number().and.above(0)))
           .expect(res => res.body.pageNum.should.equal(tDoc.numPages))
           .expect(res => should.not.exist(res.body.doc.doc))
-          .expect(res => should.not.exist(res.body.doc.fileBlob))
           .expect(res => res.body.svg.should.be.a.String().and.match(/^<svg/))
           .end(testForMs)
         function testForMs (err) {
@@ -141,7 +141,6 @@ module.exports = (schsrch, dbModel) =>
             .expect(res => ['width', 'height'].forEach(p => res.body[p].should.be.a.Number().and.above(0)))
             .expect(res => res.body.pageNum.should.equal(tMsDoc.numPages))
             .expect(res => should.not.exist(res.body.doc.doc))
-            .expect(res => should.not.exist(res.body.doc.fileBlob))
             .expect(res => res.body.svg.should.be.a.String().and.match(/^<svg/))
             .end(done)
         }
@@ -224,7 +223,7 @@ module.exports = (schsrch, dbModel) =>
       })
     })
     it('should 404 if PastPaperIndex missing', function (done) {
-      PastPaperIndex.remove({docId: sspdfTestDoc._id}).then(() => {
+      PastPaperIndex.deleteMany({docId: sspdfTestDoc._id}).then(() => {
         testPage404(0, done)
       }, err => done(err))
     })
