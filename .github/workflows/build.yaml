@@ -18,7 +18,7 @@ jobs:
           git clean -dfx &&
           chmod u=rwX,go=rX . -R &&
           docker build . -t $IMAGE_TAG --no-cache &&
-          docker-compose -f docker-compose-example.yml up -d es mongo &&
+          docker compose -f docker-compose-example.yml up -d es mongo &&
           sleep 40 &&
           docker run --entrypoint=bash -t --network schsrch_mw -e NODE_ENV=development -e MONGODB=mongodb://mw-mongo/schsrch -e ES=mw-es:9200 -e SITE_ORIGIN=http://localhost -v $(pwd)/.git:/usr/src/app/.git $IMAGE_TAG -c "test/prepareDatabase.sh && npm run test";
           if [ $? -ne 0 ]; then
